@@ -13,7 +13,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 -->
-<org.odk.collect.android.views.TwoTextItemCheckView
+<com.radicaldynamic.turboform.views.TwoTextItemCheckView
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content"
@@ -55,4 +55,4 @@ the License.
 		android:layout_toLeftOf="@id/twolinecheckbox"
 		android:layout_weight="1" />
 
-</org.odk.collect.android.views.TwoTextItemCheckView>
+</com.radicaldynamic.turboform.views.TwoTextItemCheckView>

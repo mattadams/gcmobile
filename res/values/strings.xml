@@ -20,7 +20,7 @@
 <string name="add_repeat">Add a new \"%s\" group?</string>
 <string name="add_repeat_no">Do Not Add</string>
 <string name="altitude">Altitude</string>
-<string name="app_name">ODK Collect</string>
+<string name="app_name">TurboForm</string>
 <string name="audio_file_error">No audio file was specified.</string>
 <string name="audio_file_invalid">File: %s is not a valid audio file.</string>
 <string name="barcode_scanner_error">Sorry, Barcode Scanner is not installed!</string>
@@ -111,8 +111,8 @@
 <string name="location_accuracy">Accuracy is %s meters.</string>
 <string name="longitude">Longitude</string>
 <string name="main_menu">Main Menu</string>
-<string name="main_menu_details">Magnifying human resources with technology</string>
-<string name="main_menu_message">ODK Collect v1.1.5</string>
+<string name="main_menu_details">Powerful form entry at your fingertips</string>
+<string name="main_menu_message">TurboForm v0.9.0</string>
 <string name="manage_files">Manage Forms And Data</string>
 <string name="mark_finished">Mark Data as Finished</string>
 <string name="no">No</string>

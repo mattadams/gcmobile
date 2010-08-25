@@ -13,8 +13,8 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.odk.collect.android" android:versionCode="8" android:versionName="1.1.4">
-  <application android:icon="@drawable/notes" android:label="@string/app_name" android:theme="@android:style/Theme.Light">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="8" android:versionName="1.1.4-0.9.0" package="com.radicaldynamic.turboform">
+  <application android:label="@string/app_name" android:theme="@android:style/Theme.Light" android:icon="@drawable/app">
   <activity android:label="@string/app_name" android:configChanges="orientation" android:name=".activities.MainMenuActivity">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -25,7 +25,7 @@ the License.
     <activity android:name=".activities.FormEntryActivity" android:label="@string/app_name"> 
     <!-- the intent filter below is a bit of a hack until we create a content provider for forms -->
     <intent-filter>
-    	<action android:name="org.odk.collect.android.action.FormEntry"/>
+    	<action android:name="com.radicaldynamic.turboform.action.FormEntry"/>
 		<category android:name="android.intent.category.DEFAULT"/>
     </intent-filter>
     <!-- this is what we should be doing once we have the content provider working -->
