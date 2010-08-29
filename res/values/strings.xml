@@ -11,7 +11,7 @@
 		License.
 	-->
 <resources>
-	<string name="accept_location">Record Location</string>
+<string name="accept_location">Record Location</string>
 <string name="accuracy">Accuracy</string>
 <string name="trigger">OK. Please continue.</string>
 <string name="add_another">Add Group</string>
@@ -111,7 +111,7 @@
 <string name="location_accuracy">Accuracy is %s meters.</string>
 <string name="longitude">Longitude</string>
 <string name="main_menu">Main Menu</string>
-<string name="main_menu_details">Powerful form entry at your fingertips</string>
+<string name="main_menu_details">Select form to begin new record</string>
 <string name="main_menu_message">TurboForm v0.9.0</string>
 <string name="manage_files">Manage Forms And Data</string>
 <string name="mark_finished">Mark Data as Finished</string>
@@ -120,7 +120,7 @@
 <string name="no_capture">Nothing recorded yet.</string>
 <string name="no_items_display">Nothing available to display.</string>
 <string name="no_items_error">Nothing available to %s!</string>
- <string name="no_sd_error">Sorry, your memory card is not working!</string>
+<string name="no_sd_error">Sorry, your memory card is not working!</string>
 <string name="ok">OK</string>
 <string name="one_capture">Multimedia recorded.</string>
 <string name="password">Password</string>
@@ -162,4 +162,9 @@
 <string name="username">Username</string>
 <string name="view_hierarchy">Go To Prompt</string>
 <string name="yes">Yes</string>
+<string name="tf_add_form_hint">Use &quot;Manage &gt; Forms&quot; to add a form</string>
+<string name="tf_begin_record_hint">Select form to begin new record</string>
+<string name="tf_manage">Manage</string>
+<string name="tf_preferences">Preferences</string>
+<string name="tf_sync">Synchronize</string>
 </resources>

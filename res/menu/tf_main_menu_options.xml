@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:icon="@android:drawable/ic_menu_share" android:id="@+id/tf_sync" android:title="@string/tf_sync"></item>
+<item android:icon="@android:drawable/ic_menu_manage" android:id="@+id/tf_manage" android:title="@string/tf_manage">
+    <menu>
+        <item android:id="@+id/tf_manage_forms" android:title="Forms"></item>
+        <item android:id="@+id/tf_manage_form_records" android:title="Records"></item>
+    </menu>
+</item>
+<item android:icon="@android:drawable/ic_menu_preferences" android:id="@+id/tf_preferences" android:title="@string/tf_preferences">
+    <menu>
+        <item android:title="My Settings" android:id="@+id/tf_personal"></item>
+        <item android:id="@+id/tf_web_publishing" android:title="Web Publishing"></item>
+        <item android:id="@+id/tf_web_services" android:title="TF Web Services"></item>
+    </menu>
+</item>
+</menu>
