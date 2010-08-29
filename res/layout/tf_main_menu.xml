@@ -13,7 +13,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 -->
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
@@ -41,12 +41,23 @@ the License.
     android:paddingBottom="10px"
     android:text="@string/main_menu_details" />  
     -->
+           
+    <Spinner android:id="@+id/filter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"               
+        android:drawSelectorOnTop="true"
+        android:layout_marginTop="6dp"
+        android:prompt="@string/tf_main_menu_filter_prompt"        
+    />
     
     <ListView
         android:id="@id/android:list"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+        android:layout_height="fill_parent"
+        android:layout_below="@id/filter"        
+        />
 
+<!--
     <TextView
         android:id="@android:id/empty"
         android:layout_width="fill_parent"
@@ -58,5 +69,6 @@ the License.
         android:gravity="center"
         android:background="@drawable/white"
         android:textColor="@drawable/black" />
+-->
   
-</LinearLayout>
+</RelativeLayout>

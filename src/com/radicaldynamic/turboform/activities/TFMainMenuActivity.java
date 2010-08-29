@@ -36,10 +36,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.AdapterView.OnItemSelectedListener;
 
 /**
  * Responsible for displaying buttons to launch the major activities. Launches some activities based
@@ -54,9 +58,6 @@ public class TFMainMenuActivity extends ListActivity {
     private static final int FORM_CHOOSER = 0;
     private static final int INSTANCE_CHOOSER = 1;
     private static final int INSTANCE_UPLOADER = 2;
-
-    // menu options
-    private static final int MENU_PREFERENCES = Menu.FIRST;
 
     // buttons
     private Button mEnterDataButton;
@@ -83,34 +84,31 @@ public class TFMainMenuActivity extends ListActivity {
         	createErrorDialog(getString(R.string.no_sd_error),true);
         }
         
-        refreshView();
+        refreshView(FileDbAdapter.TYPE_FORM, null);
         
-        // enter data button. expects a result.
-        /*
-        mEnterDataButton = (Button) findViewById(R.id.enter_data);
-        mEnterDataButton.setOnClickListener(new OnClickListener() {
-            @Override
-			public void onClick(View v) {
-                // make sure we haven't added forms
-                ArrayList<String> forms = FileUtils.getValidFormsAsArrayList(FileUtils.FORMS_PATH);
-                if (forms != null) {
-                    mFormsCount = forms.size();
-                } else {
-                    mFormsCount = 0;
-                }
+        Spinner s1 = (Spinner) findViewById(R.id.filter);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this, R.array.tf_main_menu_list_filters, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        s1.setAdapter(adapter);        
+        s1.setOnItemSelectedListener(
+                new OnItemSelectedListener() {
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        switch (position) {
+                        case 0:
+                            refreshView(FileDbAdapter.TYPE_FORM, null);
+                            break;
+                        case 1:
+                            refreshView(FileDbAdapter.TYPE_INSTANCE, FileDbAdapter.STATUS_INCOMPLETE);
+                            break;
+                        case 2:
+                            refreshView(FileDbAdapter.TYPE_INSTANCE, FileDbAdapter.STATUS_COMPLETE);
+                        }                        
+                    }
 
-                if (mFormsCount == 0 && mAvailableCount == 0) {
-                    Toast.makeText(getApplicationContext(),
-                        getString(R.string.no_items_error, getString(R.string.enter)),
-                        Toast.LENGTH_SHORT).show();
-                } else {
-                    Intent i = new Intent(getApplicationContext(), TFFormChooserList.class);
-                    startActivityForResult(i, FORM_CHOOSER);
-                }
-
-            }
-        });    
-        */    
+                    public void onNothingSelected(AdapterView<?> parent) {        
+                    }
+                });
 
         // review data button. expects a result.
         /*
@@ -185,7 +183,7 @@ public class TFMainMenuActivity extends ListActivity {
     protected void onResume() {
         super.onResume();
         //updateButtons();
-        refreshView();
+        refreshView(FileDbAdapter.TYPE_FORM, null);
     }
 
 
@@ -254,14 +252,14 @@ public class TFMainMenuActivity extends ListActivity {
     /**
      * Get form list from database and insert into view.
      */
-    private void refreshView() {
+    private void refreshView(String type, String status) {
         // Get all forms that match the status.
         FileDbAdapter fda = new FileDbAdapter();
         
         fda.open();
         fda.addOrphanForms();
         
-        Cursor c = fda.fetchFilesByType(FileDbAdapter.TYPE_FORM, null);
+        Cursor c = fda.fetchFilesByType(type, status);
         startManagingCursor(c);
 
         // Create data and views for cursor adapter
@@ -321,14 +319,29 @@ public class TFMainMenuActivity extends ListActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent i = null;
+        
         switch (item.getItemId()) {
-        /*
-            case MENU_PREFERENCES:
-                Intent i = new Intent(this, ServerPreferences.class);
-                startActivity(i);
-                return true;
-        */
+        case R.id.tf_sync:
+            return true;
+        case R.id.tf_manage_forms:
+            i = new Intent(this, TFManageForms.class);
+            startActivity(i);
+            return true;
+        case R.id.tf_manage_form_records:
+            return true;
+        case R.id.tf_personal_preferences:
+            i = new Intent(this, ServerPreferences.class);
+            startActivity(i);
+            return true;
+        case R.id.tf_simple_sharing:
+            return true;
+        case R.id.tf_web_publishing:
+            return true;
+        case R.id.tf_web_services:
+            return true;        
         }
+        
         return super.onOptionsItemSelected(item);
     }
     

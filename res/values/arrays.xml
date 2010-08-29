@@ -37,5 +37,12 @@ the License.
         <item>saved</item>
         <item>done</item>
     </string-array>
-
+    
+    <string-array name="tf_main_menu_list_filters">
+        <item>All forms</item>        
+        <item>Forms with incomplete records</item>
+        <item>Forms with completed records</item>
+        <item>Forms with new records</item>
+        <item>Forms without records</item>        
+    </string-array>
 </resources>
