@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 <item android:icon="@android:drawable/ic_menu_share" android:id="@+id/tf_sync" android:title="@string/tf_sync" android:enabled="false"></item>
 <item android:icon="@android:drawable/ic_menu_manage" android:id="@+id/tf_manage" android:title="@string/tf_manage">
-    <menu>
+    <!-- <menu>
         <item android:id="@+id/tf_manage_forms" android:title="@string/forms"></item>
         <item android:id="@+id/tf_manage_form_records" android:title="@string/tf_records"></item>
-    </menu>
+    </menu> -->
 </item>
 <item android:icon="@android:drawable/ic_menu_preferences" android:id="@+id/tf_preferences" android:title="@string/tf_preferences">
     <menu>

@@ -162,11 +162,12 @@
 <string name="username">Username</string>
 <string name="view_hierarchy">Go To Prompt</string>
 <string name="yes">Yes</string>
-<string name="tf_add_form_hint">Use &quot;Manage &gt; Forms&quot; to add a form</string>
+<string name="tf_add_form_hint">Use &quot;Manage Forms&quot; to add a form</string>
 <string name="tf_begin_record_hint">Select form to begin new record</string>
 <string name="tf_default_main_menu_filter_prompt">All forms</string>
 <string name="tf_main_menu_filter_prompt">Show</string>
-<string name="tf_manage">Manage</string>
+<string name="tf_main_menu_filter_default">All forms</string>
+<string name="tf_manage">Manage Forms</string>
 <string name="tf_manage_item">Manage %s</string>
 <string name="tf_personal_preferences">My settings</string>
 <string name="tf_preferences">Preferences</string>

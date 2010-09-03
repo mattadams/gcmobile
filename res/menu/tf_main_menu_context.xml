@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:title="Browse records" android:id="@+id/item01"></item>
+<item android:title="Export records" android:id="@+id/item02"></item>
+<item android:title="Import records" android:id="@+id/item03"></item>
+<item android:title="Search records" android:id="@+id/item04"></item>
+
+</menu>

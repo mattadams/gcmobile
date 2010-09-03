@@ -22,7 +22,6 @@ import com.radicaldynamic.turboform.database.FileDbAdapter;
 import com.radicaldynamic.turboform.preferences.ServerPreferences;
 import com.radicaldynamic.turboform.utilities.FileUtils;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.ComponentName;
@@ -30,19 +29,19 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 /**
@@ -53,23 +52,6 @@ import android.widget.AdapterView.OnItemSelectedListener;
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
 public class TFMainMenuActivity extends ListActivity {
-
-    // request codes for returning chosen form to main menu.
-    private static final int FORM_CHOOSER = 0;
-    private static final int INSTANCE_CHOOSER = 1;
-    private static final int INSTANCE_UPLOADER = 2;
-
-    // buttons
-    private Button mEnterDataButton;
-    private Button mManageFilesButton;
-    private Button mSendDataButton;
-    private Button mReviewDataButton;
-
-    // counts for buttons
-    private static int mSavedCount;
-    private static int mCompletedCount;
-    private static int mAvailableCount;
-    private static int mFormsCount;
 
 	private AlertDialog mAlertDialog;	
 	
@@ -85,11 +67,12 @@ public class TFMainMenuActivity extends ListActivity {
         }
         
         refreshView(FileDbAdapter.TYPE_FORM, null);
+        registerForContextMenu(getListView());
         
-        Spinner s1 = (Spinner) findViewById(R.id.filter);
+        Spinner s1 = (Spinner) findViewById(R.id.filter);        
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                this, R.array.tf_main_menu_list_filters, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                this, R.array.tf_main_menu_list_filters, android.R.layout.simple_spinner_item);        
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);        
         s1.setAdapter(adapter);        
         s1.setOnItemSelectedListener(
                 new OnItemSelectedListener() {
@@ -108,59 +91,7 @@ public class TFMainMenuActivity extends ListActivity {
 
                     public void onNothingSelected(AdapterView<?> parent) {        
                     }
-                });
-
-        // review data button. expects a result.
-        /*
-        mReviewDataButton = (Button) findViewById(R.id.review_data);
-        mReviewDataButton.setOnClickListener(new OnClickListener() {
-            @Override
-			public void onClick(View v) {
-                if ((mSavedCount + mCompletedCount) == 0) {
-                    Toast.makeText(getApplicationContext(),
-                        getString(R.string.no_items_error, getString(R.string.review)),
-                        Toast.LENGTH_SHORT).show();
-                } else {
-                    Intent i = new Intent(getApplicationContext(), InstanceChooserList.class);
-                    i.putExtra(FileDbAdapter.KEY_STATUS, FileDbAdapter.STATUS_COMPLETE);
-                    startActivityForResult(i, INSTANCE_CHOOSER);
-                }
-
-            }
-        });
-        */
-
-        // send data button. expects a result.
-        /*
-        mSendDataButton = (Button) findViewById(R.id.send_data);
-        mSendDataButton.setOnClickListener(new OnClickListener() {
-            @Override
-			public void onClick(View v) {
-                if (mCompletedCount == 0) {
-                    Toast.makeText(getApplicationContext(),
-                        getString(R.string.no_items_error, getString(R.string.send)),
-                        Toast.LENGTH_SHORT).show();
-                } else {
-                    Intent i = new Intent(getApplicationContext(), InstanceUploaderList.class);
-                    startActivityForResult(i, INSTANCE_UPLOADER);
-                }
-
-            }
-        });
-        */
-
-        // manage forms button. no result expected.
-        /*
-        mManageFilesButton = (Button) findViewById(R.id.manage_forms);
-        mManageFilesButton.setText(getString(R.string.manage_files));
-        mManageFilesButton.setOnClickListener(new OnClickListener() {
-            @Override
-			public void onClick(View v) {
-                Intent i = new Intent(getApplicationContext(), FileManagerTabs.class);
-                startActivity(i);
-            }
-        });
-        */
+                });        
     }
 
     /*
@@ -182,51 +113,17 @@ public class TFMainMenuActivity extends ListActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        //updateButtons();
+
+        /* Spinner must reflect results of refreshView() below */
+        Spinner s1 = (Spinner) findViewById(R.id.filter); 
+        s1.setSelection(0);
+        
         refreshView(FileDbAdapter.TYPE_FORM, null);
-    }
-
-
-    /**
-     * Upon return, check intent for data needed to launch other activities.
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        /*
-        if (resultCode == RESULT_CANCELED) {
-            return;
-        }
-
-        String formPath = null;
-        Intent i = null;
-        
-        switch (requestCode) {
-            // returns with a form path, start entry
-            case FORM_CHOOSER:
-                formPath = intent.getStringExtra(FormEntryActivity.KEY_FORMPATH);
-                i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
-                i.putExtra(FormEntryActivity.KEY_FORMPATH, formPath);
-                startActivity(i);
-                break;
-            // returns with an instance path, start entry
-            case INSTANCE_CHOOSER:
-                formPath = intent.getStringExtra(FormEntryActivity.KEY_FORMPATH);
-                String instancePath = intent.getStringExtra(FormEntryActivity.KEY_INSTANCEPATH);
-                i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
-                Log.e("Carl***", "loading formpath: " + formPath + " and instance path= " + instancePath);
-                i.putExtra(FormEntryActivity.KEY_FORMPATH, formPath);
-                i.putExtra(FormEntryActivity.KEY_INSTANCEPATH, instancePath);
-                startActivity(i);
-                break;
-            default:
-                break;
-        }
-        
-        super.onActivityResult(requestCode, resultCode, intent);
-        */
     }
     
     /**
+     * Provide some helpful hints when the application is started post onCreate().
+     * 
      * Called when the main window associated with the activity has been attached to the window manager.
      * This is used because we cannot open the options menu during onCreate().
      */
@@ -308,14 +205,28 @@ public class TFMainMenuActivity extends ListActivity {
     }
     
     @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.tf_main_menu_context, menu);
+    }
+    
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+      // AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+      switch (item.getItemId()) {
+      default:
+        return super.onContextItemSelected(item);
+      }
+    }
+    
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        // menu.add(0, MENU_PREFERENCES, 0, getString(R.string.server_preferences)).setIcon(android.R.drawable.ic_menu_preferences);
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.tf_main_menu_options, menu);
         return true;
-    }
-
+    } 
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -324,12 +235,13 @@ public class TFMainMenuActivity extends ListActivity {
         switch (item.getItemId()) {
         case R.id.tf_sync:
             return true;
-        case R.id.tf_manage_forms:
+        case R.id.tf_manage:
+        //case R.id.tf_manage_forms:
             i = new Intent(this, TFManageForms.class);
             startActivity(i);
             return true;
-        case R.id.tf_manage_form_records:
-            return true;
+        //case R.id.tf_manage_form_records:
+        //    return true;
         case R.id.tf_personal_preferences:
             i = new Intent(this, ServerPreferences.class);
             startActivity(i);
@@ -376,39 +288,5 @@ public class TFMainMenuActivity extends ListActivity {
 		if (mAlertDialog != null && mAlertDialog.isShowing()) {
 			mAlertDialog.dismiss();
 		}
-	}	
-    
-    /**
-     * Updates the button count and sets the text in the buttons.
-     */
-    private void updateButtons() {
-        // create adapter
-        FileDbAdapter fda = new FileDbAdapter();
-        fda.open();
-
-        // count for saved instances
-        Cursor c =
-            fda.fetchFilesByType(FileDbAdapter.TYPE_INSTANCE, FileDbAdapter.STATUS_INCOMPLETE);
-        mSavedCount = c.getCount();
-        c.close();
-
-        // count for completed instances
-        c = fda.fetchFilesByType(FileDbAdapter.TYPE_INSTANCE, FileDbAdapter.STATUS_COMPLETE);
-        mCompletedCount = c.getCount();
-        c.close();
-
-        // count for downloaded forms
-        ArrayList<String> forms = FileUtils.getValidFormsAsArrayList(FileUtils.FORMS_PATH);
-        if (forms != null) {
-            mFormsCount = forms.size();
-        } else {
-            mFormsCount = 0;
-        }
-        fda.close();        
-        
-        mEnterDataButton.setText(getString(R.string.enter_data_button, mFormsCount));        
-        mSendDataButton.setText(getString(R.string.send_data_button, mCompletedCount));
-        mReviewDataButton.setText(getString(R.string.review_data_button, mSavedCount
-                + mCompletedCount));
-    }
+	}
 }
