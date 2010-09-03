@@ -27,14 +27,15 @@ import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xform.util.XFormUtils;
-
+import com.radicaldynamic.turboform.R;
+import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.listeners.FormLoaderListener;
 import com.radicaldynamic.turboform.logic.FileReferenceFactory;
 import com.radicaldynamic.turboform.utilities.FileUtils;
 
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -120,16 +121,32 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         File formXml = new File(formPath);
         File formBin = new File(FileUtils.CACHE_PATH + FileUtils.getMd5Hash(formXml) + ".formdef");
 
+        if ( formXml.exists() && formBin.exists() &&
+        	 formBin.lastModified() < formXml.lastModified() ) {
+        	// the cache is stale w.r.t. the xml -- delete cache.
+        	// Mainly useful for development.  Could be more 
+        	// important going forward if users are updating 
+        	// or adding IAV features to existing forms.
+        	Log.i(t,"Stale .cache file -- deleting!");
+        	formBin.delete();
+        }
+            
         if (formBin.exists()) {
-            // if we have binary, deserialize binary
-            fd = deserializeFormDef(formBin);
-            if (fd == null) {
-                return null;
-            }
-        } else {
-            // no binary, read from xml
+        	// if we have binary, deserialize binary
+        	try {
+        		fd = deserializeFormDef(formBin);
+        	} catch ( Exception e ) {
+        		// didn't load -- delete the cache and try plain xml
+        		formBin.delete();
+        	}
+        }
+        
+        if ( fd == null ) {
+            // no binary, or didn't load -- read from xml
             try {
-                fis = new FileInputStream(formXml);
+            	Log.i(t,"Attempting read of " + formXml.getAbsolutePath());
+
+            	fis = new FileInputStream(formXml);
                 fd = XFormUtils.getFormFromInputStream(fis);
                 if (fd == null) {
                     return null;
@@ -152,27 +169,32 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         FormEntryModel fem = new FormEntryModel(fd);
         fec = new FormEntryController(fem);
 
-        // import existing data into formdef
-        if (instancePath != null) {
-            // This order is important.  Import data, then initialize.
-            importData(instancePath, fec);
-            fd.initialize(false);
-        } else {
-            fd.initialize(true);
+        try {
+	        // import existing data into formdef
+	        if (instancePath != null) {
+	            // This order is important.  Import data, then initialize.
+	            importData(instancePath, fec);
+	            fd.initialize(false);
+	        } else {
+	            fd.initialize(true);
+	        }
+        } catch ( Exception e ) {
+        	e.printStackTrace();
+            Toast.makeText(Collect.getInstance().getApplicationContext(), 
+                    Collect.getInstance().getString(R.string.load_error,
+                    		formXml.getName()) + " : " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();
+        	return null;
         }
 
-        // set paths to /sdcard/odk/forms/formfilename-media/
+        // set paths to FORMS_PATH + formfilename-media/
         // This is a singleton, how do we ensure that we're not doing this
         // multiple times?
-        String mediaPath =
-            formXml.getName().substring(0, formXml.getName().lastIndexOf("."));
+        String mediaPath = FileUtils.getFormMediaPath(formXml);
         
-        Log.e("Carl", "mediaPath = " + mediaPath);
-       
         if (ReferenceManager._().getFactories().length == 0) {
             ReferenceManager._().addReferenceFactory(
-                new FileReferenceFactory(Environment.getExternalStorageDirectory() + "/odk/forms/"
-                        + mediaPath + "-media"));
+                new FileReferenceFactory(mediaPath));
             ReferenceManager._()
                     .addRootTranslator(new RootTranslator("jr://images/", "jr://file/"));
             ReferenceManager._().addRootTranslator(new RootTranslator("jr://audio/", "jr://file/"));
@@ -235,28 +257,41 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     public FormDef deserializeFormDef(File formDef) {
 
         // TODO: any way to remove reliance on jrsp?
+    	Log.i(t,"Attempting read of " + formDef.getAbsolutePath());
 
         // need a list of classes that formdef uses
         PrototypeManager.registerPrototypes(SERIALIABLE_CLASSES);
         FileInputStream fis = null;
         FormDef fd = null;
+        DataInputStream dis = null;
         try {
             // create new form def
             fd = new FormDef();
             fis = new FileInputStream(formDef);
-            DataInputStream dis = new DataInputStream(fis);
+            dis = new DataInputStream(fis);
 
             // read serialized formdef into new formdef
             fd.readExternal(dis, ExtUtil.defaultPrototypes());
-            dis.close();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            fd = null;
         } catch (IOException e) {
             e.printStackTrace();
+            fd = null;
         } catch (DeserializationException e) {
             e.printStackTrace();
+            fd = null;
+        } finally {
+        	if ( dis != null ) {
+        		try {
+        			dis.close();
+        		} catch ( IOException e ) {
+        			// ignore...
+        		}
+        	}
         }
+        
 
         return fd;
     }

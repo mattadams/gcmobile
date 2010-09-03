@@ -28,8 +28,12 @@ import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.ContextMenu;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -37,12 +41,15 @@ import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ImageView.ScaleType;
 
 /**
  * Responsible for displaying buttons to launch the major activities. Launches some activities based
@@ -52,23 +59,28 @@ import android.widget.AdapterView.OnItemSelectedListener;
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
 public class TFMainMenuActivity extends ListActivity {
+    
+    // true if splash screen should be shown during onCreate
+    private static boolean mShowSplash = true;
 
 	private AlertDialog mAlertDialog;	
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.tf_main_menu);
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.main_menu));
         
-        // Quit early if there is something wrong with the SD card
+        // if sd card error, quit
         if (!FileUtils.storageReady()) {
-        	createErrorDialog(getString(R.string.no_sd_error),true);
+            createErrorDialog(getString(R.string.no_sd_error),true);
         }
+        
+        displaySplash();
+        setContentView(R.layout.tf_main_menu);
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.main_menu));        
         
         refreshView(FileDbAdapter.TYPE_FORM, null);
         registerForContextMenu(getListView());
-        
+       
         Spinner s1 = (Spinner) findViewById(R.id.filter);        
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this, R.array.tf_main_menu_list_filters, android.R.layout.simple_spinner_item);        
@@ -122,6 +134,16 @@ public class TFMainMenuActivity extends ListActivity {
     }
     
     /**
+     * onStop
+     * Re-enable the splash screen.
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mShowSplash = true;
+    }
+    
+    /**
      * Provide some helpful hints when the application is started post onCreate().
      * 
      * Called when the main window associated with the activity has been attached to the window manager.
@@ -144,6 +166,59 @@ public class TFMainMenuActivity extends ListActivity {
                         Toast.LENGTH_LONG).show();
             }
         }       
+    }
+    
+    /**
+     * displaySplash
+     * 
+     * Shows the splash screen if the mShowSplash member variable is true.
+     * Otherwise a no-op.
+     */
+    void displaySplash() {
+        if ( ! mShowSplash ) return;
+        
+        // fetch the splash screen Drawable
+        Drawable image = null;
+        try {
+            // attempt to load the configured default splash screen
+            BitmapDrawable bitImage = new BitmapDrawable( getResources(), 
+                                            FileUtils.SPLASH_SCREEN_FILE_PATH );
+            if ( bitImage.getBitmap() != null &&
+                 bitImage.getIntrinsicHeight() > 0 &&
+                 bitImage.getIntrinsicWidth() > 0 ) {
+                image = bitImage;
+            }
+        }
+        catch (Exception e) {
+            // TODO: log exception for debugging?
+        }
+        
+        if ( image == null ) {
+            // no splash provided, so do nothing...
+            return;
+        }
+
+        // create ImageView to hold the Drawable...
+        ImageView view = new ImageView(getApplicationContext());
+        // initialize it with Drawable and full-screen layout parameters
+        view.setImageDrawable(image);
+        int width = getWindowManager().getDefaultDisplay().getWidth();
+        int height = getWindowManager().getDefaultDisplay().getHeight();
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams( width, height, 0 );
+        view.setLayoutParams(lp);
+        view.setScaleType(ScaleType.CENTER);
+        view.setBackgroundColor(Color.WHITE);
+
+        // and wrap the image view in a frame layout so that the 
+        // full-screen layout parameters are honored...
+        FrameLayout layout = new FrameLayout(getApplicationContext());
+        layout.addView(view);
+
+        // Create the toast and set the view to be that of the FrameLayout
+        Toast t = Toast.makeText(getApplicationContext(), "splash screen", Toast.LENGTH_SHORT);
+        t.setView(layout);
+        t.setGravity(Gravity.CENTER, 0, 0);
+        t.show();
     }
     
     /**
@@ -174,7 +249,7 @@ public class TFMainMenuActivity extends ListActivity {
         
         setListAdapter(instances);        
        
-        fda.close();       
+        fda.close();
     }
 
 
@@ -201,7 +276,7 @@ public class TFMainMenuActivity extends ListActivity {
             setResult(RESULT_OK, i);
 
             finish();
-        }        
+        }       
     }
     
     @Override

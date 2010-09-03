@@ -18,14 +18,15 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
-import org.javarosa.core.model.data.IAnswerData;
+import org.javarosa.core.model.GroupDef;
 import org.javarosa.form.api.FormEntryCaption;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.model.xform.XFormsModule;
 import com.radicaldynamic.turboform.R;
-
+import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.database.FileDbAdapter;
 import com.radicaldynamic.turboform.listeners.FormLoaderListener;
 import com.radicaldynamic.turboform.listeners.FormSavedListener;
@@ -34,7 +35,10 @@ import com.radicaldynamic.turboform.tasks.FormLoaderTask;
 import com.radicaldynamic.turboform.tasks.SaveToDiskTask;
 import com.radicaldynamic.turboform.utilities.FileUtils;
 import com.radicaldynamic.turboform.utilities.GestureDetector;
+import com.radicaldynamic.turboform.views.GroupView;
+import com.radicaldynamic.turboform.views.AbstractFolioView;
 import com.radicaldynamic.turboform.views.QuestionView;
+import com.radicaldynamic.turboform.views.layout.GroupLayoutFactory;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -45,14 +49,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore.Images;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -65,6 +70,7 @@ import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -118,12 +124,12 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 	private String mInstancePath;
 	private GestureDetector mGestureDetector;
 
-	public static FormEntryController mFormEntryController;
 	public FormEntryModel mFormEntryModel;
 
 	private Animation mInAnimation;
 	private Animation mOutAnimation;
 
+	private Handler mHandler;
 	private RelativeLayout mRelativeLayout;
 	private View mCurrentView;
 
@@ -150,6 +156,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		setTitle(getString(R.string.app_name) + " > "
 				+ getString(R.string.loading_form));
 
+		// create handler for IFolioView ui updates from model...
+		mHandler = new Handler(Collect.getInstance().getMainLooper());
+		
 		// mProgressBar = (ProgressBar) findViewById(R.id.progressbar);
 		mRelativeLayout = (RelativeLayout) findViewById(R.id.rl);
 
@@ -187,14 +196,15 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		} else if (data instanceof SaveToDiskTask) {
 			mSaveToDiskTask = (SaveToDiskTask) data;
 		} else if (data == null) {
-			if (!newForm) {
-				mFormEntryModel = mFormEntryController.getModel();
+			FormEntryController fec = Collect.getInstance().getFormEntryController();
+			if (fec != null && !newForm) {
+				mFormEntryModel = fec.getModel();
 				refreshCurrentView();
 				return;
 			}
 
 			// Not a restart from a screen orientation change (or other).
-			mFormEntryController = null;
+			Collect.getInstance().setFormEntryController(null);
 
 			Intent intent = getIntent();
 			if (intent != null) {
@@ -239,13 +249,13 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		switch (requestCode) {
 		case BARCODE_CAPTURE:
 			String sb = intent.getStringExtra("SCAN_RESULT");
-			((QuestionView) mCurrentView).setBinaryData(sb);
+			((AbstractFolioView) mCurrentView).setBinaryData(sb);
 			saveCurrentAnswer(false);
 			break;
 		case IMAGE_CAPTURE:
 			// We saved the image to the tempfile_path, but we really want
 			// it to be in:
-			// /sdcard/odk/instances/[current instnace]/something.jpg
+			// INSTANCES_PATH + [current instance]/something.jpg
 			// so we move it there before inserting it into the content
 			// provider.
 			File fi = new File(FileUtils.TMPFILE_PATH);
@@ -277,20 +287,20 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 					Images.Media.EXTERNAL_CONTENT_URI, values);
 			Log.i(t, "Inserting image returned uri = " + imageuri.toString());
 
-			((QuestionView) mCurrentView).setBinaryData(imageuri);
+			((AbstractFolioView) mCurrentView).setBinaryData(imageuri);
 			saveCurrentAnswer(false);
 			refreshCurrentView();
 			break;
 		case AUDIO_CAPTURE:
 		case VIDEO_CAPTURE:
 			Uri um = intent.getData();
-			((QuestionView) mCurrentView).setBinaryData(um);
+			((AbstractFolioView) mCurrentView).setBinaryData(um);
 			saveCurrentAnswer(false);
 			refreshCurrentView();
 			break;
 		case LOCATION_CAPTURE:
 			String sl = intent.getStringExtra(LOCATION_RESULT);
-			((QuestionView) mCurrentView).setBinaryData(sl);
+			((AbstractFolioView) mCurrentView).setBinaryData(sl);
 			saveCurrentAnswer(false);
 			break;
 		}
@@ -309,11 +319,17 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		while (event == FormEntryController.EVENT_PROMPT_NEW_REPEAT
 				|| event == FormEntryController.EVENT_GROUP
 				|| event == FormEntryController.EVENT_REPEAT) {
-			event = mFormEntryController.stepToPreviousEvent();
+			if ( currentPromptIsGroupFolio() ) break;
+			event = stepToPreviousEvent();
 		}
+
+		// and reset index to the containing folio...
+		FormIndex index = mFormEntryModel.getFormIndex();
+		event = jumpToContainingFolio(index);
+
 		Log.e(t, "refreshing view for event: " + event);
 
-		View current = createView(event);
+		View current = createView(event, index);
 		showView(current, AnimationType.FADE);
 	}
 
@@ -336,8 +352,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		// sm.add(0, MENU_SAVE_COMPLETE, 0,
 		// getString(R.string.finalize_for_send));
 
-		menu.add(0, MENU_SAVE, 0, R.string.save_all_answers).setIcon(
-				android.R.drawable.ic_menu_save);
+		menu.add(0, MENU_SAVE, 0, getString(R.string.save_all_answers))
+				.setIcon(android.R.drawable.ic_menu_save);
 		menu.add(0, MENU_CLEAR, 0, getString(R.string.clear_answer))
 				.setIcon(android.R.drawable.ic_menu_close_clear_cancel)
 				.setEnabled(!mFormEntryModel.isIndexReadonly() ? true : false);
@@ -351,8 +367,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		menu.add(0, MENU_LANGUAGES, 0, getString(R.string.change_language))
 				.setIcon(R.drawable.ic_menu_start_conversation)
 				.setEnabled(
-						(mFormEntryModel.getLanguages() == null || mFormEntryController
-								.getModel().getLanguages().length == 1) ? false
+						(mFormEntryModel.getLanguages() == null || 
+						 mFormEntryModel.getLanguages().length == 1) ? false
 								: true);
 		return true;
 	}
@@ -392,10 +408,34 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 	}
 
 	/**
-	 * @return true if the current View represents a question in the form
+	 * @return true if the current View represents a question or group folio in the form
 	 */
 	private boolean currentPromptIsQuestion() {
-		return (mFormEntryModel.getEvent() == FormEntryController.EVENT_QUESTION);
+		return (mFormEntryModel.getEvent() == FormEntryController.EVENT_QUESTION) ||
+				currentPromptIsGroupFolio();
+	}
+
+	/**
+	 * @param appearance appearance attribute of an xform group tag
+	 * @return true if the group should render as a multi-widget folio
+	 */
+	private boolean isAppearanceGroupFolio(String appearance) {
+        return ( GroupLayoutFactory.FIELD_LIST_APPEARANCE.equals(appearance) ||
+        		GroupLayoutFactory.CONDITIONAL_FIELD_LIST_APPEARANCE.equals(appearance) );
+	}
+
+	/**
+	 * @return true if the current javarosa index is a group that should 
+	 * render as a multi-widget folio.
+	 */
+	private boolean currentPromptIsGroupFolio() {
+		if ( mFormEntryModel.getEvent() != FormEntryController.EVENT_GROUP) return false;
+		
+        FormDef fd = mFormEntryModel.getForm();
+        FormIndex index = mFormEntryModel.getFormIndex();
+        GroupDef gd = (GroupDef) fd.getChild(index);
+        if ( gd.getRepeat() ) return false;
+        return isAppearanceGroupFolio(gd.getAppearanceAttr());
 	}
 
 	/**
@@ -405,27 +445,24 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 	 * @return true on success, false otherwise
 	 */
 	private boolean saveCurrentAnswer(boolean evaluateConstraints) {
-		if (!mFormEntryModel.isIndexReadonly()
-				&& mFormEntryModel.getEvent() == FormEntryController.EVENT_QUESTION) {
-			int saveStatus = saveAnswer(
-					((QuestionView) mCurrentView).getAnswer(),
-					evaluateConstraints);
-			if (evaluateConstraints
-					&& saveStatus != FormEntryController.ANSWER_OK) {
-				createConstraintToast(mFormEntryModel.getQuestionPrompt()
-						.getConstraintText(), saveStatus);
-				return false;
-			}
-		}
-		return true;
+
+		// we can get here as part of the save-and-exit page, in which 
+		// case we have already saved all values.  We can also get here
+		// via a quit-app pop-up menu or a menu...save.
+		if ( !(mCurrentView instanceof AbstractFolioView) ) return true;
+		
+		return ((AbstractFolioView) mCurrentView).saveCurrentAnswer(evaluateConstraints);
 	}
 
 	/**
 	 * Clears the answer on the screen.
 	 */
 	private void clearCurrentAnswer() {
-		if (!mFormEntryModel.isIndexReadonly())
-			((QuestionView) mCurrentView).clearAnswer();
+		// since we have group and composite views, we have to ask the 
+		// view what the actual form index is...
+		if ( !(mCurrentView instanceof AbstractFolioView) ) return;
+
+		((AbstractFolioView) mCurrentView).clearAnswer(true);
 	}
 
 	/*
@@ -447,7 +484,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 			return mSaveToDiskTask;
 
 		// mFormEntryController is static so we don't need to pass it.
-		if (mFormEntryController != null && currentPromptIsQuestion()) {
+		if (Collect.getInstance().getFormEntryController() != null &&
+				currentPromptIsQuestion()) {
 			saveCurrentAnswer(false);
 		}
 		return null;
@@ -460,18 +498,56 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 	 * @return newly created View
 	 */
 	private View createView(int event) {
+		return createView(event, null);
+	}
+
+	/**
+	 * Creates a view given the View type and an event
+	 * 
+	 * @param event
+	 * @param subIndex index within the folio to highlight...
+	 * @return newly created View
+	 */
+	private View createView(int event, FormIndex subIndex) {
 		setTitle(getString(R.string.app_name) + " > "
 				+ mFormEntryModel.getFormTitle());
 
+		/**
+		 * Unregister the existing current view from the underlying model.
+		 * Otherwise, the model will retain references to the visited Views,
+		 * and we'll burn memory.
+		 */
+		if ( mCurrentView != null && mCurrentView instanceof AbstractFolioView ) {
+			((AbstractFolioView) mCurrentView).unregister();
+		}
+		
 		switch (event) {
 		case FormEntryController.EVENT_BEGINNING_OF_FORM:
-			View startView = View
-					.inflate(this, R.layout.form_entry_start, null);
-			setTitle(getString(R.string.app_name) + " > "
-					+ mFormEntryModel.getFormTitle());
-			((TextView) startView.findViewById(R.id.description))
-					.setText(getString(R.string.enter_data_description,
-							mFormEntryModel.getFormTitle()));
+        	View startView;
+		    startView = View.inflate(this, R.layout.form_entry_start, null);
+		    setTitle(getString(R.string.app_name) + " > " + mFormEntryModel.getFormTitle());
+		    ((TextView) startView.findViewById(R.id.form_full_title)).setText(mFormEntryModel.getFormTitle());
+		    Drawable image = null;
+		    try {
+		    	// attempt to load the configured default splash screen
+				BitmapDrawable bitImage = new BitmapDrawable( getResources(), 
+												FileUtils.FORM_LOGO_FILE_PATH );
+				if ( bitImage.getBitmap() != null &&
+					 bitImage.getIntrinsicHeight() > 0 &&
+					 bitImage.getIntrinsicWidth() > 0 ) {
+					image = bitImage;
+				}
+		    }
+		    catch (Exception e) {
+		    	// TODO: log exception for debugging?
+		    }
+		    
+		    if ( image == null ) {
+		    	// show the opendatakit zig...
+		    	image = getResources().getDrawable(R.drawable.opendatakit_zig);
+		    }
+
+		    ((ImageView) startView.findViewById(R.id.form_start_bling)).setImageDrawable(image);
 			return startView;
 		case FormEntryController.EVENT_END_OF_FORM:
 			View endView = View.inflate(this, R.layout.form_entry_end, null);
@@ -495,10 +571,15 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 					});
 
 			return endView;
+		case FormEntryController.EVENT_GROUP:
+			GroupView gv = new GroupView(mHandler, mFormEntryModel.getFormIndex(), this);
+			gv.buildView(mInstancePath, getGroupsForCurrentIndex());
+			// if we came from a constraint violation, set the focus to the violated field
+			if ( subIndex != null ) gv.setSubFocus(subIndex);
+			return gv;
 		case FormEntryController.EVENT_QUESTION:
-			QuestionView qv = new QuestionView(this, mInstancePath);
-			qv.buildView(mFormEntryModel.getQuestionPrompt(),
-					getGroupsForCurrentIndex());
+			QuestionView qv = new QuestionView(mHandler, mFormEntryModel.getFormIndex(), this);
+			qv.buildView(mInstancePath, getGroupsForCurrentIndex());
 			return qv;
 		default:
 			Log.e(t, "Attempted to create a view that does not exist.");
@@ -558,14 +639,16 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		if (currentPromptIsQuestion()) {
 			if (!saveCurrentAnswer(true)) {
 				// A constraint was violated so a dialog should be showing.
+				mBeenSwiped = false;
 				return;
 			}
 		}
 
 		if (mFormEntryModel.getEvent() != FormEntryController.EVENT_END_OF_FORM) {
-			int event = getNextNotGroupEvent();
+			int event = getNextFolioEvent();
 
 			switch (event) {
+			case FormEntryController.EVENT_GROUP:
 			case FormEntryController.EVENT_QUESTION:
 			case FormEntryController.EVENT_END_OF_FORM:
 				View next = createView(event);
@@ -593,14 +676,21 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		}
 
 		if (mFormEntryModel.getEvent() != FormEntryController.EVENT_BEGINNING_OF_FORM) {
-			int event = mFormEntryController.stepToPreviousEvent();
+			int event = stepToPreviousEvent();
 
 			while (event != FormEntryController.EVENT_BEGINNING_OF_FORM
 					&& event != FormEntryController.EVENT_QUESTION) {
-				event = mFormEntryController.stepToPreviousEvent();
+				if ( currentPromptIsGroupFolio() ) break;
+				event = stepToPreviousEvent();
 			}
 
-			View next = createView(event);
+			// and reset index to the containing folio...
+			FormIndex index = mFormEntryModel.getFormIndex();
+			event = jumpToContainingFolio(index);
+
+			Log.e(t, "refreshing view for event: " + event);
+
+			View next = createView(event, index);
 			showView(next, AnimationType.LEFT);
 		} else {
 			mBeenSwiped = false;
@@ -656,9 +746,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		mRelativeLayout.addView(mCurrentView, lp);
 
 		mCurrentView.startAnimation(mInAnimation);
-		if (mCurrentView instanceof QuestionView
-				&& !mFormEntryModel.getQuestionPrompt().isReadOnly())
-			((QuestionView) mCurrentView).setFocus(this);
+		if (mCurrentView instanceof AbstractFolioView )
+			((AbstractFolioView) mCurrentView).setFocus(this);
 		else {
 			InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 			inputManager.hideSoftInputFromWindow(mCurrentView.getWindowToken(),
@@ -677,40 +766,6 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 	 */
 
 	//
-	/**
-	 * Creates and displays a dialog displaying the violated constraint.
-	 */
-	private void createConstraintToast(String constraintText, int saveStatus) {
-		switch (saveStatus) {
-		case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
-			if (constraintText == null) {
-				constraintText = getString(R.string.invalid_answer_error);
-			}
-			break;
-		case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
-			constraintText = getString(R.string.required_answer_error);
-			break;
-		}
-
-		showCustomToast(constraintText);
-		mBeenSwiped = false;
-	}
-
-	private void showCustomToast(String message) {
-		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-		View view = inflater.inflate(R.layout.toast_view, null);
-
-		// set the text in the view
-		TextView tv = (TextView) view.findViewById(R.id.message);
-		tv.setText(message);
-
-		Toast t = new Toast(this);
-		t.setView(view);
-		t.setDuration(Toast.LENGTH_SHORT);
-		t.setGravity(Gravity.CENTER, 0, 0);
-		t.show();
-	}
 
 	/**
 	 * Creates and displays a dialog asking the user if they'd like to create a
@@ -724,7 +779,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 			public void onClick(DialogInterface dialog, int i) {
 				switch (i) {
 				case DialogInterface.BUTTON1: // yes, repeat
-					mFormEntryController.newRepeat();
+					FormEntryController fec = Collect.getInstance().getFormEntryController();
+					fec.newRepeat();
 					showNextView();
 					break;
 				case DialogInterface.BUTTON2: // no, no repeat
@@ -799,8 +855,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 			public void onClick(DialogInterface dialog, int i) {
 				switch (i) {
 				case DialogInterface.BUTTON1: // yes
-					FormIndex validIndex = mFormEntryController.deleteRepeat();
-					mFormEntryController.jumpToIndex(validIndex);
+					FormEntryController fec = Collect.getInstance().getFormEntryController();
+					FormIndex validIndex = fec.deleteRepeat();
+					jumpToContainingFolio(validIndex);
 					showPreviousView();
 					break;
 				case DialogInterface.BUTTON2: // no
@@ -1061,8 +1118,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 							@Override
 							public void onClick(DialogInterface dialog,
 									int whichButton) {
-								mFormEntryController
-										.setLanguage(languages[whichButton]);
+								FormEntryController fec = Collect.getInstance().getFormEntryController();
+								fec.setLanguage(languages[whichButton]);
 								dialog.dismiss();
 								if (currentPromptIsQuestion()) {
 									saveCurrentAnswer(false);
@@ -1209,6 +1266,15 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 	 */
 	@Override
 	protected void onDestroy() {
+		/**
+		 * Unregister the existing current view from the underlying model.
+		 * Otherwise, the model will retain references to the visited Views,
+		 * and we'll burn memory.
+		 */
+		if (mCurrentView != null && mCurrentView instanceof AbstractFolioView ) {
+			((AbstractFolioView) mCurrentView).unregister();
+		}
+		
 		if (mFormLoaderTask != null) {
 			mFormLoaderTask.setFormLoaderListener(null);
 			// We have to call cancel to terminate the thread, otherwise it
@@ -1278,7 +1344,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 							mFormPath.substring(mFormPath.lastIndexOf('/') + 1)),
 					true);
 		} else {
-			mFormEntryController = fec;
+			Collect.getInstance().setFormEntryController(fec);
 			mFormEntryModel = fec.getModel();
 
 			// Set saved answer path
@@ -1310,6 +1376,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 	@Override
 	public void savingComplete(int saveStatus) {
 		dismissDialog(SAVING_DIALOG);
+
 		switch (saveStatus) {
 		case SaveToDiskTask.SAVED:
 			Toast.makeText(getApplicationContext(),
@@ -1329,9 +1396,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 			break;
 		case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
 		case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
+			// form index will be of the offending constraint...
 			refreshCurrentView();
-			createConstraintToast(mFormEntryModel.getQuestionPrompt()
-					.getConstraintText(), saveStatus);
 			Toast.makeText(getApplicationContext(),
 					getString(R.string.data_saved_error), Toast.LENGTH_LONG)
 					.show();
@@ -1339,23 +1405,15 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		}
 	}
 
-	public int saveAnswer(IAnswerData answer, boolean evaluateConstraints) {
-		if (evaluateConstraints) {
-			return mFormEntryController.answerQuestion(answer);
-		} else {
-			mFormEntryController.saveAnswer(mFormEntryModel.getFormIndex(),
-					answer);
-			return FormEntryController.ANSWER_OK;
-		}
-	}
-
 	private FormEntryCaption[] getGroupsForCurrentIndex() {
-		if (!(mFormEntryModel.getEvent() == FormEntryController.EVENT_QUESTION || mFormEntryModel
-				.getEvent() == FormEntryController.EVENT_PROMPT_NEW_REPEAT))
+		if (!(mFormEntryModel.getEvent() == FormEntryController.EVENT_QUESTION || 
+			  mFormEntryModel.getEvent() == FormEntryController.EVENT_PROMPT_NEW_REPEAT ||
+			  currentPromptIsGroupFolio()))
 			return null;
 
+		
 		int lastquestion = 1;
-		if (mFormEntryModel.getEvent() == FormEntryController.EVENT_PROMPT_NEW_REPEAT)
+		if (mFormEntryModel.getEvent() != FormEntryController.EVENT_QUESTION)
 			lastquestion = 0;
 		FormEntryCaption[] v = mFormEntryModel.getCaptionHierarchy();
 		FormEntryCaption[] groups = new FormEntryCaption[v.length
@@ -1366,20 +1424,67 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		return groups;
 	}
 
-	/**
-	 * Loops through the FormEntryController until a non-group event is found.
-	 * 
-	 * @return The event found
-	 */
-	private int getNextNotGroupEvent() {
-		int event = mFormEntryController.stepToNextEvent();
+	private int stepToNextEvent() {
+		FormEntryController fec = Collect.getInstance().getFormEntryController();
+		if ( currentPromptIsGroupFolio() ) {
+			// advance to the group after this group...
+			FormIndex idx = mFormEntryModel.getFormIndex();
+			// advance past this group...
+			FormIndex current = mFormEntryModel.getForm().incrementIndex(idx, false);
+			// and update the current formIndex...
+			mFormEntryModel.setQuestionIndex(current);
+			return mFormEntryModel.getEvent();
+		} else {
+			return fec.stepToNextEvent();
+		}
+	}
+	
+	private int stepToPreviousEvent() {
+		FormEntryController fec = Collect.getInstance().getFormEntryController();
+		return fec.stepToPreviousEvent();
+	}
 
-		while (event == FormEntryController.EVENT_GROUP
-				|| event == FormEntryController.EVENT_REPEAT) {
-			event = mFormEntryController.stepToNextEvent();
+	/**
+	 * Jumps to the given index within the current form.  If that index is nested
+	 * within a group folio, it then patches up the location to be that of the 
+	 * enclosing group folio.
+	 *  
+	 * @param index
+	 * @return
+	 */
+	private int jumpToContainingFolio(FormIndex index) {
+		FormEntryController fec = Collect.getInstance().getFormEntryController();
+		int event = fec.jumpToIndex(index);
+		if ( event == FormEntryController.EVENT_QUESTION ) {
+			// caption[0..len-1]
+			// caption[len-1] == the question itself
+			// caption[len-2] == the first group it is contained in.  
+			FormEntryCaption[] captions = mFormEntryModel.getCaptionHierarchy();
+			if ( captions.length < 2 ) return event;
+			FormEntryCaption grp = captions[captions.length-2];
+			if ( isAppearanceGroupFolio(grp.getAppearanceHint()) ) {
+				return fec.jumpToIndex(grp.getIndex());
+			}
 		}
 		return event;
 	}
+	
+    /**
+     * Loops through the FormEntryController until a non-group event is found, 
+     * or a group with an field list appearance attribute is found.
+     * 
+     * @return The event found
+     */
+    private int getNextFolioEvent() {
+        int event = stepToNextEvent();
+
+		while (event == FormEntryController.EVENT_GROUP
+				|| event == FormEntryController.EVENT_REPEAT) {
+			if ( currentPromptIsGroupFolio() ) break;
+			event = stepToNextEvent();
+		}
+		return event;
+    }
 
 	/**
 	 * The repeat count of closest group the prompt belongs to.

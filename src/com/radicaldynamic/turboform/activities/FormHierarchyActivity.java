@@ -20,8 +20,8 @@ import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.form.api.FormEntryPrompt;
 import com.radicaldynamic.turboform.R;
-
 import com.radicaldynamic.turboform.adapters.HierarchyListAdapter;
+import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.logic.HierarchyElement;
 
 import android.app.ListActivity;
@@ -65,7 +65,7 @@ public class FormHierarchyActivity extends ListActivity {
         setContentView(R.layout.hierarchy_layout);
 
         // We use a static FormEntryController to make jumping faster.
-        mFormEntryController = FormEntryActivity.mFormEntryController;
+        mFormEntryController = Collect.getInstance().getFormEntryController();
         mFormEntryModel = mFormEntryController.getModel();
         mStartIndex = mFormEntryModel.getFormIndex();
 

@@ -32,21 +32,53 @@ import java.util.ArrayList;
  * 
  * @author Carl Hartung (carlhartung@gmail.com)
  */
-public class FileUtils {
+public final class FileUtils {
     private final static String t = "FileUtils";
 
     // Used to validate and display valid form names.
     public static final String VALID_FILENAME = "[ _\\-A-Za-z0-9]*.x[ht]*ml";
 
     // Storage paths
-    public static final String FORMS_PATH = Environment.getExternalStorageDirectory() + "/odk/forms/";
-    public static final String INSTANCES_PATH = Environment.getExternalStorageDirectory() + "/odk/instances/";
-    public static final String CACHE_PATH = Environment.getExternalStorageDirectory() + "/odk/.cache/";
+    public static final String ODK_ROOT = Environment.getExternalStorageDirectory() + "/odk/";
+    public static final String FORMS_PATH = ODK_ROOT + "forms/";
+    public static final String INSTANCES_PATH = ODK_ROOT + "instances/";
+    public static final String FORMS_X_MEDIA_DIRECTORY_SUFFIX = "-media/";
+    public static final String DATABASE_PATH = ODK_ROOT + "metadata/";
+
+    public static final String CONFIG_PATH = ODK_ROOT + "config/";
+    public static final String SPLASH_SCREEN_FILE_PATH = CONFIG_PATH + "default/splash.png";
+    public static final String FORM_LOGO_FILE_PATH = CONFIG_PATH + "default/form_logo.png";
+    public static final String XSL_EXTENSION_PATH = ODK_ROOT + "xsl/";
+    public static final String CACHE_PATH = ODK_ROOT + ".cache/";
     public static final String TMPFILE_PATH = CACHE_PATH + "tmp.jpg";
 
+    public static final String getDatabasePath() {
+
+    	File dir = new File(DATABASE_PATH);
+        if (!storageReady()) {
+            return null;
+        }
+        
+        if (!dir.exists()) {
+            if (!createFolder(DATABASE_PATH)) {
+                return null;
+            }
+        }
+        return DATABASE_PATH;
+    }
     
-    public static ArrayList<String> getValidFormsAsArrayList(String path) {
+    public static final String getFormMediaPath(File formXml) {
+    	 String mediaPath = FileUtils.FORMS_PATH +
+         		formXml.getName().substring(0, formXml.getName().lastIndexOf(".")) +
+         		FileUtils.FORMS_X_MEDIA_DIRECTORY_SUFFIX;
+     
+    	 Log.i(t, "formXml: " + formXml.getAbsolutePath() + " mediaPath: " + mediaPath);
+    	 return mediaPath;
+    }
+    
+    public static final ArrayList<String> getValidFormsAsArrayList(String path) {
         ArrayList<String> formPaths = new ArrayList<String>();
+
         File dir = new File(path);
 
         if (!storageReady()) {
@@ -64,13 +96,14 @@ public class FileUtils {
         		continue;
         	
             String formName = dirs[i].getName();
+        	Log.i(t, "Found formname: " + formName);
 
         	formPaths.add(dirs[i].getAbsolutePath());
         }
         return formPaths;
     }
-    
-    public static ArrayList<String> getFoldersAsArrayList(String path) {
+
+    public static final ArrayList<String> getFoldersAsArrayList(String path) {
         ArrayList<String> mFolderList = new ArrayList<String>();
         File root = new File(path);
 
@@ -95,7 +128,7 @@ public class FileUtils {
     }
 
 
-    public static boolean deleteFolder(String path) {
+    public static final boolean deleteFolder(String path) {
         // not recursive
         if (path != null && storageReady()) {
             File dir = new File(path);
@@ -114,7 +147,7 @@ public class FileUtils {
     }
 
 
-    public static boolean createFolder(String path) {
+    public static final boolean createFolder(String path) {
         if (storageReady()) {
             boolean made = true;
             File dir = new File(path);
@@ -128,7 +161,7 @@ public class FileUtils {
     }
 
 
-    public static boolean deleteFile(String path) {
+    public static final boolean deleteFile(String path) {
         if (storageReady()) {
             File f = new File(path);
             return f.delete();
@@ -138,7 +171,7 @@ public class FileUtils {
     }
 
 
-    public static byte[] getFileAsBytes(File file) {
+    public static final byte[] getFileAsBytes(File file) {
         byte[] bytes = null;
         InputStream is = null;
         try {
@@ -198,7 +231,7 @@ public class FileUtils {
     }
 
 
-    public static boolean storageReady() {
+    public static final boolean storageReady() {
         String cardstatus = Environment.getExternalStorageState();
         if (cardstatus.equals(Environment.MEDIA_REMOVED)
                 || cardstatus.equals(Environment.MEDIA_UNMOUNTABLE)
@@ -211,7 +244,7 @@ public class FileUtils {
     }
 
 
-    public static String getMd5Hash(File file) {
+    public static final String getMd5Hash(File file) {
         try {
             // CTS (6/15/2010) : stream file through digest instead of handing it the byte[]
             MessageDigest md = MessageDigest.getInstance("MD5");
