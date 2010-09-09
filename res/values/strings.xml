@@ -169,6 +169,7 @@
 	<string name="yes">Yes</string>
 	<string name="tf_add_form_hint">Use &quot;Manage Forms&quot; to add a form</string>
 	<string name="tf_begin_record_hint">Select form to begin new record</string>
+	<string name="tf_default_couchdb_server">http://arthur.902northland.adams.home:5984/</string>
 	<string name="tf_default_main_menu_filter_prompt">All forms</string>
 	<string name="tf_main_menu_filter_prompt">Show</string>
 	<string name="tf_main_menu_filter_default">All forms</string>
@@ -180,11 +181,5 @@
 	<string name="tf_simple_sharing">Simple sharing</string>
 	<string name="tf_sync">Synchronize</string>
 	<string name="tf_web_publishing">Web publishing</string>
-	<string name="tf_web_services">Web services</string>
-	<string name="tf_database_oncreate">
-CREATE TABLE documents (_id INTEGER PRIMARY KEY AUTOINCREMENT, service_id TEXT, xml BLOB);
-CREATE TABLE meta (_id INTEGER PRIMARY KEY AUTOINCREMENT, service_id TEXT, document_id INTEGER, attribute TEXT, value TEXT);
-CREATE TABLE records (_id INTEGER PRIMARY KEY AUTOINCREMENT, service_id TEXT, document_id INTEGER, device_id INTEGER, subscriber_id INTEGER, sim_id INTEGER, phone_number INTEGER, xml BLOB);
-CREATE TABLE binary (_id INTEGER PRIMARY KEY AUTOINCREMENT, service_id TEXT, record_id INTEGER, element TEXT, data BLOB);
-	</string>
+	<string name="tf_web_services">Web services</string>        
 </resources>

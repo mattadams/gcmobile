@@ -73,7 +73,7 @@ public class TFMainMenuActivity extends ListActivity {
         if (!FileUtils.storageReady()) {
             createErrorDialog(getString(R.string.no_sd_error),true);
         }
-        
+
         displaySplash();
         setContentView(R.layout.tf_main_menu);
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.main_menu));        
@@ -317,6 +317,7 @@ public class TFMainMenuActivity extends ListActivity {
             return true;
         //case R.id.tf_manage_form_records:
         //    return true;
+        /*
         case R.id.tf_personal_preferences:
             i = new Intent(this, ServerPreferences.class);
             startActivity(i);
@@ -326,8 +327,9 @@ public class TFMainMenuActivity extends ListActivity {
         case R.id.tf_web_publishing:
             return true;
         case R.id.tf_web_services:
-            return true;        
-        }
+            return true;
+        */        
+        }        
         
         return super.onOptionsItemSelected(item);
     }
