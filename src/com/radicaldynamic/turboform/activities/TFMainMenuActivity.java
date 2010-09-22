@@ -15,23 +15,21 @@
 package com.radicaldynamic.turboform.activities;
 
 import java.util.ArrayList;
-
-import com.radicaldynamic.turboform.R;
-
-import com.radicaldynamic.turboform.database.FileDbAdapter;
-import com.radicaldynamic.turboform.preferences.ServerPreferences;
-import com.radicaldynamic.turboform.utilities.FileUtils;
+import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.Menu;
@@ -47,9 +45,15 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ImageView.ScaleType;
+
+import com.radicaldynamic.turboform.R;
+import com.radicaldynamic.turboform.application.Collect;
+import com.radicaldynamic.turboform.database.FileDbAdapter;
+import com.radicaldynamic.turboform.preferences.TFGeneralPreferences;
+import com.radicaldynamic.turboform.services.TFCouchDbService;
+import com.radicaldynamic.turboform.utilities.FileUtils;
 
 /**
  * Responsible for displaying buttons to launch the major activities. Launches some activities based
@@ -58,21 +62,33 @@ import android.widget.ImageView.ScaleType;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class TFMainMenuActivity extends ListActivity {
-    
+public class TFMainMenuActivity extends ListActivity {    
     // true if splash screen should be shown during onCreate
     private static boolean mShowSplash = true;
+    
+    private AlertDialog mAlertDialog;
+    
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            Collect.mDb = ((TFCouchDbService.LocalBinder)service).getService();
+            loadScreen();            
+        }
 
-	private AlertDialog mAlertDialog;	
+        public void onServiceDisconnected(ComponentName className) {
+        }
+    };
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
+        startService(new Intent(this, TFCouchDbService.class));
+        bindService(new Intent(this, TFCouchDbService.class), mConnection, Context.BIND_AUTO_CREATE);
+        
         // if sd card error, quit
         if (!FileUtils.storageReady()) {
             createErrorDialog(getString(R.string.no_sd_error),true);
-        }
+        }      
 
         displaySplash();
         setContentView(R.layout.tf_main_menu);
@@ -80,12 +96,13 @@ public class TFMainMenuActivity extends ListActivity {
         
         refreshView(FileDbAdapter.TYPE_FORM, null);
         registerForContextMenu(getListView());
-       
-        Spinner s1 = (Spinner) findViewById(R.id.filter);        
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                this, R.array.tf_main_menu_list_filters, android.R.layout.simple_spinner_item);        
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);        
-        s1.setAdapter(adapter);        
+        
+        /* Initiate and populate spinner to filter forms displayed by record types */       
+        Spinner s1 = (Spinner) findViewById(R.id.record_filter);        
+        ArrayAdapter<CharSequence> records = ArrayAdapter.createFromResource(
+                this, R.array.tf_main_menu_record_filters, android.R.layout.simple_spinner_item);        
+        records.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);        
+        s1.setAdapter(records);        
         s1.setOnItemSelectedListener(
                 new OnItemSelectedListener() {
                     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -103,7 +120,7 @@ public class TFMainMenuActivity extends ListActivity {
 
                     public void onNothingSelected(AdapterView<?> parent) {        
                     }
-                });        
+                });
     }
 
     /*
@@ -127,7 +144,7 @@ public class TFMainMenuActivity extends ListActivity {
         super.onResume();
 
         /* Spinner must reflect results of refreshView() below */
-        Spinner s1 = (Spinner) findViewById(R.id.filter); 
+        Spinner s1 = (Spinner) findViewById(R.id.record_filter); 
         s1.setSelection(0);
         
         refreshView(FileDbAdapter.TYPE_FORM, null);
@@ -165,8 +182,8 @@ public class TFMainMenuActivity extends ListActivity {
                         getString(R.string.tf_add_form_hint),
                         Toast.LENGTH_LONG).show();
             }
-        }       
-    }
+        }
+    } 
     
     /**
      * displaySplash
@@ -251,6 +268,25 @@ public class TFMainMenuActivity extends ListActivity {
        
         fda.close();
     }
+    
+    /** 
+     * Load the various elements of the screen that must wait for other tasks to complete
+     */
+    private void loadScreen() {        
+        Collect.mDb.open();
+
+        Spinner s2 = (Spinner) findViewById(R.id.form_filter);
+        List<String> dbs = Collect.mDb.getAllDatabases();
+        
+        if (dbs.isEmpty()) { 
+            dbs.add(getString(R.string.tf_groups_unavailable_error));
+            s2.setEnabled(false);
+        }
+                
+        ArrayAdapter<String> collections = new ArrayAdapter<String>(TFMainMenuActivity.this, android.R.layout.simple_spinner_item, dbs);
+        collections.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        s2.setAdapter(collections);
+    }
 
 
     /**
@@ -313,6 +349,10 @@ public class TFMainMenuActivity extends ListActivity {
         case R.id.tf_manage:
         //case R.id.tf_manage_forms:
             i = new Intent(this, TFManageForms.class);
+            startActivity(i);
+            return true;
+        case R.id.tf_preferences:
+            i = new Intent(this, TFGeneralPreferences.class);
             startActivity(i);
             return true;
         //case R.id.tf_manage_form_records:

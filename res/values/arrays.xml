@@ -14,19 +14,6 @@ License for the specific language governing permissions and limitations under
 the License.
 -->
 <resources>
-    <string-array name="entries_list_preference">
-    	<item>Saved, Not Completed</item>
-        <item>Completed, Not Submitted</item>
-        <item>Submitted</item>
-    </string-array>
-
-    <!-- Used in app/menu examples -->
-    <string-array name="entryvalues_list_preference">
-        <item>saved</item>
-        <item>done</item>
-        <item>submitted</item>
-    </string-array>
-    
      <string-array name="entries_saved_preference">
     	<item>Saved, Not Completed</item>
         <item>Completed, Not Submitted</item>
@@ -38,11 +25,27 @@ the License.
         <item>done</item>
     </string-array>
     
-    <string-array name="tf_main_menu_list_filters">
-        <item>All forms</item>        
-        <item>Forms with incomplete records</item>
-        <item>Forms with completed records</item>
-        <item>Forms with new records</item>
-        <item>Forms without records</item>        
+    <string-array name="tf_main_menu_record_filters">
+        <item>Filter off</item>        
+        <item>Incomplete records</item>
+        <item>Completed records</item>
+        <item>New records</item>
+        <item>Without records</item>        
+    </string-array>    
+        
+    <string-array name="tf_time_period_entry_preferences">
+        <item>Ever 5 minutes</item>
+        <item>Every 10 minutes</item>
+        <item>Every 15 minutes</item>
+        <item>Every 30 minutes</item>
+        <item>Hourly</item>           
     </string-array>
+    
+    <string-array name="tf_time_period_value_preferences">
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>        
+    </string-array>  
 </resources>

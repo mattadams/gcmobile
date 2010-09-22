@@ -4,9 +4,6 @@ import org.javarosa.core.reference.ReferenceManager;
 import org.javarosa.core.reference.RootTranslator;
 import org.javarosa.form.api.FormEntryController;
 
-import com.radicaldynamic.turboform.R;
-import com.radicaldynamic.turboform.logic.FileReferenceFactory;
-
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -16,7 +13,13 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.radicaldynamic.turboform.R;
+import com.radicaldynamic.turboform.logic.FileReferenceFactory;
+import com.radicaldynamic.turboform.services.TFCouchDbService;
+
 public class Collect extends Application {
+    public final static String LOGTAG = "TurboForm";
+    public static TFCouchDbService mDb = null;
 
 	private static Collect singleton = null;
 	

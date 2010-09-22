@@ -31,8 +31,8 @@ public class TFManageForms extends TabActivity
         // This tab sets the intent flag so that it is recreated each time
         // the tab is clicked.
         tabHost.addTab(tabHost.newTabSpec("tab3")
-                .setIndicator("Library", res.getDrawable(R.drawable.ic_menu_archive))
-                .setContent(new Intent(this, ServerPreferences.class)
+                .setIndicator("ODK Library", res.getDrawable(R.drawable.ic_menu_archive))
+                .setContent(new Intent(this, FormDownloadList.class)
                         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)));
     }
 }
