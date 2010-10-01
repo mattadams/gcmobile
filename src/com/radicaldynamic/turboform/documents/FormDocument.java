@@ -4,9 +4,12 @@ public class FormDocument extends GenericDocument
 {
     private static final long serialVersionUID = 8292491291779289389L;   
     
+    public static enum Status {active, inactive, temporary};
+    
     private String name;
+    private Status status;
 
-    FormDocument() {
+    public FormDocument() {
         super("form");
     }
 
@@ -18,5 +21,15 @@ public class FormDocument extends GenericDocument
     public String getName()
     {
         return name;
+    }
+
+    public void setStatus(Status status)
+    {
+        this.status = status;
+    }
+
+    public Status getStatus()
+    {
+        return status;
     }
 }

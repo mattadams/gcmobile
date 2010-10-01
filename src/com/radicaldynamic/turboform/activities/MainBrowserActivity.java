@@ -1,0 +1,494 @@
+/*
+ * Copyright (C) 2009 University of Washington
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package com.radicaldynamic.turboform.activities;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import android.app.AlertDialog;
+import android.app.ListActivity;
+import android.app.ProgressDialog;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ImageView.ScaleType;
+
+import com.radicaldynamic.turboform.R;
+import com.radicaldynamic.turboform.application.Collect;
+import com.radicaldynamic.turboform.documents.FormDocument;
+import com.radicaldynamic.turboform.documents.InstanceDocument;
+import com.radicaldynamic.turboform.documents.InstanceDocument.Status;
+import com.radicaldynamic.turboform.preferences.GeneralPreferences;
+import com.radicaldynamic.turboform.repository.FormRepository;
+import com.radicaldynamic.turboform.services.CouchDbService;
+import com.radicaldynamic.turboform.tasks.InitializeApplicationTask;
+import com.radicaldynamic.turboform.utilities.DocumentUtils;
+import com.radicaldynamic.turboform.utilities.FileUtils;
+
+/**
+ * Responsible for displaying buttons to launch the major activities. Launches
+ * some activities based on returns of others.
+ * 
+ * @author Carl Hartung (carlhartung@gmail.com)
+ * @author Yaw Anokwa (yanokwa@gmail.com)
+ */
+public class MainBrowserActivity extends ListActivity
+{
+    private static boolean mShowSplash = true;  
+
+    private AlertDialog mAlertDialog;
+    private ProgressDialog mDialog;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service)
+        {
+            Collect.mDb = ((CouchDbService.LocalBinder) service).getService();
+            Collect.mDb.open();
+            loadScreen();
+        }
+
+        public void onServiceDisconnected(ComponentName className)
+        {
+            Log.d(Collect.LOGTAG, "TFCouchDbService unbound");
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);       
+        
+        mDialog = new ProgressDialog(this);
+        mDialog.setMessage(getText(R.string.tf_loading_please_wait));
+        mDialog.setIndeterminate(true);
+        mDialog.setCancelable(true);
+        mDialog.show();
+        
+        // If sd card error, quit
+        if (!FileUtils.storageReady()) {
+            mDialog.cancel();
+            createErrorDialog(getString(R.string.no_sd_error), true);
+        }     
+
+        displaySplash();
+        
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);        
+        setContentView(R.layout.main_browser);        
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.main_menu));
+        setProgressBarIndeterminateVisibility(false);
+        
+        startService(new Intent(this, CouchDbService.class));
+        bindService(new Intent(this, CouchDbService.class), mConnection, Context.BIND_AUTO_CREATE);
+
+        // Perform any needed application initialization
+        new InitializeApplicationTask().execute();
+
+        /*
+         * Initiate and populate spinner to filter forms displayed by instances types
+         */
+        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
+        ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter.createFromResource(this,
+                R.array.tf_main_menu_form_filters,
+                android.R.layout.simple_spinner_item);
+        instanceStatus.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        s1.setAdapter(instanceStatus);
+        s1.setOnItemSelectedListener(new OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                switch (position) {
+                case 0:
+                    refreshView(null);
+                    break;
+                case 1:
+                    refreshView(InstanceDocument.Status.incomplete);
+                    break;
+                case 2:
+                    refreshView(InstanceDocument.Status.complete);
+                    break;
+                case 3:
+                    refreshView(InstanceDocument.Status.updated);
+                    break;
+                case 4:
+                    refreshView(InstanceDocument.Status.nonexistent);
+                    break;
+                }
+            }
+
+            public void onNothingSelected(AdapterView<?> parent)
+            {
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        unbindService(mConnection);
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause()
+    {
+        dismissDialogs();
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        if (Collect.mDb != null)
+            loadScreen();
+    }
+
+    /**
+     * onStop Re-enable the splash screen.
+     */
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        mShowSplash = true;
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
+    {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.tf_main_menu_context, menu);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        super.onCreateOptionsMenu(menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.tf_main_menu_options, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item)
+    {
+        // AdapterContextMenuInfo info = (AdapterContextMenuInfo)
+        // item.getMenuInfo();
+        switch (item.getItemId()) {
+        default:
+            return super.onContextItemSelected(item);
+        }
+    }
+
+    /**
+     * Stores the path of selected form and finishes.
+     */
+    @Override
+    protected void onListItemClick(ListView listView, View view, int position, long id)
+    {
+        FormDocument form = (FormDocument) getListAdapter().getItem(position);
+        Log.d(Collect.LOGTAG, "Selected form " + form.getId() + " from list");
+
+        ComponentName callingActivity = getCallingActivity();
+
+        if (callingActivity == null) {
+            // Not called as an Intent, handle regularly
+            Intent i = new Intent(
+                    "com.radicaldynamic.turboform.action.FormEntry");
+            i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
+            startActivity(i);
+        } else {
+            // Called as an intent, return path of form to calling activity
+
+            // Intent i = new Intent();
+            // i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
+            // setResult(RESULT_OK, i);
+            //
+            // finish();
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        Intent i = null;
+
+        switch (item.getItemId()) {
+        case R.id.tf_sync:
+            return true;
+        case R.id.tf_manage:
+            // case R.id.tf_manage_forms:
+            i = new Intent(this, ManageFormsActivity.class);
+            startActivity(i);
+            return true;
+        case R.id.tf_preferences:
+            i = new Intent(this, GeneralPreferences.class);
+            startActivity(i);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private class FormAdapter extends ArrayAdapter<FormDocument>
+    {
+        private ArrayList<FormDocument> items;
+        private Map<String, String> instanceTallies;
+
+        public FormAdapter(Context context, int textViewResourceId, ArrayList<FormDocument> items, Map<String, String> instanceTallies) {
+            super(context, textViewResourceId, items);
+            this.items = items;
+            
+            if (instanceTallies != null) 
+                this.instanceTallies = instanceTallies;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent)
+        {
+            View v = convertView;
+
+            if (v == null) {
+                LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                v = vi.inflate(R.layout.tf_main_menu_list_item, null);
+            }
+
+            FormDocument f = items.get(position);
+
+            if (f != null) {
+                TextView tt = (TextView) v.findViewById(R.id.toptext);
+                TextView bt = (TextView) v.findViewById(R.id.bottomtext);
+
+                if (tt != null) {
+                    tt.setText(f.getName());
+                }
+
+                if (instanceTallies != null) {
+                    Spinner s1 = (Spinner) findViewById(R.id.form_filter);                    
+                    
+                    if (bt != null) {
+                        String descriptor = s1.getSelectedItem().toString().toLowerCase();
+                        
+                        // Correct plural words (this only works in very simple circumstances using English)
+                        if (instanceTallies.get(f.getId()).equals("1")) {                           
+                            descriptor = descriptor.substring(0, descriptor.length() - 1);
+                        }
+                        
+                        bt.setText(instanceTallies.get(f.getId()) + " " + descriptor);
+                    }
+                }
+            }
+
+            return v;
+        }
+    }
+
+    private void createErrorDialog(String errorMsg, final boolean shouldExit)
+    {
+        mAlertDialog = new AlertDialog.Builder(this).create();
+        mAlertDialog.setIcon(android.R.drawable.ic_dialog_info);
+        mAlertDialog.setMessage(errorMsg);
+
+        DialogInterface.OnClickListener errorListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int i)
+            {
+                switch (i) {
+                case DialogInterface.BUTTON1:
+                    if (shouldExit) {
+                        finish();
+                    }
+                    break;
+                }
+            }
+        };
+
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.setButton(getString(R.string.ok), errorListener);
+        mAlertDialog.show();
+    }
+
+    /**
+     * Dismiss any showing dialogs that we manage.
+     */
+    private void dismissDialogs()
+    {
+        if (mAlertDialog != null && mAlertDialog.isShowing()) {
+            mAlertDialog.dismiss();
+        }
+    }
+
+    /**
+     * displaySplash
+     * 
+     * Shows the splash screen if the mShowSplash member variable is true.
+     * Otherwise a no-op.
+     */
+    void displaySplash()
+    {
+        if (!mShowSplash)
+            return;
+
+        // Fetch the splash screen Drawable
+        Drawable image = null;
+
+        try {
+            // Attempt to load the configured default splash screen
+            BitmapDrawable bitImage = new BitmapDrawable(getResources(),
+                    FileUtils.SPLASH_SCREEN_FILE_PATH);
+
+            if (bitImage.getBitmap() != null
+                    && bitImage.getIntrinsicHeight() > 0
+                    && bitImage.getIntrinsicWidth() > 0) {
+                image = bitImage;
+            }
+        } catch (Exception e) {
+            // TODO: log exception for debugging?
+        }
+
+        if (image == null) {
+            // no splash provided, so do nothing...
+            return;
+        }
+
+        // Create ImageView to hold the Drawable...
+        ImageView view = new ImageView(getApplicationContext());
+
+        // Initialise it with Drawable and full-screen layout parameters
+        view.setImageDrawable(image);
+        int width = getWindowManager().getDefaultDisplay().getWidth();
+        int height = getWindowManager().getDefaultDisplay().getHeight();
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width,
+                height, 0);
+        view.setLayoutParams(lp);
+        view.setScaleType(ScaleType.CENTER);
+        view.setBackgroundColor(Color.WHITE);
+
+        // And wrap the image view in a frame layout so that the full-screen
+        // layout parameters are honoured
+        FrameLayout layout = new FrameLayout(getApplicationContext());
+        layout.addView(view);
+
+        // Create the toast and set the view to be that of the FrameLayout
+        Toast t = Toast.makeText(getApplicationContext(), "splash screen",
+                Toast.LENGTH_SHORT);
+        t.setView(layout);
+        t.setGravity(Gravity.CENTER, 0, 0);
+        t.show();
+    }
+
+    /**
+     * Get form list from database and insert into view.
+     */
+    private void refreshView(Status status)
+    {
+        setProgressBarIndeterminateVisibility(true);
+        
+        ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
+        FormAdapter adapter;
+        
+        if (status == null) {            
+            documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAll();
+            DocumentUtils.sortByName(documents);
+            
+            adapter = new FormAdapter(this, R.layout.tf_main_menu_list_item, documents, null);
+            setListAdapter(adapter);
+            
+            // Provide hints to user
+            if (documents.isEmpty()) {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
+                openOptionsMenu();                
+            } else {            
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
+            }   
+        } else {
+           Map<String, String> instanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByInstanceStatus(status);          
+           documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));
+           DocumentUtils.sortByName(documents);
+           adapter = new FormAdapter(this, R.layout.tf_main_menu_list_item, documents, instanceTallies);
+           setListAdapter(adapter);
+           
+           Spinner s1 = (Spinner) findViewById(R.id.form_filter); 
+           String descriptor = s1.getSelectedItem().toString().toLowerCase();
+           
+           // Provide hints to user
+           if (documents.isEmpty()) {
+               Toast.makeText(getApplicationContext(), getString(R.string.tf_missing_instances_hint, descriptor), Toast.LENGTH_LONG).show();
+           } else {
+               Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
+           }   
+        }
+        
+        setProgressBarIndeterminateVisibility(false);
+    }
+
+    /**
+     * Load the various elements of the screen that must wait for other tasks to
+     * complete
+     */
+    private void loadScreen()
+    {
+        /* Spinner must reflect results of refreshView() below */
+        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
+        s1.setSelection(0);
+
+        /* Pull in a list of valid form "groups" */
+        Spinner s2 = (Spinner) findViewById(R.id.group_filter);
+        List<String> dbs = Collect.mDb.getAllDatabases();
+
+        if (dbs.isEmpty()) {
+            dbs.add(getString(R.string.tf_groups_unavailable_error));
+            s2.setEnabled(false);
+        }
+
+        ArrayAdapter<String> collections = new ArrayAdapter<String>(MainBrowserActivity.this, android.R.layout.simple_spinner_item, dbs);
+        collections.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        s2.setAdapter(collections);
+
+        refreshView(null);
+        registerForContextMenu(getListView());
+        
+        mDialog.cancel();
+    }
+}

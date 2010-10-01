@@ -54,6 +54,7 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
     private Uri mExternalUri;
     private String mCaptureIntent;
     private String mInstanceFolder;
+    private String mInstanceId;
     private int mRequestCode;
     private int mCaptureText;
     private int mReplaceText;
@@ -67,7 +68,7 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
 
     private void initialize(String instancePath) {
         mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf("/") + 1);
-
+        mInstanceId = instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.length());
         mExternalUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         mCaptureIntent = android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION;
         mRequestCode = FormEntryActivity.AUDIO_CAPTURE;
@@ -206,7 +207,7 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
         // get the file path and move the file
         String binarypath = getPathFromUri((Uri) binaryuri);
         File f = new File(binarypath);
-        String s = mInstanceFolder + "/" + binarypath.substring(binarypath.lastIndexOf('/') + 1);
+        String s = mInstanceFolder + "/" + mInstanceId + binarypath.substring(binarypath.lastIndexOf('/') + 1);
         if (!f.renameTo(new File(s))) {
             Log.i(t, "Failed to rename " + f.getAbsolutePath());
         }

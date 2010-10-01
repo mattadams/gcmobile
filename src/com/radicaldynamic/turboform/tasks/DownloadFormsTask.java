@@ -14,24 +14,9 @@
 
 package com.radicaldynamic.turboform.tasks;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import com.radicaldynamic.turboform.activities.FormDownloadList;
-import com.radicaldynamic.turboform.database.FileDbAdapter;
-import com.radicaldynamic.turboform.listeners.FormDownloaderListener;
-import com.radicaldynamic.turboform.utilities.FileUtils;
-
-import android.database.Cursor;
-import android.os.AsyncTask;
-
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -41,6 +26,21 @@ import java.util.HashMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.ektorp.Attachment;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import android.os.AsyncTask;
+import android.util.Base64;
+
+import com.radicaldynamic.turboform.activities.FormDownloadList;
+import com.radicaldynamic.turboform.application.Collect;
+import com.radicaldynamic.turboform.documents.FormDocument;
+import com.radicaldynamic.turboform.listeners.FormDownloaderListener;
+import com.radicaldynamic.turboform.services.CouchDbService;
 
 /**
  * Background task for downloading forms from urls or a formlist from a url. We overload this task a
@@ -70,7 +70,6 @@ public class DownloadFormsTask extends
 
     @Override
     protected HashMap<String, String> doInBackground(HashMap<String, String>... values) {
-        FileDbAdapter fda = null;
         if (values != null && values[0].containsKey(FormDownloadList.LIST_URL)) {
             // This gets a list of available forms from the specified server.
             HashMap<String, String> formList = new HashMap<String, String>();
@@ -136,31 +135,31 @@ public class DownloadFormsTask extends
             // boolean error = false;
             int total = formNames.size();
             int count = 1;
-            fda = new FileDbAdapter();
-            fda.open();
-
+            //fda = new FileDbAdapter();
+            //fda.open();          
+            
             for (int i = 0; i < total; i++) {
                 String form = formNames.get(i);
                 publishProgress(form, Integer.valueOf(count).toString(), Integer.valueOf(total).toString());
                 try {
-                    File dl = downloadFile(form, toDownload.get(form));
-
-                    // if the file already existed, the name will be changed to formname_#
-                    if (form.compareTo(dl.getName()) != 0) {
-                        // hash of raw form
-                        String hash = FileUtils.getMd5Hash(dl);
-
-                        Cursor c = fda.fetchFilesByPath(null, hash);
-                        if (c.getCount() > 0) {
-                            // db has the hash and this is a duplicate. the dupliate will be
-                            // discarded.
-                        } else {
-                            // the form is new, but the file name was the same.
-                            // tell the user we renamed the form.
-                            result.put(form, dl.getName());
-                        }
-                        c.close();
-                    }
+                    downloadFile(form, toDownload.get(form));
+                
+//                    // if the file already existed, the name will be changed to formname_#
+//                    if (form.compareTo(dl.getName()) != 0) {
+//                        // hash of raw form
+//                        String hash = FileUtils.getMd5Hash(dl);
+//
+//                        Cursor c = fda.fetchFilesByPath(null, hash);
+//                        if (c.getCount() > 0) {
+//                            // db has the hash and this is a duplicate. the dupliate will be
+//                            // discarded.
+//                        } else {
+//                            // the form is new, but the file name was the same.
+//                            // tell the user we renamed the form.
+//                            result.put(form, dl.getName());
+//                        }
+//                        c.close();
+//                    }
  
                 } catch (SocketTimeoutException se) {
                     se.printStackTrace();
@@ -176,11 +175,11 @@ public class DownloadFormsTask extends
                 count++;
             }
 
-            if (fda != null) {
-                // addOrphanForms will remove duplicates, and add new forms to the database
-                fda.addOrphanForms();
-                fda.close();
-            }
+//            if (fda != null) {
+//                // addOrphanForms will remove duplicates, and add new forms to the database
+//                fda.addOrphanForms();
+//                fda.close();
+//            }
 
             return result;
         }
@@ -189,10 +188,9 @@ public class DownloadFormsTask extends
     }
 
 
-    private File downloadFile(String name, String url) throws IOException {
-        // create url
+    private void downloadFile(String name, String url) throws IOException {
         URL u = null;
-        File f = null;
+        
         try {
             u = new URL(url);
         } catch (MalformedURLException e) {
@@ -201,43 +199,42 @@ public class DownloadFormsTask extends
         }
 
         try {
-            // prevent deadlock when connection is invalid
+            // Prevent deadlock when connection is invalid
             URLConnection c = u.openConnection();
             c.setConnectTimeout(CONNECTION_TIMEOUT);
-            c.setReadTimeout(CONNECTION_TIMEOUT);
-
-            // write connection to file
+            c.setReadTimeout(CONNECTION_TIMEOUT);     
+            
+            // Obtain form name without file extension
+            int dot = name.lastIndexOf(".") + 1;
+            String fname = name.substring(0, dot - 1);           
+            
+            // Instantiate new form object
+            FormDocument form = new FormDocument();
+            form.setName(fname);
+                                    
+            // Write connection to file
             InputStream is = c.getInputStream();
-
-            String path = FileUtils.FORMS_PATH + name;
-            int i = 2;
-            int slash = path.lastIndexOf("/") + 1;
-            int period = path.lastIndexOf(".") + 1;
-            String base = path.substring(0, slash - 1);
-            String filename = path.substring(slash, period - 1);
-            String ext = path.substring(period);
-            f = new File(path);
-            while (f.exists()) {
-                f = new File(base + "/" + filename + "_" + i + "." + ext);
-                i++;
-            }
-
-            OutputStream os = new FileOutputStream(f);
-            byte buf[] = new byte[1024];
-            int len;
-            while ((len = is.read(buf)) > 0) {
-                os.write(buf, 0, len);
-            }
-            os.flush();
-            os.close();
-            is.close();
-
+            
+            // Set up variables to receive data
+            ByteArrayOutputStream data = new ByteArrayOutputStream();
+            byte[] inputbuf = new byte[1024];            
+            int inputlen;            
+            
+            // Input data and write it out to a temporary buffer
+            while ((inputlen = is.read(inputbuf)) > 0) {
+                data.write(inputbuf, 0, inputlen);
+            }            
+            
+            // Create attachment and save form
+            form.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT), "text/xml"));
+            CouchDbService db = Collect.mDb.open();
+            db.getDb().create(form);
+            
+            data.close();            
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
         }
-
-        return f;
     }
 
 

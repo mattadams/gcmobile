@@ -9,7 +9,7 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.widget.TabHost;
 
-public class TFManageForms extends TabActivity
+public class ManageFormsActivity extends TabActivity
 {
     @Override
     protected void onCreate(Bundle savedInstanceState) {

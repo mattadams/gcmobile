@@ -25,7 +25,7 @@ import android.preference.EditTextPreference;
 import android.preference.PreferenceActivity;
 import android.widget.Toast;
 
-public class TFGeneralPreferences extends PreferenceActivity implements
+public class GeneralPreferences extends PreferenceActivity implements
         OnSharedPreferenceChangeListener {
     
     public static String KEY_SERVER   = "server_host_preference";

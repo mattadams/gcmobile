@@ -34,7 +34,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.radicaldynamic.turboform.R;
-import com.radicaldynamic.turboform.activities.TFMainMenuActivity;
+import com.radicaldynamic.turboform.activities.MainBrowserActivity;
 import com.radicaldynamic.turboform.application.Collect;
 
 /**
@@ -43,7 +43,7 @@ import com.radicaldynamic.turboform.application.Collect;
  * @author Yaw Anokwa (yanokwa@gmail.com)
  * @author Carl Hartung (carlhartung@gmail.com)
  */
-public class TFCouchDbService extends Service {    
+public class CouchDbService extends Service {    
     private String mHost;
     private int mPort;
            
@@ -92,8 +92,8 @@ public class TFCouchDbService extends Service {
      * IPC.
      */
     public class LocalBinder extends Binder {
-        public TFCouchDbService getService() {
-            return TFCouchDbService.this;
+        public CouchDbService getService() {
+            return CouchDbService.this;
         }
     }    
 
@@ -107,7 +107,7 @@ public class TFCouchDbService extends Service {
      * 
      * @return TFCouchDbAdapter
      */
-    public TFCouchDbService open() {
+    public CouchDbService open() {
         TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);         
         String database = getString(R.string.tf_couchdb_prefix) + "device/" + mTelephonyMgr.getDeviceId();
         
@@ -120,7 +120,7 @@ public class TFCouchDbService extends Service {
      * @param database  Name of database to open
      * @return
      */
-    public TFCouchDbService open(String database) {
+    public CouchDbService open(String database) {
         connect(false);
         mDb = new StdCouchDbConnector(database, mDbInstance);        
         
@@ -155,9 +155,9 @@ public class TFCouchDbService extends Service {
         mPort = 5984;
         
         if (persistent) {
-            Log.i(Collect.LOGTAG, "Establishing persistent connection to " + mHost);
+            Log.d(Collect.LOGTAG, "Establishing persistent connection to " + mHost);
         } else {
-            Log.i(Collect.LOGTAG, "Connecting to " + mHost);
+            Log.d(Collect.LOGTAG, "Connecting to " + mHost);
         }            
         
         try { 
@@ -171,7 +171,7 @@ public class TFCouchDbService extends Service {
                 notifyOfConnectionAttempt(R.string.tf_connection_reestablished_status, R.string.tf_manage_item);
             }
             
-            Log.v(Collect.LOGTAG, "Connection to " + mHost + " successful");
+            Log.d(Collect.LOGTAG, "Connection to " + mHost + " successful");
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, "While connecting to server \"" + mHost + "\": " + e.toString());            
             
@@ -194,7 +194,7 @@ public class TFCouchDbService extends Service {
                 this, 
                 getText(status), 
                 getText(message), 
-                PendingIntent.getActivity(this, 0, new Intent(this, TFMainMenuActivity.class), 0));
+                PendingIntent.getActivity(this, 0, new Intent(this, MainBrowserActivity.class), 0));
     
         mNM.notify(R.string.tf_connection_status_notification, notification);
     }

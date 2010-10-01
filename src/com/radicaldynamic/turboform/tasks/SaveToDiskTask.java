@@ -14,6 +14,12 @@
 
 package com.radicaldynamic.turboform.tasks;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.regex.Pattern;
+
+import org.ektorp.Attachment;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.instance.FormInstance;
@@ -21,20 +27,18 @@ import org.javarosa.core.services.transport.payload.ByteArrayPayload;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.model.xform.XFormSerializingVisitor;
-import com.radicaldynamic.turboform.application.Collect;
-import com.radicaldynamic.turboform.database.FileDbAdapter;
-import com.radicaldynamic.turboform.listeners.FormSavedListener;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.os.AsyncTask;
+import android.util.Base64;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import com.radicaldynamic.turboform.application.Collect;
+import com.radicaldynamic.turboform.documents.InstanceDocument;
+import com.radicaldynamic.turboform.listeners.FormSavedListener;
+import com.radicaldynamic.turboform.services.CouchDbService;
+import com.radicaldynamic.turboform.utilities.FileUtils;
 
 /**
  * Background task for loading a form.
@@ -46,10 +50,10 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     private final static String t = "SaveToDiskTask";
 
     private FormSavedListener mSavedListener;
-    private String mInstancePath;
     private Context mContext;
     private Boolean mSave;
-    private Boolean mMarkCompleted;	
+    private Boolean mMarkCompleted;
+    private String mInstanceId;
 
     public static final int SAVED = 500;
     public static final int SAVE_ERROR = 501;
@@ -64,8 +68,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
      */
     @Override
     protected Integer doInBackground(Void... nothing) {
-
-        // validation failed, pass specific failure
+        // Validation failed, pass specific failure
         int validateStatus = validateAnswers(mMarkCompleted);
         if (validateStatus != VALIDATED) {
             return validateStatus;
@@ -73,93 +76,89 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
 
         Collect.getInstance().getFormEntryController().getModel().getForm().postProcessInstance();
 
-        if (mSave && exportData(mInstancePath, mContext,mMarkCompleted)) {
+        if (mSave && exportData(mContext, mMarkCompleted)) {
             return SAVED_AND_EXIT;
-        } else if (exportData(mInstancePath, mContext,mMarkCompleted)) {
+        } else if (exportData(mContext, mMarkCompleted)) {
             return SAVED;
         }
 
         return SAVE_ERROR;
-
     }
 
 
-    public boolean exportData(String instancePath, Context context, boolean markCompleted) {
-
+    public boolean exportData(Context context, boolean markCompleted) {
         ByteArrayPayload payload;
+        
         try {
-
-            // assume no binary data inside the model.
+            // Assume no binary data inside the model
             FormInstance datamodel = Collect.getInstance().getFormEntryController().getModel().getForm().getInstance();
             XFormSerializingVisitor serializer = new XFormSerializingVisitor();
             payload = (ByteArrayPayload) serializer.createSerializedPayload(datamodel);
 
-            // write out xml
-            exportXmlFile(payload, instancePath);
-
+            // Write out XML
+            exportXmlFile(payload, markCompleted);
         } catch (IOException e) {
             Log.e(t, "Error creating serialized payload");
             e.printStackTrace();
             return false;
         }
 
-        FileDbAdapter fda = new FileDbAdapter();
-        fda.open();
-        File f = new File(instancePath);
-        Cursor c = fda.fetchFilesByPath(f.getAbsolutePath(), null);
-        if (!mMarkCompleted) {		
-            if (c != null && c.getCount() == 0) {		
-                fda.createFile(instancePath, FileDbAdapter.TYPE_INSTANCE,		
-                        FileDbAdapter.STATUS_INCOMPLETE);		
-            } else {		
-                fda.updateFile(instancePath, FileDbAdapter.STATUS_INCOMPLETE);		
-            }		
-        } else {
-        if (c != null && c.getCount() == 0) {
-            fda
-                    .createFile(instancePath, FileDbAdapter.TYPE_INSTANCE,
-                        FileDbAdapter.STATUS_COMPLETE);
-
-        } else {
-            fda.updateFile(instancePath, FileDbAdapter.STATUS_COMPLETE);
-        }}
-        // clean up cursor
-        if (c != null) {
-            c.close();
-        }
-
-        fda.close();
         return true;
-
     }
 
 
-    private boolean exportXmlFile(ByteArrayPayload payload, String path) {
-
-        // create data stream
+    private boolean exportXmlFile(ByteArrayPayload payload, boolean markCompleted) {
+        // Create data stream
         InputStream is = payload.getPayloadStream();
         int len = (int) payload.getLength();
 
-        // read from data stream
+        // Read from data stream
         byte[] data = new byte[len];
+        
         try {
             int read = is.read(data, 0, len);
             if (read > 0) {
-                // write xml file
-                try {
-                    // String filename = path + "/" +
-                    // path.substring(path.lastIndexOf('/') + 1) + ".xml";
-                    BufferedWriter bw = new BufferedWriter(new FileWriter(path));
-                    bw.write(new String(data, "UTF-8"));
-                    bw.flush();
-                    bw.close();
-                    return true;
+                CouchDbService db = Collect.mDb.open();                
+                InstanceDocument instance = db.getDb().get(InstanceDocument.class, mInstanceId);   
+                                
+                if (markCompleted)
+                    instance.setStatus(InstanceDocument.Status.complete);
+                else
+                    instance.setStatus(InstanceDocument.Status.incomplete);
+                
+                // Save form data
+                instance.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data, Base64.DEFAULT), "text/xml"));
+                
+                // Save media attachments
+                File cacheDir = new File(FileUtils.CACHE_PATH);
+                String[] fileNames = cacheDir.list();                           
+                                            
+                for (String file : fileNames) {
+                    Log.v(Collect.LOGTAG, mInstanceId + ": evaluating " + file + " for save to DB");
+                    
+                    if (Pattern.matches("^" + mInstanceId + "[.].*", file)) {                                
+                        Log.d(Collect.LOGTAG, mInstanceId + ": attaching " + file);
+                        
+                        instance.addInlineAttachment(
+                                new Attachment(
+                                        file, 
+                                        Base64.encodeToString(FileUtils.getFileAsBytes(new File(FileUtils.CACHE_PATH + file)), Base64.DEFAULT), 
+                                        MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1))));
 
-                } catch (IOException e) {
-                    Log.e(t, "Error writing XML file");
-                    e.printStackTrace();
-                    return false;
+                        if (FileUtils.deleteFile(FileUtils.CACHE_PATH + file)) {
+                            Log.d(Collect.LOGTAG, mInstanceId + ": removed attached file " + file);                            
+                        } else {
+                            Log.e(Collect.LOGTAG, mInstanceId + ": failed removal of attached file " + file);
+                        }
+                    }
                 }
+                                
+                db.getDb().update(instance);                
+                
+                if (instance.getId().length() > 0) 
+                    return true;
+                else 
+                    return false;
             }
         } catch (IOException e) {
             Log.e(t, "Error reading from payload data stream");
@@ -168,7 +167,6 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         }
 
         return false;
-
     }
 
 
@@ -188,11 +186,11 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     }
 
 
-    public void setExportVars(String instancePath, Context context, Boolean saveAndExit, Boolean markCompleted) {
-        mInstancePath = instancePath;
+    public void setExportVars(Context context, String instanceId, Boolean saveAndExit, Boolean markCompleted) {        
         mContext = context;
         mSave = saveAndExit;
         mMarkCompleted = markCompleted;
+        mInstanceId = instanceId;
     }
 
 
@@ -212,24 +210,22 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         fec.jumpToIndex(FormIndex.createBeginningOfFormIndex());
 
         int event;
+        
         while ((event = fec.stepToNextEvent()) != FormEntryController.EVENT_END_OF_FORM) {
             if (event != FormEntryController.EVENT_QUESTION) {
                 continue;
             } else {
-                int saveStatus =
-                	fec.answerQuestion(fem.getQuestionPrompt().getAnswerValue());
+                int saveStatus = fec.answerQuestion(fem.getQuestionPrompt().getAnswerValue());
+                
                 if (markCompleted && saveStatus != FormEntryController.ANSWER_OK) { 
-                	Collect.getInstance().createConstraintToast(
-        					fem.getQuestionPrompt()
-        					.getConstraintText(), saveStatus);
+                	Collect.getInstance().createConstraintToast(fem.getQuestionPrompt().getConstraintText(), saveStatus);
         			return saveStatus;
                 }
             }
         }
 
         fec.jumpToIndex(i);
+        
         return VALIDATED;
     }
-
-
 }

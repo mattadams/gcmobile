@@ -49,7 +49,7 @@ public final class FileUtils {
     public static final String SPLASH_SCREEN_FILE_PATH = CONFIG_PATH + "default/splash.png";
     public static final String FORM_LOGO_FILE_PATH = CONFIG_PATH + "default/form_logo.png";
     public static final String XSL_EXTENSION_PATH = ODK_ROOT + "xsl/";
-    public static final String CACHE_PATH = ODK_ROOT + ".cache/";
+    public static final String CACHE_PATH = ODK_ROOT + "cache/";
     public static final String TMPFILE_PATH = CACHE_PATH + "tmp.jpg";
 
     public static final String getDatabasePath() {

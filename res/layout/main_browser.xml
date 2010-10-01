@@ -30,20 +30,20 @@ the License.
                 
         <TableRow>                       
             <Spinner 
+                android:id="@+id/group_filter"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight=".50"               
+                android:drawSelectorOnTop="true"                
+                android:prompt="@string/tf_main_menu_group_filter_prompt" />
+           
+            <Spinner 
                 android:id="@+id/form_filter"
                 android:layout_width="0dip"
                 android:layout_height="wrap_content"
                 android:layout_weight=".50"               
                 android:drawSelectorOnTop="true"                
                 android:prompt="@string/tf_main_menu_form_filter_prompt" />
-           
-            <Spinner 
-                android:id="@+id/record_filter"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_weight=".50"               
-                android:drawSelectorOnTop="true"                
-                android:prompt="@string/tf_main_menu_record_filter_prompt" />
         </TableRow>
         
         <TableRow>                       
@@ -53,14 +53,14 @@ the License.
                 android:layout_height="wrap_content"
                 android:layout_weight="0.50"                
                 android:gravity="center_vertical|center_horizontal"
-                android:text="@string/tf_main_menu_form_filter_label" />            
+                android:text="@string/tf_main_menu_group_filter_label" />            
             <TextView
                 android:id="@+id/empty2"
                 android:layout_width="0dip"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.50"                
                 android:gravity="center_vertical|center_horizontal"
-                android:text="@string/tf_main_menu_record_filter_label" />
+                android:text="@string/tf_main_menu_form_filter_label" />
         </TableRow>     
     </TableLayout>
         
@@ -68,6 +68,5 @@ the License.
         android:id="@id/android:list"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_above="@+id/filters" />                        
-  
+        android:layout_above="@+id/filters" />    
 </RelativeLayout>

@@ -55,6 +55,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
     private Uri mExternalUri;
     private String mCaptureIntent;
     private String mInstanceFolder;
+    private String mInstanceId;
     private int mRequestCode;
     private int mCaptureText;
     private int mReplaceText;
@@ -68,7 +69,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
 
     private void initialize(String instancePath) {
         mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf("/") + 1);
-
+        mInstanceId = instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.length());
         mExternalUri = Video.Media.EXTERNAL_CONTENT_URI;
         mCaptureIntent = android.provider.MediaStore.ACTION_VIDEO_CAPTURE;
         mRequestCode = FormEntryActivity.VIDEO_CAPTURE;
@@ -206,7 +207,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
         String binarypath = getPathFromUri((Uri) binaryuri);
 
         File f = new File(binarypath);
-        String s = mInstanceFolder + "/" + binarypath.substring(binarypath.lastIndexOf('/') + 1);
+        String s = mInstanceFolder + "/" + mInstanceId + binarypath.substring(binarypath.lastIndexOf('/') + 1);
         if (!f.renameTo(new File(s))) {
             Log.e(t, "Failed to rename " + f.getAbsolutePath());
         }

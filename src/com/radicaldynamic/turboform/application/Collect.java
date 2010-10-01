@@ -7,6 +7,7 @@ import org.javarosa.form.api.FormEntryController;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,11 +16,11 @@ import android.widget.Toast;
 
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.logic.FileReferenceFactory;
-import com.radicaldynamic.turboform.services.TFCouchDbService;
+import com.radicaldynamic.turboform.services.CouchDbService;
 
 public class Collect extends Application {
     public final static String LOGTAG = "TurboForm";
-    public static TFCouchDbService mDb = null;
+    public static CouchDbService mDb = null;
 
 	private static Collect singleton = null;
 	
@@ -65,16 +66,18 @@ public class Collect extends Application {
 
 
 	public void registerMediaPath(String mediaPath) {
-        if ( factory != null ) {
+	    Log.d(LOGTAG, "Registering media path " + mediaPath);
+	    
+	    if (factory != null) {
     		ReferenceManager._().removeReferenceFactory(factory);
-        }
+        }               
+        
     	factory = new FileReferenceFactory(mediaPath);
         ReferenceManager._().addReferenceFactory(factory);
         
     	if (firstReferenceInitialization) {
     		firstReferenceInitialization = false;
-            ReferenceManager._()
-                    .addRootTranslator(new RootTranslator("jr://images/", "jr://file/"));
+            ReferenceManager._().addRootTranslator(new RootTranslator("jr://images/", "jr://file/"));
             ReferenceManager._().addRootTranslator(new RootTranslator("jr://audio/", "jr://file/"));
             ReferenceManager._().addRootTranslator(new RootTranslator("jr://video/", "jr://file/"));
         }

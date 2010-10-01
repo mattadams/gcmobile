@@ -14,12 +14,21 @@
 
 package com.radicaldynamic.turboform.tasks;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream; 
+import java.io.IOException;
+import java.util.Map;
+
+import org.ektorp.Attachment;
+import org.ektorp.AttachmentInputStream;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.condition.EvaluationContext;
 import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.core.model.instance.TreeReference;
-import org.javarosa.core.reference.ReferenceManager;
-import org.javarosa.core.reference.RootTranslator;
 import org.javarosa.core.services.PrototypeManager;
 import org.javarosa.core.util.externalizable.DeserializationException;
 import org.javarosa.core.util.externalizable.ExtUtil;
@@ -27,23 +36,18 @@ import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xform.util.XFormUtils;
-import com.radicaldynamic.turboform.R;
-import com.radicaldynamic.turboform.application.Collect;
-import com.radicaldynamic.turboform.listeners.FormLoaderListener;
-import com.radicaldynamic.turboform.logic.FileReferenceFactory;
-import com.radicaldynamic.turboform.utilities.FileUtils;
 
 import android.os.AsyncTask;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.radicaldynamic.turboform.R;
+import com.radicaldynamic.turboform.application.Collect;
+import com.radicaldynamic.turboform.documents.FormDocument;
+import com.radicaldynamic.turboform.documents.InstanceDocument;
+import com.radicaldynamic.turboform.listeners.FormLoaderListener;
+import com.radicaldynamic.turboform.utilities.FileUtils;
 
 /**
  * Background task for loading a form.
@@ -53,6 +57,7 @@ import java.io.IOException;
  */
 public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FECWrapper> {
     private final static String t = "FormLoaderTask";
+    
     /**
      * Classes needed to serialize objects
      */
@@ -86,16 +91,13 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     protected class FECWrapper {
         FormEntryController controller;
 
-
         protected FECWrapper(FormEntryController controller) {
             this.controller = controller;
         }
 
-
         protected FormEntryController getController() {
             return controller;
         }
-
 
         protected void free() {
             controller = null;
@@ -110,134 +112,144 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      * an instance, it will be used to fill the {@link FormDef}.
      */
     @Override
-    protected FECWrapper doInBackground(String... path) {
+    protected FECWrapper doInBackground(String... ids) {
         FormEntryController fec = null;
         FormDef fd = null;
-        FileInputStream fis = null;
+        
+        String formId = ids[0];
+        String instanceId = ids[1];
+        
+        // TODO: we need to handle what happens when a form document no longer exists
+        // or perhaps we don't do that here at all...
+        FormDocument form = Collect.mDb.getDb().get(FormDocument.class, formId);                
+        File formBin = new File(FileUtils.CACHE_PATH + formId + ".formdef");
+        
+        Log.i(Collect.LOGTAG, formId + ": loading form named " + form.getName());
 
-        String formPath = path[0];
-        String instancePath = path[1];
-
-        File formXml = new File(formPath);
-        File formBin = new File(FileUtils.CACHE_PATH + FileUtils.getMd5Hash(formXml) + ".formdef");
-
-        if ( formXml.exists() && formBin.exists() &&
-        	 formBin.lastModified() < formXml.lastModified() ) {
-        	// the cache is stale w.r.t. the xml -- delete cache.
-        	// Mainly useful for development.  Could be more 
-        	// important going forward if users are updating 
-        	// or adding IAV features to existing forms.
-        	Log.i(t,"Stale .cache file -- deleting!");
+        if (formBin.exists() && formBin.lastModified() < form.getDateUpdatedAsCalendar().getTimeInMillis()) {
+            /*
+             * The cache is stale with regards to the XML so delete the cache file.
+             * This is mainly used for development but could be more important going
+             * forward if users are updating or adding IAV features to existing forms.
+             */
+        	Log.d(Collect.LOGTAG, formId + ": removing stale form cache file");
         	formBin.delete();
         }
             
-        if (formBin.exists()) {
-        	// if we have binary, deserialize binary
+        // If we have binary then attempt to deserialize it
+        if (formBin.exists()) {        	
         	try {
+        	    Log.d(Collect.LOGTAG, formId + ": loading serialized form binary");
         		fd = deserializeFormDef(formBin);
-        	} catch ( Exception e ) {
-        		// didn't load -- delete the cache and try plain xml
+        	} catch (Exception e) {
+                // If it did not load delete the file and read the XML directly
+        	    Log.d(Collect.LOGTAG, formId + ": serialized form binary failed to load: " + e.toString());
         		formBin.delete();
         	}
         }
         
-        if ( fd == null ) {
-            // no binary, or didn't load -- read from xml
+        // Either a binary wasn't present or didn't load -- read directly from XML
+        if (fd == null) {            
             try {
-            	Log.i(t,"Attempting read of " + formXml.getAbsolutePath());
-
-            	fis = new FileInputStream(formXml);
-                fd = XFormUtils.getFormFromInputStream(fis);
+            	Log.d(Collect.LOGTAG, formId + ": attempting read of " + form.getName() + " XML attachment");
+            	
+            	AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(formId, "xml");
+            	fd = XFormUtils.getFormFromInputStream(ais);
+            	ais.close();            	            	
+            	
                 if (fd == null) {
+                    Log.e(Collect.LOGTAG, formId + ": failed to load form definition from XML");
                     return null;
                 }
-                serializeFormDef(fd, formPath);
-
-            } catch (FileNotFoundException e) {
+                
+                serializeFormDef(fd, formId);
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, formId + ": failed to load form definition from XML: " + e.toString());
                 e.printStackTrace();
-                if (fd == null) {
-                    return null;
-                }
+                return null;
             }
         }
 
-        // new evaluation context for function handlers
+        // New evaluation context for function handlers
         EvaluationContext ec = new EvaluationContext();
         fd.setEvaluationContext(ec);
 
-        // create FormEntryController from formdef
+        // Create FormEntryController from form definition
         FormEntryModel fem = new FormEntryModel(fd);
         fec = new FormEntryController(fem);
 
-        try {
-	        // import existing data into formdef
-	        if (instancePath != null) {
-	            // This order is important.  Import data, then initialize.
-	            importData(instancePath, fec);
-	            fd.initialize(false);
-	        } else {
+        // Import existing data into form definition
+        try {            
+	        if (instanceId == null) {
+	            Log.d(Collect.LOGTAG, formId + ": new instance");
 	            fd.initialize(true);
+	        } else {
+	            // Import data, then initialise (this order is important)
+	            Log.d(Collect.LOGTAG, formId + ": existing instance");
+                importData(formId, instanceId, fec);
+                fd.initialize(false);
 	        }
-        } catch ( Exception e ) {
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, formId + ": failed loading data into form definition: " + e.toString());
         	e.printStackTrace();
-            Toast.makeText(Collect.getInstance().getApplicationContext(), 
-                    Collect.getInstance().getString(R.string.load_error,
-                    		formXml.getName()) + " : " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
+        	
+            Toast.makeText(
+                    Collect.getInstance().getApplicationContext(),
+                    Collect.getInstance().getString(R.string.load_error, form.getName()) + " : " + e.getMessage(), Toast.LENGTH_LONG).show();
+            
         	return null;
         }
 
-        // set paths to FORMS_PATH + formfilename-media/
-        // This is a singleton, how do we ensure that we're not doing this
-        // multiple times?
-        String mediaPath = FileUtils.getFormMediaPath(formXml);
-        
-        Collect.getInstance().registerMediaPath(mediaPath);
+        Collect.getInstance().registerMediaPath(FileUtils.CACHE_PATH + formId + ".");
 
-        // clean up vars
-        fis = null;
         fd = null;
         formBin = null;
-        formXml = null;
-        formPath = null;
-        instancePath = null;
+        form = null;
+        formId = null;
+        instanceId = null;
 
         data = new FECWrapper(fec);
+        
         return data;
-
     }
 
 
-    public boolean importData(String filePath, FormEntryController fec) {
-        // convert files into a byte array
-        byte[] fileBytes = FileUtils.getFileAsBytes(new File(filePath));
+    public boolean importData(String formId, String instanceId, FormEntryController fec) {
+        Log.d(Collect.LOGTAG, formId + ": importing instance " + instanceId);
+        
+        // Retrieve form instance from database
+        InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, instanceId);
+        
+        // Obtain XML attachment with data that needs to be decoded
+        Map<String, Attachment> attachments = instance.getAttachments();
+        Attachment xml = attachments.get("xml");
 
-        // get the root of the saved and template instances
-        TreeElement savedRoot = XFormParser.restoreDataModel(fileBytes, null).getRoot();
+        // Get the root of the saved and template instances
+        TreeElement savedRoot = XFormParser.restoreDataModel(Base64.decode(xml.getDataBase64(), Base64.DEFAULT), null).getRoot();
         TreeElement templateRoot = fec.getModel().getForm().getInstance().getRoot().deepCopy(true);
 
-        // weak check for matching forms
+        // Weak check for matching forms
         if (!savedRoot.getName().equals(templateRoot.getName()) || savedRoot.getMult() != 0) {
-            Log.e(t, "Saved form instance does not match template form definition");
+            Log.e(Collect.LOGTAG, formId + ": saved form instance does not match template form definition");
             return false;
         } else {
-            // populate the data model
+            // Populate the data model
             TreeReference tr = TreeReference.rootRef();
             tr.add(templateRoot.getName(), TreeReference.INDEX_UNBOUND);
             templateRoot.populate(savedRoot, fec.getModel().getForm());
 
-            // populated model to current form
+            // Populated model to current form
             fec.getModel().getForm().getInstance().setRoot(templateRoot);
 
-            // fix any language issues
-            // : http://bitbucket.org/javarosa/main/issue/5/itext-n-appearing-in-restored-instances
+            /*
+             * Fix any language issues
+             * http://bitbucket.org/javarosa/main/issue/5/itext-n-appearing-in-restored-instances
+             */
             if (fec.getModel().getLanguages() != null) {
-                fec.getModel().getForm().localeChanged(fec.getModel().getLanguage(),
-                    fec.getModel().getForm().getLocalizer());
+                fec.getModel().getForm().localeChanged(fec.getModel().getLanguage(), fec.getModel().getForm().getLocalizer());
             }
 
             return true;
-
         }
     }
 
@@ -249,24 +261,23 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      * @return {@link FormDef} object
      */
     public FormDef deserializeFormDef(File formDef) {
-
         // TODO: any way to remove reliance on jrsp?
     	Log.i(t,"Attempting read of " + formDef.getAbsolutePath());
 
-        // need a list of classes that formdef uses
+        // Need a list of classes that formDef uses
         PrototypeManager.registerPrototypes(SERIALIABLE_CLASSES);
         FileInputStream fis = null;
         FormDef fd = null;
         DataInputStream dis = null;
+        
         try {
-            // create new form def
+            // Create new form definition
             fd = new FormDef();
             fis = new FileInputStream(formDef);
             dis = new DataInputStream(fis);
 
-            // read serialized formdef into new formdef
+            // Read serialised form definition into new form definition
             fd.readExternal(dis, ExtUtil.defaultPrototypes());
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             fd = null;
@@ -284,8 +295,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         			// ignore...
         		}
         	}
-        }
-        
+        }        
 
         return fd;
     }
@@ -296,17 +306,18 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      * 
      * @param filepath path to the form file
      */
-    public void serializeFormDef(FormDef fd, String filepath) {
-        // if cache folder is missing, create it.
+    public void serializeFormDef(FormDef fd, String id) {
+        Log.i(Collect.LOGTAG, id + ": serializing form as binary");
+        
+        // If cache folder is missing, create it.
         if (FileUtils.createFolder(FileUtils.CACHE_PATH)) {
+            // Calculate unique md5 identifier            
+            File formDef = new File(FileUtils.CACHE_PATH + id + ".formdef");
 
-            // calculate unique md5 identifier
-            String hash = FileUtils.getMd5Hash(new File(filepath));
-            File formDef = new File(FileUtils.CACHE_PATH + hash + ".formdef");
-
-            // formdef does not exist, create one.
+            // If formDef does not exist, create one
             if (!formDef.exists()) {
                 FileOutputStream fos;
+                
                 try {
                     fos = new FileOutputStream(formDef);
                     DataOutputStream dos = new DataOutputStream(fos);

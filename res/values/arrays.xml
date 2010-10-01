@@ -25,12 +25,11 @@ the License.
         <item>done</item>
     </string-array>
     
-    <string-array name="tf_main_menu_record_filters">
+    <string-array name="tf_main_menu_form_filters">
         <item>Filter off</item>        
-        <item>Incomplete records</item>
-        <item>Completed records</item>
-        <item>New records</item>
-        <item>Without records</item>        
+        <item>Incomplete forms</item>
+        <item>Completed forms</item>
+        <item>Unread forms</item>                
     </string-array>    
         
     <string-array name="tf_time_period_entry_preferences">

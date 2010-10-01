@@ -14,13 +14,11 @@
 
 package com.radicaldynamic.turboform.widgets;
 
+import java.io.File;
+
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
-import com.radicaldynamic.turboform.R;
-import com.radicaldynamic.turboform.activities.FormEntryActivity;
-import com.radicaldynamic.turboform.utilities.FileUtils;
-import com.radicaldynamic.turboform.views.AbstractFolioView;
 
 import android.app.Activity;
 import android.content.Context;
@@ -38,7 +36,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.File;
+import com.radicaldynamic.turboform.R;
+import com.radicaldynamic.turboform.activities.FormEntryActivity;
+import com.radicaldynamic.turboform.utilities.FileUtils;
+import com.radicaldynamic.turboform.views.AbstractFolioView;
 
 /**
  * Widget that allows user to take pictures, sounds or video and add them to the form.
@@ -72,6 +73,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
 
     private void initialize(String instancePath) {
         mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf("/") + 1);
+        instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.length());
         mExternalUri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         mCaptureIntent = android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
         mRequestCode = FormEntryActivity.IMAGE_CAPTURE;
