@@ -4,7 +4,15 @@ public class InstanceDocument extends GenericDocument
 {    
     private static final long serialVersionUID = -2924171490521236262L;
 
-    public static enum Status {placeholder, incomplete, complete, updated, deleted, nonexistent};
+    /*
+     * Placeholder: Created when a new instance is created for entry (may be deleted if instance entry is cancelled before being saved)
+     * Incomplete:  A form instance that is saved but not marked complete
+     * Complete:    A form instance that is saved and marked complete
+     * Updated:     Not an actual status (represents forms that have been updated/created by others)
+     * Deleted:     A form instance marked for delayed deletion
+     * Nothing:     Not an actual status (represents queries for forms without regard for instance status)
+     */
+    public static enum Status {placeholder, incomplete, complete, updated, deleted, nothing};
     
     private String form;
     private Status status;

@@ -37,7 +37,6 @@ import android.webkit.MimeTypeMap;
 import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.documents.InstanceDocument;
 import com.radicaldynamic.turboform.listeners.FormSavedListener;
-import com.radicaldynamic.turboform.services.CouchDbService;
 import com.radicaldynamic.turboform.utilities.FileUtils;
 
 /**
@@ -118,8 +117,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         try {
             int read = is.read(data, 0, len);
             if (read > 0) {
-                CouchDbService db = Collect.mDb.open();                
-                InstanceDocument instance = db.getDb().get(InstanceDocument.class, mInstanceId);   
+                InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, mInstanceId);   
                                 
                 if (markCompleted)
                     instance.setStatus(InstanceDocument.Status.complete);
@@ -153,7 +151,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                     }
                 }
                                 
-                db.getDb().update(instance);                
+                Collect.mDb.getDb().update(instance);                
                 
                 if (instance.getId().length() > 0) 
                     return true;

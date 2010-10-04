@@ -40,7 +40,6 @@ import com.radicaldynamic.turboform.activities.FormDownloadList;
 import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.listeners.FormDownloaderListener;
-import com.radicaldynamic.turboform.services.CouchDbService;
 
 /**
  * Background task for downloading forms from urls or a formlist from a url. We overload this task a
@@ -226,9 +225,8 @@ public class DownloadFormsTask extends
             }            
             
             // Create attachment and save form
-            form.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT), "text/xml"));
-            CouchDbService db = Collect.mDb.open();
-            db.getDb().create(form);
+            form.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT), "text/xml"));            
+            Collect.mDb.getDb().create(form);
             
             data.close();            
         } catch (IOException e) {

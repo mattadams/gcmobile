@@ -29,8 +29,7 @@ public class FormRepository extends CouchDbRepositorySupport<FormDocument>
     }
 
     public List<FormDocument> getAllByKeys(Collection<Object> keys) {
-        List<FormDocument> forms = db.queryView(createQuery("all").keys(keys).includeDocs(true), 
-                FormDocument.class);
+        List<FormDocument> forms = db.queryView(createQuery("all").keys(keys).includeDocs(true), FormDocument.class);
         return forms;
     }
     

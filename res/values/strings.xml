@@ -171,9 +171,12 @@
 	<string name="tf_begin_instance_hint">Select list item to begin new form</string>
 	<string name="tf_browse_instances_hint">Select item to browse %s</string>
 	<string name="tf_choose_one">Choose one</string>
+	<string name="tf_connection_established_status">Connection established</string>
 	<string name="tf_connection_interrupted_status">Connection interrupted</string>
-	<string name="tf_connection_status_notification">CONNECTION STATUS NOTIFICATION</string>
+	<string name="tf_connection_interrupted_msg">Automatically retrying connection...</string>
+	<string name="tf_connection_status_notification">CONNECTION STATUS NOTIFICATION</string>	
 	<string name="tf_connection_reestablished_status">Connection reestablished</string>
+	<string name="tf_connection_reestablished_msg">TurboForm is now online</string>
 	<string name="tf_connectivity_settings">Connectivity settings</string>
 	<string name="tf_couchdb_prefix">turboform/</string>
 	<string name="tf_custom_server_settings">Custom Server Settings</string>

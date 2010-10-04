@@ -66,7 +66,6 @@ import com.radicaldynamic.turboform.documents.InstanceDocument;
 import com.radicaldynamic.turboform.listeners.FormLoaderListener;
 import com.radicaldynamic.turboform.listeners.FormSavedListener;
 import com.radicaldynamic.turboform.logic.PropertyManager;
-import com.radicaldynamic.turboform.services.CouchDbService;
 import com.radicaldynamic.turboform.tasks.FormLoaderTask;
 import com.radicaldynamic.turboform.tasks.SaveToDiskTask;
 import com.radicaldynamic.turboform.utilities.FileUtils;
@@ -120,8 +119,7 @@ public class FormEntryActivity extends Activity implements
 
 	// TODO: Uncomment when ProgressBar slow down is fixed.
 	// private ProgressBar mProgressBar;
-
-	private CouchDbService mDb;
+	
 	private String mFormId = null;
 	private String mInstanceId = null;
 
@@ -171,8 +169,6 @@ public class FormEntryActivity extends Activity implements
 		mInAnimation = null;
 		mOutAnimation = null;
 		mGestureDetector = new GestureDetector();
-		
-		mDb = Collect.mDb.open();
 
 		// Load JavaRosa modules, needed to restore forms
 		new XFormsModule().registerModule();
@@ -924,10 +920,10 @@ public class FormEntryActivity extends Activity implements
 						// Discard changes and exit
 						case 0:
 						    // Remove an instance if it has no status (e.g., recently created)
-						    InstanceDocument instance = mDb.getDb().get(InstanceDocument.class, mInstanceId);
+						    InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, mInstanceId);
 						    
 						    if (instance.getStatus() == InstanceDocument.Status.placeholder) {
-						        mDb.getDb().delete(instance);
+						        Collect.mDb.getDb().delete(instance);
 						        Log.d(Collect.LOGTAG, mFormId + ": removed placeholder instance " + mInstanceId);
 						    }
 						    
@@ -1253,7 +1249,7 @@ public class FormEntryActivity extends Activity implements
 		dismissDialog(PROGRESS_DIALOG);
 		
 		if (fec == null) {
-			createErrorDialog(getString(R.string.load_error, mDb.getDb().get(FormDocument.class, mFormId).getName()), true);
+			createErrorDialog(getString(R.string.load_error, Collect.mDb.getDb().get(FormDocument.class, mFormId).getName()), true);
 		} else {
 			Collect.getInstance().setFormEntryController(fec);
 			mFormEntryModel = fec.getModel();
@@ -1262,7 +1258,7 @@ public class FormEntryActivity extends Activity implements
 			if (mInstanceId == null) {
 			    InstanceDocument instance = new InstanceDocument();
 			    instance.setForm(mFormId);
-			    mDb.getDb().create(instance);
+			    Collect.mDb.getDb().create(instance);
 			    mInstanceId = instance.getId();	    
 			    mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
 			} else {
@@ -1480,7 +1476,7 @@ public class FormEntryActivity extends Activity implements
 	}
 
 	private boolean isInstanceComplete() {
-	    InstanceDocument instance = mDb.getDb().get(InstanceDocument.class, mInstanceId);
+	    InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, mInstanceId);
 	    
 	    if (instance.getStatus() == InstanceDocument.Status.complete) 
 	        return true;

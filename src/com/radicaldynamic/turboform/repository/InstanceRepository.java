@@ -19,4 +19,9 @@ public class InstanceRepository extends CouchDbRepositorySupport<InstanceDocumen
     public List<InstanceDocument> findByForm(String formId) {
         return queryView("by_form", formId);
     }
+    
+    @GenerateView
+    public List<InstanceDocument> findByStatus(InstanceDocument.Status status) {
+        return queryView("by_status", status.toString());
+    }
 }

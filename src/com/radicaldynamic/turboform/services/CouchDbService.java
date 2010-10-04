@@ -50,8 +50,10 @@ public class CouchDbService extends Service {
     private HttpClient mHttpClient = null;
     private StdCouchDbInstance mDbInstance = null;
     private StdCouchDbConnector mDb = null;
+    
     private boolean mInit = false;
-    private boolean mConnected = true;
+    private boolean mConnected = false;
+    private boolean mFirstConnection = true;
     
     // This is the object that receives interactions from clients.  
     // See RemoteService for a more complete example.
@@ -65,7 +67,8 @@ public class CouchDbService extends Service {
             for (int i = 1; i > 0; ++i) {
                 if (mInit == false)
                     connect(true);
-                if (mCondition.block(60 * 1000))
+                // Retry every 120 seconds
+                if (mCondition.block(120 * 1000))
                     break;
             }
         }
@@ -127,7 +130,7 @@ public class CouchDbService extends Service {
         try {
             mDb.createDatabaseIfNotExists();
         } catch (Exception e) {          
-            Log.e(Collect.LOGTAG, "While opening DB named \"" + database + "\": " + e.toString());
+            Log.e(Collect.LOGTAG, "While opening DB " + database + ": " + e.toString());
         }    
 
         return this;
@@ -146,7 +149,22 @@ public class CouchDbService extends Service {
     }
     
     public StdCouchDbConnector getDb() {
-        return mDb;   
+        connect(false);
+        
+        for (int i = 1; i > 0; ++i) {
+            if (mConnected == true) 
+                break;              
+            
+            // This is to ensure that we do not run out of int space too soon
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        
+        return mDb;        
     }   
         
     private void connect(boolean persistent) {
@@ -160,25 +178,28 @@ public class CouchDbService extends Service {
             Log.d(Collect.LOGTAG, "Connecting to " + mHost);
         }            
         
-        try { 
+        try {                        
             mHttpClient = new StdHttpClient.Builder().host(mHost).port(mPort).build();     
             mDbInstance = new StdCouchDbInstance(mHttpClient);            
             
             mDbInstance.getAllDatabases();
             
             if (mConnected == false) {
-                mConnected = true;        
-                notifyOfConnectionAttempt(R.string.tf_connection_reestablished_status, R.string.tf_manage_item);
+                mConnected = true;
+                
+                if (mFirstConnection == true) {
+                    mFirstConnection = false;
+                    notifyOfConnectionAttempt(R.string.tf_connection_established_status, R.string.tf_connection_reestablished_msg);
+                } else {
+                    notifyOfConnectionAttempt(R.string.tf_connection_reestablished_status, R.string.tf_connection_reestablished_msg);    
+                }                
             }
             
             Log.d(Collect.LOGTAG, "Connection to " + mHost + " successful");
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, "While connecting to server \"" + mHost + "\": " + e.toString());            
-            
-            if (mConnected == true) {
-                mConnected = false;
-                notifyOfConnectionAttempt(R.string.tf_connection_interrupted_status, R.string.tf_manage_item);
-            }            
+            mConnected = false;
+            Log.e(Collect.LOGTAG, "While connecting to server " + mHost + ": " + e.toString());          
+            notifyOfConnectionAttempt(R.string.tf_connection_interrupted_status, R.string.tf_connection_interrupted_msg);                        
         } finally { 
             mInit = false;
         }

@@ -15,6 +15,7 @@
 package com.radicaldynamic.turboform.activities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,7 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -57,7 +59,6 @@ import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.documents.InstanceDocument;
-import com.radicaldynamic.turboform.documents.InstanceDocument.Status;
 import com.radicaldynamic.turboform.preferences.GeneralPreferences;
 import com.radicaldynamic.turboform.repository.FormRepository;
 import com.radicaldynamic.turboform.services.CouchDbService;
@@ -78,6 +79,8 @@ public class MainBrowserActivity extends ListActivity
 
     private AlertDialog mAlertDialog;
     private ProgressDialog mDialog;
+    
+    private RefreshViewTask mRefreshViewTask;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
@@ -135,21 +138,27 @@ public class MainBrowserActivity extends ListActivity
         s1.setOnItemSelectedListener(new OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
+                mRefreshViewTask = new RefreshViewTask();
+                
                 switch (position) {
-                case 0:
-                    refreshView(null);
+                // Show all forms (in group)
+                case 0:                    
+                    mRefreshViewTask.execute(InstanceDocument.Status.nothing);
                     break;
+                // Show all incomplete forms
                 case 1:
-                    refreshView(InstanceDocument.Status.incomplete);
+                    mRefreshViewTask.execute(InstanceDocument.Status.incomplete);
                     break;
+                // Show all completed forms
                 case 2:
-                    refreshView(InstanceDocument.Status.complete);
-                    break;
+                    mRefreshViewTask.execute(InstanceDocument.Status.complete);
+                    break;                    
+                // Show all unread forms (e.g., those added or updated by others)
                 case 3:
-                    refreshView(InstanceDocument.Status.updated);
+                    mRefreshViewTask.execute(InstanceDocument.Status.updated);
                     break;
                 case 4:
-                    refreshView(InstanceDocument.Status.nonexistent);
+                    mRefreshViewTask.execute(InstanceDocument.Status.nothing);
                     break;
                 }
             }
@@ -228,26 +237,34 @@ public class MainBrowserActivity extends ListActivity
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
         FormDocument form = (FormDocument) getListAdapter().getItem(position);
+        InstanceLoadPathTask ilp;
+        
         Log.d(Collect.LOGTAG, "Selected form " + form.getId() + " from list");
 
-        ComponentName callingActivity = getCallingActivity();
-
-        if (callingActivity == null) {
-            // Not called as an Intent, handle regularly
-            Intent i = new Intent(
-                    "com.radicaldynamic.turboform.action.FormEntry");
+        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
+        
+        switch (s1.getSelectedItemPosition()) {
+        // Show all forms (in group)
+        case 0:                    
+            Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
             i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
             startActivity(i);
-        } else {
-            // Called as an intent, return path of form to calling activity
-
-            // Intent i = new Intent();
-            // i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
-            // setResult(RESULT_OK, i);
-            //
-            // finish();
+            break;
+        // Show all incomplete forms
+        case 1:
+            ilp = new InstanceLoadPathTask();
+            ilp.execute(form.getId(), InstanceDocument.Status.incomplete);            
+            break;
+        // Show all completed forms
+        case 2:
+            ilp = new InstanceLoadPathTask();
+            ilp.execute(form.getId(), InstanceDocument.Status.complete);            
+            break;                    
+        // Show all unread forms (e.g., those added or updated by others)
+        case 3:            
+            break;
         }
-    }
+    }     
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
@@ -258,7 +275,6 @@ public class MainBrowserActivity extends ListActivity
         case R.id.tf_sync:
             return true;
         case R.id.tf_manage:
-            // case R.id.tf_manage_forms:
             i = new Intent(this, ManageFormsActivity.class);
             startActivity(i);
             return true;
@@ -271,6 +287,9 @@ public class MainBrowserActivity extends ListActivity
         return super.onOptionsItemSelected(item);
     }
 
+    /*
+     * Display results as loaded by RefreshViewTask()
+     */
     private class FormAdapter extends ArrayAdapter<FormDocument>
     {
         private ArrayList<FormDocument> items;
@@ -278,10 +297,8 @@ public class MainBrowserActivity extends ListActivity
 
         public FormAdapter(Context context, int textViewResourceId, ArrayList<FormDocument> items, Map<String, String> instanceTallies) {
             super(context, textViewResourceId, items);
-            this.items = items;
-            
-            if (instanceTallies != null) 
-                this.instanceTallies = instanceTallies;
+            this.items = items;           
+            this.instanceTallies = instanceTallies;
         }
 
         @Override
@@ -304,7 +321,7 @@ public class MainBrowserActivity extends ListActivity
                     tt.setText(f.getName());
                 }
 
-                if (instanceTallies != null) {
+                if (!instanceTallies.isEmpty()) {
                     Spinner s1 = (Spinner) findViewById(R.id.form_filter);                    
                     
                     if (bt != null) {
@@ -321,6 +338,114 @@ public class MainBrowserActivity extends ListActivity
             }
 
             return v;
+        }
+    }
+    
+    /*
+     * Determine how to load a form instance
+     * 
+     * If there is only one instance for the form in question then load that instance directly. 
+     * If there is more than one instance then load the instance browser.
+     */
+    private class InstanceLoadPathTask extends AsyncTask<Object, Integer, List<String>>
+    {
+        String mFormId;
+        
+        @Override
+        protected List<String> doInBackground(Object... params)
+        {                       
+            mFormId = (String) params[0];
+            InstanceDocument.Status status = (InstanceDocument.Status) params[1];
+            
+            List<String> instanceIds = new ArrayList<String>();
+            
+            Map<String, String> instanceTallies = new HashMap<String, String>();
+            instanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByInstanceStatus(status);
+            
+            if (instanceTallies.get(mFormId).equals("1")) {
+                
+            } else {
+                // load form browser
+            }            
+            
+            return instanceIds;
+        }
+                
+        @Override
+        protected void onPreExecute() 
+        {
+            setProgressBarIndeterminateVisibility(true);
+        }
+        
+        @Override
+        protected void onPostExecute(List<String> instanceIds) 
+        {
+            Intent i = new Intent();
+            i.putExtra(FormEntryActivity.KEY_INSTANCEID, "");
+            i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
+            startActivity(i);
+            
+            setProgressBarIndeterminateVisibility(false);
+        }
+    }
+    
+    /*
+     * Refresh the main form browser view as requested by the user
+     */
+    private class RefreshViewTask extends AsyncTask<InstanceDocument.Status, Integer, InstanceDocument.Status>
+    {
+        private ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
+        private Map<String, String> instanceTallies = new HashMap<String, String>();
+        
+        @Override
+        protected InstanceDocument.Status doInBackground(InstanceDocument.Status... status)
+        {       
+            if (status[0] == InstanceDocument.Status.nothing) {            
+                documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAll();
+                DocumentUtils.sortByName(documents);
+            } else {
+               instanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByInstanceStatus(status[0]);          
+               documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));
+               DocumentUtils.sortByName(documents);      
+            }
+            
+            return status[0];
+        }
+        
+        @Override
+        protected void onPreExecute() 
+        {
+            setProgressBarIndeterminateVisibility(true);
+        }
+        
+        @Override
+        protected void onPostExecute(InstanceDocument.Status status) 
+        {
+            FormAdapter adapter;
+            adapter = new FormAdapter(getApplicationContext(), R.layout.tf_main_menu_list_item, documents, instanceTallies);
+            setListAdapter(adapter);
+
+            if (status == InstanceDocument.Status.nothing) {
+                // Provide hints to user
+                if (documents.isEmpty()) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
+                    openOptionsMenu();                
+                } else {            
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
+                }                 
+            } else {
+                Spinner s1 = (Spinner) findViewById(R.id.form_filter); 
+                String descriptor = s1.getSelectedItem().toString().toLowerCase();
+
+                // Provide hints to user
+                if (documents.isEmpty()) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_missing_instances_hint, descriptor), Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
+                }   
+            }
+            
+            setProgressBarIndeterminateVisibility(false);           
         }
     }
 
@@ -375,8 +500,7 @@ public class MainBrowserActivity extends ListActivity
 
         try {
             // Attempt to load the configured default splash screen
-            BitmapDrawable bitImage = new BitmapDrawable(getResources(),
-                    FileUtils.SPLASH_SCREEN_FILE_PATH);
+            BitmapDrawable bitImage = new BitmapDrawable(getResources(), FileUtils.SPLASH_SCREEN_FILE_PATH);
 
             if (bitImage.getBitmap() != null
                     && bitImage.getIntrinsicHeight() > 0
@@ -399,8 +523,7 @@ public class MainBrowserActivity extends ListActivity
         view.setImageDrawable(image);
         int width = getWindowManager().getDefaultDisplay().getWidth();
         int height = getWindowManager().getDefaultDisplay().getHeight();
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width,
-                height, 0);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width, height, 0);
         view.setLayoutParams(lp);
         view.setScaleType(ScaleType.CENTER);
         view.setBackgroundColor(Color.WHITE);
@@ -411,82 +534,40 @@ public class MainBrowserActivity extends ListActivity
         layout.addView(view);
 
         // Create the toast and set the view to be that of the FrameLayout
-        Toast t = Toast.makeText(getApplicationContext(), "splash screen",
-                Toast.LENGTH_SHORT);
+        Toast t = Toast.makeText(getApplicationContext(), "splash screen", Toast.LENGTH_SHORT);
         t.setView(layout);
         t.setGravity(Gravity.CENTER, 0, 0);
         t.show();
     }
 
     /**
-     * Get form list from database and insert into view.
-     */
-    private void refreshView(Status status)
-    {
-        setProgressBarIndeterminateVisibility(true);
-        
-        ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
-        FormAdapter adapter;
-        
-        if (status == null) {            
-            documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAll();
-            DocumentUtils.sortByName(documents);
-            
-            adapter = new FormAdapter(this, R.layout.tf_main_menu_list_item, documents, null);
-            setListAdapter(adapter);
-            
-            // Provide hints to user
-            if (documents.isEmpty()) {
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
-                openOptionsMenu();                
-            } else {            
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
-            }   
-        } else {
-           Map<String, String> instanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByInstanceStatus(status);          
-           documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));
-           DocumentUtils.sortByName(documents);
-           adapter = new FormAdapter(this, R.layout.tf_main_menu_list_item, documents, instanceTallies);
-           setListAdapter(adapter);
-           
-           Spinner s1 = (Spinner) findViewById(R.id.form_filter); 
-           String descriptor = s1.getSelectedItem().toString().toLowerCase();
-           
-           // Provide hints to user
-           if (documents.isEmpty()) {
-               Toast.makeText(getApplicationContext(), getString(R.string.tf_missing_instances_hint, descriptor), Toast.LENGTH_LONG).show();
-           } else {
-               Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
-           }   
-        }
-        
-        setProgressBarIndeterminateVisibility(false);
-    }
-
-    /**
-     * Load the various elements of the screen that must wait for other tasks to
-     * complete
+     * Load the various elements of the screen that must wait for other tasks to complete
      */
     private void loadScreen()
     {
-        /* Spinner must reflect results of refreshView() below */
+        // Spinner must reflect results of refresh view below
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);
         s1.setSelection(0);
 
-        /* Pull in a list of valid form "groups" */
+        // Pull in a list of valid groups
+        // TODO: replace this when the actual groups stuff is implemented
         Spinner s2 = (Spinner) findViewById(R.id.group_filter);
         List<String> dbs = Collect.mDb.getAllDatabases();
 
         if (dbs.isEmpty()) {
             dbs.add(getString(R.string.tf_groups_unavailable_error));
             s2.setEnabled(false);
+        } else {
+            // This control should be re-enabled if connections are re-established after the fact             
+            s2.setEnabled(true);
         }
 
         ArrayAdapter<String> collections = new ArrayAdapter<String>(MainBrowserActivity.this, android.R.layout.simple_spinner_item, dbs);
         collections.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         s2.setAdapter(collections);
 
-        refreshView(null);
+        mRefreshViewTask = new RefreshViewTask();
+        mRefreshViewTask.execute(InstanceDocument.Status.nothing);
         registerForContextMenu(getListView());
         
         mDialog.cancel();
