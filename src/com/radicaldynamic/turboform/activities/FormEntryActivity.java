@@ -15,6 +15,8 @@
 package com.radicaldynamic.turboform.activities;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.javarosa.core.model.FormDef;
@@ -42,6 +44,7 @@ import android.os.Handler;
 import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -87,25 +90,23 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private static final String t = "FormEntryActivity";
 
     // Request codes for returning data from specified intent
-    public static final int IMAGE_CAPTURE = 1;
+    public static final int IMAGE_CAPTURE = 1;                  
     public static final int BARCODE_CAPTURE = 2;
     public static final int AUDIO_CAPTURE = 3;
     public static final int VIDEO_CAPTURE = 4;
     public static final int LOCATION_CAPTURE = 5;
 
     public static final String LOCATION_RESULT = "LOCATION_RESULT";
-
-    // Identifies the location of the form used to launch form entry
-    public static final String KEY_FORMID = "formpath";
+    
+    public static final String KEY_FORMID = "formpath";            // Identifies the location of the form used to launch form entry
     public static final String KEY_FORMPATH = "formpath";
     public static final String KEY_INSTANCEID = "instancepath";
     public static final String KEY_INSTANCEPATH = "instancepath";
     public static final String KEY_INSTANCES = "instances";
     public static final String KEY_SUCCESS = "success";
 
-    // Identifies whether this is a new form, or reloading a form after a screen
-    // rotation (or similar)
-    private static final String NEWFORM = "newform";
+    private static final String NEWFORM = "newform";                // Identifies whether this is a new form, or reloading a form 
+                                                                    // after a screen rotation (or similar)
 
     private static final int MENU_CLEAR = Menu.FIRST;
     private static final int MENU_DELETE_REPEAT = Menu.FIRST + 1;
@@ -121,11 +122,14 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
     private String mFormId = null;
     private String mInstanceId = null;
-
     private String mInstancePath;
+    private CheckBox mInstanceComplete;
+    private List<String> mInstanceIds = new ArrayList<String>();    // Contains a list of instance IDs allowing the user to 
+                                                                    // browse a "list" of instances (this may require future reworking)
 
     public FormEntryModel mFormEntryModel;
 
+    private boolean mBeenSwiped;                                    // Used to limit forward/backward swipes to one per question   
     private GestureDetector mGestureDetector;
     private Animation mInAnimation;
     private Animation mOutAnimation;
@@ -133,15 +137,11 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private Handler mHandler;
     private RelativeLayout mRelativeLayout;
     private View mCurrentView;
+    private View mBrowserButtons;
 
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
-
-    // Used to limit forward/backward swipes to one per question
-    private boolean mBeenSwiped;
-
-    private CheckBox mInstanceComplete;
-
+    
     private FormLoaderTask mFormLoaderTask;
     private SaveToDiskTask mSaveToDiskTask;
 
@@ -187,6 +187,11 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 mInstanceId = savedInstanceState.getString(KEY_INSTANCEID);    
                 mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
             }
+            
+            if (savedInstanceState.containsKey(KEY_INSTANCES)) {
+                if (savedInstanceState.getStringArrayList(KEY_INSTANCES) != null)
+                    mInstanceIds = savedInstanceState.getStringArrayList(KEY_INSTANCES);
+            }
 
             if (savedInstanceState.containsKey(NEWFORM)) {
                 newForm = savedInstanceState.getBoolean(NEWFORM, true);
@@ -217,8 +222,13 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             if (intent != null) {
                 mFormId = intent.getStringExtra(KEY_FORMID);
                 mInstanceId = intent.getStringExtra(KEY_INSTANCEID);
+                
+                if (intent.getStringArrayListExtra(KEY_INSTANCES) != null) 
+                    mInstanceIds = intent.getStringArrayListExtra(KEY_INSTANCES);
+                
                 mFormLoaderTask = new FormLoaderTask();
                 mFormLoaderTask.execute(mFormId, mInstanceId);
+                
                 showDialog(PROGRESS_DIALOG);
             }
         }
@@ -240,20 +250,18 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         if (mCurrentView != null && mCurrentView instanceof AbstractFolioView) {
             ((AbstractFolioView) mCurrentView).unregister();
         }
-    
+
+        // We have to call cancel to terminate the thread, otherwise it
+        // lives on and retains the FEC in memory.
         if (mFormLoaderTask != null) {
             mFormLoaderTask.setFormLoaderListener(null);
-            // We have to call cancel to terminate the thread, otherwise it
-            // lives on and retains the
-            // FEC in memory.
             mFormLoaderTask.cancel(true);
             mFormLoaderTask.destroy();
         }
-    
+
+        // We have to call cancel to terminate the thread, otherwise it
+        // lives on and retains the FEC in memory.
         if (mSaveToDiskTask != null) {
-            // We have to call cancel to terminate the thread, otherwise it
-            // lives on and retains the
-            // FEC in memory.
             mSaveToDiskTask.cancel(false);
             mSaveToDiskTask.setFormSavedListener(null);
         }
@@ -308,6 +316,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         super.onSaveInstanceState(outState);
         outState.putString(KEY_FORMID, mFormId);
         outState.putString(KEY_INSTANCEID, mInstanceId);
+        outState.putStringArrayList(KEY_INSTANCES, (ArrayList<String>) mInstanceIds);
         outState.putBoolean(NEWFORM, false);
     }
 
@@ -673,8 +682,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 Intent i = new Intent(this, FormHierarchyActivity.class);
                 startActivity(i);
 
-                // So we don't show the introduction screen before jumping to
-                // the hierarchy
+                // So we don't show the introduction screen before jumping to the hierarchy
                 return;
             }
 
@@ -754,16 +762,12 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     {
         switch (from) {
         case RIGHT:
-            mInAnimation = AnimationUtils.loadAnimation(this,
-                    R.anim.push_left_in);
-            mOutAnimation = AnimationUtils.loadAnimation(this,
-                    R.anim.push_left_out);
+            mInAnimation = AnimationUtils.loadAnimation(this, R.anim.push_left_in);
+            mOutAnimation = AnimationUtils.loadAnimation(this, R.anim.push_left_out);
             break;
         case LEFT:
-            mInAnimation = AnimationUtils.loadAnimation(this,
-                    R.anim.push_right_in);
-            mOutAnimation = AnimationUtils.loadAnimation(this,
-                    R.anim.push_right_out);
+            mInAnimation = AnimationUtils.loadAnimation(this, R.anim.push_right_in);
+            mOutAnimation = AnimationUtils.loadAnimation(this, R.anim.push_right_out);
             break;
         case FADE:
             mInAnimation = AnimationUtils.loadAnimation(this, R.anim.fade_in);
@@ -774,6 +778,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         if (mCurrentView != null) {
             mCurrentView.startAnimation(mOutAnimation);
             mRelativeLayout.removeView(mCurrentView);
+            
+            if (mBrowserButtons != null)
+                mRelativeLayout.removeView(mBrowserButtons);
         }
     
         mInAnimation.setAnimationListener(this);
@@ -785,23 +792,29 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         // WARNING: will currently slow large forms considerably
         // TODO: make the progress bar fast. Must be done in javarosa.
         // mProgressBar.setMax(mFormEntryModel.getTotalRelevantQuestionCount());
-        // mProgressBar.setProgress(mFormEntryModel.getCompletedRelevantQuestionCount());
-    
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
-                LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+        // mProgressBar.setProgress(mFormEntryModel.getCompletedRelevantQuestionCount());       
+        
+        if (mInstanceIds.size() > 0) {            
+            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            mBrowserButtons = inflater.inflate(R.layout.form_browser_buttons, mRelativeLayout, false);            
+            mRelativeLayout.addView(mBrowserButtons);    
+        }
+            
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
         // lp.addRule(RelativeLayout.ABOVE, R.id.progressbar);
-    
-        mCurrentView = next;
+        
+        if (mInstanceIds.size() > 0)
+            lp.addRule(RelativeLayout.BELOW, mBrowserButtons.getId());        
+
+        mCurrentView = next;        
         mRelativeLayout.addView(mCurrentView, lp);
-    
         mCurrentView.startAnimation(mInAnimation);
     
         if (mCurrentView instanceof AbstractFolioView)
             ((AbstractFolioView) mCurrentView).setFocus(this);
         else {
             InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            inputManager.hideSoftInputFromWindow(mCurrentView.getWindowToken(),
-                    0);
+            inputManager.hideSoftInputFromWindow(mCurrentView.getWindowToken(), 0);
         }
     }
 

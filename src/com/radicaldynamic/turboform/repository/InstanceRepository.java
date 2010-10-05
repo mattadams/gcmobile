@@ -28,17 +28,17 @@ public class InstanceRepository extends CouchDbRepositorySupport<InstanceDocumen
         return queryView("by_status", status.toString());
     }
     
-    public List<InstanceDocument> findByFormAndStatus(String formId, InstanceDocument.Status status) {
+    public List<String> findByFormAndStatus(String formId, InstanceDocument.Status status) {
         List<InstanceDocument> instancesByForm = findByForm(formId);
-        List<InstanceDocument> instancesToReturn = new ArrayList<InstanceDocument>();
+        List<String> instanceIds = new ArrayList<String>();
         String stat = status.toString();
         
         for(InstanceDocument doc : instancesByForm) {            
             if (doc.getStatus().toString().equals(stat)) {            
-                instancesToReturn.add(doc);
+                instanceIds.add(doc.getId());
             }
         }
         
-        return instancesToReturn;
+        return instanceIds;
     }
 }

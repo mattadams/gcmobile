@@ -102,53 +102,65 @@ public class FormHierarchyActivity extends ListActivity {
     }
 
 
-    private void goUpLevel() {
-        FormIndex index = stepIndexOut(mFormEntryModel.getFormIndex());
-        int currentEvent = mFormEntryModel.getEvent();
-
-        // Step out of any group indexes that are present.
-        while (index != null && mFormEntryModel.getEvent(index) == FormEntryController.EVENT_GROUP) {
-            index = stepIndexOut(index);
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        HierarchyElement h = (HierarchyElement) l.getItemAtPosition(position);
+        if (h.getFormIndex() == null) {
+            goUpLevel();
+            return;
         }
-
-        if (index == null) {
-            mFormEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
-        } else {
-            if (currentEvent == FormEntryController.EVENT_REPEAT) {
-                // We were at a repeat, so stepping back brought us to then previous level
-                mFormEntryController.jumpToIndex(index);
-            } else {
-                // We were at a question, so stepping back brought us to either:
-                // The beginning. or The start of a repeat. So we need to step
-                // out again to go passed the repeat.
-                index = stepIndexOut(index);
-                if (index == null) {
-                    mFormEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
-                } else {
-                    mFormEntryController.jumpToIndex(index);
+    
+        switch (h.getType()) {
+            case EXPANDED:
+                h.setType(COLLAPSED);
+                ArrayList<HierarchyElement> children = h.getChildren();
+                for (int i = 0; i < children.size(); i++) {
+                    formList.remove(position + 1);
                 }
-            }
+                h.setIcon(getResources().getDrawable(R.drawable.expander_ic_minimized));
+                h.setColor(Color.WHITE);
+                break;
+            case COLLAPSED:
+                h.setType(EXPANDED);
+                ArrayList<HierarchyElement> children1 = h.getChildren();
+                for (int i = 0; i < children1.size(); i++) {
+                    Log.i(t, "adding child: " + children1.get(i).getFormIndex());
+                    formList.add(position + 1 + i, children1.get(i));
+    
+                }
+                h.setIcon(getResources().getDrawable(R.drawable.expander_ic_maximized));
+                h.setColor(Color.WHITE);
+                break;
+            case QUESTION:
+                mFormEntryController.jumpToIndex(h.getFormIndex());
+                finish();
+                return;
+            case CHILD:
+                mFormEntryController.jumpToIndex(h.getFormIndex());
+                refreshView();
+                return;
         }
-
-        refreshView();
+    
+        // Should only get here if we've expanded or collapsed a group
+        HierarchyListAdapter itla = new HierarchyListAdapter(this);
+        itla.setListItems(formList);
+        setListAdapter(itla);
+        getListView().setSelection(position);
     }
 
 
-    private String getCurrentPath() {
-        FormIndex index = stepIndexOut(mFormEntryModel.getFormIndex());
-
-        String path = "";
-        while (index != null) {
-
-            path =
-                mFormEntryModel.getCaptionPrompt(index).getLongText() + " ("
-                        + (mFormEntryModel.getCaptionPrompt(index).getMultiplicity() + 1) + ") > "
-                        + path;
-
-            index = stepIndexOut(index);
+    /*
+     * (non-Javadoc)
+     * 
+     * @see android.app.Activity#onKeyDown(int, android.view.KeyEvent)
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                mFormEntryController.jumpToIndex(mStartIndex);
         }
-        // return path?
-        return path.substring(0, path.length() - 2);
+        return super.onKeyDown(keyCode, event);
     }
 
 
@@ -309,65 +321,53 @@ public class FormHierarchyActivity extends ListActivity {
     }
 
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        HierarchyElement h = (HierarchyElement) l.getItemAtPosition(position);
-        if (h.getFormIndex() == null) {
-            goUpLevel();
-            return;
+    private String getCurrentPath() {
+        FormIndex index = stepIndexOut(mFormEntryModel.getFormIndex());
+    
+        String path = "";
+        while (index != null) {
+    
+            path =
+                mFormEntryModel.getCaptionPrompt(index).getLongText() + " ("
+                        + (mFormEntryModel.getCaptionPrompt(index).getMultiplicity() + 1) + ") > "
+                        + path;
+    
+            index = stepIndexOut(index);
         }
-
-        switch (h.getType()) {
-            case EXPANDED:
-                h.setType(COLLAPSED);
-                ArrayList<HierarchyElement> children = h.getChildren();
-                for (int i = 0; i < children.size(); i++) {
-                    formList.remove(position + 1);
-                }
-                h.setIcon(getResources().getDrawable(R.drawable.expander_ic_minimized));
-                h.setColor(Color.WHITE);
-                break;
-            case COLLAPSED:
-                h.setType(EXPANDED);
-                ArrayList<HierarchyElement> children1 = h.getChildren();
-                for (int i = 0; i < children1.size(); i++) {
-                    Log.i(t, "adding child: " + children1.get(i).getFormIndex());
-                    formList.add(position + 1 + i, children1.get(i));
-
-                }
-                h.setIcon(getResources().getDrawable(R.drawable.expander_ic_maximized));
-                h.setColor(Color.WHITE);
-                break;
-            case QUESTION:
-                mFormEntryController.jumpToIndex(h.getFormIndex());
-                finish();
-                return;
-            case CHILD:
-                mFormEntryController.jumpToIndex(h.getFormIndex());
-                refreshView();
-                return;
-        }
-
-        // Should only get here if we've expanded or collapsed a group
-        HierarchyListAdapter itla = new HierarchyListAdapter(this);
-        itla.setListItems(formList);
-        setListAdapter(itla);
-        getListView().setSelection(position);
+        // return path?
+        return path.substring(0, path.length() - 2);
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see android.app.Activity#onKeyDown(int, android.view.KeyEvent)
-     */
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_BACK:
-                mFormEntryController.jumpToIndex(mStartIndex);
+    private void goUpLevel() {
+        FormIndex index = stepIndexOut(mFormEntryModel.getFormIndex());
+        int currentEvent = mFormEntryModel.getEvent();
+    
+        // Step out of any group indexes that are present.
+        while (index != null && mFormEntryModel.getEvent(index) == FormEntryController.EVENT_GROUP) {
+            index = stepIndexOut(index);
         }
-        return super.onKeyDown(keyCode, event);
+    
+        if (index == null) {
+            mFormEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
+        } else {
+            if (currentEvent == FormEntryController.EVENT_REPEAT) {
+                // We were at a repeat, so stepping back brought us to then previous level
+                mFormEntryController.jumpToIndex(index);
+            } else {
+                // We were at a question, so stepping back brought us to either:
+                // The beginning. or The start of a repeat. So we need to step
+                // out again to go passed the repeat.
+                index = stepIndexOut(index);
+                if (index == null) {
+                    mFormEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
+                } else {
+                    mFormEntryController.jumpToIndex(index);
+                }
+            }
+        }
+    
+        refreshView();
     }
 
 }

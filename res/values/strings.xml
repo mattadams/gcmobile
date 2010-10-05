@@ -194,8 +194,10 @@
 	<string name="tf_manage">Manage Forms</string>
 	<string name="tf_manage_item">Manage %s</string>	
 	<string name="tf_missing_instances_hint">No %s to browse</string>
+	<string name="tf_next_instance">Next</string>
 	<string name="tf_notification_settings">Notification settings</string>
 	<string name="tf_preferences">Preferences</string>	
+	<string name="tf_previous_instance">Previous</string>
 	<string name="tf_records">Records</string>
 	<string name="tf_server_connection_error">Cannot contact database - try again later</string>
 	<string name="tf_server_settings">Server settings</string>

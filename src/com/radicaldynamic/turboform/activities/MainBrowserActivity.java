@@ -304,28 +304,21 @@ public class MainBrowserActivity extends ListActivity
      * instance browser.
      */
     private class InstanceLoadPathTask extends
-            AsyncTask<Object, Integer, Integer>
+            AsyncTask<Object, Integer, Void>
     {
         String mFormId;
-        List<InstanceDocument> mInstances = new ArrayList<InstanceDocument>();
+        List<String> mInstanceIds = new ArrayList<String>();
 
         @Override
-        protected Integer doInBackground(Object... params)
+        protected Void doInBackground(Object... params)
         {
             mFormId = (String) params[0];
             InstanceDocument.Status status = (InstanceDocument.Status) params[1];
 
-            Map<String, String> instanceTallies = new HashMap<String, String>();
-            instanceTallies = new FormRepository(Collect.mDb.getDb())
-                    .getFormsByInstanceStatus(status);
-            mInstances = new InstanceRepository(Collect.mDb.getDb())
+            mInstanceIds = new InstanceRepository(Collect.mDb.getDb())
                     .findByFormAndStatus(mFormId, status);
-
-            if (instanceTallies.get(mFormId).equals("1")) {
-                return 1;
-            } else {
-                return 0;
-            }
+            
+            return null;
         }
 
         @Override
@@ -335,16 +328,17 @@ public class MainBrowserActivity extends ListActivity
         }
 
         @Override
-        protected void onPostExecute(Integer instanceCount)
+        protected void onPostExecute(Void nothing)
         {
-            if (instanceCount == 1) {
-                Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
-                i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstances.get(0).getId());
-                i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
-                startActivity(i);
-            } else {
-                Log.v(Collect.LOGTAG, "More than one instance available -- need to start instance browser activity!");
-            }
+            Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
+            i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstanceIds.get(0));
+            i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
+            
+            // Multiple instances
+            if (mInstanceIds.size() > 1)            
+                i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, (ArrayList<String>) mInstanceIds);                            
+            
+            startActivity(i);
 
             setProgressBarIndeterminateVisibility(false);
         }
