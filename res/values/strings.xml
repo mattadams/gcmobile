@@ -45,7 +45,7 @@
 	<string name="clear_answer_no">Do Not Remove</string>
 	<string name="collapsed_group">Collapsed Group</string>
 	<string name="completed_data">Complete (%s)</string>
-	<string name="continue_form">Do Not Exit</string>
+	<string name="continue_form">Return to form</string>
 	<string name="data">Data</string>
 	<string name="data_saved_error">Sorry, data save failed!</string>
 	<string name="data_saved_ok">Data successfully saved!</string>
@@ -67,8 +67,8 @@
 	<string name="download_failed_with_error">Form \"%s\" failed. %s.</string>
 	<string name="download_some_failed">Sorry, %s form(s) not downloaded!</string>
 	<string name="do_not_change">Do Not Change</string>
-	<string name="do_not_exit">Do Not Exit</string>
-	<string name="do_not_save">Discard Changes And Exit</string>
+	<string name="do_not_exit">Return to form</string>
+	<string name="do_not_save">Discard changes and exit</string>
 	<string name="enter">enter</string>
 	<string name="entering_repeat">Add Group</string>
 	<string name="entering_repeat_ask">Add New Group?</string>
@@ -132,7 +132,7 @@
 	<string name="play_video">Play Video</string>
 	<string name="please_wait">Please wait a few moments.</string>
 	<string name="quit_application">Exit Without Saving?</string>
-	<string name="quit_entry">Save Data And Exit</string>
+	<string name="quit_entry">Save form and exit</string>
 	<string name="refresh">Refresh</string>
 	<string name="remote_files">Remote</string>
 	<string name="replace_audio">Replace Sound</string>

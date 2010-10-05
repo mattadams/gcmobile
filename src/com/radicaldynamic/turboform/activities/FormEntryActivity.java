@@ -84,7 +84,6 @@ import com.radicaldynamic.turboform.views.layout.GroupLayoutFactory;
 public class FormEntryActivity extends Activity implements AnimationListener,
         FormLoaderListener, FormSavedListener
 {
-
     private static final String t = "FormEntryActivity";
 
     // Request codes for returning data from specified intent
@@ -112,8 +111,6 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private static final int MENU_DELETE_REPEAT = Menu.FIRST + 1;
     private static final int MENU_LANGUAGES = Menu.FIRST + 2;
     private static final int MENU_HIERARCHY_VIEW = Menu.FIRST + 3;
-    // private static final int MENU_SUBMENU = Menu.FIRST + 4;
-    // private static final int MENU_SAVE_INCOMPLETE = Menu.FIRST + 5;
     private static final int MENU_SAVE = Menu.FIRST + 4;
 
     private static final int PROGRESS_DIALOG = 1;
@@ -187,7 +184,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             }
 
             if (savedInstanceState.containsKey(KEY_INSTANCEID)) {
-                mInstanceId = savedInstanceState.getString(KEY_INSTANCEID);                
+                mInstanceId = savedInstanceState.getString(KEY_INSTANCEID);    
+                mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
             }
 
             if (savedInstanceState.containsKey(NEWFORM)) {
