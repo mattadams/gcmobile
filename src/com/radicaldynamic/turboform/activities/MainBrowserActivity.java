@@ -142,31 +142,7 @@ public class MainBrowserActivity extends ListActivity
             public void onItemSelected(AdapterView<?> parent, View view,
                     int position, long id)
             {
-                mRefreshViewTask = new RefreshViewTask();
-
-                switch (position) {
-                // Show all forms (in group)
-                case 0:
-                    mRefreshViewTask.execute(InstanceDocument.Status.nothing);
-                    break;
-                // Show all incomplete forms
-                case 1:
-                    mRefreshViewTask
-                            .execute(InstanceDocument.Status.incomplete);
-                    break;
-                // Show all completed forms
-                case 2:
-                    mRefreshViewTask.execute(InstanceDocument.Status.complete);
-                    break;
-                // Show all unread forms (e.g., those added or updated by
-                // others)
-                case 3:
-                    mRefreshViewTask.execute(InstanceDocument.Status.updated);
-                    break;
-                case 4:
-                    mRefreshViewTask.execute(InstanceDocument.Status.nothing);
-                    break;
-                }
+                triggerRefresh(position);
             }
 
             public void onNothingSelected(AdapterView<?> parent)
@@ -526,8 +502,8 @@ public class MainBrowserActivity extends ListActivity
     private void loadScreen()
     {
         // Spinner must reflect results of refresh view below
-        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-        s1.setSelection(0);
+        Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
+        triggerRefresh(s1.getSelectedItemPosition());
 
         // Pull in a list of valid groups
         // TODO: replace this when the actual groups stuff is implemented
@@ -550,10 +526,35 @@ public class MainBrowserActivity extends ListActivity
                 .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         s2.setAdapter(collections);
 
-        mRefreshViewTask = new RefreshViewTask();
-        mRefreshViewTask.execute(InstanceDocument.Status.nothing);
         registerForContextMenu(getListView());
 
         mDialog.cancel();
+    }
+    
+    /*
+     * 
+     */
+    private void triggerRefresh(int position)
+    {
+        mRefreshViewTask = new RefreshViewTask();
+
+        switch (position) {
+        // Show all forms (in group)
+        case 0:
+            mRefreshViewTask.execute(InstanceDocument.Status.nothing);
+            break;
+        // Show all incomplete forms
+        case 1:
+            mRefreshViewTask.execute(InstanceDocument.Status.incomplete);
+            break;
+        // Show all completed forms
+        case 2:
+            mRefreshViewTask.execute(InstanceDocument.Status.complete);
+            break;
+        // Show all unread forms (e.g., those added or updated by others)
+        case 3:
+            mRefreshViewTask.execute(InstanceDocument.Status.updated);
+            break;
+        }   
     }
 }
