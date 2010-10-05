@@ -59,11 +59,13 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
     private int mCaptureText;
     private int mReplaceText;
     private int mPlayText;
-
+    
+    private FormEntryPrompt mPrompt;
 
     public AudioWidget(Handler handler, Context context, FormEntryPrompt prompt, String instancePath) {
         super(handler, context, prompt);
         initialize(instancePath);
+        mPrompt = prompt;
     }
 
     private void initialize(String instancePath) {
@@ -207,7 +209,9 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
         // get the file path and move the file
         String binarypath = getPathFromUri((Uri) binaryuri);
         File f = new File(binarypath);
-        String s = mInstanceFolder + "/" + mInstanceId + binarypath.substring(binarypath.lastIndexOf('/') + 1);
+        String s = mInstanceFolder + "/" + mInstanceId
+                + mPrompt.getFormElement().getID() + "."
+                + binarypath.substring(binarypath.lastIndexOf('.') + 1);
         if (!f.renameTo(new File(s))) {
             Log.i(t, "Failed to rename " + f.getAbsolutePath());
         }

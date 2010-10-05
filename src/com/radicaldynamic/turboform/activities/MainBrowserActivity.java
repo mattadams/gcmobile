@@ -61,6 +61,7 @@ import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.documents.InstanceDocument;
 import com.radicaldynamic.turboform.preferences.GeneralPreferences;
 import com.radicaldynamic.turboform.repository.FormRepository;
+import com.radicaldynamic.turboform.repository.InstanceRepository;
 import com.radicaldynamic.turboform.services.CouchDbService;
 import com.radicaldynamic.turboform.tasks.InitializeApplicationTask;
 import com.radicaldynamic.turboform.utilities.DocumentUtils;
@@ -347,28 +348,26 @@ public class MainBrowserActivity extends ListActivity
      * If there is only one instance for the form in question then load that instance directly. 
      * If there is more than one instance then load the instance browser.
      */
-    private class InstanceLoadPathTask extends AsyncTask<Object, Integer, List<String>>
+    private class InstanceLoadPathTask extends AsyncTask<Object, Integer, Integer>
     {
         String mFormId;
+        List <InstanceDocument> mInstances = new ArrayList<InstanceDocument>();
         
         @Override
-        protected List<String> doInBackground(Object... params)
+        protected Integer doInBackground(Object... params)
         {                       
             mFormId = (String) params[0];
-            InstanceDocument.Status status = (InstanceDocument.Status) params[1];
-            
-            List<String> instanceIds = new ArrayList<String>();
+            InstanceDocument.Status status = (InstanceDocument.Status) params[1];           
             
             Map<String, String> instanceTallies = new HashMap<String, String>();
             instanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByInstanceStatus(status);
+            mInstances = new InstanceRepository(Collect.mDb.getDb()).findByFormAndStatus(mFormId, status);
             
             if (instanceTallies.get(mFormId).equals("1")) {
-                
+                return 1;
             } else {
-                // load form browser
-            }            
-            
-            return instanceIds;
+                return 0;
+            }
         }
                 
         @Override
@@ -378,12 +377,16 @@ public class MainBrowserActivity extends ListActivity
         }
         
         @Override
-        protected void onPostExecute(List<String> instanceIds) 
+        protected void onPostExecute(Integer instanceCount) 
         {
-            Intent i = new Intent();
-            i.putExtra(FormEntryActivity.KEY_INSTANCEID, "");
-            i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
-            startActivity(i);
+            if (instanceCount == 1) {
+                Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
+                i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstances.get(0).getId());
+                i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
+                startActivity(i);
+            } else {
+                Log.v(Collect.LOGTAG, "More than one instance available -- need to start instance browser activity!");
+            }
             
             setProgressBarIndeterminateVisibility(false);
         }

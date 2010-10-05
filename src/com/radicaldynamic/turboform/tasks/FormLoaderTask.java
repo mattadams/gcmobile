@@ -14,14 +14,16 @@
 
 package com.radicaldynamic.turboform.tasks;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream; 
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Map;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
@@ -38,7 +40,6 @@ import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xform.util.XFormUtils;
 
 import android.os.AsyncTask;
-import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -214,19 +215,26 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     }
 
 
-    public boolean importData(String formId, String instanceId, FormEntryController fec) {
+    public boolean importData(String formId, String instanceId, FormEntryController fec) throws IOException {
         Log.d(Collect.LOGTAG, formId + ": importing instance " + instanceId);
         
-        // Retrieve form instance from database
-        InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, instanceId);
+        // Retrieve instance XML attachment from database
+        AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(instanceId, "xml");
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int bytesRead;
         
-        // Obtain XML attachment with data that needs to be decoded
-        Map<String, Attachment> attachments = instance.getAttachments();
-        Attachment xml = attachments.get("xml");
+        while ((bytesRead = ais.read(buffer)) != -1) {
+            output.write(buffer, 0, bytesRead);
+        }
+        
+        ais.close();        
 
         // Get the root of the saved and template instances
-        TreeElement savedRoot = XFormParser.restoreDataModel(Base64.decode(xml.getDataBase64(), Base64.DEFAULT), null).getRoot();
+        TreeElement savedRoot = XFormParser.restoreDataModel(output.toByteArray(), null).getRoot();
         TreeElement templateRoot = fec.getModel().getForm().getInstance().getRoot().deepCopy(true);
+        
+        output.close();
 
         // Weak check for matching forms
         if (!savedRoot.getName().equals(templateRoot.getName()) || savedRoot.getMult() != 0) {
@@ -247,6 +255,30 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
              */
             if (fec.getModel().getLanguages() != null) {
                 fec.getModel().getForm().localeChanged(fec.getModel().getLanguage(), fec.getModel().getForm().getLocalizer());
+            }
+            
+            // Also download any media attachments
+            InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, instanceId);            
+            HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
+            
+            for (Entry<String, Attachment> entry : attachments.entrySet()) {
+                String key = entry.getKey();
+                
+                // Do not download XML attachments (these are loaded directly into the form model)
+                if (!key.equals("xml")) {
+                    ais = Collect.mDb.getDb().getAttachment(instanceId, key);                  
+                    
+                    FileOutputStream file = new FileOutputStream(new File(FileUtils.CACHE_PATH + key));
+                    buffer = new byte[8192];
+                    bytesRead = 0;
+                    
+                    while ((bytesRead = ais.read(buffer)) != -1) {
+                        file.write(buffer, 0, bytesRead);
+                    }
+                    
+                    ais.close();
+                    file.close();
+                }
             }
 
             return true;

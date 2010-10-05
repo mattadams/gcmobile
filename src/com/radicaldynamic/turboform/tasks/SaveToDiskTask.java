@@ -116,6 +116,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         
         try {
             int read = is.read(data, 0, len);
+            
             if (read > 0) {
                 InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, mInstanceId);   
                                 
@@ -150,8 +151,8 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                         }
                     }
                 }
-                                
-                Collect.mDb.getDb().update(instance);                
+                
+                Collect.mDb.getDb().update(instance);   
                 
                 if (instance.getId().length() > 0) 
                     return true;

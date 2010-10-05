@@ -59,21 +59,25 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
 
     private Uri mExternalUri;
     private String mCaptureIntent;
+    private String mInstanceId;
     private String mInstanceFolder;
     private int mRequestCode;
     private int mCaptureText;
     private int mReplaceText;
+    
+    private FormEntryPrompt mPrompt;
 
 
     public ImageWidget(Handler handler, Context context, FormEntryPrompt prompt, String instancePath) {
         super(handler, context, prompt);
         initialize(instancePath);
+        mPrompt = prompt;
     }
 
 
     private void initialize(String instancePath) {
         mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf("/") + 1);
-        instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.length());
+        mInstanceId = instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.length());        
         mExternalUri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         mCaptureIntent = android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
         mRequestCode = FormEntryActivity.IMAGE_CAPTURE;
@@ -154,8 +158,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
 
                 // if this gets modified, the onActivityResult in
                 // FormEntyActivity will also need to be updated.
-                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(
-                        FileUtils.TMPFILE_PATH)));
+                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(FileUtils.TMPFILE_PATH)));
                 ((Activity) getContext()).startActivityForResult(i, mRequestCode);
 
             }
@@ -231,6 +234,19 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
             mImageView.setImageBitmap(null);
         }
     }
+    
+    private Uri getUriFromPath(String path) {
+        // find entry in content provider
+        Cursor c =
+            getContext().getContentResolver().query(mExternalUri, null, "_data='" + path + "'",
+                null, null);
+        c.moveToFirst();
+
+        // create uri from path
+        String newPath = mExternalUri + "/" + c.getInt(c.getColumnIndex("_id"));
+        c.close();
+        return Uri.parse(newPath);
+    }
 
     private String getPathFromUri(Uri uri) {
         // find entry in content provider
@@ -243,18 +259,25 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         return colString;
     }
 
-
     @Override
 	public void setBinaryData(Object binaryuri) {
-        // you are replacing an answer. delete the previous image using the
-        // content provider.
-        if (mBinaryName != null) {
+        // You are replacing an answer.  Delete the previous image using the content provider.
+        if (mBinaryName != null)
             deleteMedia();
-        }
+        
         String binarypath = getPathFromUri((Uri) binaryuri);
-        File f = new File(binarypath);
-        mBinaryName = f.getName();
-        Log.i(t, "Setting current answer to " + mBinaryName);
+        
+        File f = new File(binarypath);           
+        String s = mInstanceFolder + "/" + mInstanceId
+        + mPrompt.getFormElement().getID() + "."
+        + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
+        if (!f.renameTo(new File(s))) {
+            Log.e(t, "Failed to rename " + f.getAbsolutePath());
+        }
+
+        // remove the database entry and update the name
+        getContext().getContentResolver().delete(getUriFromPath(binarypath), null, null);
+        mBinaryName = s.substring(s.lastIndexOf('/') + 1);
         saveAnswer(true); // and evaluate constraints and trigger UI update...
     }
 

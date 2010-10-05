@@ -61,10 +61,12 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
     private int mReplaceText;
     private int mPlayText;
 
+    private FormEntryPrompt mPrompt;
 
     public VideoWidget(Handler handler, Context context, FormEntryPrompt prompt, String instancePath) {
         super(handler, context, prompt);
         initialize(instancePath);
+        mPrompt = prompt;
     }
 
     private void initialize(String instancePath) {
@@ -207,7 +209,9 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
         String binarypath = getPathFromUri((Uri) binaryuri);
 
         File f = new File(binarypath);
-        String s = mInstanceFolder + "/" + mInstanceId + binarypath.substring(binarypath.lastIndexOf('/') + 1);
+        String s = mInstanceFolder + "/" + mInstanceId
+        + mPrompt.getFormElement().getID() + "."
+        + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
         if (!f.renameTo(new File(s))) {
             Log.e(t, "Failed to rename " + f.getAbsolutePath());
         }
