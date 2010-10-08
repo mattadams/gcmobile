@@ -230,8 +230,8 @@ public class MainBrowserActivity extends ListActivity
         switch (s1.getSelectedItemPosition()) {
         // Show all forms (in group)
         case 0:
-            Intent i = new Intent(
-                    "com.radicaldynamic.turboform.action.FormEntry");
+            Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
+            i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, new ArrayList<String>());
             i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
             startActivity(i);
             break;
@@ -283,7 +283,7 @@ public class MainBrowserActivity extends ListActivity
             AsyncTask<Object, Integer, Void>
     {
         String mFormId;
-        List<String> mInstanceIds = new ArrayList<String>();
+        ArrayList<String> mInstanceIds = new ArrayList<String>();
 
         @Override
         protected Void doInBackground(Object... params)
@@ -307,13 +307,9 @@ public class MainBrowserActivity extends ListActivity
         protected void onPostExecute(Void nothing)
         {
             Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
+            i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstanceIds);
             i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstanceIds.get(0));
-            i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
-            
-            // Multiple instances
-            if (mInstanceIds.size() > 1)            
-                i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, (ArrayList<String>) mInstanceIds);                            
-            
+            i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);            
             startActivity(i);
 
             setProgressBarIndeterminateVisibility(false);

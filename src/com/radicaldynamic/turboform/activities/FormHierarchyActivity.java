@@ -14,62 +14,99 @@
 
 package com.radicaldynamic.turboform.activities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.form.api.FormEntryCaption;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.form.api.FormEntryPrompt;
+
+import android.app.ListActivity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.adapters.HierarchyListAdapter;
 import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.logic.HierarchyElement;
 
-import android.app.ListActivity;
-import android.graphics.Color;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class FormHierarchyActivity extends ListActivity {
-
     private static final String t = "FormHierarchyActivity";
-    private FormEntryController mFormEntryController;
-    private FormEntryModel mFormEntryModel;
-    int state;
-
+    
     private static final int CHILD = 1;
     private static final int EXPANDED = 2;
     private static final int COLLAPSED = 3;
     private static final int QUESTION = 4;
-
     private final String mIndent = "     ";
+    
+    public static final String KEY_FORMID = "formpath";             
+    public static final String KEY_INSTANCEID = "instancepath";
+    
+    private FormEntryController mFormEntryController;
+    private FormEntryModel mFormEntryModel;
+    
+    private RelativeLayout mRelativeLayout;
+    private View mBrowserButtons;
     private Button jumpPreviousButton;
-
+    
     List<HierarchyElement> formList;
-    TextView mPath;
-
     FormIndex mStartIndex;
-
+    TextView mPath;
+    
+    int state;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.hierarchy_layout);
-
-        // We use a static FormEntryController to make jumping faster.
+        
+        // We use a static FormEntryController to make jumping faster
         mFormEntryController = Collect.getInstance().getFormEntryController();
         mFormEntryModel = mFormEntryController.getModel();
         mStartIndex = mFormEntryModel.getFormIndex();
-
-        setTitle(getString(R.string.app_name) + " > " + mFormEntryModel.getFormTitle());
+        
+        if (Collect.getInstance().getInstanceBrowseList().size() > 1) {           
+            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            mRelativeLayout = (RelativeLayout) findViewById(R.id.rl);                        
+            mBrowserButtons = inflater.inflate(R.layout.form_browser_buttons, mRelativeLayout, false);
+            mRelativeLayout.addView(mBrowserButtons);
+            mRelativeLayout.invalidate();            
+            
+            ((Button) mBrowserButtons.findViewById(R.id.next_instance)).setOnClickListener(
+                    new Button.OnClickListener() {
+                        @Override
+                        public void onClick(View arg0) {
+                            setResult(RESULT_OK, (new Intent()).setAction("next_instance"));
+                            finish();
+                        }                        
+                    });
+            
+            ((Button) mBrowserButtons.findViewById(R.id.previous_instance)).setOnClickListener(
+                    new Button.OnClickListener() {
+                        @Override
+                        public void onClick(View arg0) {
+                            setResult(RESULT_OK, (new Intent()).setAction("previous_instance"));
+                            finish();
+                        }                        
+                    });
+            
+            setTitle(getString(R.string.app_name) + " > " + mFormEntryModel.getFormTitle());
+        } else {
+            setTitle(getString(R.string.app_name) + " > " + mFormEntryModel.getFormTitle());
+        }
 
         mPath = (TextView) findViewById(R.id.pathtext);
 
@@ -86,6 +123,7 @@ public class FormHierarchyActivity extends ListActivity {
             @Override
             public void onClick(View v) {
                 mFormEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
+                setResult(RESULT_CANCELED);
                 finish();
             }
         });
@@ -95,16 +133,18 @@ public class FormHierarchyActivity extends ListActivity {
             @Override
             public void onClick(View v) {
                 mFormEntryController.jumpToIndex(FormIndex.createEndOfFormIndex());
+                setResult(RESULT_CANCELED);
                 finish();
             }
         });
+        
         refreshView();
     }
-
 
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         HierarchyElement h = (HierarchyElement) l.getItemAtPosition(position);
+        
         if (h.getFormIndex() == null) {
             goUpLevel();
             return;
@@ -133,10 +173,12 @@ public class FormHierarchyActivity extends ListActivity {
                 break;
             case QUESTION:
                 mFormEntryController.jumpToIndex(h.getFormIndex());
+                setResult(RESULT_CANCELED);
                 finish();
                 return;
             case CHILD:
                 mFormEntryController.jumpToIndex(h.getFormIndex());
+                setResult(RESULT_CANCELED);
                 refreshView();
                 return;
         }
@@ -160,6 +202,7 @@ public class FormHierarchyActivity extends ListActivity {
             case KeyEvent.KEYCODE_BACK:
                 mFormEntryController.jumpToIndex(mStartIndex);
         }
+        
         return super.onKeyDown(keyCode, event);
     }
 
@@ -173,30 +216,28 @@ public class FormHierarchyActivity extends ListActivity {
         String enclosingGroupRef = "";
         formList = new ArrayList<HierarchyElement>();
 
-        // If we're currently at a repeat node, record the name of the node and step to the next
-        // node to display.
+        // If we're currently at a repeat node, record the name of the node and step to the next node to display.
         if (mFormEntryModel.getEvent() == FormEntryController.EVENT_REPEAT) {
             enclosingGroupRef = mFormEntryModel.getFormIndex().getReference().toString(false);
             mFormEntryController.stepToNextEvent();
         } else {
             FormIndex startTest = stepIndexOut(currentIndex);
-            // If we have a 'group' tag, we want to step back until we hit a repeat or the
-            // beginning.
+            // If we have a 'group' tag, we want to step back until we hit a repeat or the beginning.
             while (startTest != null
                     && mFormEntryModel.getEvent(startTest) == FormEntryController.EVENT_GROUP) {
                 startTest = stepIndexOut(startTest);
             }
+            
             if (startTest == null) {
-                // check to see if the question is at the first level of the hierarchy. If it is,
+                // Check to see if the question is at the first level of the hierarchy. If it is,
                 // display the root level from the beginning.
                 mFormEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
             } else {
-                // otherwise we're at a repeated group
+                // Otherwise we're at a repeated group
                 mFormEntryController.jumpToIndex(startTest);
             }
 
-            // now test again for repeat. This should be true at this point or we're at the
-            // beginning
+            // Mow test again for repeat. This should be true at this point or we're at the beginning
             if (mFormEntryModel.getEvent() == FormEntryController.EVENT_REPEAT) {
                 enclosingGroupRef = mFormEntryModel.getFormIndex().getReference().toString(false);
                 mFormEntryController.stepToNextEvent();
@@ -204,6 +245,7 @@ public class FormHierarchyActivity extends ListActivity {
         }
 
         int event = mFormEntryModel.getEvent();
+        
         if (event == FormEntryController.EVENT_BEGINNING_OF_FORM) {
             // The beginning of form has no valid prompt to display.
             mFormEntryController.stepToNextEvent();
@@ -218,16 +260,14 @@ public class FormHierarchyActivity extends ListActivity {
         // Refresh the current event in case we did step forward.
         event = mFormEntryModel.getEvent();
 
-        // There may be repeating Groups at this level of the hierarchy, we use this variable to
-        // keep track of them.
+        // There may be repeating Groups at this level of the hierarchy, we use this variable to keep track of them.
         String repeatedGroupRef = "";
 
         event_search: while (event != FormEntryController.EVENT_END_OF_FORM) {
             switch (event) {
                 case FormEntryController.EVENT_QUESTION:
                     if (!repeatedGroupRef.equalsIgnoreCase("")) {
-                        // We're in a repeating group, so skip this question and move to the next
-                        // index.
+                        // We're in a repeating group, so skip this question and move to the next index.
                         event = mFormEntryController.stepToNextEvent();
                         continue;
                     }
@@ -235,10 +275,13 @@ public class FormHierarchyActivity extends ListActivity {
                     FormEntryPrompt fp = mFormEntryModel.getQuestionPrompt();
                     formList.add(new HierarchyElement(fp.getLongText(), fp.getAnswerText(), null,
                             Color.WHITE, QUESTION, fp.getIndex()));
+                    
                     break;
+                    
                 case FormEntryController.EVENT_GROUP:
                     // ignore group events
                     break;
+                    
                 case FormEntryController.EVENT_PROMPT_NEW_REPEAT:
                     if (enclosingGroupRef.compareTo(mFormEntryModel.getFormIndex().getReference()
                             .toString(false)) == 0) {
@@ -261,7 +304,9 @@ public class FormHierarchyActivity extends ListActivity {
                         // repeatedGroupName variable
                         repeatedGroupRef = "";
                     }
+                    
                     break;
+                    
                 case FormEntryController.EVENT_REPEAT:
                     FormEntryCaption fc = mFormEntryModel.getCaptionPrompt();
                     if (enclosingGroupRef.compareTo(mFormEntryModel.getFormIndex().getReference()
@@ -290,8 +335,10 @@ public class FormHierarchyActivity extends ListActivity {
                                 + (fc.getMultiplicity() + 1), null, null, Color.WHITE, CHILD, fc
                                 .getIndex()));
                     }
+                    
                     break;
             }
+            
             event = mFormEntryController.stepToNextEvent();
         }
 
@@ -325,20 +372,19 @@ public class FormHierarchyActivity extends ListActivity {
         FormIndex index = stepIndexOut(mFormEntryModel.getFormIndex());
     
         String path = "";
-        while (index != null) {
-    
-            path =
-                mFormEntryModel.getCaptionPrompt(index).getLongText() + " ("
+        
+        while (index != null) {    
+            path = mFormEntryModel.getCaptionPrompt(index).getLongText() + " ("
                         + (mFormEntryModel.getCaptionPrompt(index).getMultiplicity() + 1) + ") > "
                         + path;
     
             index = stepIndexOut(index);
         }
+        
         // return path?
         return path.substring(0, path.length() - 2);
     }
-
-
+    
     private void goUpLevel() {
         FormIndex index = stepIndexOut(mFormEntryModel.getFormIndex());
         int currentEvent = mFormEntryModel.getEvent();
@@ -359,6 +405,7 @@ public class FormHierarchyActivity extends ListActivity {
                 // The beginning. or The start of a repeat. So we need to step
                 // out again to go passed the repeat.
                 index = stepIndexOut(index);
+                
                 if (index == null) {
                     mFormEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
                 } else {

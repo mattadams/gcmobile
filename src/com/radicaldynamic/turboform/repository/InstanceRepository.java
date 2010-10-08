@@ -28,9 +28,9 @@ public class InstanceRepository extends CouchDbRepositorySupport<InstanceDocumen
         return queryView("by_status", status.toString());
     }
     
-    public List<String> findByFormAndStatus(String formId, InstanceDocument.Status status) {
+    public ArrayList<String> findByFormAndStatus(String formId, InstanceDocument.Status status) {
         List<InstanceDocument> instancesByForm = findByForm(formId);
-        List<String> instanceIds = new ArrayList<String>();
+        ArrayList<String> instanceIds = new ArrayList<String>();
         String stat = status.toString();
         
         for(InstanceDocument doc : instancesByForm) {            

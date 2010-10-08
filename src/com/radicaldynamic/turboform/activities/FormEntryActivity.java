@@ -15,8 +15,6 @@
 package com.radicaldynamic.turboform.activities;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import org.javarosa.core.model.FormDef;
@@ -95,10 +93,11 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     public static final int AUDIO_CAPTURE = 3;
     public static final int VIDEO_CAPTURE = 4;
     public static final int LOCATION_CAPTURE = 5;
+    public static final int HIERARCHY_BROWSER = 6;                  // Navigate to another instance (via FormHierarchyActivity)
 
     public static final String LOCATION_RESULT = "LOCATION_RESULT";
     
-    public static final String KEY_FORMID = "formpath";            // Identifies the location of the form used to launch form entry
+    public static final String KEY_FORMID = "formpath";             // Identifies the location of the form used to launch form entry
     public static final String KEY_FORMPATH = "formpath";
     public static final String KEY_INSTANCEID = "instancepath";
     public static final String KEY_INSTANCEPATH = "instancepath";
@@ -124,8 +123,6 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private String mInstanceId = null;
     private String mInstancePath;
     private CheckBox mInstanceComplete;
-    private List<String> mInstanceIds = new ArrayList<String>();    // Contains a list of instance IDs allowing the user to 
-                                                                    // browse a "list" of instances (this may require future reworking)
 
     public FormEntryModel mFormEntryModel;
 
@@ -179,23 +176,19 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         Boolean newForm = true;
 
         if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(KEY_FORMID)) {
+            if (savedInstanceState.containsKey(KEY_FORMID))
                 mFormId = savedInstanceState.getString(KEY_FORMID);
-            }
 
             if (savedInstanceState.containsKey(KEY_INSTANCEID)) {
                 mInstanceId = savedInstanceState.getString(KEY_INSTANCEID);    
                 mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
             }
             
-            if (savedInstanceState.containsKey(KEY_INSTANCES)) {
-                if (savedInstanceState.getStringArrayList(KEY_INSTANCES) != null)
-                    mInstanceIds = savedInstanceState.getStringArrayList(KEY_INSTANCES);
-            }
+            if (savedInstanceState.containsKey(KEY_INSTANCES))             
+                Collect.getInstance().setInstanceBrowseList(savedInstanceState.getStringArrayList(KEY_INSTANCES));  
 
-            if (savedInstanceState.containsKey(NEWFORM)) {
+            if (savedInstanceState.containsKey(NEWFORM))
                 newForm = savedInstanceState.getBoolean(NEWFORM, true);
-            }
         }
 
         // Check to see if this is a screen flip or a new form load
@@ -221,11 +214,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
             if (intent != null) {
                 mFormId = intent.getStringExtra(KEY_FORMID);
-                mInstanceId = intent.getStringExtra(KEY_INSTANCEID);
-                
-                if (intent.getStringArrayListExtra(KEY_INSTANCES) != null) 
-                    mInstanceIds = intent.getStringArrayListExtra(KEY_INSTANCES);
-                
+                mInstanceId = intent.getStringExtra(KEY_INSTANCEID);          
+                Collect.getInstance().setInstanceBrowseList(intent.getStringArrayListExtra(KEY_INSTANCES));
+
                 mFormLoaderTask = new FormLoaderTask();
                 mFormLoaderTask.execute(mFormId, mInstanceId);
                 
@@ -316,7 +307,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         super.onSaveInstanceState(outState);
         outState.putString(KEY_FORMID, mFormId);
         outState.putString(KEY_INSTANCEID, mInstanceId);
-        outState.putStringArrayList(KEY_INSTANCES, (ArrayList<String>) mInstanceIds);
+        outState.putStringArrayList(KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
         outState.putBoolean(NEWFORM, false);
     }
 
@@ -330,17 +321,26 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
     
-        if (resultCode == RESULT_CANCELED) {
-            // request was cancelled, so do nothing
+        if (resultCode == RESULT_CANCELED)
             return;
-        }
     
         switch (requestCode) {
+        case HIERARCHY_BROWSER:
+            if (intent.getAction().equals("next_instance")) {
+                browseToNextInstance();
+            } else if (intent.getAction().equals("previous_instance")) {
+                browseToPreviousInstance();
+            } else {
+                // Throw exception
+            }            
+            break;
+            
         case BARCODE_CAPTURE:
             String sb = intent.getStringExtra("SCAN_RESULT");
             ((AbstractFolioView) mCurrentView).setBinaryData(sb);
             saveCurrentAnswer(false);
             break;
+            
         case IMAGE_CAPTURE:
             /*
              * We saved the image to the tempfile_path but we really want it to
@@ -365,6 +365,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             saveCurrentAnswer(false);
             refreshCurrentView();
             break;        
+            
         case AUDIO_CAPTURE:
         case VIDEO_CAPTURE:
             Uri um = intent.getData();
@@ -372,6 +373,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             saveCurrentAnswer(false);
             refreshCurrentView();
             break;
+            
         case LOCATION_CAPTURE:
             String sl = intent.getStringExtra(LOCATION_RESULT);
             ((AbstractFolioView) mCurrentView).setBinaryData(sl);
@@ -426,9 +428,10 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             mProgressDialog.setMessage(getString(R.string.please_wait));
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);
-            mProgressDialog.setButton(getString(R.string.cancel_loading_form),
-                    loadingButtonListener);
+            mProgressDialog.setButton(getString(R.string.cancel_loading_form), loadingButtonListener);
+            
             return mProgressDialog;
+            
         case SAVING_DIALOG:
             mProgressDialog = new ProgressDialog(this);
 
@@ -447,10 +450,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             mProgressDialog.setMessage(getString(R.string.please_wait));
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);
-            mProgressDialog.setButton(getString(R.string.cancel),
-                    savingButtonListener);
-            mProgressDialog.setButton(getString(R.string.cancel_saving_form),
-                    savingButtonListener);
+            mProgressDialog.setButton(getString(R.string.cancel), savingButtonListener);
+            mProgressDialog.setButton(getString(R.string.cancel_saving_form), savingButtonListener);
+            
             return mProgressDialog;
 
         }
@@ -470,19 +472,23 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         case KeyEvent.KEYCODE_BACK:
             createQuitDialog();
             return true;
+            
         case KeyEvent.KEYCODE_DPAD_RIGHT:
             if (event.isAltPressed() && !mBeenSwiped) {
                 mBeenSwiped = true;
                 showNextView();
                 return true;
             }
+            
             break;
+            
         case KeyEvent.KEYCODE_DPAD_LEFT:
             if (event.isAltPressed() && !mBeenSwiped) {
                 mBeenSwiped = true;
                 showPreviousView();
                 return true;
             }
+            
             break;
         }
 
@@ -555,8 +561,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 saveCurrentAnswer(false);
             }
     
-            Intent i = new Intent(this, FormHierarchyActivity.class);
-            startActivity(i);
+            Intent i = new Intent(this, FormHierarchyActivity.class);            
+            startActivityForResult(i, HIERARCHY_BROWSER);
         }
     
         return super.onOptionsItemSelected(item);
@@ -679,8 +685,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
                 
                 // We've just loaded a saved form, so start in the hierarchy view
-                Intent i = new Intent(this, FormHierarchyActivity.class);
-                startActivity(i);
+                Intent i = new Intent(this, FormHierarchyActivity.class);                
+                startActivityForResult(i, HIERARCHY_BROWSER);
 
                 // So we don't show the introduction screen before jumping to the hierarchy
                 return;
@@ -794,16 +800,33 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         // mProgressBar.setMax(mFormEntryModel.getTotalRelevantQuestionCount());
         // mProgressBar.setProgress(mFormEntryModel.getCompletedRelevantQuestionCount());       
         
-        if (mInstanceIds.size() > 0) {            
+        if (Collect.getInstance().getInstanceBrowseList().size() > 1) {            
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             mBrowserButtons = inflater.inflate(R.layout.form_browser_buttons, mRelativeLayout, false);            
-            mRelativeLayout.addView(mBrowserButtons);    
+            mRelativeLayout.addView(mBrowserButtons);
+            
+            ((Button) mBrowserButtons.findViewById(R.id.next_instance)).setOnClickListener(
+                    new Button.OnClickListener() {
+                        @Override
+                        public void onClick(View arg0) {
+                            browseToNextInstance();
+                        }                        
+                    });
+            
+
+            ((Button) mBrowserButtons.findViewById(R.id.previous_instance)).setOnClickListener(
+                    new Button.OnClickListener() {
+                        @Override
+                        public void onClick(View arg0) {
+                            browseToPreviousInstance();
+                        }                        
+                    });
         }
             
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
         // lp.addRule(RelativeLayout.ABOVE, R.id.progressbar);
         
-        if (mInstanceIds.size() > 0)
+        if (Collect.getInstance().getInstanceBrowseList().size() > 1)
             lp.addRule(RelativeLayout.BELOW, mBrowserButtons.getId());        
 
         mCurrentView = next;        
@@ -816,6 +839,43 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             inputManager.hideSoftInputFromWindow(mCurrentView.getWindowToken(), 0);
         }
+    }
+    
+    private void browseToNextInstance()
+    {
+        String nextInstanceId;
+        
+        if (Collect.getInstance().getInstanceBrowseList().indexOf(mInstanceId) < Collect.getInstance().getInstanceBrowseList().size() - 1) {                                                                    
+            nextInstanceId = Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mInstanceId) + 1).next();
+        } else {
+            nextInstanceId = Collect.getInstance().getInstanceBrowseList().get(0);
+        }
+        
+        Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
+        i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
+        i.putExtra(FormEntryActivity.KEY_INSTANCEID, nextInstanceId);
+        i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
+        startActivity(i);
+        finish();
+    }
+    
+    private void browseToPreviousInstance()
+    {
+        String previousInstanceId;
+
+        if (Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mInstanceId)).hasPrevious()) {
+            previousInstanceId = Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mInstanceId)).previous();
+        } else {
+            previousInstanceId = Collect.getInstance().getInstanceBrowseList().
+            get(Collect.getInstance().getInstanceBrowseList().size() - 1);
+        }
+
+        Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");                            
+        i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
+        i.putExtra(FormEntryActivity.KEY_INSTANCEID, previousInstanceId);
+        i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
+        startActivity(i);
+        finish();
     }
 
     /**
@@ -1121,7 +1181,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                                 }
                             }
     
-                            finish();
+                            finish(); 
                             break;
                         // Save and exit
                         case 1:
@@ -1142,25 +1202,13 @@ public class FormEntryActivity extends Activity implements AnimationListener,
      * Creates a view given the View type and an event
      * 
      * @param event
-     * @return newly created View
-     */
-    private View createView(int event)
-    {
-        return createView(event, null);
-    }
-
-    /**
-     * Creates a view given the View type and an event
-     * 
-     * @param event
      * @param subIndex
      *            index within the folio to highlight...
      * @return newly created View
      */
     private View createView(int event, FormIndex subIndex)
     {
-        setTitle(getString(R.string.app_name) + " > "
-                + mFormEntryModel.getFormTitle());
+        setTitle(getString(R.string.app_name) + " > " + mFormEntryModel.getFormTitle());
     
         /**
          * Unregister the existing current view from the underlying model.
@@ -1515,8 +1563,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         // TODO move to constructor <--? No. the mInstancePath isn't set until
         // the form loads.
         // TODO remove context
-        mSaveToDiskTask.setExportVars(getApplicationContext(), mInstanceId,
-                exit, complete);
+        mSaveToDiskTask.setExportVars(getApplicationContext(), mInstanceId, exit, complete);
         mSaveToDiskTask.execute();
         showDialog(SAVING_DIALOG);
     
@@ -1545,7 +1592,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             case FormEntryController.EVENT_GROUP:
             case FormEntryController.EVENT_QUESTION:
             case FormEntryController.EVENT_END_OF_FORM:
-                View next = createView(event);
+                View next = createView(event, null);
                 showView(next, AnimationType.RIGHT);
                 break;
             case FormEntryController.EVENT_PROMPT_NEW_REPEAT:

@@ -1,5 +1,7 @@
 package com.radicaldynamic.turboform.application;
 
+import java.util.ArrayList;
+
 import org.javarosa.core.reference.ReferenceManager;
 import org.javarosa.core.reference.RootTranslator;
 import org.javarosa.form.api.FormEntryController;
@@ -21,16 +23,11 @@ import com.radicaldynamic.turboform.services.CouchDbService;
 public class Collect extends Application {
     public final static String LOGTAG = "TurboForm";
     public static CouchDbService mDb = null;
-
-	private static Collect singleton = null;
-	
-	public static Collect getInstance() {
-		return singleton;
-	}
-	
+    
+	private static Collect singleton = null;	
 	private FormEntryController formEntryController = null;
-
     private FileReferenceFactory factory = null;
+    private ArrayList<String> instanceBrowseList = new ArrayList<String>();
     private boolean firstReferenceInitialization = true;
 
 	/* (non-Javadoc)
@@ -50,22 +47,34 @@ public class Collect extends Application {
 		super.onCreate();
 		singleton = this;
 	}
+	
+    public static Collect getInstance()
+    {
+        return singleton;
+    }
 
-	public void setFormEntryController( FormEntryController formEntryController) {
+	public void setFormEntryController(FormEntryController formEntryController) 
+	{
 		this.formEntryController = formEntryController;
 	}
 	
-	/**
-	 * Returns the form entry controller, if there is one.
-	 * 
-	 * @return the fec or null
-	 */
-	public FormEntryController getFormEntryController() {
+	public FormEntryController getFormEntryController() 
+	{
 		return formEntryController;
-	}
+	}	
 
+    public void setInstanceBrowseList(ArrayList<String> instanceBrowseList)
+    {
+        this.instanceBrowseList = instanceBrowseList;
+    }
 
-	public void registerMediaPath(String mediaPath) {
+    public ArrayList<String> getInstanceBrowseList()
+    {
+        return instanceBrowseList;
+    }
+
+	public void registerMediaPath(String mediaPath)
+	{
 	    Log.d(LOGTAG, "Registering media path " + mediaPath);
 	    
 	    if (factory != null) {
@@ -86,7 +95,8 @@ public class Collect extends Application {
 	/**
 	 * Creates and displays a dialog displaying the violated constraint.
 	 */
-	public void createConstraintToast(String constraintText, int saveStatus) {
+	public void createConstraintToast(String constraintText, int saveStatus) 
+	{
 		switch (saveStatus) {
 		case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
 			if (constraintText == null) {
@@ -101,12 +111,13 @@ public class Collect extends Application {
 		showCustomToast(constraintText);
 	}
 
-	private void showCustomToast(String message) {
+	private void showCustomToast(String message) 
+	{
 		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		View view = inflater.inflate(R.layout.toast_view, null);
 
-		// set the text in the view
+		// Set the text in the view
 		TextView tv = (TextView) view.findViewById(R.id.message);
 		tv.setText(message);
 

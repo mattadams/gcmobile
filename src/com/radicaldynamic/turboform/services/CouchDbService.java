@@ -188,8 +188,7 @@ public class CouchDbService extends Service {
                 mConnected = true;
                 
                 if (mFirstConnection == true) {
-                    mFirstConnection = false;
-                    notifyOfConnectionAttempt(R.string.tf_connection_established_status, R.string.tf_connection_reestablished_msg);
+                    mFirstConnection = false;                    
                 } else {
                     notifyOfConnectionAttempt(R.string.tf_connection_reestablished_status, R.string.tf_connection_reestablished_msg);    
                 }                
