@@ -21,6 +21,7 @@ import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.activities.FormEntryActivity;
 import com.radicaldynamic.turboform.activities.GeoPointActivity;
 import com.radicaldynamic.turboform.views.AbstractFolioView;
+import com.radicaldynamic.turboform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
 
 import android.app.Activity;
 import android.content.Context;
@@ -92,11 +93,11 @@ public class GeoPointWidget extends AbstractQuestionWidget implements IBinaryWid
             @Override
 			public void onClick(View v) {
             	// touches are not focus change events 
-            	signalDescendant(true);
-                Intent i = new Intent(getContext(), GeoPointActivity.class);
-                ((Activity) getContext()).startActivityForResult(i,
-                    FormEntryActivity.LOCATION_CAPTURE);
-
+            	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL)) {
+                    Intent i = new Intent(getContext(), GeoPointActivity.class);
+                    ((Activity) getContext()).startActivityForResult(i,
+                        FormEntryActivity.LOCATION_CAPTURE);
+            	}
             }
         });
 

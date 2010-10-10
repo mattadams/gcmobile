@@ -40,6 +40,7 @@ import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.activities.FormEntryActivity;
 import com.radicaldynamic.turboform.utilities.FileUtils;
 import com.radicaldynamic.turboform.views.AbstractFolioView;
+import com.radicaldynamic.turboform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
 
 /**
  * Widget that allows user to take pictures, sounds or video and add them to the form.
@@ -146,21 +147,22 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         mCaptureButton.setOnClickListener(new View.OnClickListener() {
             @Override
 			public void onClick(View v) {
-            	signalDescendant(true);
-                Intent i = new Intent(mCaptureIntent);
-                // We give the camera an absolute filename/path where to put the
-                // picture because of bug:
-                // http://code.google.com/p/android/issues/detail?id=1480
-                // The bug appears to be fixed in Android 2.0+, but as of feb 2,
-                // 2010, G1 phones only run 1.6. Without specifying the path the
-                // images returned by the camera in 1.6 (and earlier) are ~1/4
-                // the size. boo.
-
-                // if this gets modified, the onActivityResult in
-                // FormEntyActivity will also need to be updated.
-                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(FileUtils.TMPFILE_PATH)));
-                ((Activity) getContext()).startActivityForResult(i, mRequestCode);
-
+                if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
+                    Intent i = new Intent(mCaptureIntent);
+                    // We give the camera an absolute filename/path where to put the
+                    // picture because of bug:
+                    // http://code.google.com/p/android/issues/detail?id=1480
+                    // The bug appears to be fixed in Android 2.0+, but as of feb 2,
+                    // 2010, G1 phones only run 1.6. Without specifying the path the
+                    // images returned by the camera in 1.6 (and earlier) are ~1/4
+                    // the size. boo.
+                       
+                    // if this gets modified, the onActivityResult in
+                    // FormEntyActivity will also need to be updated.
+                    i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(
+                            FileUtils.TMPFILE_PATH)));
+                    ((Activity) getContext()).startActivityForResult(i, mRequestCode);
+                }
             }
         });
 
@@ -176,28 +178,29 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
 			public void onClick(View v) {
-            	signalDescendant(true);
-            	// do nothing if there is no image...
-            	if ( mBinaryName == null ) return;
-
-                Intent i = new Intent("android.intent.action.VIEW");
-                String[] projection = {
-                    "_id"
-                };
-                Cursor c =
-                    getContext().getContentResolver().query(mExternalUri, projection,
-                        "_data='" + mInstanceFolder + mBinaryName + "'", null, null);
-                if (c.getCount() > 0) {
-                    c.moveToFirst();
-                    String id = c.getString(c.getColumnIndex("_id"));
-
-                    Log.i(t, "setting view path to: " + Uri.withAppendedPath(mExternalUri, id));
-
-                    i.setDataAndType(Uri.withAppendedPath(mExternalUri, id), "image/*");
-                    getContext().startActivity(i);
-
-                }
-                c.close();
+            	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
+	            	// do nothing if there is no image...
+	            	if ( mBinaryName == null ) return;
+	
+	                Intent i = new Intent("android.intent.action.VIEW");
+	                String[] projection = {
+	                    "_id"
+	                };
+	                Cursor c =
+	                    getContext().getContentResolver().query(mExternalUri, projection,
+	                        "_data='" + mInstanceFolder + mBinaryName + "'", null, null);
+	                if (c.getCount() > 0) {
+	                    c.moveToFirst();
+	                    String id = c.getString(c.getColumnIndex("_id"));
+	
+	                    Log.i(t, "setting view path to: " + Uri.withAppendedPath(mExternalUri, id));
+	
+	                    i.setDataAndType(Uri.withAppendedPath(mExternalUri, id), "image/*");
+	                    getContext().startActivity(i);
+	
+	                }
+	                c.close();
+            	}
             }
         });
         addView(mImageView);

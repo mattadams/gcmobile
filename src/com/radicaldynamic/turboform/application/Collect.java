@@ -9,10 +9,12 @@ import org.javarosa.form.api.FormEntryController;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +31,7 @@ public class Collect extends Application {
     private FileReferenceFactory factory = null;
     private ArrayList<String> instanceBrowseList = new ArrayList<String>();
     private boolean firstReferenceInitialization = true;
+    private IBinder viewToken = null;
 
 	/* (non-Javadoc)
 	 * @see android.app.Application#onConfigurationChanged(android.content.res.Configuration)
@@ -90,11 +93,45 @@ public class Collect extends Application {
             ReferenceManager._().addRootTranslator(new RootTranslator("jr://audio/", "jr://file/"));
             ReferenceManager._().addRootTranslator(new RootTranslator("jr://video/", "jr://file/"));
         }
-	}
+	}	
+	
+    /**
+     * Creates and displays a dialog displaying the violated constraint.
+     */
+    public void showSoftKeyboard(View v)
+    {
+        InputMethodManager inputManager = (InputMethodManager) getBaseContext()
+                .getSystemService(Context.INPUT_METHOD_SERVICE);
 
-	/**
-	 * Creates and displays a dialog displaying the violated constraint.
-	 */
+        IBinder b = v.getWindowToken();
+        if (viewToken != null && !viewToken.equals(b)) {
+            inputManager.hideSoftInputFromInputMethod(viewToken, 0);
+        }
+
+        if (inputManager.isActive(v))
+            return;
+        inputManager.showSoftInput(v, 0);
+        viewToken = b;
+    }
+
+    public void hideSoftKeyboard(View c)
+    {
+        InputMethodManager inputManager = (InputMethodManager) getBaseContext()
+                .getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        if (viewToken != null) {
+            inputManager.hideSoftInputFromWindow(viewToken, 0);
+        }
+        viewToken = null;
+
+        if (c != null) {
+            if (inputManager.isActive()) {
+                inputManager.hideSoftInputFromWindow(c
+                        .getApplicationWindowToken(), 0);
+            }
+        }
+    }
+
 	public void createConstraintToast(String constraintText, int saveStatus) 
 	{
 		switch (saveStatus) {

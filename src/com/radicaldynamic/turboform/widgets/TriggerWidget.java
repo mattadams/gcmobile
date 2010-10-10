@@ -19,6 +19,7 @@ import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.views.AbstractFolioView;
+import com.radicaldynamic.turboform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
 
 import android.content.Context;
 import android.os.Handler;
@@ -70,7 +71,8 @@ public class TriggerWidget extends AbstractQuestionWidget {
                 } else {
                     mStringAnswer.setText(null);
                 }
-                signalDescendant(true);
+                // make change ... then see if it sticks...
+                signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL);
             }
         });
 
