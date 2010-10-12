@@ -30,6 +30,7 @@ import org.javarosa.model.xform.XFormSerializingVisitor;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -67,6 +68,11 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
      */
     @Override
     protected Integer doInBackground(Void... nothing) {
+        
+        // we need to prepare this thread for message queue handling should a
+        // toast be needed...
+        Looper.prepare();
+        
         // Validation failed, pass specific failure
         int validateStatus = validateAnswers(mMarkCompleted);
         if (validateStatus != VALIDATED) {
