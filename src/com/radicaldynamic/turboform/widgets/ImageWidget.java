@@ -147,22 +147,22 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         mCaptureButton.setOnClickListener(new View.OnClickListener() {
             @Override
 			public void onClick(View v) {
-                if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
-                    Intent i = new Intent(mCaptureIntent);
-                    // We give the camera an absolute filename/path where to put the
-                    // picture because of bug:
-                    // http://code.google.com/p/android/issues/detail?id=1480
-                    // The bug appears to be fixed in Android 2.0+, but as of feb 2,
-                    // 2010, G1 phones only run 1.6. Without specifying the path the
-                    // images returned by the camera in 1.6 (and earlier) are ~1/4
-                    // the size. boo.
-                       
-                    // if this gets modified, the onActivityResult in
-                    // FormEntyActivity will also need to be updated.
-                    i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(
-                            FileUtils.TMPFILE_PATH)));
-                    ((Activity) getContext()).startActivityForResult(i, mRequestCode);
-                }
+            	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
+	                Intent i = new Intent(mCaptureIntent);
+	                // We give the camera an absolute filename/path where to put the
+	                // picture because of bug:
+	                // http://code.google.com/p/android/issues/detail?id=1480
+	                // The bug appears to be fixed in Android 2.0+, but as of feb 2,
+	                // 2010, G1 phones only run 1.6. Without specifying the path the
+	                // images returned by the camera in 1.6 (and earlier) are ~1/4
+	                // the size. boo.
+	
+	                // if this gets modified, the onActivityResult in
+	                // FormEntyActivity will also need to be updated.
+	                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(
+	                        FileUtils.TMPFILE_PATH)));
+	                ((Activity) getContext()).startActivityForResult(i, mRequestCode);
+            	}
             }
         });
 

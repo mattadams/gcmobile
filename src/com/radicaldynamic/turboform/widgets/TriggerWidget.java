@@ -72,7 +72,7 @@ public class TriggerWidget extends AbstractQuestionWidget {
                     mStringAnswer.setText(null);
                 }
                 // make change ... then see if it sticks...
-                signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL);
+            	signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL);
             }
         });
 

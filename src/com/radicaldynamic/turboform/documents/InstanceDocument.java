@@ -1,5 +1,15 @@
 package com.radicaldynamic.turboform.documents;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
+
+import android.util.Log;
+
+import com.radicaldynamic.turboform.application.Collect;
+
 public class InstanceDocument extends GenericDocument
 {    
     private static final long serialVersionUID = -2924171490521236262L;
@@ -16,6 +26,7 @@ public class InstanceDocument extends GenericDocument
     
     private String form;
     private Status status;
+    private String dateAggregated;          // The date that this document was last uploaded to an ODK Aggregate server
     
     public InstanceDocument() {
         super("instance");
@@ -42,5 +53,29 @@ public class InstanceDocument extends GenericDocument
     public Status getStatus()
     {
         return status;
+    }
+
+    public void setDateAggregated(String dateAggregated)
+    {
+        this.dateAggregated = dateAggregated;
+    }
+
+    public String getDateAggregated()
+    {
+        return dateAggregated;
+    }
+    
+    @JsonIgnore
+    public Calendar getDateAggregatedAsCalendar() {
+        SimpleDateFormat sdf = new SimpleDateFormat(GenericDocument.DATETIME);
+        Calendar calendar = Calendar.getInstance();
+        
+        try {
+            calendar.setTime(sdf.parse(dateAggregated));
+        } catch (ParseException e1) {
+            Log.e(Collect.LOGTAG, "Unable to parse dateAggregated, returning a valid date anyway: " + e1.toString());            
+        }
+        
+        return calendar;
     }
 }

@@ -18,7 +18,7 @@ import com.radicaldynamic.turboform.utilities.StringUtils;
 @SuppressWarnings("serial")
 public class GenericDocument extends CouchDbDocument
 {
-    private static final String DATETIME = "yyyy-MM-dd HH:mm:ss Z"; 
+    public static final String DATETIME = "yyyy-MM-dd HH:mm:ss Z"; 
     
     private Integer authoredBy;
     private Integer updatedBy;
@@ -27,6 +27,8 @@ public class GenericDocument extends CouchDbDocument
     private String dateUpdated;
     
     private String type;
+    
+    private Integer documentVersion;
     
     /*
      * TODO: possibly remove?
@@ -152,5 +154,15 @@ public class GenericDocument extends CouchDbDocument
     public String getHash()
     {
         return hash;
+    }
+
+    public void setDocumentVersion(Integer documentVersion)
+    {
+        this.documentVersion = documentVersion;
+    }
+
+    public Integer getDocumentVersion()
+    {
+        return documentVersion;
     }
 }

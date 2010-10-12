@@ -31,9 +31,11 @@ public class HierarchyListAdapter extends BaseAdapter {
     private Context mContext;
     private List<HierarchyElement> mItems = new ArrayList<HierarchyElement>();
 
+
     public HierarchyListAdapter(Context context) {
         mContext = context;
     }
+
 
     /*
      * (non-Javadoc)
@@ -45,6 +47,7 @@ public class HierarchyListAdapter extends BaseAdapter {
         return mItems.size();
     }
 
+
     /*
      * (non-Javadoc)
      * 
@@ -54,6 +57,7 @@ public class HierarchyListAdapter extends BaseAdapter {
 	public Object getItem(int position) {
         return mItems.get(position);
     }
+
 
     /*
      * (non-Javadoc)
@@ -65,6 +69,7 @@ public class HierarchyListAdapter extends BaseAdapter {
         return position;
     }
 
+
     /*
      * (non-Javadoc)
      * 
@@ -73,7 +78,6 @@ public class HierarchyListAdapter extends BaseAdapter {
     @Override
 	public View getView(int position, View convertView, ViewGroup parent) {
         HierarchyElementView hev;
-        
         if (convertView == null) {
             hev = new HierarchyElementView(mContext, mItems.get(position));
         } else {
@@ -90,9 +94,10 @@ public class HierarchyListAdapter extends BaseAdapter {
         } else {
             hev.showSecondary(true);
         }
-        
         return hev;
+
     }
+
 
     /**
      * Sets the list of items for this adapter to use.
@@ -100,4 +105,5 @@ public class HierarchyListAdapter extends BaseAdapter {
     public void setListItems(List<HierarchyElement> it) {
         mItems = it;
     }
+
 }
