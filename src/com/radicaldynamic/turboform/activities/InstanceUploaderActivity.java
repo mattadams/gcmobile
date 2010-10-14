@@ -38,7 +38,7 @@ import java.util.ArrayList;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class InstanceUploaderActivity extends Activity implements InstanceUploaderListener {
-    private static final String t = "InstanceUploaderActivity: ";
+    //private static final String t = "InstanceUploaderActivity: ";
 
     private final static int PROGRESS_DIALOG = 1;
     private final static String KEY_TOTALCOUNT = "totalcount";

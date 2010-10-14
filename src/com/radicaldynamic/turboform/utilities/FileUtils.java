@@ -26,6 +26,9 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
+
+import com.radicaldynamic.turboform.application.Collect;
 
 /**
  * Static methods used for common file operations.
@@ -33,7 +36,7 @@ import java.util.ArrayList;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public final class FileUtils {
-    private final static String t = "FileUtils";
+    private final static String t = "FileUtils: ";
 
     // Used to validate and display valid form names.
     public static final String VALID_FILENAME = "[ _\\-A-Za-z0-9]*.x[ht]*ml";
@@ -295,8 +298,24 @@ public final class FileUtils {
             Log.e("Problem reading from file", e.getMessage());
             return null;
         } 
-        
+    }
+    
+    public static void deleteInstanceCacheFiles(String instanceId) 
+    {
+        File cacheDir = new File(FileUtils.CACHE_PATH);
+        String[] fileNames = cacheDir.list();
 
+        for (String file : fileNames) {
+            Log.v(Collect.LOGTAG, t + "evaluating " + file + " for removal");
+
+            if (Pattern.matches("^" + instanceId + "[.].*", file)) {
+                if (FileUtils.deleteFile(FileUtils.CACHE_PATH + file)) {
+                    Log.d(Collect.LOGTAG, t + "removed file " + file);
+                } else {
+                    Log.e(Collect.LOGTAG, t + "unable to remove file " + file);
+                }
+            }
+        }
     }
 
 }

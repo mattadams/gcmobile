@@ -15,7 +15,6 @@
 package com.radicaldynamic.turboform.activities;
 
 import java.io.File;
-import java.util.regex.Pattern;
 
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
@@ -1153,32 +1152,11 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                                         + ": removed placeholder instance "
                                         + mInstanceId);
                             }
-    
-                            // Remove any temporary media files that have not
-                            // been sent to the database
-                            File cacheDir = new File(FileUtils.CACHE_PATH);
-                            String[] fileNames = cacheDir.list();
-    
-                            for (String file : fileNames) {
-                                Log.v(Collect.LOGTAG, t + mFormId + ": evaluating "
-                                        + file + " for removal");
-    
-                                if (Pattern.matches(
-                                        "^" + mInstanceId + "[.].*", file)) {
-                                    if (FileUtils
-                                            .deleteFile(FileUtils.CACHE_PATH
-                                                    + file)) {
-                                        Log.d(Collect.LOGTAG, t + mFormId
-                                                + ": removed unused file "
-                                                + file);
-                                    } else {
-                                        Log.e(Collect.LOGTAG, t + mFormId
-                                                + ": unable to remove file "
-                                                + file);
-                                    }
-                                }
-                            }
-    
+
+                            // Purge unused media files
+                            Log.d(Collect.LOGTAG, t + "removing unused files");
+                            FileUtils.deleteInstanceCacheFiles(mInstanceId);
+                            
                             finish(); 
                             break;
                         // Save and exit

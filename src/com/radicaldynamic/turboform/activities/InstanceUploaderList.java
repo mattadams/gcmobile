@@ -49,7 +49,7 @@ import com.radicaldynamic.turboform.utilities.DocumentUtils;
 
 // TODO long click form for submission log
 public class InstanceUploaderList extends ListActivity {
-    private static final String t = "InstanceUploaderList: ";
+    //private static final String t = "InstanceUploaderList: ";
 
     private static final String BUNDLE_SELECTED_ITEMS_KEY = "selected_items";
     private static final String BUNDLE_TOGGLED_KEY = "toggled";
@@ -210,11 +210,14 @@ public class InstanceUploaderList extends ListActivity {
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            mInstanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByAggregateReadiness();            
-            documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).
-                getAllByKeys(new ArrayList<Object>(mInstanceTallies.keySet()));
+            mInstanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByAggregateReadiness();
             
-            DocumentUtils.sortByName(documents);
+            if (!mInstanceTallies.isEmpty()) {
+                documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).
+                    getAllByKeys(new ArrayList<Object>(mInstanceTallies.keySet()));
+            
+                DocumentUtils.sortByName(documents);
+            }
             
             return null;
         }

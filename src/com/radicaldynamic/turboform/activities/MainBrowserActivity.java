@@ -340,11 +340,13 @@ public class MainBrowserActivity extends ListActivity
             } else {
                 instanceTallies = new FormRepository(Collect.mDb.getDb())
                         .getFormsByInstanceStatus(status[0]);
-                documents = (ArrayList<FormDocument>) new FormRepository(
-                        Collect.mDb.getDb())
-                        .getAllByKeys(new ArrayList<Object>(instanceTallies
-                                .keySet()));
-                DocumentUtils.sortByName(documents);
+                
+                if (!instanceTallies.isEmpty()) {
+                    documents = (ArrayList<FormDocument>) new FormRepository(
+                            Collect.mDb.getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));
+                    
+                    DocumentUtils.sortByName(documents);
+                }
             }
 
             return status[0];

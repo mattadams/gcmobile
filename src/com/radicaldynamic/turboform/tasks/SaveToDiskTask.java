@@ -30,7 +30,6 @@ import org.javarosa.model.xform.XFormSerializingVisitor;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.MimeTypeMap;

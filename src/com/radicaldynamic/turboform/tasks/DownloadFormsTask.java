@@ -34,7 +34,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import android.os.AsyncTask;
-import android.os.Looper;
 import android.util.Base64;
 
 import com.radicaldynamic.turboform.activities.FormDownloadList;
@@ -52,7 +51,7 @@ import com.radicaldynamic.turboform.listeners.FormDownloaderListener;
  */
 public class DownloadFormsTask extends
         AsyncTask<HashMap<String, String>, String, HashMap<String, String>> {
-    private static final String t = "DownloadFormsTask: ";
+    //private static final String t = "DownloadFormsTask: ";
 
     // used to store form name if one errors
     public static final String DL_FORM = "dlform";

@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.regex.Pattern;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -54,7 +53,7 @@ import com.radicaldynamic.turboform.utilities.FileUtils;
 public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<String>> {
     private static final String t = "InstanceUploaderTask: ";
     
-    private static long MAX_BYTES = 1048576 - 1024;         // 1MB less 1KB overhead
+    //private static long MAX_BYTES = 1048576 - 1024;         // 1MB less 1KB overhead
     private static final int CONNECTION_TIMEOUT = 30000;
     
     InstanceUploaderListener mStateListener;
@@ -110,6 +109,9 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                 FileOutputStream file;
 
                 try {
+                    if (key.equals("xml")) 
+                        key = values[i] + ".xml";
+                    
                     file = new FileOutputStream(new File(FileUtils.CACHE_PATH + key));
                     
                     while ((bytesRead = ais.read(buffer)) != -1) {
@@ -181,20 +183,8 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             }
             
             // Remove cache files pertaining to this upload
-            File cacheDir = new File(FileUtils.CACHE_PATH);
-            String[] fileNames = cacheDir.list();
-
-            for (String file : fileNames) {
-                Log.v(Collect.LOGTAG, t + "evaluating " + file + " for removal");
-
-                if (Pattern.matches("^" + values[i] + "[.].*", file) || file.equals("xml")) {
-                    if (FileUtils.deleteFile(FileUtils.CACHE_PATH + file)) {
-                        Log.d(Collect.LOGTAG, t + "removed file from upload attempt " + file);
-                    } else {
-                        Log.e(Collect.LOGTAG, t + "unable to remove file from upload attempt " + file);
-                    }
-                }
-            }
+            Log.d(Collect.LOGTAG, t + "purging uploaded files");
+            FileUtils.deleteInstanceCacheFiles(values[i]);
         }
 
         return uploadedIntances;
