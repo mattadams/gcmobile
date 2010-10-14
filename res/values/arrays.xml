@@ -26,7 +26,7 @@ the License.
     </string-array>
     
     <string-array name="tf_main_menu_form_filters">
-        <item>Filter off</item>        
+        <item>All forms (filter off)</item>        
         <item>Incomplete forms</item>
         <item>Completed forms</item>
         <item>Unread forms</item>                

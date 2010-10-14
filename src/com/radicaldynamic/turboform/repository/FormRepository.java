@@ -1,5 +1,6 @@
 package com.radicaldynamic.turboform.repository;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +21,7 @@ import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.documents.InstanceDocument;
 
-@View(name = "all", map = "function(doc) { if (doc.type == 'form') emit (doc._id, doc._id) }")
+@View(name = "all", map = "function(doc) { if (doc.type && doc.type == 'form') emit (doc._id, doc._id) }")
 public class FormRepository extends CouchDbRepositorySupport<FormDocument>
 {
     public FormRepository(CouchDbConnector db) {
@@ -33,7 +34,7 @@ public class FormRepository extends CouchDbRepositorySupport<FormDocument>
         return forms;
     }
     
-    @View(name = "by_instance_status", map = "function(doc) { if (doc.type == 'instance') emit ([doc.form, doc.status], 1); }", reduce = "function(keys, values) { return sum(values); }")
+    @View(name = "by_instance_status", map = "function(doc) { if (doc.type && doc.type == 'instance') emit ([doc.formId, doc.status], 1); }", reduce = "function(keys, values) { return sum(values); }")
     public Map<String, String> getFormsByInstanceStatus(InstanceDocument.Status status) {
         Map<String, String> results = new HashMap<String, String>();
         ViewResult r = db.queryView(createQuery("by_instance_status").group(true));        
@@ -55,6 +56,25 @@ public class FormRepository extends CouchDbRepositorySupport<FormDocument>
                 e.printStackTrace();
             }
         }
+        
+        return results;
+    }
+    
+    @View(name = "by_instance_aggregate_readiness", map = "function(doc) { if (doc.type && doc.status && doc.type == 'instance' && doc.status == 'complete') if ( doc.dateAggregated == null || Date.parse(doc.dateUpdated) > Date.parse(doc.dateAggregated)) emit(doc.formId, doc._id); }" )
+    public Map<String, List<String>> getFormsByAggregateReadiness() {
+        Map<String, List<String>> results = new HashMap<String, List<String>>();
+        ViewResult r = db.queryView(createQuery("by_instance_aggregate_readiness"));
+        List<Row> rows = r.getRows();
+        
+        for(Row record : rows) {
+            List<String> values = new ArrayList<String>();
+            
+            if (results.containsKey(record.getKey()))
+                values = results.get(record.getKey());                
+
+            values.add(record.getValue());
+            results.put(record.getKey(), values);
+        }        
         
         return results;
     }

@@ -72,7 +72,7 @@ public class DownloadFormsTask extends
     protected HashMap<String, String> doInBackground(HashMap<String, String>... values) {
         // we need to prepare this thread for message queue handling should a
         // toast be needed...
-        Looper.prepare();        
+        //Looper.prepare();        
         
         if (values != null && values[0].containsKey(FormDownloadList.LIST_URL)) {
             // This gets a list of available forms from the specified server.

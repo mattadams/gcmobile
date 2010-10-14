@@ -71,7 +71,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         
         // we need to prepare this thread for message queue handling should a
         // toast be needed...
-        Looper.prepare();
+        //Looper.prepare();
         
         // Validation failed, pass specific failure
         int validateStatus = validateAnswers(mMarkCompleted);

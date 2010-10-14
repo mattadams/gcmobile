@@ -10,7 +10,7 @@ import org.ektorp.support.View;
 
 import com.radicaldynamic.turboform.documents.InstanceDocument;
 
-@View(name = "all", map = "function(doc) { if (doc.type == 'instance') emit (doc._id, doc._id) }")
+@View(name = "all", map = "function(doc) { if (doc.type && doc.type == 'instance') emit (doc._id, doc._id) }")
 public class InstanceRepository extends CouchDbRepositorySupport<InstanceDocument>
 {
     public InstanceRepository(CouchDbConnector db) {
@@ -19,8 +19,8 @@ public class InstanceRepository extends CouchDbRepositorySupport<InstanceDocumen
     }
     
     @GenerateView
-    public List<InstanceDocument> findByForm(String formId) {
-        return queryView("by_form", formId);
+    public List<InstanceDocument> findByFormId(String formId) {
+        return queryView("by_formId", formId);
     }
     
     @GenerateView
@@ -28,8 +28,13 @@ public class InstanceRepository extends CouchDbRepositorySupport<InstanceDocumen
         return queryView("by_status", status.toString());
     }
     
+    /*
+     * Given a formId and an InstanceDocument status, return a list of 
+     * instance IDs belonging to the form in question and having the 
+     * desired status.
+     */
     public ArrayList<String> findByFormAndStatus(String formId, InstanceDocument.Status status) {
-        List<InstanceDocument> instancesByForm = findByForm(formId);
+        List<InstanceDocument> instancesByForm = findByFormId(formId);
         ArrayList<String> instanceIds = new ArrayList<String>();
         String stat = status.toString();
         

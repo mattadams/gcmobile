@@ -84,8 +84,6 @@ import com.radicaldynamic.turboform.views.layout.GroupLayoutFactory;
 public class FormEntryActivity extends Activity implements AnimationListener,
         FormLoaderListener, FormSavedListener
 {
-    private static final String t = "FormEntryActivity";
-
     // Request codes for returning data from specified intent
     public static final int IMAGE_CAPTURE = 1;                  
     public static final int BARCODE_CAPTURE = 2;
@@ -358,7 +356,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
             Uri imageuri = getContentResolver().insert(Images.Media.EXTERNAL_CONTENT_URI, values);
     
-            Log.i(t, "URI returned by image insertion: " + imageuri.toString());
+            Log.i(Collect.LOGTAG, "URI returned by image insertion: " + imageuri.toString());
             
             ((AbstractFolioView) mCurrentView).setBinaryData(imageuri);
             saveCurrentAnswer(false);
@@ -560,7 +558,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 saveCurrentAnswer(false);
             }
     
-            Intent i = new Intent(this, FormHierarchyActivity.class);            
+            Intent i = new Intent(this, FormHierarchyList.class);            
             startActivityForResult(i, HIERARCHY_BROWSER);
         }
     
@@ -676,7 +674,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             // Initialize new instance document
             if (mInstanceId == null) {
                 InstanceDocument instance = new InstanceDocument();
-                instance.setForm(mFormId);
+                instance.setFormId(mFormId);
                 Collect.mDb.getDb().create(instance);
                 mInstanceId = instance.getId();
                 mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
@@ -684,7 +682,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
                 
                 // We've just loaded a saved form, so start in the hierarchy view
-                Intent i = new Intent(this, FormHierarchyActivity.class);                
+                Intent i = new Intent(this, FormHierarchyList.class);                
                 startActivityForResult(i, HIERARCHY_BROWSER);
 
                 // So we don't show the introduction screen before jumping to the hierarchy
@@ -719,7 +717,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         FormIndex index = mFormEntryModel.getFormIndex();
         event = jumpToContainingFolio(index);
     
-        Log.e(t, "refreshing view for event: " + event);
+        Log.e(Collect.LOGTAG, "refreshing view for event: " + event);
     
         View current = createView(event, index);
         showView(current, AnimationType.FADE);
@@ -1301,7 +1299,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             qv.buildView(mInstancePath, getGroupsForCurrentIndex());
             return qv;
         default:
-            Log.e(t, "Attempted to create a view that does not exist.");
+            Log.e(Collect.LOGTAG, "Attempted to create a view that does not exist.");
             return null;
         }
     }
@@ -1639,7 +1637,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             FormIndex index = mFormEntryModel.getFormIndex();
             event = jumpToContainingFolio(index);
     
-            Log.e(t, "refreshing view for event: " + event);
+            Log.e(Collect.LOGTAG, "refreshing view for event: " + event);
     
             View next = createView(event, index);
             showView(next, AnimationType.LEFT);

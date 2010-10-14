@@ -9,12 +9,12 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.widget.TabHost;
 
-public class ManageFormsActivity extends TabActivity
+public class ManageFormsTabs extends TabActivity
 {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.tf_manage_forms);
+        setContentView(R.layout.manage_forms);
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_manage_item, getString(R.string.forms)));
 
         final TabHost tabHost = getTabHost();

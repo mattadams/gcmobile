@@ -16,7 +16,6 @@ package com.radicaldynamic.turboform.activities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import android.app.AlertDialog;
@@ -257,10 +256,12 @@ public class MainBrowserActivity extends ListActivity
         Intent i = null;
 
         switch (item.getItemId()) {
-        case R.id.tf_sync:
+        case R.id.tf_synchronize:
+            i = new Intent(this, SynchronizeTabs.class);
+            startActivity(i);
             return true;
         case R.id.tf_manage:
-            i = new Intent(this, ManageFormsActivity.class);
+            i = new Intent(this, ManageFormsTabs.class);
             startActivity(i);
             return true;
         case R.id.tf_preferences:
@@ -500,9 +501,10 @@ public class MainBrowserActivity extends ListActivity
         // Spinner must reflect results of refresh view below
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
         triggerRefresh(s1.getSelectedItemPosition());
-
+              
         // Pull in a list of valid groups
-        // TODO: replace this when the actual groups stuff is implemented
+        // TODO: replace this when the actual groups stuff is implemented        
+        /*
         Spinner s2 = (Spinner) findViewById(R.id.group_filter);
         List<String> dbs = Collect.mDb.getAllDatabases();
 
@@ -521,6 +523,7 @@ public class MainBrowserActivity extends ListActivity
         collections
                 .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         s2.setAdapter(collections);
+        */
 
         registerForContextMenu(getListView());
 

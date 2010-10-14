@@ -22,9 +22,9 @@ public class InstanceDocument extends GenericDocument
      * Deleted:     A form instance marked for delayed deletion
      * Nothing:     Not an actual status (represents queries for forms without regard for instance status)
      */
-    public static enum Status {placeholder, incomplete, complete, updated, deleted, nothing};
+    public static enum Status {placeholder, incomplete, complete, submitted, updated, deleted, nothing};
     
-    private String form;
+    private String formId;
     private Status status;
     private String dateAggregated;          // The date that this document was last uploaded to an ODK Aggregate server
     
@@ -35,14 +35,14 @@ public class InstanceDocument extends GenericDocument
             setStatus(Status.placeholder);
     }
 
-    public void setForm(String form)
+    public void setFormId(String form)
     {
-        this.form = form;
+        this.formId = form;
     }
 
-    public String getForm()
+    public String getFormId()
     {
-        return form;
+        return formId;
     }
 
     public void setStatus(Status status)

@@ -179,7 +179,7 @@
 	<string name="tf_connection_reestablished_msg">TurboForm is now online</string>
 	<string name="tf_connectivity_settings">Connectivity settings</string>
 	<string name="tf_couchdb_prefix">turboform/</string>
-	<string name="tf_custom_server_settings">Custom Server Settings</string>
+	<string name="tf_custom_server_settings">Custom Server Settings</string>	
 	<string name="tf_default_couchdb_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_couchdb_port">5984</string>
 	<string name="tf_general_preferences">Preferences</string>
@@ -190,7 +190,6 @@
 	<string name="tf_main_menu_list_item_name_label">Name</string>
 	<string name="tf_main_menu_form_filter_label">Filter Forms</string>
 	<string name="tf_main_menu_form_filter_prompt">Show...</string>
-	<string name="tf_main_menu_form_filter_default">Filter off</string>
 	<string name="tf_manage">Manage Forms</string>
 	<string name="tf_manage_item">Manage %s</string>	
 	<string name="tf_missing_instances_hint">No %s to browse</string>
@@ -198,10 +197,11 @@
 	<string name="tf_notification_settings">Notification settings</string>
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
+	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_records">Records</string>
 	<string name="tf_server_connection_error">Cannot contact database - try again later</string>
 	<string name="tf_server_settings">Server settings</string>
 	<string name="tf_server_url_error">Invalid server URL</string>   
-	<string name="tf_sync">Synchronize</string>
+	<string name="tf_synchronize">Synchronize</string>
 	<string name="tf_synchronization_settings">Synchronization settings</string>
 </resources>

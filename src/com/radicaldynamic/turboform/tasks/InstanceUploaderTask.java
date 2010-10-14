@@ -26,6 +26,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
+import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.listeners.InstanceUploaderListener;
 
 import android.os.AsyncTask;
@@ -43,24 +44,21 @@ import java.util.ArrayList;
  */
 public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<String>> {
 
-    private static String t = "InstanceUploaderTask";
-    private static long MAX_BYTES = 1048576 - 1024; // 1MB less 1KB overhead
-    InstanceUploaderListener mStateListener;
-    String mUrl;
+    private static long MAX_BYTES = 1048576 - 1024;         // 1MB less 1KB overhead
     private static final int CONNECTION_TIMEOUT = 30000;
-
+    
+    InstanceUploaderListener mStateListener;
+    String mUrl;   
 
     public void setUploadServer(String newServer) {
         mUrl = newServer;
     }
 
-
     @Override
     protected ArrayList<String> doInBackground(String... values) {
-
     	// we need to prepare this thread for message queue handling should a
     	// toast be needed...
-    	Looper.prepare();
+    	//Looper.prepare();
 
         ArrayList<String> uploadedIntances = new ArrayList<String>();
         int instanceCount = values.length;
@@ -68,73 +66,78 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
         for (int i = 0; i < instanceCount; i++) {
             publishProgress(i + 1, instanceCount);
 
-            // configure connection
+            // Configure connection
             HttpParams params = new BasicHttpParams();
             HttpConnectionParams.setConnectionTimeout(params, CONNECTION_TIMEOUT);
             HttpConnectionParams.setSoTimeout(params, CONNECTION_TIMEOUT);
             HttpClientParams.setRedirecting(params, false);
 
-            // setup client
-            DefaultHttpClient httpclient = new DefaultHttpClient(params);
-            HttpPost httppost = new HttpPost(mUrl);
+            // Setup client
+            DefaultHttpClient httpClient = new DefaultHttpClient(params);
+            HttpPost httpPost = new HttpPost(mUrl);
 
-            // get instance file
+            // Get instance file
             File file = new File(values[i]);
 
-            // find all files in parent directory
+            // Find all files in parent directory
             File[] files = file.getParentFile().listFiles();
+            
             if (files == null) {
-                Log.e(t, "no files to upload");
+                Log.e(Collect.LOGTAG, "no files to upload");
                 cancel(true);
             }
 
-            // mime post
+            // MIME POST
             MultipartEntity entity = new MultipartEntity();
+            
             for (int j = 0; j < files.length; j++) {
                 File f = files[j];
                 FileBody fb;
+                
                 if (f.getName().endsWith(".xml")) {
                     fb = new FileBody(f, "text/xml");
                     if (fb.getContentLength() <= MAX_BYTES) {
                         entity.addPart("xml_submission_file", fb);
-                        Log.i(t, "added xml file " + f.getName());
+                        Log.i(Collect.LOGTAG, "added xml file " + f.getName());
                     } else {
-                        Log.i(t, "file " + f.getName() + " is too big");
+                        Log.i(Collect.LOGTAG, "file " + f.getName() + " is too big");
                     }
                 } else if (f.getName().endsWith(".jpg")) {
                     fb = new FileBody(f, "image/jpeg");
                     if (fb.getContentLength() <= MAX_BYTES) {
                         entity.addPart(f.getName(), fb);
-                        Log.i(t, "added image file " + f.getName());
+                        Log.i(Collect.LOGTAG, "added image file " + f.getName());
                     } else {
-                        Log.i(t, "file " + f.getName() + " is too big");
+                        Log.i(Collect.LOGTAG, "file " + f.getName() + " is too big");
                     }
                 } else if (f.getName().endsWith(".3gpp")) {
                     fb = new FileBody(f, "audio/3gpp");
                     if (fb.getContentLength() <= MAX_BYTES) {
                         entity.addPart(f.getName(), fb);
-                        Log.i(t, "added audio file " + f.getName());
+                        Log.i(Collect.LOGTAG, "added audio file " + f.getName());
                     } else {
-                        Log.i(t, "file " + f.getName() + " is too big");
+                        Log.i(Collect.LOGTAG, "file " + f.getName() + " is too big");
                     }
                 } else if (f.getName().endsWith(".3gp")) {
                     fb = new FileBody(f, "video/3gpp");
                     if (fb.getContentLength() <= MAX_BYTES) {
                         entity.addPart(f.getName(), fb);
-                        Log.i(t, "added video file " + f.getName());
+                        Log.i(Collect.LOGTAG, "added video file " + f.getName());
                     } else {
-                        Log.i(t, "file " + f.getName() + " is too big");
+                        Log.i(Collect.LOGTAG, "file " + f.getName() + " is too big");
                     }
                 } else {
-                    Log.w(t, "unsupported file type, not adding file: " + f.getName());
+                    Log.w(Collect.LOGTAG, "Unsupported file type while building MIME POST for instance upload to ODK Aggregate, not adding file: " + f.getName());
                 }
             }
-            httppost.setEntity(entity);
+            
+            httpPost.setEntity(entity);
 
             // prepare response and return uploaded
             HttpResponse response = null;
+            
             try {
-                response = httpclient.execute(httppost);
+                response = httpClient.execute(httpPost);
             } catch (ClientProtocolException e) {
                 e.printStackTrace();
                 return uploadedIntances;
@@ -150,25 +153,25 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             // TODO: This isn't handled correctly.
             String serverLocation = null;
             Header[] h = response.getHeaders("Location");
+            
             if (h != null && h.length > 0) {
                 serverLocation = h[0].getValue();
             } else {
                 // something should be done here...
-                Log.e(t, "Location header was absent");
+                Log.e(Collect.LOGTAG, "Location header was absent");
             }
+            
             int responseCode = response.getStatusLine().getStatusCode();
-            Log.e(t, "Response code:" + responseCode);
+            Log.e(Collect.LOGTAG, "Response code:" + responseCode);
 
             // verify that your response came from a known server
             if (serverLocation != null && mUrl.contains(serverLocation) && responseCode == 201) {
                 uploadedIntances.add(values[i]);
             }
-
         }
 
         return uploadedIntances;
     }
-
 
     @Override
     protected void onPostExecute(ArrayList<String> value) {
@@ -179,7 +182,6 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
         }
     }
 
-
     @Override
     protected void onProgressUpdate(Integer... values) {
         synchronized (this) {
@@ -189,7 +191,6 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             }
         }
     }
-
 
     public void setUploaderListener(InstanceUploaderListener sl) {
         synchronized (this) {

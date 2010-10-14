@@ -18,7 +18,7 @@ import com.radicaldynamic.turboform.utilities.StringUtils;
 @SuppressWarnings("serial")
 public class GenericDocument extends CouchDbDocument
 {
-    public static final String DATETIME = "yyyy-MM-dd HH:mm:ss Z"; 
+    public static final String DATETIME = "yyyy/MM/dd HH:mm:ss Z"; 
     
     private Integer authoredBy;
     private Integer updatedBy;
@@ -37,7 +37,7 @@ public class GenericDocument extends CouchDbDocument
      * a way to compare a serialised form definition with the original XML file.  It isn't being
      * used at the moment so we might want to remove it in the future.
      */
-    private String hash;
+    private String xmlHash;
     
     GenericDocument(String type) {
         setType(type);
@@ -141,19 +141,19 @@ public class GenericDocument extends CouchDbDocument
          */
         if (a.getId() == "xml") {
             if (a.getDataBase64().length() > 0) {
-                setHash(StringUtils.getMD5(a.getDataBase64()));                
+                setXmlHash(StringUtils.getMD5(a.getDataBase64()));                
             }
         }
     }
 
-    public void setHash(String hash)
+    public void setXmlHash(String hash)
     {
-        this.hash = hash;
+        this.xmlHash = hash;
     }
 
-    public String getHash()
+    public String getXmlHash()
     {
-        return hash;
+        return xmlHash;
     }
 
     public void setDocumentVersion(Integer documentVersion)
