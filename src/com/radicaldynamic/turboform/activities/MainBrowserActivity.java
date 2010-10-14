@@ -73,6 +73,8 @@ import com.radicaldynamic.turboform.utilities.FileUtils;
  */
 public class MainBrowserActivity extends ListActivity
 {
+    private static final String t = "MainBrowserActivity: ";
+
     private static boolean mShowSplash = true;
 
     private AlertDialog mAlertDialog;
@@ -90,7 +92,7 @@ public class MainBrowserActivity extends ListActivity
 
         public void onServiceDisconnected(ComponentName className)
         {
-            Log.d(Collect.LOGTAG, "TFCouchDbService unbound");
+            Log.d(Collect.LOGTAG, t + "TFCouchDbService unbound");
         }
     };
 
@@ -222,7 +224,7 @@ public class MainBrowserActivity extends ListActivity
         FormDocument form = (FormDocument) getListAdapter().getItem(position);
         InstanceLoadPathTask ilp;
 
-        Log.d(Collect.LOGTAG, "Selected form " + form.getId() + " from list");
+        Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
 
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);
 

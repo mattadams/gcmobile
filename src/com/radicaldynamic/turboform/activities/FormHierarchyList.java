@@ -44,6 +44,8 @@ import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.logic.HierarchyElement;
 
 public class FormHierarchyList extends ListActivity {
+    private static final String t = "FormHierarchyList: ";
+
     private static final int CHILD = 1;
     private static final int EXPANDED = 2;
     private static final int COLLAPSED = 3;
@@ -162,7 +164,7 @@ public class FormHierarchyList extends ListActivity {
                 h.setType(EXPANDED);
                 ArrayList<HierarchyElement> children1 = h.getChildren();
                 for (int i = 0; i < children1.size(); i++) {
-                    Log.i(Collect.LOGTAG, "adding child: " + children1.get(i).getFormIndex());
+                    Log.i(Collect.LOGTAG, t + "adding child: " + children1.get(i).getFormIndex());
                     formList.add(position + 1 + i, children1.get(i));
     
                 }

@@ -18,6 +18,8 @@ import com.radicaldynamic.turboform.utilities.StringUtils;
 @SuppressWarnings("serial")
 public class GenericDocument extends CouchDbDocument
 {
+    private static final String t = "GenericDocument: ";
+
     public static final String DATETIME = "yyyy/MM/dd HH:mm:ss Z"; 
     
     private Integer authoredBy;
@@ -42,26 +44,32 @@ public class GenericDocument extends CouchDbDocument
     GenericDocument(String type) {
         setType(type);
         
+        String timestamp = generateTimestamp(); 
+        
+        if (isNew()) {
+            if (getDateCreated() == null) {
+                Log.v(Collect.LOGTAG, t + "new " + type + ": setting dateCreated and dateUpdated to " + timestamp);
+                setDateCreated(timestamp);
+                setDateUpdated(timestamp);
+            }            
+        } else {
+            if (getDateCreated() instanceof String) { 
+                Log.v(Collect.LOGTAG, t + "existing " + type + ": setting dateUpdated to " + timestamp);
+                setDateUpdated(timestamp);
+            }
+        }
+    }
+    
+    @JsonIgnore
+    public static String generateTimestamp() 
+    {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat formatter = (SimpleDateFormat)DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
         
         formatter.setTimeZone(TimeZone.getDefault());
         formatter.applyPattern(DATETIME);
         
-        String timestamp = formatter.format(calendar.getTime());   
-        
-        if (isNew()) {
-            if (getDateCreated() == null) {
-                Log.v(Collect.LOGTAG, "New " + type + ": setting dateCreated and dateUpdated to " + timestamp);
-                setDateCreated(timestamp);
-                setDateUpdated(timestamp);
-            }            
-        } else {
-            if (getDateCreated() instanceof String) { 
-                Log.v(Collect.LOGTAG, "Existing " + type + ": setting dateUpdated to " + timestamp);
-                setDateUpdated(timestamp);
-            }
-        }
+        return formatter.format(calendar.getTime());       
     }
     
     public void setAuthoredBy(Integer author) {
@@ -96,7 +104,7 @@ public class GenericDocument extends CouchDbDocument
         try {
             calendar.setTime(sdf.parse(dateCreated));
         } catch (ParseException e1) {
-            Log.e(Collect.LOGTAG, "Unable to parse dateCreated, returning a valid date anyway: " + e1.toString());            
+            Log.e(Collect.LOGTAG, t + "unable to parse dateCreated, returning a valid date anyway: " + e1.toString());            
         }
         
         return calendar;
@@ -118,7 +126,7 @@ public class GenericDocument extends CouchDbDocument
         try {
             calendar.setTime(sdf.parse(dateUpdated));
         } catch (ParseException e1) {
-            Log.e(Collect.LOGTAG, "Unable to parse dateCreated, returning a valid date anyway: " + e1.toString());            
+            Log.e(Collect.LOGTAG, t + "unable to parse dateCreated, returning a valid date anyway: " + e1.toString());            
         }
         
         return calendar;

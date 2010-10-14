@@ -38,6 +38,7 @@ import java.util.ArrayList;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class InstanceUploaderActivity extends Activity implements InstanceUploaderListener {
+    private static final String t = "InstanceUploaderActivity: ";
 
     private final static int PROGRESS_DIALOG = 1;
     private final static String KEY_TOTALCOUNT = "totalcount";
@@ -100,9 +101,10 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
             Toast.makeText(this, getString(R.string.upload_some_failed, s), Toast.LENGTH_LONG).show();
         }
 
-        //Intent i = new Intent();
-        //i.putExtra(FormEntryActivity.KEY_SUCCESS, success);
-        //setResult(RESULT_OK, in);
+        Intent i = new Intent();
+        i.putExtra(FormEntryActivity.KEY_SUCCESS, success);
+        setResult(RESULT_OK, i);
+        finish();
     }
 
     @Override

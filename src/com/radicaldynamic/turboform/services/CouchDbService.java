@@ -44,6 +44,8 @@ import com.radicaldynamic.turboform.application.Collect;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class CouchDbService extends Service {    
+    private static final String t = "CouchDbService: ";
+
     private String mHost;
     private int mPort;
            
@@ -130,7 +132,7 @@ public class CouchDbService extends Service {
         try {
             mDb.createDatabaseIfNotExists();
         } catch (Exception e) {          
-            Log.e(Collect.LOGTAG, "While opening DB " + database + ": " + e.toString());
+            Log.e(Collect.LOGTAG, t + "while opening DB " + database + ": " + e.toString());
         }    
 
         return this;
@@ -142,7 +144,7 @@ public class CouchDbService extends Service {
         try {
             dbs = mDbInstance.getAllDatabases();
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, "While fetching databases: " + e.toString());            
+            Log.e(Collect.LOGTAG, t + "while fetching databases: " + e.toString());            
         }
         
         return dbs;
@@ -173,9 +175,9 @@ public class CouchDbService extends Service {
         mPort = 5984;
         
         if (persistent) {
-            Log.d(Collect.LOGTAG, "Establishing persistent connection to " + mHost);
+            Log.d(Collect.LOGTAG, t + "establishing persistent connection to " + mHost);
         } else {
-            Log.d(Collect.LOGTAG, "Connecting to " + mHost);
+            Log.d(Collect.LOGTAG, t + "connecting to " + mHost);
         }            
         
         try {                        
@@ -194,10 +196,10 @@ public class CouchDbService extends Service {
                 }                
             }
             
-            Log.d(Collect.LOGTAG, "Connection to " + mHost + " successful");
+            Log.d(Collect.LOGTAG, t + "connection to " + mHost + " successful");
         } catch (Exception e) {
             mConnected = false;
-            Log.e(Collect.LOGTAG, "While connecting to server " + mHost + ": " + e.toString());          
+            Log.e(Collect.LOGTAG, t + "while connecting to server " + mHost + ": " + e.toString());          
             notifyOfConnectionAttempt(R.string.tf_connection_interrupted_status, R.string.tf_connection_interrupted_msg);                        
         } finally { 
             mInit = false;

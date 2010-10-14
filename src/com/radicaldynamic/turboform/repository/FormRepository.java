@@ -24,6 +24,8 @@ import com.radicaldynamic.turboform.documents.InstanceDocument;
 @View(name = "all", map = "function(doc) { if (doc.type && doc.type == 'form') emit (doc._id, doc._id) }")
 public class FormRepository extends CouchDbRepositorySupport<FormDocument>
 {
+    private final static String t = "FormRepository: ";
+    
     public FormRepository(CouchDbConnector db) {
         super(FormDocument.class, db);
         initStandardDesignDocument();
@@ -52,7 +54,7 @@ public class FormRepository extends CouchDbRepositorySupport<FormDocument>
                     results.put(key.getString(0), record.getValue());
                 }
             } catch (JSONException e) {
-                Log.e(Collect.LOGTAG, "Failed to parse complex key in getFormsByInstanceStatus, key: " + record.getKey() + ", value: " + record.getValue());
+                Log.e(Collect.LOGTAG, t + "failed to parse complex key in getFormsByInstanceStatus, key: " + record.getKey() + ", value: " + record.getValue());
                 e.printStackTrace();
             }
         }

@@ -12,6 +12,8 @@ import com.radicaldynamic.turboform.application.Collect;
 
 public class InstanceDocument extends GenericDocument
 {    
+    private static final String t = "InstanceDocument: ";
+
     private static final long serialVersionUID = -2924171490521236262L;
 
     /*
@@ -73,7 +75,7 @@ public class InstanceDocument extends GenericDocument
         try {
             calendar.setTime(sdf.parse(dateAggregated));
         } catch (ParseException e1) {
-            Log.e(Collect.LOGTAG, "Unable to parse dateAggregated, returning a valid date anyway: " + e1.toString());            
+            Log.e(Collect.LOGTAG, t + "unable to parse dateAggregated, returning a valid date anyway: " + e1.toString());            
         }
         
         return calendar;

@@ -14,6 +14,15 @@
 
 package com.radicaldynamic.turboform.tasks;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
+
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -25,17 +34,17 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-
-import com.radicaldynamic.turboform.application.Collect;
-import com.radicaldynamic.turboform.listeners.InstanceUploaderListener;
+import org.ektorp.Attachment;
+import org.ektorp.AttachmentInputStream;
 
 import android.os.AsyncTask;
-import android.os.Looper;
 import android.util.Log;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+import com.radicaldynamic.turboform.application.Collect;
+import com.radicaldynamic.turboform.documents.GenericDocument;
+import com.radicaldynamic.turboform.documents.InstanceDocument;
+import com.radicaldynamic.turboform.listeners.InstanceUploaderListener;
+import com.radicaldynamic.turboform.utilities.FileUtils;
 
 /**
  * Background task for uploading completed forms.
@@ -43,7 +52,8 @@ import java.util.ArrayList;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<String>> {
-
+    private static final String t = "InstanceUploaderTask: ";
+    
     private static long MAX_BYTES = 1048576 - 1024;         // 1MB less 1KB overhead
     private static final int CONNECTION_TIMEOUT = 30000;
     
@@ -76,48 +86,62 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             DefaultHttpClient httpClient = new DefaultHttpClient(params);
             HttpPost httpPost = new HttpPost(mUrl);
 
-            // Get instance file
-            File file = new File(values[i]);
-
-            // Find all files in parent directory
-            File[] files = file.getParentFile().listFiles();
-            
-            if (files == null) {
-                Log.e(Collect.LOGTAG, "no files to upload");
-                cancel(true);
-            }
-
             // MIME POST
             MultipartEntity entity = new MultipartEntity();
             
-            for (int j = 0; j < files.length; j++) {
-                File f = files[j];
-                FileBody fb;
+            InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, values[i]);
+            
+            if (instance.getDateAggregated() != null && instance.getDateUpdatedAsCalendar().after(instance.getDateAggregatedAsCalendar())) {
+                Log.w(Collect.LOGTAG, t + values[i] + " cannot be uploaded to ODK Aggregate: dateUpdated is newer than dateAggregated");
+                cancel(true);
+            }
+            
+            HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
+            
+            for (Entry<String, Attachment> entry : attachments.entrySet()) {
+                String key = entry.getKey();
+                String contentType = entry.getValue().getContentType();
 
-                if (f.getName().endsWith(".xml")) {
-                    fb = new FileBody(f, "text/xml");
-                    entity.addPart("xml_submission_file", fb);
-                    Log.i(Collect.LOGTAG, "added xml file " + f.getName());
-                } else if (f.getName().endsWith(".jpg")) {
-                    fb = new FileBody(f, "image/jpeg");
-                    entity.addPart(f.getName(), fb);
-                    Log.i(Collect.LOGTAG, "added image file " + f.getName());
-                } else if (f.getName().endsWith(".3gpp")) {
-                    fb = new FileBody(f, "audio/3gpp");
-                    entity.addPart(f.getName(), fb);
-                    Log.i(Collect.LOGTAG, "added audio file " + f.getName());
-                } else if (f.getName().endsWith(".3gp")) {
-                    fb = new FileBody(f, "video/3gpp");
-                    entity.addPart(f.getName(), fb);
-                    Log.i(Collect.LOGTAG, "added video file " + f.getName());
-                } else {
-                    Log.w(Collect.LOGTAG, "Unsupported file type while building MIME POST for instance upload to ODK Aggregate, not adding file: " + f.getName());
+                AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(values[i], key);  
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                byte[] buffer = new byte[8192];
+                int bytesRead = 0;
+
+                FileOutputStream file;
+
+                try {
+                    file = new FileOutputStream(new File(FileUtils.CACHE_PATH + key));
+                    
+                    while ((bytesRead = ais.read(buffer)) != -1) {
+                        file.write(buffer, 0, bytesRead);
+                    }
+                    
+                    ais.close();
+                    output.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
+
+                File f = new File(FileUtils.CACHE_PATH + key);
+                FileBody fb = new FileBody(f, contentType);
+                
+                if (contentType.equals("text/xml"))
+                    entity.addPart("xml_submission_file", fb);
+                else 
+                    entity.addPart(f.getName(), fb);
+                
+//                if (f.delete())
+//                    Log.d(Collect.LOGTAG, t + "removed " + f.getName());
+//                else
+//                    Log.e(Collect.LOGTAG, t + "unable to remove " + f.getName());                
+                
+                Log.i(Collect.LOGTAG, t + "added " + contentType + " file named " + f.getName() + " prior to httpPost");                
             }
             
             httpPost.setEntity(entity);
 
-            // prepare response and return uploaded
+            // Prepare response and return uploaded
             HttpResponse response = null;
             
             try {
@@ -133,24 +157,43 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                 return uploadedIntances;
             }
 
-            // check response.
-            // TODO: This isn't handled correctly.
+            // Check response
+            // TODO: This isn't handled correctly
             String serverLocation = null;
             Header[] h = response.getHeaders("Location");
             
             if (h != null && h.length > 0) {
                 serverLocation = h[0].getValue();
             } else {
-                // something should be done here...
-                Log.e(Collect.LOGTAG, "Location header was absent");
+                // Something should be done here...
+                Log.e(Collect.LOGTAG, t + "location header was absent");
             }
             
             int responseCode = response.getStatusLine().getStatusCode();
-            Log.e(Collect.LOGTAG, "Response code:" + responseCode);
+            Log.e(Collect.LOGTAG, t + "received response code " + responseCode);
 
-            // verify that your response came from a known server
+            // Verify that your response came from a known server
             if (serverLocation != null && mUrl.contains(serverLocation) && responseCode == 201) {
                 uploadedIntances.add(values[i]);
+                
+                instance.setDateAggregated(GenericDocument.generateTimestamp());
+                Collect.mDb.getDb().update(instance);
+            }
+            
+            // Remove cache files pertaining to this upload
+            File cacheDir = new File(FileUtils.CACHE_PATH);
+            String[] fileNames = cacheDir.list();
+
+            for (String file : fileNames) {
+                Log.v(Collect.LOGTAG, t + "evaluating " + file + " for removal");
+
+                if (Pattern.matches("^" + values[i] + "[.].*", file) || file.equals("xml")) {
+                    if (FileUtils.deleteFile(FileUtils.CACHE_PATH + file)) {
+                        Log.d(Collect.LOGTAG, t + "removed file from upload attempt " + file);
+                    } else {
+                        Log.e(Collect.LOGTAG, t + "unable to remove file from upload attempt " + file);
+                    }
+                }
             }
         }
 

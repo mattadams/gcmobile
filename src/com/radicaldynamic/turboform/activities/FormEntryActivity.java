@@ -84,6 +84,8 @@ import com.radicaldynamic.turboform.views.layout.GroupLayoutFactory;
 public class FormEntryActivity extends Activity implements AnimationListener,
         FormLoaderListener, FormSavedListener
 {
+    private static final String t = "FormEntryActivity: ";
+
     // Request codes for returning data from specified intent
     public static final int IMAGE_CAPTURE = 1;                  
     public static final int BARCODE_CAPTURE = 2;
@@ -356,7 +358,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
             Uri imageuri = getContentResolver().insert(Images.Media.EXTERNAL_CONTENT_URI, values);
     
-            Log.i(Collect.LOGTAG, "URI returned by image insertion: " + imageuri.toString());
+            Log.i(Collect.LOGTAG, t + "URI returned by image insertion: " + imageuri.toString());
             
             ((AbstractFolioView) mCurrentView).setBinaryData(imageuri);
             saveCurrentAnswer(false);
@@ -717,7 +719,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         FormIndex index = mFormEntryModel.getFormIndex();
         event = jumpToContainingFolio(index);
     
-        Log.e(Collect.LOGTAG, "refreshing view for event: " + event);
+        Log.e(Collect.LOGTAG, t + "refreshing view for event: " + event);
     
         View current = createView(event, index);
         showView(current, AnimationType.FADE);
@@ -1147,7 +1149,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
                             if (instance.getStatus() == InstanceDocument.Status.placeholder) {
                                 Collect.mDb.getDb().delete(instance);
-                                Log.d(Collect.LOGTAG, mFormId
+                                Log.d(Collect.LOGTAG, t + mFormId
                                         + ": removed placeholder instance "
                                         + mInstanceId);
                             }
@@ -1158,7 +1160,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                             String[] fileNames = cacheDir.list();
     
                             for (String file : fileNames) {
-                                Log.v(Collect.LOGTAG, mFormId + ": evaluating "
+                                Log.v(Collect.LOGTAG, t + mFormId + ": evaluating "
                                         + file + " for removal");
     
                                 if (Pattern.matches(
@@ -1166,11 +1168,11 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                                     if (FileUtils
                                             .deleteFile(FileUtils.CACHE_PATH
                                                     + file)) {
-                                        Log.d(Collect.LOGTAG, mFormId
+                                        Log.d(Collect.LOGTAG, t + mFormId
                                                 + ": removed unused file "
                                                 + file);
                                     } else {
-                                        Log.e(Collect.LOGTAG, mFormId
+                                        Log.e(Collect.LOGTAG, t + mFormId
                                                 + ": unable to remove file "
                                                 + file);
                                     }
@@ -1299,7 +1301,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             qv.buildView(mInstancePath, getGroupsForCurrentIndex());
             return qv;
         default:
-            Log.e(Collect.LOGTAG, "Attempted to create a view that does not exist.");
+            Log.e(Collect.LOGTAG, t + "attempted to create a view that does not exist");
             return null;
         }
     }
@@ -1637,7 +1639,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             FormIndex index = mFormEntryModel.getFormIndex();
             event = jumpToContainingFolio(index);
     
-            Log.e(Collect.LOGTAG, "refreshing view for event: " + event);
+            Log.e(Collect.LOGTAG, t + "refreshing view for event: " + event);
     
             View next = createView(event, index);
             showView(next, AnimationType.LEFT);

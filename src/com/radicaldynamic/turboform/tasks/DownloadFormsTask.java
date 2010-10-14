@@ -52,6 +52,7 @@ import com.radicaldynamic.turboform.listeners.FormDownloaderListener;
  */
 public class DownloadFormsTask extends
         AsyncTask<HashMap<String, String>, String, HashMap<String, String>> {
+    private static final String t = "DownloadFormsTask: ";
 
     // used to store form name if one errors
     public static final String DL_FORM = "dlform";

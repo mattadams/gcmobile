@@ -58,7 +58,7 @@ import com.radicaldynamic.turboform.utilities.FileUtils;
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
 public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FECWrapper> {
-    private final static String t = "FormLoaderTask";
+    private static final String t = "FormLoaderTask: ";
     
     /**
      * Classes needed to serialize objects. Need to put anything from JR in here.
@@ -129,7 +129,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         FormDocument form = Collect.mDb.getDb().get(FormDocument.class, formId);                
         File formBin = new File(FileUtils.CACHE_PATH + formId + ".formdef");
         
-        Log.i(Collect.LOGTAG, formId + ": loading form named " + form.getName());
+        Log.i(Collect.LOGTAG, t + formId + ": loading form named " + form.getName());
 
         if (formBin.exists() && formBin.lastModified() < form.getDateUpdatedAsCalendar().getTimeInMillis()) {
             /*
@@ -137,18 +137,18 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
              * This is mainly used for development but could be more important going
              * forward if users are updating or adding IAV features to existing forms.
              */
-        	Log.d(Collect.LOGTAG, formId + ": removing stale form cache file");
+        	Log.d(Collect.LOGTAG, t + formId + ": removing stale form cache file");
         	formBin.delete();
         }
             
         // If we have binary then attempt to deserialize it
         if (formBin.exists()) {        	
         	try {
-        	    Log.d(Collect.LOGTAG, formId + ": loading serialized form binary");
+        	    Log.d(Collect.LOGTAG, t + formId + ": loading serialized form binary");
         		fd = deserializeFormDef(formBin);
         	} catch (Exception e) {
                 // If it did not load delete the file and read the XML directly
-        	    Log.d(Collect.LOGTAG, formId + ": serialized form binary failed to load: " + e.toString());
+        	    Log.d(Collect.LOGTAG, t + formId + ": serialized form binary failed to load: " + e.toString());
         		formBin.delete();
         	}
         }
@@ -156,20 +156,20 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         // Either a binary wasn't present or didn't load -- read directly from XML
         if (fd == null) {            
             try {
-            	Log.d(Collect.LOGTAG, formId + ": attempting read of " + form.getName() + " XML attachment");
+            	Log.d(Collect.LOGTAG, t + formId + ": attempting read of " + form.getName() + " XML attachment");
             	
             	AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(formId, "xml");
             	fd = XFormUtils.getFormFromInputStream(ais);
             	ais.close();            	            	
             	
                 if (fd == null) {
-                    Log.e(Collect.LOGTAG, formId + ": failed to load form definition from XML");
+                    Log.e(Collect.LOGTAG, t + formId + ": failed to load form definition from XML");
                     return null;
                 }
                 
                 serializeFormDef(fd, formId);
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, formId + ": failed to load form definition from XML: " + e.toString());
+                Log.e(Collect.LOGTAG, t + formId + ": failed to load form definition from XML: " + e.toString());
                 e.printStackTrace();
                 return null;
             }
@@ -186,16 +186,16 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         // Import existing data into form definition
         try {            
 	        if (instanceId == null) {
-	            Log.d(Collect.LOGTAG, formId + ": new instance");
+	            Log.d(Collect.LOGTAG, t + formId + ": new instance");
 	            fd.initialize(true);
 	        } else {
 	            // Import data, then initialise (this order is important)
-	            Log.d(Collect.LOGTAG, formId + ": existing instance");
+	            Log.d(Collect.LOGTAG, t + formId + ": existing instance");
                 importData(formId, instanceId, fec);
                 fd.initialize(false);
 	        }
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, formId + ": failed loading data into form definition: " + e.toString());
+            Log.e(Collect.LOGTAG, t + formId + ": failed loading data into form definition: " + e.toString());
         	e.printStackTrace();
         	
             Toast.makeText(
@@ -220,7 +220,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
 
 
     public boolean importData(String formId, String instanceId, FormEntryController fec) throws IOException {
-        Log.d(Collect.LOGTAG, formId + ": importing instance " + instanceId);
+        Log.d(Collect.LOGTAG, t + formId + ": importing instance " + instanceId);
         
         // Retrieve instance XML attachment from database
         AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(instanceId, "xml");
@@ -242,7 +242,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
 
         // Weak check for matching forms
         if (!savedRoot.getName().equals(templateRoot.getName()) || savedRoot.getMult() != 0) {
-            Log.e(Collect.LOGTAG, formId + ": saved form instance does not match template form definition");
+            Log.e(Collect.LOGTAG, t + formId + ": saved form instance does not match template form definition");
             return false;
         } else {
             // Populate the data model
@@ -298,7 +298,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      */
     public FormDef deserializeFormDef(File formDef) {
         // TODO: any way to remove reliance on jrsp?
-    	Log.i(t,"Attempting read of " + formDef.getAbsolutePath());
+    	Log.i(Collect.LOGTAG, t + "attempting read of " + formDef.getAbsolutePath());
 
         // Need a list of classes that formDef uses
         PrototypeManager.registerPrototypes(SERIALIABLE_CLASSES);
@@ -343,7 +343,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      * @param filepath path to the form file
      */
     public void serializeFormDef(FormDef fd, String id) {
-        Log.i(Collect.LOGTAG, id + ": serializing form as binary");
+        Log.i(Collect.LOGTAG, t + id + ": serializing form as binary");
         
         // If cache folder is missing, create it.
         if (FileUtils.createFolder(FileUtils.CACHE_PATH)) {

@@ -49,6 +49,7 @@ import com.radicaldynamic.turboform.utilities.DocumentUtils;
 
 // TODO long click form for submission log
 public class InstanceUploaderList extends ListActivity {
+    private static final String t = "InstanceUploaderList: ";
 
     private static final String BUNDLE_SELECTED_ITEMS_KEY = "selected_items";
     private static final String BUNDLE_TOGGLED_KEY = "toggled";
@@ -148,9 +149,8 @@ public class InstanceUploaderList extends ListActivity {
             if (intent.getBooleanExtra(FormEntryActivity.KEY_SUCCESS, false)) {
                 refreshData();
                 
-                if (mInstanceTallies.isEmpty()) {
+                if (mInstanceTallies.isEmpty())
                     finish();
-                }
             }
             
             break;

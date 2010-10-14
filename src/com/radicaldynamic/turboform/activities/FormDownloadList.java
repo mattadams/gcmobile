@@ -55,6 +55,8 @@ import java.util.Set;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class FormDownloadList extends ListActivity implements FormDownloaderListener {
+    private static final String t = "FormDownloadList: ";
+
     private static final int PROGRESS_DIALOG = 1;
     private static final int MENU_PREFERENCES = Menu.FIRST;
 
@@ -177,7 +179,7 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
             try {
                 dismissDialog(PROGRESS_DIALOG);
             } catch (IllegalArgumentException e) {
-                Log.w(Collect.LOGTAG, "Attempting to close a dialog that was not previously opened");
+                Log.w(Collect.LOGTAG, t + "attempting to close a dialog that was not previously opened");
             }
             buildView();
         }
@@ -425,7 +427,7 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
 
             }
         } else {
-            Log.e(Collect.LOGTAG, "result was null when downloading");
+            Log.e(Collect.LOGTAG, t + "result was null when downloading");
         }
         buildView();
     }

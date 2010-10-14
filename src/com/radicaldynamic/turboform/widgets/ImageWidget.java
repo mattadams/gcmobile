@@ -38,6 +38,7 @@ import android.widget.TextView;
 
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.activities.FormEntryActivity;
+import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.utilities.FileUtils;
 import com.radicaldynamic.turboform.views.AbstractFolioView;
 import com.radicaldynamic.turboform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
@@ -49,8 +50,7 @@ import com.radicaldynamic.turboform.widgets.AbstractQuestionWidget.OnDescendantR
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
 public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget {
-
-    private final static String t = "MediaWidget";
+    private final static String t = "ImageWidget: ";
 
     private Button mCaptureButton;
     private ImageView mImageView;
@@ -91,7 +91,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
     	// non-existent?
     	if ( mBinaryName == null ) return;
 
-    	Log.i(t, "Deleting current answer: " + mBinaryName);
+    	Log.i(Collect.LOGTAG, t + "deleting current answer: " + mBinaryName);
     	
     	// release image...
     	mImageView.setImageBitmap(null);
@@ -111,7 +111,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
             c.moveToFirst();
             String id = c.getString(c.getColumnIndex(Images.ImageColumns._ID));
 
-            Log.i(t, "attempting to delete: " + Uri.withAppendedPath(mExternalUri, id));
+            Log.i(Collect.LOGTAG, t + "attempting to delete: " + Uri.withAppendedPath(mExternalUri, id));
             del =
                 getContext().getContentResolver().delete(Uri.withAppendedPath(mExternalUri, id),
                     null, null);
@@ -120,7 +120,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
 
         // clean up variables
         mBinaryName = null;
-        Log.i(t, "Deleted " + del + " rows from media content provider");
+        Log.i(Collect.LOGTAG, t + "deleted " + del + " rows from media content provider");
     }
 
     @Override
@@ -181,6 +181,9 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
             	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
 	            	// do nothing if there is no image...
 	            	if ( mBinaryName == null ) return;
+	            	
+	            	Log.e(Collect.LOGTAG, t + "about to view image...");
+	            	Log.e(Collect.LOGTAG, t + "_data below is " +  "_data='" + mInstanceFolder + mBinaryName + "'");
 	
 	                Intent i = new Intent("android.intent.action.VIEW");
 	                String[] projection = {
@@ -193,7 +196,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
 	                    c.moveToFirst();
 	                    String id = c.getString(c.getColumnIndex("_id"));
 	
-	                    Log.i(t, "setting view path to: " + Uri.withAppendedPath(mExternalUri, id));
+	                    Log.i(Collect.LOGTAG, t + "setting view path to: " + Uri.withAppendedPath(mExternalUri, id));
 	
 	                    i.setDataAndType(Uri.withAppendedPath(mExternalUri, id), "image/*");
 	                    getContext().startActivity(i);
@@ -275,7 +278,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         + mPrompt.getFormElement().getID() + "."
         + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
         if (!f.renameTo(new File(s))) {
-            Log.e(t, "Failed to rename " + f.getAbsolutePath());
+            Log.e(Collect.LOGTAG, t + "failed to rename " + f.getAbsolutePath());
         }
 
         // remove the database entry and update the name

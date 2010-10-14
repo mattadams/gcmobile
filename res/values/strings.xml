@@ -161,8 +161,8 @@
 	<string name="toggle_selected">Toggle All</string>
 	<string name="trigger">OK. Ready to Continue.</string>
 	<string name="uploading_data">Sending Data</string>
-	<string name="upload_all_successful">%s item(s) sent successfully.</string>
-	<string name="upload_some_failed">Sorry, %s item(s) failed to send!</string>
+	<string name="upload_all_successful">%s item(s) sent successfully</string>
+	<string name="upload_some_failed">Failed sending %s item(s) - please try again</string>
 	<string name="url_error">Sorry, invalid URL!</string>
 	<string name="username">Username</string>
 	<string name="view_hierarchy">Go To Prompt</string>

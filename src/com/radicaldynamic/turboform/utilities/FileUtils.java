@@ -39,7 +39,7 @@ public final class FileUtils {
     public static final String VALID_FILENAME = "[ _\\-A-Za-z0-9]*.x[ht]*ml";
 
     // Storage paths
-    public static final String ODK_ROOT = Environment.getExternalStorageDirectory() + "/odk/";
+    public static final String ODK_ROOT = Environment.getExternalStorageDirectory() + "/turboform/";
     public static final String FORMS_PATH = ODK_ROOT + "forms/";
     public static final String INSTANCES_PATH = ODK_ROOT + "instances/";
     public static final String FORMS_X_MEDIA_DIRECTORY_SUFFIX = "-media/";

@@ -47,7 +47,7 @@ import com.radicaldynamic.turboform.utilities.FileUtils;
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
 public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
-    private final static String t = "SaveToDiskTask";
+    private final static String t = "SaveToDiskTask: ";
 
     private FormSavedListener mSavedListener;
     private Context mContext;
@@ -103,7 +103,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
             // Write out XML
             exportXmlFile(payload, markCompleted);
         } catch (IOException e) {
-            Log.e(t, "Error creating serialized payload");
+            Log.e(Collect.LOGTAG, t + "error creating serialized payload");
             e.printStackTrace();
             return false;
         }
@@ -139,10 +139,10 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 String[] fileNames = cacheDir.list();                           
                                             
                 for (String file : fileNames) {
-                    Log.v(Collect.LOGTAG, mInstanceId + ": evaluating " + file + " for save to DB");
+                    Log.v(Collect.LOGTAG, t + mInstanceId + ": evaluating " + file + " for save to DB");
                     
                     if (Pattern.matches("^" + mInstanceId + "[.].*", file)) {                                
-                        Log.d(Collect.LOGTAG, mInstanceId + ": attaching " + file);
+                        Log.d(Collect.LOGTAG, t + mInstanceId + ": attaching " + file);
                         
                         instance.addInlineAttachment(
                                 new Attachment(
@@ -151,9 +151,9 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                                         MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1))));
 
                         if (FileUtils.deleteFile(FileUtils.CACHE_PATH + file)) {
-                            Log.d(Collect.LOGTAG, mInstanceId + ": removed attached file " + file);                            
+                            Log.d(Collect.LOGTAG, t + mInstanceId + ": removed attached file " + file);                            
                         } else {
-                            Log.e(Collect.LOGTAG, mInstanceId + ": failed removal of attached file " + file);
+                            Log.e(Collect.LOGTAG, t + mInstanceId + ": failed removal of attached file " + file);
                         }
                     }
                 }
@@ -166,7 +166,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                     return false;
             }
         } catch (IOException e) {
-            Log.e(t, "Error reading from payload data stream");
+            Log.e(Collect.LOGTAG, t + "error reading from payload data stream");
             e.printStackTrace();
             return false;
         }
