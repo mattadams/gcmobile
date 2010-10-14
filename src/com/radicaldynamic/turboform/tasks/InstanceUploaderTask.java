@@ -93,39 +93,23 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             for (int j = 0; j < files.length; j++) {
                 File f = files[j];
                 FileBody fb;
-                
+
                 if (f.getName().endsWith(".xml")) {
                     fb = new FileBody(f, "text/xml");
-                    if (fb.getContentLength() <= MAX_BYTES) {
-                        entity.addPart("xml_submission_file", fb);
-                        Log.i(Collect.LOGTAG, "added xml file " + f.getName());
-                    } else {
-                        Log.i(Collect.LOGTAG, "file " + f.getName() + " is too big");
-                    }
+                    entity.addPart("xml_submission_file", fb);
+                    Log.i(Collect.LOGTAG, "added xml file " + f.getName());
                 } else if (f.getName().endsWith(".jpg")) {
                     fb = new FileBody(f, "image/jpeg");
-                    if (fb.getContentLength() <= MAX_BYTES) {
-                        entity.addPart(f.getName(), fb);
-                        Log.i(Collect.LOGTAG, "added image file " + f.getName());
-                    } else {
-                        Log.i(Collect.LOGTAG, "file " + f.getName() + " is too big");
-                    }
+                    entity.addPart(f.getName(), fb);
+                    Log.i(Collect.LOGTAG, "added image file " + f.getName());
                 } else if (f.getName().endsWith(".3gpp")) {
                     fb = new FileBody(f, "audio/3gpp");
-                    if (fb.getContentLength() <= MAX_BYTES) {
-                        entity.addPart(f.getName(), fb);
-                        Log.i(Collect.LOGTAG, "added audio file " + f.getName());
-                    } else {
-                        Log.i(Collect.LOGTAG, "file " + f.getName() + " is too big");
-                    }
+                    entity.addPart(f.getName(), fb);
+                    Log.i(Collect.LOGTAG, "added audio file " + f.getName());
                 } else if (f.getName().endsWith(".3gp")) {
                     fb = new FileBody(f, "video/3gpp");
-                    if (fb.getContentLength() <= MAX_BYTES) {
-                        entity.addPart(f.getName(), fb);
-                        Log.i(Collect.LOGTAG, "added video file " + f.getName());
-                    } else {
-                        Log.i(Collect.LOGTAG, "file " + f.getName() + " is too big");
-                    }
+                    entity.addPart(f.getName(), fb);
+                    Log.i(Collect.LOGTAG, "added video file " + f.getName());
                 } else {
                     Log.w(Collect.LOGTAG, "Unsupported file type while building MIME POST for instance upload to ODK Aggregate, not adding file: " + f.getName());
                 }

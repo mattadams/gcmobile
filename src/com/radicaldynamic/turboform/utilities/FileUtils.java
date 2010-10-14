@@ -93,14 +93,11 @@ public final class FileUtils {
         }
         File[] dirs = dir.listFiles();
         for (int i = 0; i < dirs.length; i++) {
-        	// skip all the directories
-        	if (dirs[i].isDirectory())
+            // skip all the -media directories and "invisible" files that start with "."
+            if (dirs[i].isDirectory() || dirs[i].getName().startsWith("."))
         		continue;
         	
-            String formName = dirs[i].getName();
-        	Log.i(t, "Found formname: " + formName);
-
-        	formPaths.add(dirs[i].getAbsolutePath());
+            formPaths.add(dirs[i].getAbsolutePath());
         }
         return formPaths;
     }

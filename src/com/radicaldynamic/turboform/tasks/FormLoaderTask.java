@@ -61,32 +61,31 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     private final static String t = "FormLoaderTask";
     
     /**
-     * Classes needed to serialize objects
+     * Classes needed to serialize objects. Need to put anything from JR in here.
      */
-    public final static String[] SERIALIABLE_CLASSES =
-        {
-                "org.javarosa.core.model.FormDef", "org.javarosa.core.model.GroupDef",
-                "org.javarosa.core.model.QuestionDef", "org.javarosa.core.model.data.DateData",
-                "org.javarosa.core.model.data.DateTimeData",
-                "org.javarosa.core.model.data.DecimalData",
-                "org.javarosa.core.model.data.GeoPointData",
-                "org.javarosa.core.model.data.helper.BasicDataPointer",
-                "org.javarosa.core.model.data.IntegerData",
-                "org.javarosa.core.model.data.MultiPointerAnswerData",
-                "org.javarosa.core.model.data.PointerAnswerData",
-                "org.javarosa.core.model.data.SelectMultiData",
-                "org.javarosa.core.model.data.SelectOneData",
-                "org.javarosa.core.model.data.StringData", "org.javarosa.core.model.data.TimeData",
-                "org.javarosa.core.services.locale.TableLocaleSource",
-                "org.javarosa.xpath.expr.XPathArithExpr", "org.javarosa.xpath.expr.XPathBoolExpr",
-                "org.javarosa.xpath.expr.XPathCmpExpr", "org.javarosa.xpath.expr.XPathEqExpr",
-                "org.javarosa.xpath.expr.XPathFilterExpr", "org.javarosa.xpath.expr.XPathFuncExpr",
-                "org.javarosa.xpath.expr.XPathNumericLiteral",
-                "org.javarosa.xpath.expr.XPathNumNegExpr", "org.javarosa.xpath.expr.XPathPathExpr",
-                "org.javarosa.xpath.expr.XPathStringLiteral",
-                "org.javarosa.xpath.expr.XPathUnionExpr",
-                "org.javarosa.xpath.expr.XPathVariableReference"
-        };
+    public final static String[] SERIALIABLE_CLASSES = {
+        "org.javarosa.core.model.FormDef", "org.javarosa.core.model.GroupDef",
+        "org.javarosa.core.model.QuestionDef", "org.javarosa.core.model.data.DateData",
+        "org.javarosa.core.model.data.DateTimeData",
+        "org.javarosa.core.model.data.DecimalData",
+        "org.javarosa.core.model.data.GeoPointData",
+        "org.javarosa.core.model.data.helper.BasicDataPointer",
+        "org.javarosa.core.model.data.IntegerData",
+        "org.javarosa.core.model.data.MultiPointerAnswerData",
+        "org.javarosa.core.model.data.PointerAnswerData",
+        "org.javarosa.core.model.data.SelectMultiData",
+        "org.javarosa.core.model.data.SelectOneData",
+        "org.javarosa.core.model.data.StringData", "org.javarosa.core.model.data.TimeData",
+        "org.javarosa.core.services.locale.TableLocaleSource",
+        "org.javarosa.xpath.expr.XPathArithExpr", "org.javarosa.xpath.expr.XPathBoolExpr",
+        "org.javarosa.xpath.expr.XPathCmpExpr", "org.javarosa.xpath.expr.XPathEqExpr",
+        "org.javarosa.xpath.expr.XPathFilterExpr", "org.javarosa.xpath.expr.XPathFuncExpr",
+        "org.javarosa.xpath.expr.XPathNumericLiteral",
+        "org.javarosa.xpath.expr.XPathNumNegExpr", "org.javarosa.xpath.expr.XPathPathExpr",
+        "org.javarosa.xpath.expr.XPathStringLiteral",
+        "org.javarosa.xpath.expr.XPathUnionExpr",
+        "org.javarosa.xpath.expr.XPathVariableReference"
+    };
     
     FormLoaderListener mStateListener;
 
