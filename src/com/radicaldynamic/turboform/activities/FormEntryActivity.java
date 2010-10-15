@@ -328,8 +328,10 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 browseToNextInstance();
             } else if (intent.getAction().equals("previous_instance")) {
                 browseToPreviousInstance();
+            } else if (intent.getAction().equals("return_to_browser")) {
+                discardChangesAndExit();
             } else {
-                // Throw exception
+                // Throw exception?
             }            
             break;
             
@@ -683,7 +685,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
                 
                 // We've just loaded a saved form, so start in the hierarchy view
-                Intent i = new Intent(this, FormHierarchyList.class);                
+                Intent i = new Intent(this, FormHierarchyList.class);
+                i.putExtra(FormHierarchyList.KEY_AUTO_LOAD, true);
                 startActivityForResult(i, HIERARCHY_BROWSER);
 
                 // So we don't show the introduction screen before jumping to the hierarchy
@@ -838,6 +841,16 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         }
     }
     
+    private void browseToInstance(String instanceId)
+    {        
+        Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
+        i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
+        i.putExtra(FormEntryActivity.KEY_INSTANCEID, instanceId);
+        i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
+        startActivity(i);
+        finish();
+    }
+    
     private void browseToNextInstance()
     {
         String nextInstanceId;
@@ -847,13 +860,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         } else {
             nextInstanceId = Collect.getInstance().getInstanceBrowseList().get(0);
         }
-        
-        Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
-        i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
-        i.putExtra(FormEntryActivity.KEY_INSTANCEID, nextInstanceId);
-        i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
-        startActivity(i);
-        finish();
+
+        browseToInstance(nextInstanceId);
     }
     
     private void browseToPreviousInstance()
@@ -867,12 +875,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             get(Collect.getInstance().getInstanceBrowseList().size() - 1);
         }
 
-        Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");                            
-        i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
-        i.putExtra(FormEntryActivity.KEY_INSTANCEID, previousInstanceId);
-        i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);
-        startActivity(i);
-        finish();
+        browseToInstance(previousInstanceId);
     }
 
     /**
@@ -1141,23 +1144,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                         switch (which) {
                         // Discard changes and exit
                         case 0:
-                            // Remove an instance if it has no status (e.g.,
-                            // recently created)
-                            InstanceDocument instance = Collect.mDb.getDb()
-                                    .get(InstanceDocument.class, mInstanceId);
-    
-                            if (instance.getStatus() == InstanceDocument.Status.placeholder) {
-                                Collect.mDb.getDb().delete(instance);
-                                Log.d(Collect.LOGTAG, t + mFormId
-                                        + ": removed placeholder instance "
-                                        + mInstanceId);
-                            }
-
-                            // Purge unused media files
-                            Log.d(Collect.LOGTAG, t + "removing unused files");
-                            FileUtils.deleteInstanceCacheFiles(mInstanceId);
-                            
-                            finish(); 
+                            discardChangesAndExit();
                             break;
                         // Save and exit
                         case 1:
@@ -1311,6 +1298,24 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     {
         return (mFormEntryModel.getEvent() == FormEntryController.EVENT_QUESTION)
                 || currentPromptIsGroupFolio();
+    }
+    
+    private void discardChangesAndExit()
+    {
+        // Remove an instance if it has no status (e.g.,
+        // recently created)
+        InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, mInstanceId);
+
+        if (instance.getStatus() == InstanceDocument.Status.placeholder) {
+            Collect.mDb.getDb().delete(instance);
+            Log.d(Collect.LOGTAG, t + mFormId + ": removed placeholder instance " + mInstanceId);
+        }
+
+        // Purge unused media files
+        Log.d(Collect.LOGTAG, t + "removing unused files");
+        FileUtils.deleteInstanceCacheFiles(mInstanceId);
+
+        finish();
     }
 
     /**

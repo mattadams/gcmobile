@@ -50,10 +50,12 @@ public class FormHierarchyList extends ListActivity {
     private static final int EXPANDED = 2;
     private static final int COLLAPSED = 3;
     private static final int QUESTION = 4;
+    
     private final String mIndent = "     ";
     
     public static final String KEY_FORMID = "formpath";             
     public static final String KEY_INSTANCEID = "instancepath";
+    public static final String KEY_AUTO_LOAD = "autoload";          // This activity was loaded automatically
     
     private FormEntryController mFormEntryController;
     private FormEntryModel mFormEntryModel;
@@ -61,6 +63,8 @@ public class FormHierarchyList extends ListActivity {
     private RelativeLayout mRelativeLayout;
     private View mBrowserButtons;
     private Button jumpPreviousButton;
+    
+    private boolean mLoadedAutomatically;
     
     List<HierarchyElement> formList;
     FormIndex mStartIndex;
@@ -139,6 +143,10 @@ public class FormHierarchyList extends ListActivity {
         });
         
         refreshView();
+        
+        // Determine whether this activity was loaded automatically or manually
+        Intent intent = getIntent();
+        mLoadedAutomatically = intent.getBooleanExtra(KEY_AUTO_LOAD, false);
     }
 
     @Override
@@ -200,7 +208,14 @@ public class FormHierarchyList extends ListActivity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-                mFormEntryController.jumpToIndex(mStartIndex);
+                if (event.getRepeatCount() == 0) {
+                    mFormEntryController.jumpToIndex(mStartIndex);
+                    
+                    if (mLoadedAutomatically) {
+                        setResult(RESULT_OK, (new Intent()).setAction("return_to_browser"));
+                        finish();
+                    }
+                }
         }
         
         return super.onKeyDown(keyCode, event);
