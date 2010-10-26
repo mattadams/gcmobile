@@ -16,22 +16,22 @@ the License.
     <application android:label="@string/app_name" android:theme="@android:style/Theme.Light" android:icon="@drawable/app_icon_check" android:name=".application.Collect" android:debuggable="true">
         <activity android:label="@string/app_name" android:configChanges="orientation" android:name=".activities.MainBrowserActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".activities.FormEntryActivity" android:label="@string/app_name" android:windowSoftInputMode="adjustResize"> 
             <!-- the intent filter below is a bit of a hack until we create a content provider for forms -->
             <intent-filter>
-                <action android:name="com.radicaldynamic.turboform.action.FormEntry"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <action android:name="com.radicaldynamic.turboform.action.FormEntry" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <!-- this is what we should be doing once we have the content provider working -->
             <intent-filter>
     	       <action android:name="android.intent.action.VIEW" />
     	       <action android:name="android.intent.action.EDIT" />
-    	       <category android:name="android.intent.category.DEFAULT"/>
+    	       <category android:name="android.intent.category.DEFAULT" />
     	       <!-- need to add something like:
     	       <data android:mimeType="vnd.android.cursor.item/vnd.google.note" />
     	       here once we make a contentProvider for forms.
@@ -39,20 +39,22 @@ the License.
             </intent-filter>   
         </activity>        
         <activity android:name=".activities.SynchronizeTabs" android:label="@string/app_name" />    
-        <activity android:name=".activities.ManageFormsTabs" android:label="@string/app_name"/>
-        <activity android:name=".activities.FormDownloadList" android:label="@string/app_name"/>   
-        <activity android:name=".activities.FormHierarchyList" android:label="@string/app_name"/>
-        <activity android:name=".activities.InstanceUploaderList" android:label="@string/app_name"/>
-        <activity android:name=".activities.InstanceUploaderActivity" android:label="@string/app_name"/>
-        <activity android:name=".activities.GeoPointActivity" android:label="@string/app_name"/>    
-        <activity android:name=".preferences.ServerPreferences" android:label="@string/app_name"/>
-        <activity android:name=".preferences.GeneralPreferences" android:label="@string/app_name"/>        
+        <activity android:name=".activities.ManageFormsTabs" android:label="@string/app_name" />
+        <activity android:name=".activities.FormBuilderList" android:label="@string/app_name" />
+        <activity android:name=".activities.FormDownloadList" android:label="@string/app_name" />   
+        <activity android:name=".activities.FormHierarchyList" android:label="@string/app_name" />
+        <activity android:name=".activities.InstanceUploaderList" android:label="@string/app_name" />
+        <activity android:name=".activities.InstanceUploaderActivity" android:label="@string/app_name" />
+        <activity android:name=".activities.GeoPointActivity" android:label="@string/app_name" />
+        <activity android:name=".activities.LocalFormList" android:label="@string/app_name" />
+        <activity android:name=".preferences.ServerPreferences" android:label="@string/app_name" />
+        <activity android:name=".preferences.GeneralPreferences" android:label="@string/app_name" />        
         <service android:name=".services.CouchDbService" android:label="@string/app_name" />    
     </application>
-    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.INTERNET"/>
-    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.ACCESS_SURFACE_FLINGER"/>
-    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.INTERNET" />
+    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.ACCESS_SURFACE_FLINGER" />
+    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-sdk android:minSdkVersion="8"></uses-sdk>
 </manifest>

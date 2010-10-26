@@ -218,6 +218,15 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     }
 
 
+    @Override
+    protected void onPostExecute(FECWrapper wrapper) {
+        synchronized (this) {
+            if (mStateListener != null)
+                mStateListener.loadingComplete(wrapper.getController());
+        }
+    }
+
+
     public boolean importData(String formId, String instanceId, FormEntryController fec) throws IOException {
         Log.d(Collect.LOGTAG, t + formId + ": importing instance " + instanceId);
         
@@ -365,15 +374,6 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                     e.printStackTrace();
                 }
             }
-        }
-    }
-
-
-    @Override
-    protected void onPostExecute(FECWrapper wrapper) {
-        synchronized (this) {
-            if (mStateListener != null)
-                mStateListener.loadingComplete(wrapper.getController());
         }
     }
 

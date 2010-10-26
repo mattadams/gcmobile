@@ -37,10 +37,10 @@ public class FormRepository extends CouchDbRepositorySupport<FormDocument>
     }
     
     @View(name = "by_instance_status", map = "function(doc) { if (doc.type && doc.type == 'instance') emit ([doc.formId, doc.status], 1); }", reduce = "function(keys, values) { return sum(values); }")
-    public Map<String, String> getFormsByInstanceStatus(InstanceDocument.Status status) {
-        Map<String, String> results = new HashMap<String, String>();
+    public HashMap<String, String> getFormsByInstanceStatus(InstanceDocument.Status status) {
+        HashMap<String, String> results = new HashMap<String, String>();
         ViewResult r = db.queryView(createQuery("by_instance_status").group(true));        
-        List<Row> rows = r.getRows();        
+        List<Row> rows = r.getRows();
         
         for(Row record : rows) {
             try {
@@ -55,6 +55,33 @@ public class FormRepository extends CouchDbRepositorySupport<FormDocument>
                 }
             } catch (JSONException e) {
                 Log.e(Collect.LOGTAG, t + "failed to parse complex key in getFormsByInstanceStatus, key: " + record.getKey() + ", value: " + record.getValue());
+                e.printStackTrace();
+            }
+        }
+        
+        return results;
+    }
+    
+    public HashMap<String, HashMap<String, String>> getFormsWithInstanceCounts()
+    {
+        HashMap<String, HashMap<String, String>> results = new HashMap<String, HashMap<String, String>>();
+        ViewResult r = db.queryView(createQuery("by_instance_status").group(true));        
+        List<Row> rows = r.getRows();
+        
+        for(Row record : rows) {
+            try {
+                JSONArray key = (JSONArray) new JSONTokener(record.getKey()).nextValue();
+
+                /*
+                 * Document ID:     key.getString(0)
+                 * Status category: key.getString(1)
+                 */                
+                if (!results.containsKey(key.getString(0)))
+                    results.put(key.getString(0), new HashMap<String, String>());
+                
+                results.get(key.getString(0)).put(key.getString(1), record.getValue());
+            } catch (JSONException e) {
+                Log.e(Collect.LOGTAG, t + "failed to parse complex key in getFormsAsInstanceCount, key: " + record.getKey() + ", value: " + record.getValue());
                 e.printStackTrace();
             }
         }

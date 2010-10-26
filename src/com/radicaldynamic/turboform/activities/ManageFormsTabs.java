@@ -22,7 +22,7 @@ public class ManageFormsTabs extends TabActivity
 
         tabHost.addTab(tabHost.newTabSpec("tab1")
                 .setIndicator("Local", res.getDrawable(R.drawable.ic_menu_home))
-                .setContent(new Intent(this, ServerPreferences.class)));
+                .setContent(new Intent(this, LocalFormList.class)));
 
         tabHost.addTab(tabHost.newTabSpec("tab2")
                 .setIndicator("Shared", res.getDrawable(android.R.drawable.ic_menu_share))
