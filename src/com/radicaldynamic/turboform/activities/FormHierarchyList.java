@@ -127,7 +127,7 @@ public class FormHierarchyList extends ListActivity {
             @Override
             public void onClick(View v) {
                 mFormEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
-                setResult(RESULT_CANCELED);
+                setResult(RESULT_OK);
                 finish();
             }
         });
@@ -137,7 +137,7 @@ public class FormHierarchyList extends ListActivity {
             @Override
             public void onClick(View v) {
                 mFormEntryController.jumpToIndex(FormIndex.createEndOfFormIndex());
-                setResult(RESULT_CANCELED);
+                setResult(RESULT_OK);
                 finish();
             }
         });
@@ -181,12 +181,12 @@ public class FormHierarchyList extends ListActivity {
                 break;
             case QUESTION:
                 mFormEntryController.jumpToIndex(h.getFormIndex());
-                setResult(RESULT_CANCELED);
+                setResult(RESULT_OK);
                 finish();
                 return;
             case CHILD:
                 mFormEntryController.jumpToIndex(h.getFormIndex());
-                setResult(RESULT_CANCELED);
+                setResult(RESULT_OK);
                 refreshView();
                 return;
         }

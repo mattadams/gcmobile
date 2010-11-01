@@ -91,7 +91,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     public static final int AUDIO_CAPTURE = 3;
     public static final int VIDEO_CAPTURE = 4;
     public static final int LOCATION_CAPTURE = 5;
-    public static final int HIERARCHY_BROWSER = 6;                  // Navigate to another instance (via FormHierarchyActivity)
+    //public static final int HIERARCHY_ACTIVITY = 6;               // Kept to make sense of intent of upstream changeset 402
+    public static final int HIERARCHY_BROWSER = 7;                  // Navigate to another instance (via FormHierarchyActivity)
 
     public static final String LOCATION_RESULT = "LOCATION_RESULT";
     
@@ -323,18 +324,6 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             return;
     
         switch (requestCode) {
-        case HIERARCHY_BROWSER:
-            if (intent.getAction().equals("next_instance")) {
-                browseToNextInstance();
-            } else if (intent.getAction().equals("previous_instance")) {
-                browseToPreviousInstance();
-            } else if (intent.getAction().equals("return_to_browser")) {
-                discardChangesAndExit();
-            } else {
-                // Throw exception?
-            }            
-            break;
-            
         case BARCODE_CAPTURE:
             String sb = intent.getStringExtra("SCAN_RESULT");
             ((AbstractFolioView) mCurrentView).setBinaryData(sb);
@@ -379,6 +368,19 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             ((AbstractFolioView) mCurrentView).setBinaryData(sl);
             saveCurrentAnswer(false);
             break;
+            
+        case HIERARCHY_BROWSER:
+            if (intent.getAction().equals("next_instance")) {
+                browseToNextInstance();
+            } else if (intent.getAction().equals("previous_instance")) {
+                browseToPreviousInstance();
+            } else if (intent.getAction().equals("return_to_browser")) {
+                discardChangesAndExit();
+            } else {
+                // We may have jumped to a new index in hierarchy activity, so refresh
+                refreshCurrentView();
+            }            
+            break;            
         }
     }
 
