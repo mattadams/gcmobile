@@ -36,6 +36,7 @@ import org.javarosa.core.util.externalizable.DeserializationException;
 import org.javarosa.core.util.externalizable.ExtUtil;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
+import org.javarosa.xform.parse.XFormParseException;
 import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xform.util.XFormUtils;
 
@@ -87,6 +88,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     };
     
     FormLoaderListener mStateListener;
+    String mErrorMsg = "unexpected error";
 
     protected class FECWrapper {
         FormEntryController controller;
@@ -147,7 +149,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         		fd = deserializeFormDef(formBin);
         	} catch (Exception e) {
                 // If it did not load delete the file and read the XML directly
-        	    Log.d(Collect.LOGTAG, t + formId + ": serialized form binary failed to load: " + e.toString());
+        	    Log.w(Collect.LOGTAG, t + formId + ": serialized form binary failed to load (deleting cache file): " + e.toString());
         		formBin.delete();
         	}
         }
@@ -163,12 +165,19 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             	
                 if (fd == null) {
                     Log.e(Collect.LOGTAG, t + formId + ": failed to load form definition from XML");
+                    mErrorMsg = "Error reading XForm file";
                     return null;
+                } else {                
+                    serializeFormDef(fd, formId);
                 }
-                
-                serializeFormDef(fd, formId);
+            } catch (XFormParseException e) {
+                Log.e(Collect.LOGTAG, t + formId + ": failed to load form definition from XML: " + e.toString());
+                mErrorMsg = e.getMessage();
+                e.printStackTrace();
+                return null;
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + formId + ": failed to load form definition from XML: " + e.toString());
+                mErrorMsg = e.getMessage();
                 e.printStackTrace();
                 return null;
             }
@@ -221,11 +230,16 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     @Override
     protected void onPostExecute(FECWrapper wrapper) {
         synchronized (this) {
-            if (mStateListener != null)
-                mStateListener.loadingComplete(wrapper.getController());
+            if (mStateListener != null) {
+                if (wrapper == null) {
+                    mStateListener.loadingError(mErrorMsg);
+                } else {
+                    mStateListener.loadingComplete(wrapper.getController());    
+                }
+            }
+                
         }
     }
-
 
     public boolean importData(String formId, String instanceId, FormEntryController fec) throws IOException {
         Log.d(Collect.LOGTAG, t + formId + ": importing instance " + instanceId);
@@ -297,7 +311,6 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         }
     }
 
-
     /**
      * Read serialized {@link FormDef} from file and recreate as object.
      * 
@@ -344,7 +357,6 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         return fd;
     }
 
-
     /**
      * Write the FormDef to the file system as a binary blog.
      * 
@@ -377,13 +389,11 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         }
     }
 
-
     public void setFormLoaderListener(FormLoaderListener sl) {
         synchronized (this) {
             mStateListener = sl;
         }
     }
-
 
     public void destroy() {
         if (data != null) {
@@ -391,5 +401,4 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             data = null;
         }
     }
-
 }

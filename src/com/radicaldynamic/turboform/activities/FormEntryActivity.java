@@ -696,6 +696,18 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             refreshCurrentView();
         }
     }
+    
+    @Override
+    public void loadingError(String errorMsg)
+    {
+        dismissDialog(PROGRESS_DIALOG);
+        
+        if (errorMsg != null) {
+            createErrorDialog(errorMsg, true);            
+        } else {
+            createErrorDialog("Unhandled XForm Parsing error", true);
+        }
+    }
 
     /**
      * Refreshes the current view. the controller and the displayed view can get
