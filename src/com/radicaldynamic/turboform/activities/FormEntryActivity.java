@@ -253,19 +253,28 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             ((AbstractFolioView) mCurrentView).unregister();
         }
 
-        // We have to call cancel to terminate the thread, otherwise it
-        // lives on and retains the FEC in memory.
         if (mFormLoaderTask != null) {
             mFormLoaderTask.setFormLoaderListener(null);
-            mFormLoaderTask.cancel(true);
-            mFormLoaderTask.destroy();
+            
+            // We have to call cancel to terminate the thread, otherwise it
+            // lives on and retains the FEC in memory.
+            if (mFormLoaderTask.getStatus() == AsyncTask.Status.FINISHED) {
+                // But only if it's done, otherwise the thread never returns
+                mFormLoaderTask.cancel(true);
+                mFormLoaderTask.destroy();
+            }
         }
 
-        // We have to call cancel to terminate the thread, otherwise it
-        // lives on and retains the FEC in memory.
+
         if (mSaveToDiskTask != null) {
-            mSaveToDiskTask.cancel(false);
             mSaveToDiskTask.setFormSavedListener(null);
+            
+            // We have to call cancel to terminate the thread, otherwise it
+            // lives on and retains the FEC in memory.            
+            if (mFormLoaderTask.getStatus() == AsyncTask.Status.FINISHED) {
+                // But only if it's done, otherwise the thread never returns
+                mSaveToDiskTask.cancel(false);    
+            }            
         }
     
         super.onDestroy();
