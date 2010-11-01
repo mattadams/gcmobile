@@ -120,9 +120,15 @@ public class IAVTLayout extends RelativeLayout {
                 String imageFilename = ReferenceManager._().DeriveReference(imageURI).getLocalURI();
                 final File imageFile = new File(imageFilename);
                 if (imageFile.exists()) {
-                    Bitmap b =
-                        BitmapFactory.decodeStream(ReferenceManager._().DeriveReference(imageURI)
-                                .getStream());
+                    Bitmap b = null;
+                    try {
+                        b =
+                            BitmapFactory.decodeStream(ReferenceManager._()
+                                    .DeriveReference(imageURI).getStream());
+                    } catch (OutOfMemoryError e) {
+                        errorMsg = "ERROR: " + e.getMessage();
+                    }
+
                     if (b != null) {
                         mImageView = new ImageView(getContext());
                         mImageView.setPadding(2, 2, 2, 2);
@@ -138,11 +144,11 @@ public class IAVTLayout extends RelativeLayout {
                                 getContext().startActivity(i);
                             }
                         });
-                    } else {
+                    } else if (errorMsg == null) {
                         // Loading the image failed, so it's likely a bad file.
                         errorMsg = getContext().getString(R.string.file_invalid, imageFile);
                     }
-                } else {
+                } else if (errorMsg == null) {
                     // We should have an image, but the file doesn't exist.
                     errorMsg = getContext().getString(R.string.file_missing, imageFile);
                 }
