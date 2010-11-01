@@ -102,6 +102,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     public static final String KEY_INSTANCEPATH = "instancepath";
     public static final String KEY_INSTANCES = "instances";
     public static final String KEY_SUCCESS = "success";
+    public static final String KEY_ERROR = "error";
 
     private static final String NEWFORM = "newform";                // Identifies whether this is a new form, or reloading a form 
                                                                     // after a screen rotation (or similar)
@@ -137,6 +138,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
+    private String mErrorMessage;
     
     private FormLoaderTask mFormLoaderTask;
     private SaveToDiskTask mSaveToDiskTask;
@@ -188,6 +190,16 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
             if (savedInstanceState.containsKey(NEWFORM))
                 newForm = savedInstanceState.getBoolean(NEWFORM, true);
+            
+            if (savedInstanceState.containsKey(KEY_ERROR))
+                mErrorMessage = savedInstanceState.getString(KEY_ERROR);
+        }
+        
+        // If a parse error message is showing then nothing else is loaded
+        // Dialogs mid form just disappear on rotation
+        if (mErrorMessage != null) {
+            createErrorDialog(mErrorMessage, true);
+            return;
         }
 
         // Check to see if this is a screen flip or a new form load
@@ -308,6 +320,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         outState.putString(KEY_INSTANCEID, mInstanceId);
         outState.putStringArrayList(KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
         outState.putBoolean(NEWFORM, false);
+        outState.putString(KEY_ERROR, mErrorMessage);
     }
 
     /*
@@ -703,6 +716,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     public void loadingError(String errorMsg)
     {
         dismissDialog(PROGRESS_DIALOG);
+        mErrorMessage = errorMsg;
         
         if (errorMsg != null) {
             createErrorDialog(errorMsg, true);            
