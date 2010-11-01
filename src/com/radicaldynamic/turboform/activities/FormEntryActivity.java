@@ -721,7 +721,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         if (errorMsg != null) {
             createErrorDialog(errorMsg, true);            
         } else {
-            createErrorDialog("Unhandled XForm Parsing error", true);
+            createErrorDialog(getString(R.string.parse_error), true);
         }
     }
 
@@ -1024,7 +1024,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private void createErrorDialog(String errorMsg, final boolean shouldExit)
     {
         mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setIcon(android.R.drawable.ic_dialog_info);
+        mAlertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+        mAlertDialog.setTitle(getString(R.string.error_occurred));
         mAlertDialog.setMessage(errorMsg);
     
         DialogInterface.OnClickListener errorListener = new DialogInterface.OnClickListener() {
