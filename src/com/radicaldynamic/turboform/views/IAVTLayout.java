@@ -53,7 +53,8 @@ public class IAVTLayout extends RelativeLayout {
     }
 
 
-    public void setAVT(TextView text, String audioURI, String imageURI, final String videoURI) {
+    public void setAVT(TextView text, String audioURI, String imageURI, final String videoURI,
+                          final String bigImageURI) {
         mView_Text = text;
         mView_Text.setId(AbstractQuestionWidget.newUniqueId());
 
@@ -142,14 +143,19 @@ public class IAVTLayout extends RelativeLayout {
                         mImageView.setImageBitmap(b);
                         mImageView.setId(imageId);
 
-                        mImageView.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Intent i = new Intent("android.intent.action.VIEW");
-                                i.setDataAndType(Uri.fromFile(imageFile), "image/*");
-                                getContext().startActivity(i);
-                            }
-                        });
+                        if (bigImageURI != null) {
+                            mImageView.setOnClickListener(new OnClickListener() {
+                                String bigImageFilename = ReferenceManager._()
+                                .DeriveReference(bigImageURI).getLocalURI();
+                                File bigImage = new File(bigImageFilename);
+                                @Override
+                                public void onClick(View v) {
+                                    Intent i = new Intent("android.intent.action.VIEW");
+                                    i.setDataAndType(Uri.fromFile(bigImage), "image/*");
+                                    getContext().startActivity(i);
+                                }
+                            });
+                        }
                     } else if (errorMsg == null) {
                         // Loading the image failed, so it's likely a bad file.
                         errorMsg = getContext().getString(R.string.file_invalid, imageFile);

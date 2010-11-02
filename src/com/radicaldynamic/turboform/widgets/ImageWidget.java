@@ -209,6 +209,10 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
                 }
             });
             addView(mImageView);
+        } else {
+            // Fix for a bug that was introduced by way of a merge from upstream
+            mImageView = new ImageView(getContext());
+            addView(mImageView);
         }
     }
 
@@ -234,6 +238,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
                 options = null;
             }
 
+            Log.d(Collect.LOGTAG, t + "attempting to decodeFile with path " + mInstanceFolder + "/" + mBinaryName);
             Bitmap bmp = BitmapFactory.decodeFile(mInstanceFolder + "/" + mBinaryName, options);
             mImageView.setImageBitmap(bmp);
         } else {
