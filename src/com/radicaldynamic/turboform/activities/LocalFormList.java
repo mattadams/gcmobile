@@ -39,12 +39,8 @@ import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.repository.FormRepository;
 import com.radicaldynamic.turboform.utilities.DocumentUtils;
 
-/**
- * Responsible for displaying buttons to launch the major activities. Launches
- * some activities based on returns of others.
+/*
  * 
- * @author Carl Hartung (carlhartung@gmail.com)
- * @author Yaw Anokwa (yanokwa@gmail.com)
  */
 public class LocalFormList extends ListActivity
 {

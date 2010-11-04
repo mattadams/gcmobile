@@ -191,7 +191,7 @@ public class MainBrowserActivity extends ListActivity
     {
         super.onCreateContextMenu(menu, v, menuInfo);
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.tf_main_menu_context, menu);
+        inflater.inflate(R.menu.main_browser_context, menu);
     }
 
     @Override
@@ -199,7 +199,7 @@ public class MainBrowserActivity extends ListActivity
     {
         super.onCreateOptionsMenu(menu);
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.tf_main_menu_options, menu);
+        inflater.inflate(R.menu.main_browser_options, menu);
         return true;
     }
 

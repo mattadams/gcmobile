@@ -108,7 +108,6 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
 
     FECWrapper data;
 
-
     /**
      * Initialize {@link FormEntryController} with {@link FormDef} from binary or from XML. If given
      * an instance, it will be used to fill the {@link FormDef}.
@@ -225,7 +224,6 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         
         return data;
     }
-
 
     @Override
     protected void onPostExecute(FECWrapper wrapper) {

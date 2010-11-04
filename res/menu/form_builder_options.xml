@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:icon="@android:drawable/ic_menu_add" android:id="@+id/tf_synchronize" android:title="@string/tf_synchronize"></item>
+<item android:icon="@android:drawable/ic_menu_save" android:id="@+id/tf_manage" android:title="@string/tf_manage"></item>
+<item android:icon="@android:drawable/ic_menu_help" android:id="@+id/tf_preferences" android:title="@string/tf_preferences"></item>
+</menu>

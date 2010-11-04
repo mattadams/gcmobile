@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<declare-styleable name="TurboForm">
-		<attr name="normal_height" format="dimension" />
+        <!--  The following attributes support TouchListView -->
+        <attr name="normal_height" format="dimension" />
 		<attr name="expanded_height" format="dimension" />
 		<attr name="grabber" format="reference" />
 		<attr name="dragndrop_background" format="color" />
