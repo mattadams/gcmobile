@@ -12,7 +12,7 @@ public class ControlText
     
     public ControlText(String valueOrRef) 
     {
-        if (Pattern.matches("^jr:", valueOrRef)) {
+        if (Pattern.matches("^jr:.*", valueOrRef)) {
             String [] items = valueOrRef.split("'");    // jr:itext('GroupLabel')
             String id = items[1];                       // The string between the single quotes
             

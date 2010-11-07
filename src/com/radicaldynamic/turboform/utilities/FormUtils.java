@@ -12,6 +12,7 @@ import com.mycila.xmltool.CallBack;
 import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.turboform.application.Collect;
+import com.radicaldynamic.turboform.xform.Bind;
 import com.radicaldynamic.turboform.xform.Control;
 import com.radicaldynamic.turboform.xform.Translation;
 import com.radicaldynamic.turboform.xform.TranslationText;
@@ -28,6 +29,7 @@ public class FormUtils
     // State of controls and other form elements    
     private ArrayList<Control> mControlState = new ArrayList<Control>();
     private ArrayList<Translation> mTranslationState = new ArrayList<Translation>();
+    private ArrayList<Bind> mBindState = new ArrayList<Bind>(); 
     
     {
         // List of valid controls that we can handle
@@ -72,95 +74,6 @@ public class FormUtils
         return Base64.encodeToString(mForm.gotoRoot().toBytes(), Base64.DEFAULT);       
     }
     
-//    /*
-//     * 
-//     */
-//    public void removeNode(String nodeName)
-//    {
-//        String ns = "";                 // Stores the namespace of nodes in the actual instance document                    
-//        String [] nodePathParts;        // Stores various pieces of an XPath to a node
-//        String nodeNameArg = nodeName;  // The original nodeName as it was passed to this method
-//        
-//        // Obtain default name space for the actual instance document (within the <instance> element)
-//        if (mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().hasAttribute("xmlns")) {
-//            ns = mForm.getPefix(mForm.getAttribute("xmlns")); 
-//        } else {
-//            ns = mDefaultPrefix;
-//        }
-//        
-//        if ((nodePathParts = nodeName.split("/")).length > 0) {
-//            nodeName = "";
-//            
-//            for (String pathPart : nodePathParts) {
-//                nodeName = nodeName + ns + ":" + pathPart + "/";                
-//            }
-//            
-//            nodeName = nodeName.substring(0, nodeName.length() - 1);
-//        } else {
-//            nodeName = ns + ":" + nodeName;
-//        }
-//        
-//        mForm.gotoTag(nodeName).delete();
-//        
-//        removeBind(nodeNameArg);
-//        removeControl(nodeNameArg);
-//    }
-//    
-//    public void removeBind(final String nodePath)
-//    {
-//        final String initialPattern = "/" + mInstanceRoot + "/" + nodePath;  
-//        
-//        mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).forEachChild(new CallBack() {
-//            @Override
-//            public void execute(XMLTag tag)
-//            {
-//                if (tag.getCurrentTagName().equals("bind"))
-//                    if (Pattern.matches(initialPattern + "(|/.*)", tag.getAttribute("nodeset")))
-//                        tag.delete();
-//            }
-//        });
-//    }
-//
-//    public void removeControl(final String nodeName)
-//    {
-//        mForm.gotoRoot().gotoTag("h:body").forEachChild(new CallBack() {
-//            @Override
-//            public void execute(XMLTag tag)
-//            {
-//                removeRecursiveControl(tag, nodeName);
-//            }
-//        });
-//    }
-//    
-//    public void removeRecursiveControl(XMLTag tag, final String nodeName) 
-//    {
-//        if (tag.hasAttribute("ref") && tag.getAttribute("ref").equals(nodeName.substring(nodeName.lastIndexOf("/") + 1, nodeName.length()))) {
-//            // Remove an independent control
-//            tag.delete();
-//        } else if (tag.hasAttribute("nodeset") && tag.getAttribute("nodeset").equals("/" + mInstanceRoot + "/" + nodeName)) {
-//            // Remove a repeat element
-//            tag.delete(); 
-//        } else if (tag.getChildCount() > 0) {
-//            // If this element has children then iterate recursively over them 
-//            tag.forEachChild(new CallBack() {
-//                @Override
-//                public void execute(XMLTag arg0)
-//                {
-//                    removeRecursiveControl(arg0, nodeName);                                        
-//                }
-//            });
-//            
-//            if (tag.getCurrentTagName().equals("group") && tag.getChildCount() == 1) {
-//                // Remove empty groups
-//                tag.delete();
-//            } else if (tag.getCurrentTagName().equals("repeat") && tag.getChildCount() == 0) {
-//                // Remove empty repeated questions                
-//                // TODO: this should really call removeNode() to also remove the instance and binds
-//                tag.delete();
-//            }
-//        }
-//    }
-    
     /*
      * Trigger method for doing all of the actual work
      */
@@ -171,9 +84,16 @@ public class FormUtils
             parseFormTranslations(mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:itext", mDefaultPrefix));
         } else
             Log.d(Collect.LOGTAG, t + "no form translations to parse");        
+        
+        Log.d(Collect.LOGTAG, t + "parsing form binds...");
+        parseFormBinds(mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix));
 
         Log.d(Collect.LOGTAG, t + "parsing form controls...");
-        parseFormControls(mForm.gotoRoot().gotoTag("h:body"));      
+        parseFormControls(mForm.gotoRoot().gotoTag("h:body"));
+        
+        Log.d(Collect.LOGTAG, t + "parsing form instance...");
+        parseFormInstance(mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild(), "/" + mInstanceRoot);
+        Log.d(Collect.LOGTAG, t + "FINISHED parsing form instance");
     }
     
     /*
@@ -185,7 +105,7 @@ public class FormUtils
         
         if (mControlList.contains(tag.getCurrentTagName())) {
             if (tag.getCurrentTagLocation().split("/").length == 2) {                
-                mControlState.add(new Control(tag));
+                mControlState.add(new Control(tag, null, mInstanceRoot, mBindState));
             } else {
                 attachChildToParentControl(tag, null);
             }
@@ -215,24 +135,24 @@ public class FormUtils
      * 
      * This uses the same test for determining a parent as recursivelyApplyProperty().
      */
-    private void attachChildToParentControl(XMLTag child, Control parent)
+    private void attachChildToParentControl(XMLTag child, Control incomingParent)
     {
         Iterator<Control> it = null;
         
-        if (parent == null)
+        if (incomingParent == null)
             it = mControlState.iterator();
         else
-            it = parent.children.iterator();
+            it = incomingParent.children.iterator();
         
         while (it.hasNext()) {
-            Control possibleParent = it.next();
+            Control parent = it.next();
             
-            if (child.getCurrentTagLocation().split("/").length - possibleParent.getLocation().split("/").length == 1 &&
-                    possibleParent.getLocation().equals(child.getCurrentTagLocation().substring(0, possibleParent.getLocation().length())))
-                possibleParent.children.add(new Control(child));                
+            if (child.getCurrentTagLocation().split("/").length - parent.getLocation().split("/").length == 1 &&
+                    parent.getLocation().equals(child.getCurrentTagLocation().substring(0, parent.getLocation().length())))
+                parent.children.add(new Control(child, parent, mInstanceRoot, mBindState));                
             
-            if (!possibleParent.children.isEmpty())
-                attachChildToParentControl(child, possibleParent);
+            if (!parent.children.isEmpty())
+                attachChildToParentControl(child, parent);
         }
     }
     
@@ -270,9 +190,9 @@ public class FormUtils
             /*
              * Obtain a single translation to represent this control on the form builder screen
              * 
-             * TODO: We should select the most appropriate language (not necessarily English)
-             *       before falling back to English.  The most appropriate language can be determined
-             *       by checking the locale of the device. 
+             * FIXME: We should select the most appropriate language (not necessarily English)
+             *        before falling back to English.  The most appropriate language can be determined
+             *        by checking the locale of the device. 
              */ 
             if (tag.hasAttribute("ref")) {
                 String ref = tag.getAttribute("ref");
@@ -300,7 +220,7 @@ public class FormUtils
             }
             
             if (tag.getCurrentTagName().contains("value")) {
-                targetControl.setValue(tag.getInnerText());
+                targetControl.setItemValue(tag.getInnerText());
             }
             
             return true;
@@ -349,7 +269,7 @@ public class FormUtils
     }
     
     /*
-     * Retrieve a translation for a specific ID from a specific language  
+     * Retrieve a translation for a specific ID from a specific language.
      */
     private String getTranslation(String language, String id)
     {
@@ -364,12 +284,78 @@ public class FormUtils
                 while (texts.hasNext()) {
                     TranslationText text = texts.next();
                     
-                    if (text.getId().equals(id))
+                    if (text.getId().equals(id)) {
+                        text.setUsed(true);
                         return text.getValue();
+                    }
                 }
             }
         }
         
         return "[Translation Not Available]";
+    }
+    
+    /*
+     * Go through the list of binds and build objects to represent them.
+     * Binds are associated with control objects when the control is instantiated.
+     */
+    private void parseFormBinds(XMLTag tag)
+    {
+        tag.forEachChild(new CallBack() {
+            @Override
+            public void execute(XMLTag arg0)
+            {
+                if (arg0.getCurrentTagName().equals("bind"))
+                    mBindState.add(new Bind(arg0, mInstanceRoot));                    
+            }
+        });
+    }
+    
+    /*
+     * Recursively parse and use the information supplied in the form instance
+     * to supplement the control objects in mControlState 
+     */
+    private void parseFormInstance(XMLTag tag, final String instancePath)
+    {
+        // Search controls for an object having a ref that matches this instancePath
+        if (!applyInstanceToControl(null, tag, instancePath)) {
+            // FIXME: this does not guarantee that the control will be added to the correct parent
+            mControlState.add(new Control(tag, mBindState, instancePath));
+        }
+        
+        tag.forEachChild(new CallBack() {
+            @Override
+            public void execute(XMLTag arg0)
+            {
+                parseFormInstance(arg0, instancePath + "/" + arg0.getCurrentTagName());
+            }
+        });
+    }
+    
+    private boolean applyInstanceToControl(Control control, final XMLTag instanceTag, final String instancePath)
+    {
+        Iterator<Control> it;
+        
+        if (control == null) {
+            it = mControlState.iterator();
+        } else { 
+            if (control.getRef() != null && control.getRef().equals(instancePath)) {
+                Log.v(Collect.LOGTAG, t + "instance matched with control object via " + instancePath);
+                control.setDefaultValue(instanceTag.getInnerText());
+                return true;
+            }
+            
+            it = control.children.iterator();
+        }
+        
+        while (it.hasNext()) {
+            Control c = it.next();
+            
+            if (applyInstanceToControl(c, instanceTag, instancePath)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

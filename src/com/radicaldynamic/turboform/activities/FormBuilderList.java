@@ -31,10 +31,10 @@ public class FormBuilderList extends ListActivity
 {
     private static final String t = "FormBuilderList: ";
     
-    private static final String KEY_FORMID      = "formid";
-    private static final String KEY_FORM        = "form";
-    private static final String KEY_UTILITY     = "formutility";
-    private static final String KEY_CONTROLS    = "formcontrols";
+//    private static final String KEY_FORMID      = "formid";
+//    private static final String KEY_FORM        = "form";
+//    private static final String KEY_UTILITY     = "formutility";
+//    private static final String KEY_CONTROLS    = "formcontrols";
     
     private FormBuilderListAdapter adapter = null;
     
@@ -64,6 +64,11 @@ public class FormBuilderList extends ListActivity
         }
     }
 
+    /*
+     * FIXME: element icons are not kept consistent when list items are reordered.  
+     * I am not sure whether this affects only the items that are actually moved 
+     * or the ones that are next to them.
+     */
     private TouchListView.DropListener onDrop = new TouchListView.DropListener() {
         @Override
         public void drop(int from, int to)
@@ -103,7 +108,7 @@ public class FormBuilderList extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-        Control control = (Control) getListAdapter().getItem(position);
+        // Control control = (Control) getListAdapter().getItem(position);
     }
     
     /*
