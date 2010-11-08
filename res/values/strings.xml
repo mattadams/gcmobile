@@ -151,6 +151,7 @@
 	<string name="url_error">Sorry, invalid URL!</string>
 	<string name="username">Username</string>
 	<string name="view_hierarchy">Go To Prompt</string>
+	<string name="tf_add_form_element">Add Element</string>
 	<string name="tf_add_form_hint">Use &quot;Manage Forms&quot; to add a form</string>
 	<string name="tf_begin_instance_hint">Select list item to begin new form</string>
 	<string name="tf_browse_instances_hint">Select item to browse %s</string>
@@ -168,6 +169,7 @@
 	<string name="tf_editing">Editing</string>
 	<string name="tf_general_preferences">Preferences</string>
 	<string name="tf_groups_unavailable_error">Unavailable</string>
+	<string name="tf_help">Help</string>
 	<string name="tf_loading_please_wait">Loading, please wait...</string>
 	<string name="tf_main_menu_group_filter_label">Show Forms By Group</string>
 	<string name="tf_main_menu_group_filter_prompt">Choose form group</string>
@@ -181,6 +183,7 @@
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
+	<string name="tf_save_form_definition">Save Form</string>
 	<string name="tf_server_connection_error">Cannot contact server - try again later</string>
 	<string name="tf_server_settings">Server settings</string>
 	<string name="tf_server_url_error">Invalid server URL</string>   

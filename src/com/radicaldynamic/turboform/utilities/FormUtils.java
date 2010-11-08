@@ -93,7 +93,6 @@ public class FormUtils
         
         Log.d(Collect.LOGTAG, t + "parsing form instance...");
         parseFormInstance(mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild(), "/" + mInstanceRoot);
-        Log.d(Collect.LOGTAG, t + "FINISHED parsing form instance");
     }
     
     /*
@@ -104,7 +103,7 @@ public class FormUtils
         Log.v(Collect.LOGTAG, t + "visiting <" + tag.getCurrentTagName() + ">");
         
         if (mControlList.contains(tag.getCurrentTagName())) {
-            if (tag.getCurrentTagLocation().split("/").length == 2) {                
+            if (tag.getCurrentTagLocation().split("/").length == 2) {
                 mControlState.add(new Control(tag, null, mInstanceRoot, mBindState));
             } else {
                 attachChildToParentControl(tag, null);
@@ -149,10 +148,38 @@ public class FormUtils
             
             if (child.getCurrentTagLocation().split("/").length - parent.getLocation().split("/").length == 1 &&
                     parent.getLocation().equals(child.getCurrentTagLocation().substring(0, parent.getLocation().length())))
-                parent.children.add(new Control(child, parent, mInstanceRoot, mBindState));                
+                parent.children.add(new Control(child, parent, mInstanceRoot, mBindState));
             
             if (!parent.children.isEmpty())
                 attachChildToParentControl(child, parent);
+        }
+    }
+    
+    /*
+     * This methods has the same purpose as its namesake but is used for attaching 
+     * instance children to control parents and so uses a slightly different test. 
+     */
+    private void attachChildToParentControl(XMLTag child, Control incomingParent, String instancePath, Integer instancePosition)
+    {
+        Iterator<Control> it = null;
+        
+        if (incomingParent == null)
+            it = mControlState.iterator();
+        else
+            it = incomingParent.children.iterator();
+        
+        while (it.hasNext()) {
+            Control parent = it.next();
+            
+            // We can compare on the basis of control reference because the list of controls has already been built
+            if (parent.getRef() != null) {
+                if (parent.getRef().equals(instancePath.substring(0, instancePath.lastIndexOf("/")))) {
+                    parent.children.add(instancePosition, new Control(child, mBindState, instancePath));
+                }
+            }
+            
+            if (!parent.children.isEmpty())
+                attachChildToParentControl(child, parent, instancePath, instancePosition);
         }
     }
     
@@ -324,8 +351,21 @@ public class FormUtils
         if (instancePath.equals("/" + mInstanceRoot) == false) {
             // Attempt to apply this instance to a pre-existing control
             if (applyInstanceToControl(null, tag, instancePath) == false) {
-                // FIXME: this does not guarantee that the control will be added to the correct parent
-                mControlState.add(new Control(tag, mBindState, instancePath));
+                // XML tag position will be stored in a string ending with *[n] where n is the position
+                String [] locationParts = tag.getCurrentTagLocation().split("/");
+                String [] positionParts = locationParts[ locationParts.length - 1 ].split("[^0-9]");
+                
+                /*
+                 * The actual position can be found at the 2nd index.
+                 * Position counts begin at 1 from XML vs. 0 in in-memory lists.
+                 */
+                Integer position = Integer.valueOf(positionParts[2]) - 1;
+                
+                if (instancePath.split("/").length == 3) {
+                    mControlState.add(position, new Control(tag, mBindState, instancePath));
+                } else {
+                    attachChildToParentControl(tag, null, instancePath, position);
+                }      
             }
         }
         

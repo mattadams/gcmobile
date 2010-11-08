@@ -79,7 +79,7 @@ public class FormBuilderListAdapter extends ArrayAdapter<Control>
             
         } else if (control.getType().equals("repeat")) { 
             controlTypeView.setImageDrawable(getDrawable(R.drawable.element_group));
-            details.add("Contains repeated elements");
+            details.add("Repeated");
             
         } else if (control.getType().equals("select")) {
             controlTypeView.setImageDrawable(getDrawable(R.drawable.element_selectmulti));
@@ -90,6 +90,8 @@ public class FormBuilderListAdapter extends ArrayAdapter<Control>
             details.add(control.children.size() + " items");
             
         } else if (control.getType().equals("trigger")) {
+            controlTypeView.setImageDrawable(getDrawable(R.drawable.element_noicon));
+            details.add("Trigger");
             
         } else if (control.getType().equals("upload")) {
             String mediaType = control.attributes.get("mediatype");
