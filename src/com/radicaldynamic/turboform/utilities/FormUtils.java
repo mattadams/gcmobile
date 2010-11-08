@@ -317,10 +317,16 @@ public class FormUtils
      */
     private void parseFormInstance(XMLTag tag, final String instancePath)
     {
-        // Search controls for an object having a ref that matches this instancePath
-        if (!applyInstanceToControl(null, tag, instancePath)) {
-            // FIXME: this does not guarantee that the control will be added to the correct parent
-            mControlState.add(new Control(tag, mBindState, instancePath));
+        /*
+         * If the instancePath does not currently point to the instance root
+         * (this only happens the first time this method runs) 
+         */
+        if (instancePath.equals("/" + mInstanceRoot) == false) {
+            // Attempt to apply this instance to a pre-existing control
+            if (applyInstanceToControl(null, tag, instancePath) == false) {
+                // FIXME: this does not guarantee that the control will be added to the correct parent
+                mControlState.add(new Control(tag, mBindState, instancePath));
+            }
         }
         
         tag.forEachChild(new CallBack() {
