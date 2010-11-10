@@ -27,7 +27,6 @@ import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -61,11 +60,11 @@ public class LocalFormList extends ListActivity
         mDialog.setCancelable(true);
         mDialog.show();
 
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.main_browser);
         setTitle(getString(R.string.app_name) + " > "
                 + getString(R.string.main_menu));
-        setProgressBarIndeterminateVisibility(false);
+        //setProgressBarIndeterminateVisibility(false);
 
         // TODO: select "my forms" group/database
 
@@ -185,7 +184,7 @@ public class LocalFormList extends ListActivity
         @Override
         protected void onPreExecute()
         {
-            setProgressBarIndeterminateVisibility(true);
+            //setProgressBarIndeterminateVisibility(true);
         }
 
         @Override
@@ -197,7 +196,7 @@ public class LocalFormList extends ListActivity
                     instanceTalliesByStatus, (Spinner) findViewById(R.id.form_filter));
             setListAdapter(adapter);
 
-            setProgressBarIndeterminateVisibility(false);
+            //setProgressBarIndeterminateVisibility(false);
         }
     }
 

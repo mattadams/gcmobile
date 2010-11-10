@@ -98,13 +98,14 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
     public static final String KEY_FORMID = "formpath";             // Identifies the location of the form used to launch form entry
     public static final String KEY_FORMPATH = "formpath";
+    public static final String KEY_FORMACTUALPATH = "formactualpath";
     public static final String KEY_INSTANCEID = "instancepath";
     public static final String KEY_INSTANCEPATH = "instancepath";
     public static final String KEY_INSTANCES = "instances";
     public static final String KEY_SUCCESS = "success";
     public static final String KEY_ERROR = "error";
 
-    private static final String NEWFORM = "newform";                // Identifies whether this is a new form, or reloading a form 
+    public static final String NEWFORM = "newform";                 // Identifies whether this is a new form, or reloading a form 
                                                                     // after a screen rotation (or similar)
 
     private static final int MENU_CLEAR = Menu.FIRST;

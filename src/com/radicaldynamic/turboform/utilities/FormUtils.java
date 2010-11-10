@@ -23,7 +23,7 @@ public class FormUtils
     
     private XMLTag mForm;                           // The "form" as it was loaded by xmltool
     private String mInstanceRoot;                   // The name of the instance root element 
-    private String mDefaultPrefix;                  // The name of the default Xform prefix (needed for navigation)    
+    private String mDefaultPrefix;                  // The name of the default XForm prefix (needed for navigation)    
     private ArrayList<String> mControlList = new ArrayList<String>();    
     
     // State of controls and other form elements    
@@ -104,8 +104,10 @@ public class FormUtils
         
         if (mControlList.contains(tag.getCurrentTagName())) {
             if (tag.getCurrentTagLocation().split("/").length == 2) {
-                mControlState.add(new Control(tag, null, mInstanceRoot, mBindState));
+                // Add a top level control
+                mControlState.add(new Control(tag, mBindState, mInstanceRoot, null));
             } else {
+                // Control belongs elsewhere as a child of another control
                 attachChildToParentControl(tag, null);
             }
         } else if (tag.getCurrentTagName().equals("label")) {
@@ -148,7 +150,7 @@ public class FormUtils
             
             if (child.getCurrentTagLocation().split("/").length - parent.getLocation().split("/").length == 1 &&
                     parent.getLocation().equals(child.getCurrentTagLocation().substring(0, parent.getLocation().length())))
-                parent.children.add(new Control(child, parent, mInstanceRoot, mBindState));
+                parent.children.add(new Control(child, mBindState, mInstanceRoot, parent));
             
             if (!parent.children.isEmpty())
                 attachChildToParentControl(child, parent);
@@ -175,6 +177,7 @@ public class FormUtils
             if (parent.getRef() != null) {
                 if (parent.getRef().equals(instancePath.substring(0, instancePath.lastIndexOf("/")))) {
                     parent.children.add(instancePosition, new Control(child, mBindState, instancePath));
+                    parent.children.get(instancePosition).setParent(parent);
                 }
             }
             
@@ -362,8 +365,14 @@ public class FormUtils
                 Integer position = Integer.valueOf(positionParts[2]) - 1;
                 
                 if (instancePath.split("/").length == 3) {
+                    // Ensure that "add" does not trigger an IndexOutOfBoundsException
+                    if (position > mControlState.size())                        
+                        position = mControlState.size();
+                        
+                    // Add a top level control
                     mControlState.add(position, new Control(tag, mBindState, instancePath));
                 } else {
+                    // Control belongs elsewhere as a child of another control
                     attachChildToParentControl(tag, null, instancePath, position);
                 }      
             }

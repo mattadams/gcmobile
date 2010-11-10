@@ -18,12 +18,13 @@ public class Control
     // Any attributes found on this element
     public Map<String, String> attributes = new HashMap<String, String>();
     // Any children (other controls) of this one, e.g., groups and repeats (or items for a select or select1 control)
-    public ArrayList<Control> children = new ArrayList<Control>();  
+    public ArrayList<Control> children = new ArrayList<Control>();    
     
     private String type;                        // The XML element name of this control  (e.g., group, input, etc.)
     private String location;                    // The XML element location of this node (e.g., *[2]/*[1])
     private String ref;                         // Value of the "ref" attribute (if any)
     
+    private Control parent;
     private String itemValue;                   // Any value assigned to this node (if it is an item)
     private String defaultValue;                // A default value assigned to this field (will be stored in the instance XML)
     
@@ -32,6 +33,7 @@ public class Control
     
     private Bind bind;
     
+    private boolean active = false;             // Used to determine which control is "active" in form builder navigation
     private boolean hidden = false;             // Whether or not this is a hidden control
     private boolean repeated = false;           // Whether this is a repeated control (e.g., a child of a <repeat> element.
                                                 // This has a bearing on how the resulting XML will be output.
@@ -51,26 +53,30 @@ public class Control
         setRef(instancePath);
         setType("input");
 
-        // If a bind with a nodeset identical to this ref exists, bind it to this control (hahaha)
+        // FIXME: the logic below is identical to the sister method Control(), find some way to consolidate it
         Iterator<Bind> it = binds.iterator();                    
-        
+
         while (it.hasNext()) {
             Bind b = it.next();
             
+            // If a bind with a nodeset identical to this ref exists, associate it with this control
             if (b.getNodeset().equals(getRef())) {
                 setBind(b);
                 Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getNodeset() + " bound to hidden control");
             }
-        }      
+        }
     }
     
     // For controls instantiated from entries in <h:body>
-    public Control(XMLTag tag, Control parent, String instanceRoot, ArrayList<Bind> binds)
+    public Control(XMLTag tag, ArrayList<Bind> binds, String instanceRoot, Control parent)
     {
         Log.v(Collect.LOGTAG, t + "created new " + tag.getCurrentTagName() + " control at " + tag.getCurrentTagLocation());
         
         setType(tag.getCurrentTagName());
         setLocation(tag.getCurrentTagLocation());
+        
+        if (parent != null)
+            setParent(parent);
         
         // Read in attributes (includes "ref" to instance data output)
         for (String s : tag.getAttributeNames()) {
@@ -87,6 +93,7 @@ public class Control
                 String ref = tag.getAttribute(s);
                 
                 // If this reference is not to an itext translation then it must be to an instance/bind
+                // FIXME: does this even happen?
                 if (!Pattern.matches("^jr:.*", ref)) {
                     // If the reference is not literal then make it so
                     if (!Pattern.matches("^/.*", ref)) {
@@ -96,7 +103,7 @@ public class Control
                          * This logic exists to support repeated elements.  We must ensure that their refs
                          * are literal if binds and other items are to be properly associated with them.
                          * 
-                         * FIXME: this assumes that the immediate parent of a repeated items is a <repeat> control
+                         * FIXME: this assumes that the immediate parent of repeated items is a <repeat> control
                          */
                         if (parent != null) {
                             if (parent.getType().equals("repeat")) {
@@ -107,15 +114,13 @@ public class Control
                         
                         ref = newRef;                        
                     }
-                    
-                    // If a bind with a nodeset identical to this ref exists, bind it to this control (hahaha)
+
                     Iterator<Bind> it = binds.iterator();                    
                     
                     while (it.hasNext()) {
                         Bind b = it.next();
-                        
-                        // Log.v(Collect.LOGTAG, t + "testing bind " + b.getNodeset() + " for a match with " + ref);
-                        
+
+                        // If a bind with a nodeset identical to this ref exists, associate it with this control
                         if (b.getNodeset().equals(ref)) {
                             setBind(b);
                             Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getNodeset() + " bound to this control at " + getLocation());
@@ -134,9 +139,17 @@ public class Control
         this.label = new ControlText(label);
     }
 
+    /*
+     * We should really be able to return a label for anything that is going to be
+     * displayed but include this failsafe here just in case so things don't crash
+     * elsewhere if the label is null.
+     */
     public String getLabel()
     {
-        return label.toString();
+        if (label == null)
+            return "[label not available]";
+        else
+            return label.toString();
     }
 
     public void setHint(String hint)
@@ -147,7 +160,10 @@ public class Control
 
     public String getHint()
     {
-        return hint.toString();
+        if (hint.toString() == null)
+            return "";
+        else 
+            return label.toString();
     }
 
     public void setType(String type)
@@ -168,16 +184,6 @@ public class Control
     public String getLocation()
     {
         return location;
-    }
-
-    public void setHidden(boolean hidden)
-    {
-        this.hidden = hidden;
-    }
-
-    public boolean isHidden()
-    {
-        return hidden;
     }
 
     public void setItemValue(String itemValue)
@@ -220,6 +226,26 @@ public class Control
         return bind;
     }
 
+    public void setActive(boolean active)
+    {
+        this.active = active;
+    }
+
+    public boolean isActive()
+    {
+        return active;
+    }
+
+    public void setHidden(boolean hidden)
+    {
+        this.hidden = hidden;
+    }
+
+    public boolean isHidden()
+    {
+        return hidden;
+    }
+
     public void setRepeated(boolean repeated)
     {
         this.repeated = repeated;
@@ -228,5 +254,15 @@ public class Control
     public boolean isRepeated()
     {
         return repeated;
+    }
+
+    public void setParent(Control parent)
+    {
+        this.parent = parent;
+    }
+
+    public Control getParent()
+    {
+        return parent;
     }
 }

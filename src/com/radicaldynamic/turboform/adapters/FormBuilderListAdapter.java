@@ -57,8 +57,16 @@ public class FormBuilderListAdapter extends ArrayAdapter<Control>
          */
         
         if (control.getType().equals("group")) {
-            controlTypeView.setImageDrawable(getDrawable(R.drawable.element_group));
-            details.add("Contains " + control.children.size() + " elements");
+            controlTypeView.setImageDrawable(getDrawable(R.drawable.element_group));            
+            
+            // Special logic to hide the complexity of repeated elements
+            if (control.children.size() == 1 && control.children.get(0).getType().equals("repeat"))
+                details.add("Repeated group");
+            else 
+                if (control.children.size() == 1)
+                    details.add("Contains " + control.children.size() + " element");
+                else
+                    details.add("Contains " + control.children.size() + " elements");
             
         } else if (control.getType().equals("input")) {
             Drawable icon = getDrawable(R.drawable.element_string);

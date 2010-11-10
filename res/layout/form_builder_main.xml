@@ -1,14 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.radicaldynamic.turboform.views.TouchListView
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:tlv="http://schemas.android.com/apk/res/com.radicaldynamic.turboform"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent">
+    
+    <TextView 
+        android:id="@+id/pathText"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_margin="4dp" />
+        
+    <Button 
+        android:id="@+id/jumpPreviousButton"
+        android:enabled="false"
+        android:layout_alignParentBottom="true"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:text="@string/jump_to_previous" 
+        android:padding="12dp"
+        android:textSize="16dp" 
+        android:layout_marginTop="4dp"
+        android:layout_weight="1" />
 
-	android:id="@android:id/list"
-	android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
-	android:drawSelectorOnTop="false"
-	tlv:normal_height="64dip"
-	tlv:grabber="@+id/icon"
-	tlv:remove_mode="slideRight"
-/>
-
+    <com.radicaldynamic.turboform.views.TouchListView 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tlv="http://schemas.android.com/apk/res/com.radicaldynamic.turboform"
+        android:id="@android:id/list"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_above="@id/jumpPreviousButton"
+        android:layout_below="@id/pathText" 
+        android:drawSelectorOnTop="false"
+        tlv:normal_height="64dip"
+        tlv:grabber="@+id/icon"
+        tlv:remove_mode="slideRight" />
+</RelativeLayout>

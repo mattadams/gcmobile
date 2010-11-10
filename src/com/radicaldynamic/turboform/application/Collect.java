@@ -19,19 +19,25 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.radicaldynamic.turboform.R;
+import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.logic.FileReferenceFactory;
 import com.radicaldynamic.turboform.services.CouchDbService;
+import com.radicaldynamic.turboform.xform.Control;
 
 public class Collect extends Application {
     public final static String LOGTAG = "TurboForm";
-    public static CouchDbService mDb = null;
-    
-	private static Collect singleton = null;	
+    public static CouchDbService mDb = null;    
+	private static Collect singleton = null;
+	
 	private FormEntryController formEntryController = null;
     private FileReferenceFactory factory = null;
-    private ArrayList<String> instanceBrowseList = new ArrayList<String>();
-    private boolean firstReferenceInitialization = true;
     private IBinder viewToken = null;
+    
+    private boolean firstReferenceInitialization = true;
+    
+    private ArrayList<String> instanceBrowseList = new ArrayList<String>();
+    private ArrayList<Control> formBuilderControlState = null;
+    private FormDocument formBuilderForm = null;    
 
 	/* (non-Javadoc)
 	 * @see android.app.Application#onConfigurationChanged(android.content.res.Configuration)
@@ -164,4 +170,24 @@ public class Collect extends Application {
 		t.setGravity(Gravity.CENTER, 0, 0);
 		t.show();
 	}
+
+    public void setFormBuilderControlState(ArrayList<Control> formBuilderControlState)
+    {
+        this.formBuilderControlState = formBuilderControlState;
+    }
+
+    public ArrayList<Control> getFormBuilderControlState()
+    {
+        return formBuilderControlState;
+    }
+
+    public void setFormBuilderForm(FormDocument formBuilderForm)
+    {
+        this.formBuilderForm = formBuilderForm;
+    }
+
+    public FormDocument getFormBuilderForm()
+    {
+        return formBuilderForm;
+    }
 }

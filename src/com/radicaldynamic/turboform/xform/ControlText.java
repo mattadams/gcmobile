@@ -26,11 +26,9 @@ public class ControlText
     {
         String result = "";
         
-        if (value == null)
+        if (value != null)
             result = getValue();
-        else 
-            result = getValue();
-        
+
         return result;
     }
     
