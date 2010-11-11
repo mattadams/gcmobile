@@ -453,8 +453,9 @@ public class MainBrowserActivity extends ListActivity
 
         try {
             // Attempt to load the configured default splash screen
-            BitmapDrawable bitImage = new BitmapDrawable(getResources(),
-                    FileUtils.SPLASH_SCREEN_FILE_PATH);
+            // The following code only works in 1.6+
+            // BitmapDrawable bitImage = new BitmapDrawable(getResources(), FileUtils.SPLASH_SCREEN_FILE_PATH);
+            BitmapDrawable bitImage = new BitmapDrawable(FileUtils.SPLASH_SCREEN_FILE_PATH);
 
             if (bitImage.getBitmap() != null
                     && bitImage.getIntrinsicHeight() > 0

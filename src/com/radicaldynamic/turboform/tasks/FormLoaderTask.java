@@ -147,7 +147,12 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         	    Log.d(Collect.LOGTAG, t + formId + ": loading serialized form binary");
         		fd = deserializeFormDef(formBin);
         	} catch (Exception e) {
-                // If it did not load delete the file and read the XML directly
+                /*
+                 * If it did not load delete the file and read the XML directly
+                 * 
+                 * The common case here is that the JavaRosa library that serialized the binary is 
+                 * incompatible with the JavaRosa library that is now attempting to deserialize it.
+                 */        	    
         	    Log.w(Collect.LOGTAG, t + formId + ": serialized form binary failed to load (deleting cache file): " + e.toString());
         		formBin.delete();
         	}
@@ -205,10 +210,8 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             Log.e(Collect.LOGTAG, t + formId + ": failed loading data into form definition: " + e.toString());
         	e.printStackTrace();
         	
-            Toast.makeText(
-                    Collect.getInstance().getApplicationContext(),
-                    Collect.getInstance().getString(R.string.load_error, form.getName()) + " : " + e.getMessage(), Toast.LENGTH_LONG).show();
-            
+            this.publishProgress(Collect.getInstance().getString(R.string.load_error, form.getName()) + " : " + e.getMessage());
+
         	return null;
         }
 
@@ -398,5 +401,11 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             data.free();
             data = null;
         }
+    }
+
+    @Override
+    protected void onProgressUpdate(String... values) 
+    {
+        Toast.makeText(Collect.getInstance().getApplicationContext(), values[0], Toast.LENGTH_LONG).show();
     }
 }
