@@ -179,7 +179,13 @@ public class FormBuilderList extends ListActivity
     {
         Control control = (Control) getListAdapter().getItem(position);
         
-        // Navigate "down" into the form to display elements contained by others
+        /* 
+         * If the form field that has been clicked on is either a group or a repeat the default
+         * behaviour is to navigate "down" into the form to display elements contained by others.
+         * 
+         * These form elements may be edited by using a context menu (or possibly using an
+         * option menu that will become enabled if the user has navigated below the top).
+         */
         if (control.getType().equals("group") || control.getType().equals("repeat")) {
             // So we can find our way back "up" the tree later
             control.setActive(true);
@@ -187,6 +193,10 @@ public class FormBuilderList extends ListActivity
             // Deactivate the parent, if applicable
             if (control.getParent() != null)
                 control.getParent().setActive(false);
+            
+            // Make sure parents of parents are also deactivated (as in the case of nested repeated groups)
+            if (control.getParent() != null && control.getParent().getParent() != null)
+                control.getParent().getParent().setActive(false);
             
             mPath.add(control.getLabel());
             
@@ -255,7 +265,7 @@ public class FormBuilderList extends ListActivity
             mDialog = new ProgressDialog(FormBuilderList.this);
             mDialog.setMessage(getText(R.string.tf_loading_please_wait));
             mDialog.setIndeterminate(true);
-            mDialog.setCancelable(true);
+            mDialog.setCancelable(false);
             mDialog.show();
         }
 
@@ -281,7 +291,7 @@ public class FormBuilderList extends ListActivity
              */
             mPath.remove(mPath.size() - 1);                 // Remove the "group" label
             mActualPath.remove(mActualPath.size() - 1);     // Remove the repeated element 
-            mActualPath.remove(mActualPath.size() - 1);     // Remove the "group" element 
+            mActualPath.remove(mActualPath.size() - 1);     // Remove the "group" element
         } else {
             mPath.remove(mPath.size() - 1);
             mActualPath.remove(mActualPath.size() - 1);     // Remove the group element
@@ -292,7 +302,14 @@ public class FormBuilderList extends ListActivity
         if (destination == null)
             refreshView(mControlState);
         else {
-            refreshView(destination.children);
+            // Special support for nested repeated groups
+            if (destination.children.size() == 1 && destination.children.get(0).getType().equals("repeat")) {
+                mActualPath.add(destination.getLabel());
+                mActualPath.add(destination.children.get(0).getLabel());
+                refreshView(destination.children.get(0).children);
+            } else {                            
+                refreshView(destination.children);
+            }
         }
     }
     
@@ -324,8 +341,15 @@ public class FormBuilderList extends ListActivity
                 if (c.getParent() == null) {
                     return c;
                 } else {
-                    c.getParent().setActive(true);
-                    return c.getParent();
+                    // Special support for nested repeated groups
+                    if (c.getParent().getType().equals("repeat")) {
+                        // Set the parent of our parent (e.g., a group) active and return it
+                        c.getParent().getParent().setActive(true);
+                        return c.getParent().getParent();
+                    } else {
+                        c.getParent().setActive(true);
+                        return c.getParent();
+                    }
                 }
             }            
             
@@ -347,7 +371,7 @@ public class FormBuilderList extends ListActivity
     
     private void refreshView(ArrayList<Control> controlsToDisplay)
     {
-        setTitle(getString(R.string.tf_editing) + " " + mForm.getName());
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_editing) + " " + mForm.getName());
         
         String pathText = "";
         
