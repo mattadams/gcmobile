@@ -25,7 +25,7 @@ public class ManageFormsTabs extends TabActivity
                 .setContent(new Intent(this, LocalFormList.class)));
 
         tabHost.addTab(tabHost.newTabSpec("tab2")
-                .setIndicator("Shared", res.getDrawable(android.R.drawable.ic_menu_share))
+                .setIndicator("Shared", res.getDrawable(R.drawable.ic_menu_share))
                 .setContent(new Intent(this, ServerPreferences.class)));
         
         // This tab sets the intent flag so that it is recreated each time

@@ -14,6 +14,7 @@ import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.xform.Bind;
 import com.radicaldynamic.turboform.xform.Control;
+import com.radicaldynamic.turboform.xform.Instance;
 import com.radicaldynamic.turboform.xform.Translation;
 import com.radicaldynamic.turboform.xform.TranslationText;
 
@@ -27,9 +28,10 @@ public class FormUtils
     private ArrayList<String> mControlList = new ArrayList<String>();    
     
     // State of controls and other form elements    
+    private ArrayList<Bind> mBindState = new ArrayList<Bind>();
     private ArrayList<Control> mControlState = new ArrayList<Control>();
-    private ArrayList<Translation> mTranslationState = new ArrayList<Translation>();
-    private ArrayList<Bind> mBindState = new ArrayList<Bind>(); 
+    private ArrayList<Instance> mInstanceState = new ArrayList<Instance>();
+    private ArrayList<Translation> mTranslationState = new ArrayList<Translation>();    
     
     {
         // List of valid controls that we can handle

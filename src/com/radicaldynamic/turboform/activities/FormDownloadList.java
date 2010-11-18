@@ -259,7 +259,7 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, MENU_PREFERENCES, 0, getString(R.string.server_preferences)).setIcon(
-            android.R.drawable.ic_menu_preferences);
+            R.drawable.ic_menu_preferences);
         return true;
     }
 
@@ -296,7 +296,7 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
                     };
                 mProgressDialog.setTitle(getString(R.string.downloading_data));
                 mProgressDialog.setMessage(mAlertMsg);
-                mProgressDialog.setIcon(android.R.drawable.ic_dialog_info);
+                mProgressDialog.setIcon(R.drawable.ic_dialog_info);
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.setButton(getString(R.string.cancel), loadingButtonListener);
@@ -457,9 +457,9 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
         mAlertDialog.setCancelable(false);
         mAlertDialog.setButton(getString(R.string.ok), quitListener);
         if (mSuccess) {
-            mAlertDialog.setIcon(android.R.drawable.ic_dialog_info);
+            mAlertDialog.setIcon(R.drawable.ic_dialog_info);
         } else {
-            mAlertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+            mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
         }
         mAlertShowing = true;
         mAlertMsg = message;

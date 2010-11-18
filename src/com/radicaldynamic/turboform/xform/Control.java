@@ -31,12 +31,19 @@ public class Control
     private ControlText label;                  // Any label assigned to this control
     private ControlText hint;                   // Any hint assigned to this control
     
-    private Bind bind;
+    private Bind bind = new Bind();
     
     private boolean active = false;             // Used to determine which control is "active" in form builder navigation
     private boolean hidden = false;             // Whether or not this is a hidden control
     private boolean repeated = false;           // Whether this is a repeated control (e.g., a child of a <repeat> element.
                                                 // This has a bearing on how the resulting XML will be output.
+    
+    /* 
+     * For controls instantiated by the form builder
+     */
+    public Control()
+    {        
+    }
     
     /*
      * For controls instantiated from entries in <instance>
@@ -140,15 +147,17 @@ public class Control
     }
 
     /*
+     * FIXME
      * We should really be able to return a label for anything that is going to be
      * displayed but include this failsafe here just in case so things don't crash
      * elsewhere if the label is null.
      */
     public String getLabel()
     {
-        if (label == null)
-            return "[label not available]";
-        else
+        if (label == null || label.toString() == null) {
+            Log.w(Collect.LOGTAG, t + "label unavailable for control");
+            return "";
+        } else
             return label.toString();
     }
 
@@ -160,10 +169,11 @@ public class Control
 
     public String getHint()
     {
-        if (hint.toString() == null)
+        if (hint == null || hint.toString() == null) {
+            Log.w(Collect.LOGTAG, t + "hint unavailable for control");
             return "";
-        else 
-            return label.toString();
+        } else 
+            return hint.toString();
     }
 
     public void setType(String type)
@@ -228,6 +238,7 @@ public class Control
 
     public void setActive(boolean active)
     {
+        Log.v(Collect.LOGTAG, t + "setting control " + getLabel() + " active state to " + active);
         this.active = active;
     }
 
@@ -264,5 +275,15 @@ public class Control
     public Control getParent()
     {
         return parent;
+    }
+    
+    public ArrayList<Control> getChildren()
+    {
+        return children;
+    }
+    
+    public Map<String, String> getAttributes()
+    {
+        return attributes;
     }
 }

@@ -448,7 +448,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 }
             };
 
-            mProgressDialog.setIcon(android.R.drawable.ic_dialog_info);
+            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
             mProgressDialog.setTitle(getString(R.string.loading_form));
             mProgressDialog.setMessage(getString(R.string.please_wait));
             mProgressDialog.setIndeterminate(true);
@@ -470,7 +470,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 }
             };
 
-            mProgressDialog.setIcon(android.R.drawable.ic_dialog_info);
+            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
             mProgressDialog.setTitle(getString(R.string.saving_form));
             mProgressDialog.setMessage(getString(R.string.please_wait));
             mProgressDialog.setIndeterminate(true);
@@ -603,9 +603,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         menu.removeItem(MENU_SAVE);
     
         menu.add(0, MENU_SAVE, 0, getString(R.string.save_all_answers))
-                .setIcon(android.R.drawable.ic_menu_save);
+                .setIcon(R.drawable.ic_menu_save);
         menu.add(0, MENU_CLEAR, 0, getString(R.string.clear_answer)).setIcon(
-                android.R.drawable.ic_menu_close_clear_cancel).setEnabled(
+                R.drawable.ic_menu_close_clear_cancel).setEnabled(
                 !mFormEntryModel.isIndexReadonly() ? true : false);
         menu.add(0, MENU_DELETE_REPEAT, 0, getString(R.string.delete_repeat))
                 .setIcon(R.drawable.ic_menu_clear_playlist).setEnabled(
@@ -935,7 +935,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private void createClearDialog()
     {
         mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
     
         mAlertDialog.setTitle(getString(R.string.clear_answer_ask));
     
@@ -977,7 +977,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private void createDeleteRepeatConfirmDialog()
     {
         mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
     
         String name = getLastRepeatedGroupName(getGroupsForCurrentIndex());
     
@@ -1034,7 +1034,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private void createErrorDialog(String errorMsg, final boolean shouldExit)
     {
         mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
         mAlertDialog.setTitle(getString(R.string.error_occurred));
         mAlertDialog.setMessage(errorMsg);
     
@@ -1125,7 +1125,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private void createRepeatDialog()
     {
         mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setIcon(android.R.drawable.ic_dialog_info);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_info);
     
         DialogInterface.OnClickListener repeatListener = new DialogInterface.OnClickListener() {
             @Override
@@ -1174,7 +1174,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 getString(R.string.quit_entry), getString(R.string.do_not_exit) };
     
         mAlertDialog = new AlertDialog.Builder(this).setIcon(
-                android.R.drawable.ic_dialog_alert).setTitle(
+                R.drawable.ic_dialog_alert).setTitle(
                 getString(R.string.quit_application)).setItems(items,
                 new DialogInterface.OnClickListener() {
                     @Override

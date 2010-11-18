@@ -117,8 +117,7 @@ public class MainBrowserActivity extends ListActivity
 
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.main_browser);
-        setTitle(getString(R.string.app_name) + " > "
-                + getString(R.string.main_menu));
+        setTitle(getString(R.string.app_name));
         setProgressBarIndeterminateVisibility(false);
 
         startService(new Intent(this, CouchDbService.class));
@@ -405,7 +404,7 @@ public class MainBrowserActivity extends ListActivity
     private void createErrorDialog(String errorMsg, final boolean shouldExit)
     {
         mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setIcon(android.R.drawable.ic_dialog_info);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_info);
         mAlertDialog.setMessage(errorMsg);
 
         DialogInterface.OnClickListener errorListener = new DialogInterface.OnClickListener() {
