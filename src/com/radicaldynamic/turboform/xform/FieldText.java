@@ -3,14 +3,14 @@ package com.radicaldynamic.turboform.xform;
 import java.util.regex.Pattern;
 
 /*
- * Used for labels and hints on controls and item labels
+ * Used for labels and hints on fields and item labels
  */
-public class ControlText
+public class FieldText
 {
     private String value;       // Regular string value associated with this text object
     private String ref;         // A reference to an itext translation
     
-    public ControlText(String valueOrRef) 
+    public FieldText(String valueOrRef) 
     {
         if (Pattern.matches("^jr:.*", valueOrRef)) {
             String [] items = valueOrRef.split("'");    // jr:itext('GroupLabel')

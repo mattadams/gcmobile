@@ -142,7 +142,7 @@ public class LocalFormList extends ListActivity
 
         Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
 
-        Intent i = new Intent(this, FormBuilderList.class);
+        Intent i = new Intent(this, FormBuilderFieldList.class);
         i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
         startActivity(i);
     }

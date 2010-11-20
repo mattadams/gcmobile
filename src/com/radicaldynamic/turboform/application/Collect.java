@@ -22,7 +22,8 @@ import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.logic.FileReferenceFactory;
 import com.radicaldynamic.turboform.services.CouchDbService;
-import com.radicaldynamic.turboform.xform.Control;
+import com.radicaldynamic.turboform.xform.Field;
+import com.radicaldynamic.turboform.xform.Instance;
 
 public class Collect extends Application {
     public final static String LOGTAG = "TurboForm";
@@ -35,9 +36,13 @@ public class Collect extends Application {
     
     private boolean firstReferenceInitialization = true;
     
-    private ArrayList<String> instanceBrowseList = new ArrayList<String>();
-    private ArrayList<Control> formBuilderControlState = null;
-    private FormDocument formBuilderForm = null;    
+    private ArrayList<String> instanceBrowseList            = new ArrayList<String>();
+    
+    private FormDocument formBuilderForm                    = null;     // Form document in memory for use with the form builder
+    private ArrayList<Field> formBuilderFieldState          = null;     // XForm field state in memory for use with FormBuilderFieldList
+    private ArrayList<Instance> formBuilderInstanceState    = null;     // XForm instance state in memory for use with FormBuilderInstanceList    
+    private Field formBuilderField                          = null;     // SINGLE XForm field in memory for use with FormBuilderFieldEditor
+    private Instance formBuilderInstance                    = null;     // SINGLE XForm instance in memory for use with FormBuilderInstanceEditor
 
 	/* (non-Javadoc)
 	 * @see android.app.Application#onConfigurationChanged(android.content.res.Configuration)
@@ -171,14 +176,24 @@ public class Collect extends Application {
 		t.show();
 	}
 
-    public void setFormBuilderControlState(ArrayList<Control> formBuilderControlState)
+    public void setFormBuilderFieldState(ArrayList<Field> formBuilderFieldState)
     {
-        this.formBuilderControlState = formBuilderControlState;
+        this.formBuilderFieldState = formBuilderFieldState;
     }
 
-    public ArrayList<Control> getFormBuilderControlState()
+    public ArrayList<Field> getFormBuilderFieldState()
     {
-        return formBuilderControlState;
+        return formBuilderFieldState;
+    }
+
+    public void setFormBuilderInstanceState(ArrayList<Instance> formBuilderInstanceState)
+    {
+        this.formBuilderInstanceState = formBuilderInstanceState;
+    }
+
+    public ArrayList<Instance> getFormBuilderInstanceState()
+    {
+        return formBuilderInstanceState;
     }
 
     public void setFormBuilderForm(FormDocument formBuilderForm)
@@ -189,5 +204,25 @@ public class Collect extends Application {
     public FormDocument getFormBuilderForm()
     {
         return formBuilderForm;
+    }
+
+    public void setFormBuilderField(Field formBuilderField)
+    {
+        this.formBuilderField = formBuilderField;
+    }
+
+    public Field getFormBuilderField()
+    {
+        return formBuilderField;
+    }
+
+    public void setFormBuilderInstance(Instance formBuilderInstance)
+    {
+        this.formBuilderInstance = formBuilderInstance;
+    }
+
+    public Instance getFormBuilderInstance()
+    {
+        return formBuilderInstance;
     }
 }

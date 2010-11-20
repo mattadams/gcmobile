@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dip">
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:textSize="20sp"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:text="@string/tf_fbel_label" 
+    />
+    
+    <EditText
+        android:id="@+id/label"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+    />
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_fbel_label_hint" 
+    />
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:textSize="20sp"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:paddingTop="10dp"
+        android:text="@string/tf_fbel_hint"        
+    />
+    
+    <EditText
+        android:id="@+id/hint"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+    />
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_fbel_hint_hint" 
+    />
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:textSize="20sp"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:paddingTop="10dp"
+        android:text="@string/tf_fbel_default" 
+    />
+    
+    <EditText
+        android:id="@+id/defaultValue"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+    />    
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_fbel_default_hint" 
+    />    
+    
+    <!-- Hidden option -->
+    <!-- 
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/hiddenLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+        
+        <CheckBox             
+            android:id="@+id/hidden"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true" 
+            android:layout_width="wrap_content" 
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:gravity="top"
+        />
+
+        <TextView
+            android:id="@+id/fbel_hidden"
+            android:textSize="20sp"            
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@id/hidden"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:text="@string/tf_fbel_hidden"
+        />
+                
+        <TextView
+            android:id="@android:id/empty"
+            android:inputType="textMultiLine"            
+            android:layout_toRightOf="@id/hidden"
+            android:layout_below="@id/fbel_hidden"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"                    
+            android:text="@string/tf_fbel_hidden_hint" 
+        />
+    </RelativeLayout>
+    -->
+    
+    <!-- Read-only option -->
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/readonlyLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+        
+        <CheckBox             
+            android:id="@+id/readonly"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true" 
+            android:layout_width="wrap_content" 
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:gravity="top"
+        />
+
+        <TextView
+            android:id="@+id/fbel_readonly"
+            android:textSize="20sp"            
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@id/readonly"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:text="@string/tf_fbel_readonly"
+        />
+                
+        <TextView
+            android:id="@android:id/empty"
+            android:inputType="textMultiLine"            
+            android:layout_toRightOf="@id/readonly"
+            android:layout_below="@id/fbel_readonly"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"                    
+            android:text="@string/tf_fbel_readonly_hint" 
+        />
+    </RelativeLayout>
+    
+    <!-- Required option -->
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/requiredLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+        
+        <CheckBox             
+            android:id="@+id/required"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true" 
+            android:layout_width="wrap_content" 
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:gravity="top"
+        />
+
+        <TextView
+            android:id="@+id/fbel_required"
+            android:textSize="20sp"            
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@id/required"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:text="@string/tf_fbel_required"
+        />
+                
+        <TextView
+            android:id="@android:id/empty"
+            android:inputType="textMultiLine"            
+            android:layout_toRightOf="@id/required"
+            android:layout_below="@id/fbel_required"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"                    
+            android:text="@string/tf_fbel_required_hint" 
+        />
+    </RelativeLayout>    
+</LinearLayout>
+
+</ScrollView>

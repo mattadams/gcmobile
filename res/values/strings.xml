@@ -153,6 +153,7 @@
 	<string name="view_hierarchy">Go To Prompt</string>
 	<string name="tf_add_form_element">Add Element</string>
 	<string name="tf_add_form_hint">Use &quot;Manage Forms&quot; to add a form</string>
+	<string name="tf_add_new">Add New</string>
 	<string name="tf_begin_instance_hint">Select list item to begin new form</string>
 	<string name="tf_browse_instances_hint">Select item to browse %s</string>
 	<string name="tf_choose_one">Choose one</string>
@@ -166,7 +167,29 @@
 	<string name="tf_couchdb_prefix">turboform/</string>
 	<string name="tf_default_couchdb_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_couchdb_port">5984</string>
+	<string name="tf_edit">Edit</string>
 	<string name="tf_editing">Editing</string>
+	<string name="tf_element_barcode">Barcode reader</string>
+	<string name="tf_element_date">Date selection</string>
+	<string name="tf_element_geopoint">Geopoint detection</string>
+	<string name="tf_element_group">Group of fields</string>
+	<string name="tf_element_media">Media field</string>
+	<string name="tf_element_number">Number field</string>
+	<string name="tf_element_select">Select from list</string>
+	<string name="tf_element_text">Text field</string>
+	<!--  fbel: Form Builder Element Label -->
+	<string name="tf_fbel_default">Default value</string>
+	<string name="tf_fbel_default_hint">Any value supplied here will be shown in the input area of the field and will be saved as-is unless otherwise changed by the user.</string>
+	<string name="tf_fbel_hidden">Hidden</string>
+	<string name="tf_fbel_hidden_hint">Hidden fields will appear in your exported data and may be manipulated by advanced properties but are not directly available to the user.</string>
+	<string name="tf_fbel_hint">Description</string>
+	<string name="tf_fbel_hint_hint">You may provide longer instructions or a hint to help the user understand how to use this field.</string>
+	<string name="tf_fbel_label">Label</string>
+	<string name="tf_fbel_label_hint">The name, prompt or question for this field.</string>
+        <string name="tf_fbel_readonly">Read-only</string>
+        <string name="tf_fbel_readonly_hint">Read-only fields will be visible to the user but they will not be able to modify them directly.  The values of read-only fields may be manipulated by advanced properties.</string>
+        <string name="tf_fbel_required">Required</string>
+        <string name="tf_fbel_required_hint">Marking this field as required will force the user to respond to it before marking the form as complete.</string>
 	<string name="tf_general_preferences">Preferences</string>
 	<string name="tf_groups_unavailable_error">Unavailable</string>
 	<string name="tf_help">Help</string>
@@ -189,4 +212,6 @@
 	<string name="tf_server_url_error">Invalid server URL</string>   
 	<string name="tf_synchronize">Synchronize</string>
 	<string name="tf_synchronization_settings">Synchronization settings</string>
+	<string name="tf_view_instance">View Output</string>
+	<string name="tf_viewing_instance">Output Fields for</string>
 </resources>

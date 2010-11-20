@@ -13,23 +13,23 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.radicaldynamic.turboform.R;
-import com.radicaldynamic.turboform.xform.Control;
+import com.radicaldynamic.turboform.xform.Field;
 
-public class FormBuilderListAdapter extends ArrayAdapter<Control>
+public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
 {
-    private ArrayList<Control> mControls;
+    private ArrayList<Field> mFields;
     private Context mContext;
     
-    public FormBuilderListAdapter(Context context, ArrayList<Control> controlList) {
-        super(context, R.layout.form_builder_row2, controlList);
-        mControls = controlList;
-        mContext = context;    
+    public FormBuilderFieldListAdapter(Context context, ArrayList<Field> fieldList) {
+        super(context, R.layout.form_builder_row2, fieldList);
+        mFields = fieldList;
+        mContext = context;
     }
 
     public View getView(int position, View convertView, ViewGroup parent)
     {
         View row = convertView;
-        Control control = mControls.get(position);
+        Field field = mFields.get(position);
         ArrayList<String> details = new ArrayList<String>();
 
         if (row == null) {
@@ -40,39 +40,39 @@ public class FormBuilderListAdapter extends ArrayAdapter<Control>
         // If these objects are not reset to suitable defaults they might be reused with undesired side effects
         TextView labelView = (TextView) row.findViewById(R.id.label);
         TextView detailView = (TextView) row.findViewById(R.id.details);
-        ImageView controlTypeView = (ImageView) row.findViewById(R.id.control_type);
+        ImageView fieldTypeView = (ImageView) row.findViewById(R.id.field_type);
         
         /*
          * Shorten label to an appropriate length
          * 
          * TODO: this might not be suitable on different devices, resolutions, orientations etc.
          */
-        if (control.getLabel().length() > 30)
-            labelView.setText(control.getLabel().substring(0, 27) + "...");
+        if (field.getLabel().length() > 30)
+            labelView.setText(field.getLabel().substring(0, 27) + "...");
         else               
-            labelView.setText(control.getLabel());
+            labelView.setText(field.getLabel());
 
         /*
-         * Customize the row according to per-control specifics
+         * Customize the row according to per-field specifics
          */
         
-        if (control.getType().equals("group")) {
-            controlTypeView.setImageDrawable(getDrawable(R.drawable.element_group));            
+        if (field.getType().equals("group")) {
+            fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_group));            
             
             // Special logic to hide the complexity of repeated elements
-            if (control.children.size() == 1 && control.children.get(0).getType().equals("repeat"))
+            if (field.children.size() == 1 && field.children.get(0).getType().equals("repeat"))
                 details.add("Repeated group");
             else 
-                if (control.children.size() == 1)
-                    details.add("Contains " + control.children.size() + " element");
+                if (field.children.size() == 1)
+                    details.add("Contains " + field.children.size() + " element");
                 else
-                    details.add("Contains " + control.children.size() + " elements");
+                    details.add("Contains " + field.children.size() + " elements");
             
-        } else if (control.getType().equals("input")) {
+        } else if (field.getType().equals("input")) {
             Drawable icon = getDrawable(R.drawable.element_string);
             
             try {
-                String specificType = control.getBind().getType();
+                String specificType = field.getBind().getType();
                 
                 if (specificType.equals("barcode"))     icon = getDrawable(R.drawable.element_barcode);     else
                 if (specificType.equals("date"))        icon = getDrawable(R.drawable.element_calendar);    else
@@ -82,39 +82,36 @@ public class FormBuilderListAdapter extends ArrayAdapter<Control>
             } catch (NullPointerException e){
                 // TODO: is this really a problem?    
             } finally {
-                controlTypeView.setImageDrawable(icon);
+                fieldTypeView.setImageDrawable(icon);
             }
             
-        } else if (control.getType().equals("repeat")) { 
-            controlTypeView.setImageDrawable(getDrawable(R.drawable.element_group));
+        } else if (field.getType().equals("repeat")) { 
+            fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_group));
             details.add("Repeated");
             
-        } else if (control.getType().equals("select")) {
-            controlTypeView.setImageDrawable(getDrawable(R.drawable.element_selectmulti));
-            details.add(control.children.size() + " items");
+        } else if (field.getType().equals("select")) {
+            fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_selectmulti));
+            details.add(field.children.size() + " items");
             
-        } else if (control.getType().equals("select1")) {
-            controlTypeView.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
-            details.add(control.children.size() + " items");
+        } else if (field.getType().equals("select1")) {
+            fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
+            details.add(field.children.size() + " items");
             
-        } else if (control.getType().equals("trigger")) {
-            controlTypeView.setImageDrawable(getDrawable(R.drawable.element_noicon));
+        } else if (field.getType().equals("trigger")) {
+            fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_noicon));
             details.add("Trigger");
             
-        } else if (control.getType().equals("upload")) {
-            String mediaType = control.attributes.get("mediatype");
+        } else if (field.getType().equals("upload")) {
+            String mediaType = field.attributes.get("mediatype");
             mediaType = mediaType.substring(0, 1).toUpperCase() + mediaType.substring(1, 5) + " media";
                         
-            controlTypeView.setImageDrawable(getDrawable(R.drawable.element_media));
+            fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_media));
             details.add(mediaType);
         }
         
         try {
-            if (control.getBind().isRequired())
+            if (field.getBind().isRequired())
                 details.add("Required");
-            
-            if (control.isHidden())
-                details.add("Hidden form data");
             
         } catch (NullPointerException e) {
            // TODO: is this really a problem?

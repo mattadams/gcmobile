@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-<item android:icon="@android:drawable/ic_menu_add" android:id="@+id/add_form_element" android:title="@string/tf_add_form_element"></item>
+<item android:icon="@android:drawable/ic_menu_add" android:id="@+id/add_form_element" android:title="@string/tf_add_form_element">
+    <menu>
+        <item android:id="@+id/barcode" android:title="@string/tf_element_barcode" />
+        <item android:id="@+id/date" android:title="@string/tf_element_date" />
+        <item android:id="@+id/geopoint" android:title="@string/tf_element_geopoint" />
+        <item android:id="@+id/group" android:title="@string/tf_element_group" />
+        <item android:id="@+id/media" android:title="@string/tf_element_media" />
+        <item android:id="@+id/number" android:title="@string/tf_element_number" />
+        <item android:id="@+id/select" android:title="@string/tf_element_select" />
+        <item android:id="@+id/text" android:title="@string/tf_element_text" />
+    </menu>
+</item>
+<item android:icon="@android:drawable/ic_menu_view" android:id="@+id/view_instance" android:title="@string/tf_view_instance"></item>
 <item android:icon="@android:drawable/ic_menu_save" android:id="@+id/save_form" android:title="@string/tf_save_form_definition"></item>
 <item android:icon="@android:drawable/ic_menu_help" android:id="@+id/help" android:title="@string/tf_help"></item>
 </menu>

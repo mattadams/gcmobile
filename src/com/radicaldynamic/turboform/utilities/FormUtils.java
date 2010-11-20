@@ -13,7 +13,7 @@ import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.xform.Bind;
-import com.radicaldynamic.turboform.xform.Control;
+import com.radicaldynamic.turboform.xform.Field;
 import com.radicaldynamic.turboform.xform.Instance;
 import com.radicaldynamic.turboform.xform.Translation;
 import com.radicaldynamic.turboform.xform.TranslationText;
@@ -25,17 +25,17 @@ public class FormUtils
     private XMLTag mForm;                           // The "form" as it was loaded by xmltool
     private String mInstanceRoot;                   // The name of the instance root element 
     private String mDefaultPrefix;                  // The name of the default XForm prefix (needed for navigation)    
-    private ArrayList<String> mControlList = new ArrayList<String>();    
+    private ArrayList<String> mFieldList = new ArrayList<String>();    
     
-    // State of controls and other form elements    
+    // State of binds, fields, instances and translations    
     private ArrayList<Bind> mBindState = new ArrayList<Bind>();
-    private ArrayList<Control> mControlState = new ArrayList<Control>();
+    private ArrayList<Field> mFieldState = new ArrayList<Field>();
     private ArrayList<Instance> mInstanceState = new ArrayList<Instance>();
     private ArrayList<Translation> mTranslationState = new ArrayList<Translation>();    
     
     {
-        // List of valid controls that we can handle
-        Collections.addAll(mControlList, "group", "input", "item", "repeat", "select", "select1", "trigger", "upload");
+        // List of valid fields that we can handle
+        Collections.addAll(mFieldList, "group", "input", "item", "repeat", "select", "select1", "trigger", "upload");
     }
     
     public FormUtils(String title) {
@@ -53,9 +53,14 @@ public class FormUtils
         Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
     }
     
-    public ArrayList<Control> getControlState()
+    public ArrayList<Field> getFieldState()
     {
-        return mControlState;
+        return mFieldState;
+    }
+    
+    public ArrayList<Instance> getInstanceState()
+    {
+        return mInstanceState;
     }
     
     public ArrayList<Translation> getTranslationState()
@@ -90,27 +95,27 @@ public class FormUtils
         Log.d(Collect.LOGTAG, t + "parsing form binds...");
         parseFormBinds(mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix));
 
-        Log.d(Collect.LOGTAG, t + "parsing form controls...");
-        parseFormControls(mForm.gotoRoot().gotoTag("h:body"));
+        Log.d(Collect.LOGTAG, t + "parsing form fields...");
+        parseFormFields(mForm.gotoRoot().gotoTag("h:body"));
         
         Log.d(Collect.LOGTAG, t + "parsing form instance...");
         parseFormInstance(mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild(), "/" + mInstanceRoot);
     }
     
     /*
-     * Recursively iterate over the form controls, creating objects to represent these controls
+     * Recursively iterate over the form fields, creating objects to represent these fields
      */
-    private void parseFormControls(XMLTag tag)
+    private void parseFormFields(XMLTag tag)
     {       
         Log.v(Collect.LOGTAG, t + "visiting <" + tag.getCurrentTagName() + ">");
         
-        if (mControlList.contains(tag.getCurrentTagName())) {
+        if (mFieldList.contains(tag.getCurrentTagName())) {
             if (tag.getCurrentTagLocation().split("/").length == 2) {
-                // Add a top level control
-                mControlState.add(new Control(tag, mBindState, mInstanceRoot, null));
+                // Add a top level field
+                mFieldState.add(new Field(tag, mBindState, mInstanceRoot, null));
             } else {
-                // Control belongs elsewhere as a child of another control
-                attachChildToParentControl(tag, null);
+                // Field belongs elsewhere as a child of another field
+                attachChildToParentField(tag, null);
             }
         } else if (tag.getCurrentTagName().equals("label")) {
             applyProperty(tag);
@@ -120,84 +125,55 @@ public class FormUtils
             applyProperty(tag);
         }
 
-        // If control element has children then listControls recursively from the standpoint of every child
+        // If field element has children then list fields recursively from the standpoint of every child
         if (tag.getChildCount() > 0) {           
             tag.forEachChild(new CallBack() {
                 @Override
                 public void execute(XMLTag arg0)
                 {
-                    parseFormControls(arg0);
+                    parseFormFields(arg0);
                 }
             });
         }
     }
 
     /*
-     * For controls that are nested within other controls (e.g., not top-level group or repeat controls) 
-     * determine which control is the parent and attach the new control to it as a child.
+     * For fields that are nested within other fields (e.g., not top-level group or repeat fields) 
+     * determine which field is the parent and attach the new field to it as a child.
      * 
      * This uses the same test for determining a parent as recursivelyApplyProperty().
      */
-    private void attachChildToParentControl(XMLTag child, Control incomingParent)
+    private void attachChildToParentField(XMLTag child, Field incomingParent)
     {
-        Iterator<Control> it = null;
+        Iterator<Field> it = null;
         
         if (incomingParent == null)
-            it = mControlState.iterator();
+            it = mFieldState.iterator();
         else
             it = incomingParent.children.iterator();
         
         while (it.hasNext()) {
-            Control parent = it.next();
+            Field parent = it.next();
             
             if (child.getCurrentTagLocation().split("/").length - parent.getLocation().split("/").length == 1 &&
                     parent.getLocation().equals(child.getCurrentTagLocation().substring(0, parent.getLocation().length())))
-                parent.children.add(new Control(child, mBindState, mInstanceRoot, parent));
+                parent.children.add(new Field(child, mBindState, mInstanceRoot, parent));
             
             if (!parent.children.isEmpty())
-                attachChildToParentControl(child, parent);
+                attachChildToParentField(child, parent);
         }
     }
     
     /*
-     * This methods has the same purpose as its namesake but is used for attaching 
-     * instance children to control parents and so uses a slightly different test. 
-     */
-    private void attachChildToParentControl(XMLTag child, Control incomingParent, String instancePath, Integer instancePosition)
-    {
-        Iterator<Control> it = null;
-        
-        if (incomingParent == null)
-            it = mControlState.iterator();
-        else
-            it = incomingParent.children.iterator();
-        
-        while (it.hasNext()) {
-            Control parent = it.next();
-            
-            // We can compare on the basis of control reference because the list of controls has already been built
-            if (parent.getRef() != null) {
-                if (parent.getRef().equals(instancePath.substring(0, instancePath.lastIndexOf("/")))) {
-                    parent.children.add(instancePosition, new Control(child, mBindState, instancePath));
-                    parent.children.get(instancePosition).setParent(parent);
-                }
-            }
-            
-            if (!parent.children.isEmpty())
-                attachChildToParentControl(child, parent, instancePath, instancePosition);
-        }
-    }
-    
-    /*
-     * Iterate recursively through the list of controls stopping only when the correct control object 
-     * has been found (the control object to which this property applies and should be set for)
+     * Iterate recursively through the list of fields stopping only when the correct field object 
+     * has been found (the field object to which this property applies and should be set for)
      */
     private boolean applyProperty(XMLTag tag)
     {
-        Iterator<Control> it = mControlState.iterator();
+        Iterator<Field> it = mFieldState.iterator();
         
         while (it.hasNext()) {
-            Control c = it.next();
+            Field c = it.next();
             if (recursivelyApplyProperty(c, tag)) {
                 return true;
             }
@@ -208,19 +184,19 @@ public class FormUtils
     
     /*
      * Recursive method for applyProperty().  Determines the proper object to apply the property to by 
-     * comparing the property location and the control object location.  E.g.,
+     * comparing the property location and the field object location.  E.g.,
      * 
-     * If the control exists at *[2]/*[2]/*[3] then the property located at  *[2]/*[2]/*[3]/*[1] or 
+     * If the field exists at *[2]/*[2]/*[3] then the property located at  *[2]/*[2]/*[3]/*[1] or 
      * any other direct child of *[2]/*[2]/*[3] should be assigned to same. 
      */
-    private boolean recursivelyApplyProperty(Control targetControl, XMLTag tag)
+    private boolean recursivelyApplyProperty(Field targetField, XMLTag tag)
     {
-        if (tag.getCurrentTagLocation().split("/").length - targetControl.getLocation().split("/").length == 1 &&
-                targetControl.getLocation().equals(tag.getCurrentTagLocation().substring(0, targetControl.getLocation().length()))) {           
+        if (tag.getCurrentTagLocation().split("/").length - targetField.getLocation().split("/").length == 1 &&
+                targetField.getLocation().equals(tag.getCurrentTagLocation().substring(0, targetField.getLocation().length()))) {           
             String label = tag.getInnerText();
             
             /*
-             * Obtain a single translation to represent this control on the form builder screen
+             * Obtain a single translation to represent this field on the form builder screen
              * 
              * FIXME: We should select the most appropriate language (not necessarily English)
              *        before falling back to English.  The most appropriate language can be determined
@@ -238,30 +214,30 @@ public class FormUtils
             // Set the label
             if (tag.getCurrentTagName().contains("label")) {
                 if (tag.hasAttribute("ref")) 
-                    targetControl.setLabel(tag.getAttribute("ref"));
+                    targetField.setLabel(tag.getAttribute("ref"));
                     
-                targetControl.setLabel(label);                
+                targetField.setLabel(label);                
             }
             
             // Set the hint
             if (tag.getCurrentTagName().contains("hint")) {
                 if (tag.hasAttribute("ref")) 
-                    targetControl.setHint(tag.getAttribute("ref"));
+                    targetField.setHint(tag.getAttribute("ref"));
                 
-                targetControl.setHint(label);                
+                targetField.setHint(label);                
             }
             
             if (tag.getCurrentTagName().contains("value")) {
-                targetControl.setItemValue(tag.getInnerText());
+                targetField.setItemValue(tag.getInnerText());
             }
             
             return true;
         }
         
-        Iterator<Control> children = targetControl.children.iterator();
+        Iterator<Field> children = targetField.children.iterator();
         
         while (children.hasNext()) {
-            Control child = children.next();
+            Field child = children.next();
             
             if (recursivelyApplyProperty(child, tag))
                 return true;
@@ -329,7 +305,7 @@ public class FormUtils
     
     /*
      * Go through the list of binds and build objects to represent them.
-     * Binds are associated with control objects when the control is instantiated.
+     * Binds are associated with field objects when the field is instantiated.
      */
     private void parseFormBinds(XMLTag tag)
     {
@@ -345,7 +321,7 @@ public class FormUtils
     
     /*
      * Recursively parse and use the information supplied in the form instance
-     * to supplement the control objects in mControlState 
+     * to supplement the field objects in mFieldState 
      */
     private void parseFormInstance(XMLTag tag, final String instancePath)
     {
@@ -354,29 +330,16 @@ public class FormUtils
          * (this only happens the first time this method runs) 
          */
         if (instancePath.equals("/" + mInstanceRoot) == false) {
-            // Attempt to apply this instance to a pre-existing control
-            if (applyInstanceToControl(null, tag, instancePath) == false) {
-                // XML tag position will be stored in a string ending with *[n] where n is the position
-                String [] locationParts = tag.getCurrentTagLocation().split("/");
-                String [] positionParts = locationParts[ locationParts.length - 1 ].split("[^0-9]");
-                
-                /*
-                 * The actual position can be found at the 2nd index.
-                 * Position counts begin at 1 from XML vs. 0 in in-memory lists.
-                 */
-                Integer position = Integer.valueOf(positionParts[2]) - 1;
-                
-                if (instancePath.split("/").length == 3) {
-                    // Ensure that "add" does not trigger an IndexOutOfBoundsException
-                    if (position > mControlState.size())                        
-                        position = mControlState.size();
-                        
-                    // Add a top level control
-                    mControlState.add(position, new Control(tag, mBindState, instancePath));
-                } else {
-                    // Control belongs elsewhere as a child of another control
-                    attachChildToParentControl(tag, null, instancePath, position);
-                }      
+            Instance newInstance = new Instance(instancePath, tag.getInnerText(), tag.getCurrentTagLocation(), mBindState);
+            
+            // Attempt to apply this instance to a pre-existing field -- if this fails then the instance is "hidden"
+            newInstance.setHidden(!applyInstanceToField(null, newInstance));
+            
+            if (tag.getCurrentTagLocation().split("/").length == 5) {
+                // Add a top level instance
+                mInstanceState.add(newInstance);
+            } else {
+                attachChildToParentInstance(newInstance, null);
             }
         }
         
@@ -389,29 +352,67 @@ public class FormUtils
         });
     }
     
-    private boolean applyInstanceToControl(Control control, final XMLTag instanceTag, final String instancePath)
+    /*
+     * Attempts to apply an instance to an existing field
+     * 
+     * Returns true to indicate that application was successful and false
+     * to indicate that it was not (e.g., the instance is hidden)
+     */
+    private boolean applyInstanceToField(Field field, final Instance instance)
     {
-        Iterator<Control> it;
+        Iterator<Field> it;
         
-        if (control == null) {
-            it = mControlState.iterator();
+        if (field == null) {
+            it = mFieldState.iterator();
         } else { 
-            if (control.getRef() != null && control.getRef().equals(instancePath)) {
-                Log.v(Collect.LOGTAG, t + "instance matched with control object via " + instancePath);
-                control.setDefaultValue(instanceTag.getInnerText());
+            if (field.getRef() != null && field.getRef().equals(instance.getXpath())) {
+                Log.v(Collect.LOGTAG, t + "instance matched with field object via " + instance.getXpath());
+                field.setInstance(instance);
+                field.getInstance().setField(field);
                 return true;
             }
             
-            it = control.children.iterator();
+            it = field.children.iterator();
         }
         
         while (it.hasNext()) {
-            Control c = it.next();
+            Field c = it.next();
             
-            if (applyInstanceToControl(c, instanceTag, instancePath)) {
+            if (applyInstanceToField(c, instance)) {
                 return true;
             }
         }
+        
+        return false;
+    }
+    
+    /*
+     * For instances that are nested within other instances
+     * (e.g., those that are probably nested in a repeated group somewhere)
+     */
+    private boolean attachChildToParentInstance(Instance child, Instance incomingParent)
+    {
+        Iterator<Instance> it = null;
+        
+        if (incomingParent == null)
+            it = mInstanceState.iterator();
+        else
+            it = incomingParent.getChildren().iterator();
+        
+        while (it.hasNext()) {
+            Instance parent = it.next();
+            
+            if (child.getLocation().split("/").length - parent.getLocation().split("/").length == 1 &&
+                    parent.getLocation().equals(child.getLocation().substring(0, parent.getLocation().length()))) {
+                child.setParent(parent);
+                parent.getChildren().add(child);
+                return true;
+            }
+                
+            
+            if (!parent.getChildren().isEmpty())
+                attachChildToParentInstance(child, parent);
+        }      
         
         return false;
     }

@@ -9,7 +9,8 @@
         android:id="@+id/pathText"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:layout_margin="4dp" />
+        android:layout_margin="4dp"
+        android:background="@drawable/blue" />
         
     <Button 
         android:id="@+id/jumpPreviousButton"

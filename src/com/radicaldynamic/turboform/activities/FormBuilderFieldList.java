@@ -25,23 +25,19 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.radicaldynamic.turboform.R;
-import com.radicaldynamic.turboform.adapters.FormBuilderListAdapter;
+import com.radicaldynamic.turboform.adapters.FormBuilderFieldListAdapter;
 import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.utilities.FormUtils;
 import com.radicaldynamic.turboform.views.TouchListView;
-import com.radicaldynamic.turboform.xform.Control;
+import com.radicaldynamic.turboform.xform.Field;
 
-public class FormBuilderList extends ListActivity
+public class FormBuilderFieldList extends ListActivity
 {
-    private static final String t = "FormBuilderList: ";
-    
-    private static final int MENU_ADD  = Menu.FIRST;
-    private static final int MENU_SAVE = Menu.FIRST + 1;
-    private static final int MENU_HELP = Menu.FIRST + 2;
+    private static final String t = "FormBuilderElementList: ";
     
     private LoadFormDefinitionTask mLoadFormDefinitionTask;
-    private FormBuilderListAdapter adapter = null;  
+    private FormBuilderFieldListAdapter adapter = null;  
     private Button jumpPreviousButton;
     private ProgressDialog mDialog;
     private TextView mPathText;
@@ -49,9 +45,9 @@ public class FormBuilderList extends ListActivity
     private String mFormId;
     private FormDocument mForm;
     private FormUtils mFormUtility;
-    private ArrayList<Control> mControlState;
-    private ArrayList<String> mPath = new ArrayList<String>();          // Human readable location in mControlState
-    private ArrayList<String> mActualPath = new ArrayList<String>();    // Actual location in mControlState
+    private ArrayList<Field> mFieldState;
+    private ArrayList<String> mPath = new ArrayList<String>();          // Human readable location in mFieldState
+    private ArrayList<String> mActualPath = new ArrayList<String>();    // Actual location in mFieldState
     
     /*
      * FIXME: element icons are not kept consistent when list items are reordered.  
@@ -62,7 +58,7 @@ public class FormBuilderList extends ListActivity
         @Override
         public void drop(int from, int to)
         {
-            Control item = adapter.getItem(from);
+            Field item = adapter.getItem(from);
 
             adapter.remove(item);
             adapter.insert(item, to);
@@ -130,17 +126,17 @@ public class FormBuilderList extends ListActivity
             } else if (data == null) {
                 if (newForm == false) {
                     // Load important bits of the form definition from memory
-                    mControlState = Collect.getInstance().getFormBuilderControlState();
+                    mFieldState = Collect.getInstance().getFormBuilderFieldState();
                     mForm = Collect.getInstance().getFormBuilderForm();
                     
-                    Control destination = gotoActiveControl(null, true);
+                    Field destination = gotoActiveField(null, true);
                     
                     if (destination == null)
-                        refreshView(mControlState);
+                        refreshView(mFieldState);
                     else
                         refreshView(destination.children);
                 } else {
-                    Collect.getInstance().setFormBuilderControlState(null);
+                    Collect.getInstance().setFormBuilderFieldState(null);
                     Collect.getInstance().setFormBuilderForm(null);
                 }
             }            
@@ -177,7 +173,7 @@ public class FormBuilderList extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-        Control control = (Control) getListAdapter().getItem(position);
+        Field field = (Field) getListAdapter().getItem(position);
         
         /* 
          * If the form field that has been clicked on is either a group or a repeat the default
@@ -186,44 +182,84 @@ public class FormBuilderList extends ListActivity
          * These form elements may be edited by using a context menu (or possibly using an
          * option menu that will become enabled if the user has navigated below the top).
          */
-        if (control.getType().equals("group") || control.getType().equals("repeat")) {
+        if (field.getType().equals("group") || field.getType().equals("repeat")) {
             // So we can find our way back "up" the tree later
-            control.setActive(true);
+            field.setActive(true);
             
             // Deactivate the parent, if applicable
-            if (control.getParent() != null)
-                control.getParent().setActive(false);
+            if (field.getParent() != null)
+                field.getParent().setActive(false);
             
             // Make sure parents of parents are also deactivated (as in the case of nested repeated groups)
-            if (control.getParent() != null && control.getParent().getParent() != null)
-                control.getParent().getParent().setActive(false);
+            if (field.getParent() != null && field.getParent().getParent() != null)
+                field.getParent().getParent().setActive(false);
             
-            mPath.add(control.getLabel());
+            mPath.add(field.getLabel());
             
             // Special logic to hide the complexity of repeated elements
-            if (control.children.size() == 1 && control.children.get(0).getType().equals("repeat")) {
-                mActualPath.add(control.getLabel());
-                mActualPath.add(control.children.get(0).getLabel());
-                refreshView(control.children.get(0).children);
+            if (field.children.size() == 1 && field.children.get(0).getType().equals("repeat")) {
+                mActualPath.add(field.getLabel());
+                mActualPath.add(field.children.get(0).getLabel());
+                refreshView(field.children.get(0).children);
             } else {
-                mActualPath.add(control.getLabel());
-                refreshView(control.children);
+                mActualPath.add(field.getLabel());
+                refreshView(field.children);
             }
-        }
-    }
+        } else {
+            /*
+             * There is no case here for groups/repeated groups since this is not how
+             * 
+             */
+            String humanFieldType = null;
+            
+            if (field.getType().equals("input"))
+                if (field.getBind() == null || field.getBind().getType().equals("string")) {
+                    humanFieldType = "text";
+                } else if (field.getBind().getType().equals("decimal") || field.getBind().getType().equals("int")) {
+                    humanFieldType = "number";
+                } else {
+                    humanFieldType = field.getBind().getType();
+                }
+            else if (field.getType().equals("select") || field.getType().equals("select1"))
+                humanFieldType = "select";
+            else if (field.getType().equals("upload"))
+                humanFieldType = "media";
+            else if (field.getType().equals("trigger"))
+                humanFieldType = "trigger";
+            
+            if (humanFieldType != null) 
+                startElementEditor(humanFieldType, field);
+            else 
+                Log.w(Collect.LOGTAG, t + "Unable to determine field type and start element editor");            
+        } // end if field type is group or repeat        
+    } // end onListItemClick()
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch (item.getItemId()) {
-        case MENU_ADD:
+        
+        case R.id.barcode:  startElementEditor("barcode",   null);  break;
+        case R.id.date:     startElementEditor("date",      null);  break;
+        case R.id.geopoint: startElementEditor("geopoint",  null);  break;
+        case R.id.group:    startElementEditor("group",     null);  break;
+        case R.id.media:    startElementEditor("media",     null);  break;
+        case R.id.number:   startElementEditor("number",    null);  break;
+        case R.id.select:   startElementEditor("select",    null);  break;
+        case R.id.text:     startElementEditor("text",      null);  break;
+        
+        case R.id.view_instance:
+            Intent i = new Intent(this, FormBuilderInstanceList.class);       
+            startActivity(i);
+            break;            
+            
+        case R.id.save_form:
             break;
-        case MENU_SAVE:
-            break;
-        case MENU_HELP:
-            break;
+            
+        case R.id.help:
+            break;            
         }
-    
+        
         return super.onOptionsItemSelected(item);
     }
     
@@ -249,8 +285,9 @@ public class FormBuilderList extends ListActivity
                 ais.close();
                 
                 mFormUtility.parseForm();            
-                mControlState = mFormUtility.getControlState();
-                Collect.getInstance().setFormBuilderControlState(mControlState);
+                mFieldState = mFormUtility.getFieldState();
+                Collect.getInstance().setFormBuilderFieldState(mFieldState);
+                Collect.getInstance().setFormBuilderInstanceState(mFormUtility.getInstanceState());
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -262,7 +299,7 @@ public class FormBuilderList extends ListActivity
         @Override
         protected void onPreExecute()
         {
-            mDialog = new ProgressDialog(FormBuilderList.this);
+            mDialog = new ProgressDialog(FormBuilderFieldList.this);
             mDialog.setMessage(getText(R.string.tf_loading_please_wait));
             mDialog.setIndeterminate(true);
             mDialog.setCancelable(false);
@@ -272,21 +309,21 @@ public class FormBuilderList extends ListActivity
         @Override
         protected void onPostExecute(Void nothing)
         {
-            refreshView(mControlState);            
+            refreshView(mFieldState);            
             mDialog.cancel();
         }
     }
     
     public void goUpLevel()
     {
-        Control destination;
+        Field destination;
         
         // Special logic to hide the complexity of repeated elements
         if (mActualPath.size() > mPath.size()) {
             /*
              * This will evaluate to true when we have navigated into a repeated group since
              * the actual representation is <group><label>...</label><repeat ... /></group>
-             * and we want to represent it as one control vs. travelling two depths to get at
+             * and we want to represent it as one field vs. travelling two depths to get at
              * the list of repeated elements.
              */
             mPath.remove(mPath.size() - 1);                 // Remove the "group" label
@@ -297,10 +334,10 @@ public class FormBuilderList extends ListActivity
             mActualPath.remove(mActualPath.size() - 1);     // Remove the group element
         }
         
-        destination = gotoActiveControl(null, false);
+        destination = gotoActiveField(null, false);
         
         if (destination == null)
-            refreshView(mControlState);
+            refreshView(mFieldState);
         else {
             // Special support for nested repeated groups
             if (destination.children.size() == 1 && destination.children.get(0).getType().equals("repeat")) {
@@ -314,26 +351,26 @@ public class FormBuilderList extends ListActivity
     }
     
     /*
-     * Finds the current active control, sets it to inactive and either returns 
+     * Finds the current active field, sets it to inactive and either returns 
      * null to signal that the "top level" of the form has been reached or 
-     * sets the parent control to active and returns it.
+     * sets the parent field to active and returns it.
      * 
-     * If returnActiveControl is true then the active control itself will be 
-     * returned vs. the parent control.
+     * If returnActiveField is true then the active field itself will be 
+     * returned vs. the parent field.
      */
-    public Control gotoActiveControl(Control c, Boolean returnActiveControl)
+    public Field gotoActiveField(Field c, Boolean returnActiveField)
     {
-        Iterator<Control> it = null;
+        Iterator<Field> it = null;
         
         if (c == null)
-            it = mControlState.iterator();
+            it = mFieldState.iterator();
         else {
             if (c.isActive()) {
                 /* 
                  * This is convoluted logic that lets us use this method both for "go up" navigation 
                  * and also to reset navigation to the correct place on orientation changes
                  */
-                if (returnActiveControl)
+                if (returnActiveField)
                     return c;
                 else 
                     c.setActive(false);
@@ -357,9 +394,9 @@ public class FormBuilderList extends ListActivity
         }        
         
         while (it.hasNext()) {                  
-            Control result = gotoActiveControl(it.next(), returnActiveControl);
+            Field result = gotoActiveField(it.next(), returnActiveField);
             
-            if (result instanceof Control)
+            if (result instanceof Field)
                 if (result.isActive() == false)
                     return null;
                 else
@@ -369,7 +406,7 @@ public class FormBuilderList extends ListActivity
         return null;        
     }
     
-    private void refreshView(ArrayList<Control> controlsToDisplay)
+    private void refreshView(ArrayList<Field> fieldsToDisplay)
     {
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_editing) + " " + mForm.getName());
         
@@ -395,12 +432,24 @@ public class FormBuilderList extends ListActivity
         
         mPathText.setText(pathText);
         
-        adapter = new FormBuilderListAdapter(getApplicationContext(), controlsToDisplay);
+        adapter = new FormBuilderFieldListAdapter(getApplicationContext(), fieldsToDisplay);
         setListAdapter(adapter);
 
         TouchListView tlv = (TouchListView) getListView();
 
         tlv.setDropListener(onDrop);
         tlv.setRemoveListener(onRemove);
+    }
+    
+    /*
+     * Launch the element editor either to add a new field or to modify an existing one 
+     */
+    private void startElementEditor(String type, Field loadField)
+    {
+        Collect.getInstance().setFormBuilderField(loadField);
+        
+        Intent i = new Intent(this, FormBuilderFieldEditor.class);
+        i.putExtra(FormBuilderFieldEditor.ELEMENT_TYPE, type);        
+        startActivity(i);
     }
 }

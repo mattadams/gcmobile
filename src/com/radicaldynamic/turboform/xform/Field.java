@@ -11,73 +11,44 @@ import com.radicaldynamic.turboform.application.Collect;
 
 import android.util.Log;
 
-public class Control
+public class Field
 {
-    private String t = "Control: ";
+    private String t = "Field: ";
     
     // Any attributes found on this element
     public Map<String, String> attributes = new HashMap<String, String>();
-    // Any children (other controls) of this one, e.g., groups and repeats (or items for a select or select1 control)
-    public ArrayList<Control> children = new ArrayList<Control>();    
+    // Any children (other fields) of this one, e.g., groups and repeats (or items for a select or select1 field)
+    public ArrayList<Field> children = new ArrayList<Field>();    
     
-    private String type;                        // The XML element name of this control  (e.g., group, input, etc.)
+    private String type;                        // The XML element name of this field  (e.g., group, input, etc.)
     private String location;                    // The XML element location of this node (e.g., *[2]/*[1])
     private String ref;                         // Value of the "ref" attribute (if any)
     
-    private Control parent;
+    private Field parent;
     private String itemValue;                   // Any value assigned to this node (if it is an item)
     private String defaultValue;                // A default value assigned to this field (will be stored in the instance XML)
     
-    private ControlText label;                  // Any label assigned to this control
-    private ControlText hint;                   // Any hint assigned to this control
+    private FieldText label;                  // Any label assigned to this field
+    private FieldText hint;                   // Any hint assigned to this field   
     
     private Bind bind = new Bind();
+    private Instance instance = new Instance();
     
-    private boolean active = false;             // Used to determine which control is "active" in form builder navigation
-    private boolean hidden = false;             // Whether or not this is a hidden control
-    private boolean repeated = false;           // Whether this is a repeated control (e.g., a child of a <repeat> element.
+    private boolean active   = false;           // Used to determine which field is "active" in form builder navigation
+    private boolean repeated = false;           // Whether this is a repeated field (e.g., a child of a <repeat> element.
                                                 // This has a bearing on how the resulting XML will be output.
     
     /* 
-     * For controls instantiated by the form builder
+     * For fields instantiated by the form builder
      */
-    public Control()
+    public Field()
     {        
     }
     
-    /*
-     * For controls instantiated from entries in <instance>
-     * 
-     * FIXME: entries in the instance are not guaranteed to be recreated at the same "level"
-     */
-    public Control(XMLTag tag, ArrayList<Bind> binds, String instancePath)
+    // For fields instantiated from entries in <h:body>
+    public Field(XMLTag tag, ArrayList<Bind> binds, String instanceRoot, Field parent)
     {
-        Log.v(Collect.LOGTAG, t + "created new \"" + tag.getCurrentTagName() + "\" hidden control from instance, having an instancePath of " + instancePath);
-
-        setDefaultValue(tag.getInnerText());
-        setHidden(true);        
-        setLabel(tag.getCurrentTagName());
-        setRef(instancePath);
-        setType("input");
-
-        // FIXME: the logic below is identical to the sister method Control(), find some way to consolidate it
-        Iterator<Bind> it = binds.iterator();                    
-
-        while (it.hasNext()) {
-            Bind b = it.next();
-            
-            // If a bind with a nodeset identical to this ref exists, associate it with this control
-            if (b.getNodeset().equals(getRef())) {
-                setBind(b);
-                Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getNodeset() + " bound to hidden control");
-            }
-        }
-    }
-    
-    // For controls instantiated from entries in <h:body>
-    public Control(XMLTag tag, ArrayList<Bind> binds, String instanceRoot, Control parent)
-    {
-        Log.v(Collect.LOGTAG, t + "created new " + tag.getCurrentTagName() + " control at " + tag.getCurrentTagLocation());
+        Log.v(Collect.LOGTAG, t + "created new " + tag.getCurrentTagName() + " field at " + tag.getCurrentTagLocation());
         
         setType(tag.getCurrentTagName());
         setLocation(tag.getCurrentTagLocation());
@@ -110,7 +81,7 @@ public class Control
                          * This logic exists to support repeated elements.  We must ensure that their refs
                          * are literal if binds and other items are to be properly associated with them.
                          * 
-                         * FIXME: this assumes that the immediate parent of repeated items is a <repeat> control
+                         * FIXME: this assumes that the immediate parent of repeated items is a <repeat> field
                          */
                         if (parent != null) {
                             if (parent.getType().equals("repeat")) {
@@ -127,10 +98,10 @@ public class Control
                     while (it.hasNext()) {
                         Bind b = it.next();
 
-                        // If a bind with a nodeset identical to this ref exists, associate it with this control
+                        // If a bind with a nodeset identical to this ref exists, associate it with this field
                         if (b.getNodeset().equals(ref)) {
                             setBind(b);
-                            Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getNodeset() + " bound to this control at " + getLocation());
+                            Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getNodeset() + " bound to this field at " + getLocation());
                         }
                     }
                 }
@@ -140,10 +111,20 @@ public class Control
         }
     }
 
+    public Map<String, String> getAttributes()
+    {
+        return attributes;
+    }
+
+    public ArrayList<Field> getChildren()
+    {
+        return children;
+    }
+
     public void setLabel(String label)
     {
         Log.v(Collect.LOGTAG, t + "setting label " + label + " for " + type + " at " + location);
-        this.label = new ControlText(label);
+        this.label = new FieldText(label);
     }
 
     /*
@@ -155,7 +136,7 @@ public class Control
     public String getLabel()
     {
         if (label == null || label.toString() == null) {
-            Log.w(Collect.LOGTAG, t + "label unavailable for control");
+            Log.w(Collect.LOGTAG, t + "label unavailable for field");
             return "";
         } else
             return label.toString();
@@ -164,13 +145,13 @@ public class Control
     public void setHint(String hint)
     {
         Log.v(Collect.LOGTAG, t + "setting hint " + hint + " for " + type + " at " + location);
-        this.hint = new ControlText(hint);
+        this.hint = new FieldText(hint);
     }
 
     public String getHint()
     {
         if (hint == null || hint.toString() == null) {
-            Log.w(Collect.LOGTAG, t + "hint unavailable for control");
+            Log.w(Collect.LOGTAG, t + "hint unavailable for field");
             return "";
         } else 
             return hint.toString();
@@ -238,23 +219,13 @@ public class Control
 
     public void setActive(boolean active)
     {
-        Log.v(Collect.LOGTAG, t + "setting control " + getLabel() + " active state to " + active);
+        Log.v(Collect.LOGTAG, t + "setting field " + getLabel() + " active state to " + active);
         this.active = active;
     }
 
     public boolean isActive()
     {
         return active;
-    }
-
-    public void setHidden(boolean hidden)
-    {
-        this.hidden = hidden;
-    }
-
-    public boolean isHidden()
-    {
-        return hidden;
     }
 
     public void setRepeated(boolean repeated)
@@ -267,23 +238,23 @@ public class Control
         return repeated;
     }
 
-    public void setParent(Control parent)
+    public void setParent(Field parent)
     {
         this.parent = parent;
     }
 
-    public Control getParent()
+    public Field getParent()
     {
         return parent;
     }
     
-    public ArrayList<Control> getChildren()
+    public void setInstance(Instance instance)
     {
-        return children;
+        this.instance = instance;
     }
-    
-    public Map<String, String> getAttributes()
+
+    public Instance getInstance()
     {
-        return attributes;
+        return instance;
     }
 }

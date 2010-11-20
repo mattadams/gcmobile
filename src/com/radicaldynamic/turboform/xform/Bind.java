@@ -22,12 +22,12 @@ public class Bind
     // Important fields that we need easy access to
     private String nodeset;
     private String type;
-    private boolean required;
-    private boolean readonly;
+    private boolean required = false;
+    private boolean readonly = false;
     
     /*
      * Used for instantiating binds created by the form builder and to ensure
-     * that default binds are available to newly created controls
+     * that default binds are available to newly created fields
      */
     public Bind()
     {
