@@ -24,6 +24,7 @@ import com.radicaldynamic.turboform.logic.FileReferenceFactory;
 import com.radicaldynamic.turboform.services.CouchDbService;
 import com.radicaldynamic.turboform.xform.Field;
 import com.radicaldynamic.turboform.xform.Instance;
+import com.radicaldynamic.turboform.xform.Translation;
 
 public class Collect extends Application {
     public final static String LOGTAG = "TurboForm";
@@ -40,7 +41,8 @@ public class Collect extends Application {
     
     private FormDocument formBuilderForm                    = null;     // Form document in memory for use with the form builder
     private ArrayList<Field> formBuilderFieldState          = null;     // XForm field state in memory for use with FormBuilderFieldList
-    private ArrayList<Instance> formBuilderInstanceState    = null;     // XForm instance state in memory for use with FormBuilderInstanceList    
+    private ArrayList<Instance> formBuilderInstanceState    = null;     // XForm instance state in memory for use with FormBuilderInstanceList
+    private ArrayList<Translation> formBuilderTranslationState = null;  // XForm translation state in memory for use with FieldText and itext management activities
     private Field formBuilderField                          = null;     // SINGLE XForm field in memory for use with FormBuilderFieldEditor
     private Instance formBuilderInstance                    = null;     // SINGLE XForm instance in memory for use with FormBuilderInstanceEditor
 
@@ -224,5 +226,16 @@ public class Collect extends Application {
     public Instance getFormBuilderInstance()
     {
         return formBuilderInstance;
+    }
+
+    public void setFormBuilderTranslationState(
+            ArrayList<Translation> formBuilderTranslationState)
+    {
+        this.formBuilderTranslationState = formBuilderTranslationState;
+    }
+
+    public ArrayList<Translation> getFormBuilderTranslationState()
+    {
+        return formBuilderTranslationState;
     }
 }

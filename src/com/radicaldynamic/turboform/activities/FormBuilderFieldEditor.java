@@ -3,15 +3,18 @@ package com.radicaldynamic.turboform.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.method.DigitsKeyListener;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.RelativeLayout;
+import android.widget.RadioButton;
 
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.application.Collect;
@@ -53,7 +56,7 @@ public class FormBuilderFieldEditor extends Activity
             
             setTitle(getString(R.string.app_name) + " > " 
                     + getString(R.string.tf_add_new) + " "
-                    + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1));
+                    + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field));
             
             // Retrieve field (if any)
             mField = Collect.getInstance().getFormBuilderField();
@@ -112,7 +115,7 @@ public class FormBuilderFieldEditor extends Activity
             } else {
                 setTitle(getString(R.string.app_name) + " > " 
                         + getString(R.string.tf_edit) + " "
-                        + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1));
+                        + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field));
                 
                 if (mFieldType.equals("barcode"))         loadBarcodeElement();                    
                 else if (mFieldType.equals("date"))       loadDateElement();                
@@ -128,18 +131,6 @@ public class FormBuilderFieldEditor extends Activity
             
             loadCommonAttributes();
         }
-        
-//        mHidden.setOnClickListener(new OnClickListener() {
-//            public void onClick(View v) {                
-//                if (((CheckBox) v).isChecked()) {
-//                    mReadonly.setChecked(false);
-//                    mRequired.setChecked(false);
-//                    mField.setHidden(true);
-//                } else {
-//                    mField.setHidden(false);
-//                }
-//            }
-//        });
         
         mReadonly.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {                
@@ -175,8 +166,8 @@ public class FormBuilderFieldEditor extends Activity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-//        MenuInflater inflater = getMenuInflater();
-//        inflater.inflate(R.menu.form_builder_options, menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.form_builder_field_editor_options, menu);
         return true;
     }
     
@@ -190,11 +181,17 @@ public class FormBuilderFieldEditor extends Activity
         return super.onOptionsItemSelected(item);
     }
     
+    private void disableFormComponent(int componentResource)
+    {
+        ViewGroup component = (ViewGroup) findViewById(componentResource);
+        component.setVisibility(View.GONE);
+    }
+    
     private void loadCommonAttributes()
     {         
          mLabel.setText(mField.getLabel());
          mHint.setText(mField.getHint());
-         mDefaultValue.setText(mField.getDefaultValue());
+         mDefaultValue.setText(mField.getInstance().getDefaultValue());
          
          if (mField.getBind().isReadonly())
              mReadonly.setChecked(true);
@@ -207,51 +204,186 @@ public class FormBuilderFieldEditor extends Activity
     {
         loadCommonAttributes();
         
+        disableFormComponent(R.id.mediaFieldTypeSelection);
+        disableFormComponent(R.id.numberFieldTypeSelection);
+        disableFormComponent(R.id.selectFieldTypeSelection);
+        disableFormComponent(R.id.readonlyLayout);
     }
     
+    // TODO: add support for selecting times as well as dates once this becomes available
     private void loadDateElement()
     {
         loadCommonAttributes();
+     
+        disableFormComponent(R.id.mediaFieldTypeSelection);
+        disableFormComponent(R.id.numberFieldTypeSelection);
+        disableFormComponent(R.id.selectFieldTypeSelection);
         
+        // TODO: we should probably display a "default" date using the date widget
     }
     
     private void loadGeopointElement()
     {
         loadCommonAttributes();
-        
+     
+        disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.mediaFieldTypeSelection);
+        disableFormComponent(R.id.numberFieldTypeSelection);
+        disableFormComponent(R.id.selectFieldTypeSelection);
+        disableFormComponent(R.id.readonlyLayout);
     }
     
     private void loadGroupElement()
     {
         loadCommonAttributes();
-        
+    
+        disableFormComponent(R.id.mediaFieldTypeSelection);
+        disableFormComponent(R.id.numberFieldTypeSelection);
+        disableFormComponent(R.id.selectFieldTypeSelection);
     }
     
     private void loadMediaElement()
     {
         loadCommonAttributes();
+
+        disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.numberFieldTypeSelection);
+        disableFormComponent(R.id.selectFieldTypeSelection);
+        disableFormComponent(R.id.readonlyLayout);        
         
-        RelativeLayout readonlyLayout = (RelativeLayout) findViewById(R.id.readonlyLayout);
-        readonlyLayout.setVisibility(View.INVISIBLE);
+        // Set up listener for radio buttons so that they influence the field type
+        OnClickListener radioListener = new OnClickListener() {
+            public void onClick(View v) {
+                RadioButton rb = (RadioButton) v;
+                
+                switch (rb.getId()) {
+                case R.id.mediaTypeAudio: mField.getAttributes().put("mediatype", "audio/*"); break;                    
+                case R.id.mediaTypeImage: mField.getAttributes().put("mediatype", "image/*"); break;
+                case R.id.mediaTypeVideo: mField.getAttributes().put("mediatype", "video/*"); break;
+                }
+            }
+        };
+        
+        final RadioButton radioAudio = (RadioButton) findViewById(R.id.mediaTypeAudio);
+        final RadioButton radioImage = (RadioButton) findViewById(R.id.mediaTypeImage);
+        final RadioButton radioVideo = (RadioButton) findViewById(R.id.mediaTypeVideo);
+        
+        radioAudio.setOnClickListener(radioListener);
+        radioImage.setOnClickListener(radioListener);
+        radioVideo.setOnClickListener(radioListener);
+        
+        // Represent media type as it is currently stored in memory
+        if (mField.getAttributes().get("mediatype").equals("audio/*"))
+            radioAudio.setChecked(true);
+        else if (mField.getAttributes().get("mediatype").equals("image/*"))
+            radioImage.setChecked(true);
+        else if (mField.getAttributes().get("mediatype").equals("video/*"))
+            radioVideo.setChecked(true);
     }
     
     private void loadNumberElement()
     {
         loadCommonAttributes();
         
+        disableFormComponent(R.id.mediaFieldTypeSelection);
+        disableFormComponent(R.id.selectFieldTypeSelection);
+        
+        final EditText defaultValue = (EditText) findViewById(R.id.defaultValue);
+        
+        // Set up listener for radio buttons so that they influence the field type
+        OnClickListener radioListener = new OnClickListener() {
+            public void onClick(View v) {
+                RadioButton rb = (RadioButton) v;
+                
+                switch (rb.getId()) {
+                case R.id.numberTypeInteger:
+                    mField.getBind().setType("int");
+                    defaultValue.setKeyListener(new DigitsKeyListener(false, false));
+                    
+                    // Remove any occurrences of a decimal
+                    if (defaultValue.getText().toString().contains(".")) {
+                        String txt = defaultValue.getText().toString();                        
+                        defaultValue.setText(txt.replace(".", ""));
+                    }
+                    
+                    break;
+                    
+                case R.id.numberTypeDecimal:
+                    mField.getBind().setType("decimal");                   
+                    defaultValue.setKeyListener(new DigitsKeyListener(false, true)); 
+                    break;                    
+                }
+            }
+        };
+        
+        final RadioButton radioInteger = (RadioButton) findViewById(R.id.numberTypeInteger);
+        final RadioButton radioDecimal = (RadioButton) findViewById(R.id.numberTypeDecimal);
+        
+        radioInteger.setOnClickListener(radioListener);
+        radioDecimal.setOnClickListener(radioListener);
+        
+        // Represent number type as it is currently stored in memory (set default input listener)
+        if (mField.getBind().getType().equals("int")) { 
+            radioInteger.setChecked(true);
+            // false, false supports only integer input
+            defaultValue.setKeyListener(new DigitsKeyListener(false, false));
+        } else {
+            radioDecimal.setChecked(true);
+            // false, true supports decimal input
+            defaultValue.setKeyListener(new DigitsKeyListener(false, true));
+        }
     }
     
     private void loadSelectElement()
     {
         loadCommonAttributes();
         
-        RelativeLayout readonlyLayout = (RelativeLayout) findViewById(R.id.readonlyLayout);
-        readonlyLayout.setVisibility(View.INVISIBLE);
+        disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.mediaFieldTypeSelection);
+        disableFormComponent(R.id.numberFieldTypeSelection);
+        disableFormComponent(R.id.readonlyLayout);
+        
+        // Set up listener for radio buttons so that they influence the field type
+        OnClickListener radioListener = new OnClickListener() {
+            public void onClick(View v) {
+                RadioButton rb = (RadioButton) v;
+                
+                switch (rb.getId()) {
+                case R.id.selectTypeMultiple:
+                    mField.setType("select");
+                    mField.getBind().setType("select");
+                    break;
+                    
+                case R.id.selectTypeSingle:
+                    mField.setType("select1");
+                    mField.getBind().setType("select1");
+                    
+                    // TODO: reduce possible multiple default values to a single one
+                    
+                    break;
+                }
+            }
+        };
+        
+        final RadioButton radioMultiple = (RadioButton) findViewById(R.id.selectTypeMultiple);
+        final RadioButton radioSingle = (RadioButton) findViewById(R.id.selectTypeSingle);
+        
+        radioMultiple.setOnClickListener(radioListener);
+        radioSingle.setOnClickListener(radioListener);
+
+        // Represent number type as it is currently stored in memory
+        if (mField.getType().equals("select"))
+            radioMultiple.setChecked(true);
+        else
+            radioSingle.setChecked(true);        
     }
     
     private void loadTextElement()
     {
         loadCommonAttributes();
         
+        disableFormComponent(R.id.mediaFieldTypeSelection);
+        disableFormComponent(R.id.numberFieldTypeSelection);
+        disableFormComponent(R.id.selectFieldTypeSelection);
     } 
 }

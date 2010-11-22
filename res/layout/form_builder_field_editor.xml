@@ -16,22 +16,19 @@
         android:textSize="20sp"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:text="@string/tf_fbel_label" 
-    />
+        android:text="@string/tf_fbel_label" />
     
     <EditText
         android:id="@+id/label"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-    />
+        android:layout_height="wrap_content" />
     
     <TextView
         android:id="@android:id/empty"
         android:inputType="textMultiLine"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"                    
-        android:text="@string/tf_fbel_label_hint" 
-    />
+        android:text="@string/tf_fbel_label_hint" />
     
     <TextView
         android:id="@android:id/empty"
@@ -39,86 +36,189 @@
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
         android:paddingTop="10dp"
-        android:text="@string/tf_fbel_hint"        
-    />
+        android:text="@string/tf_fbel_hint" />
     
     <EditText
         android:id="@+id/hint"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-    />
+        android:layout_height="wrap_content" />
     
     <TextView
         android:id="@android:id/empty"
         android:inputType="textMultiLine"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"                    
-        android:text="@string/tf_fbel_hint_hint" 
-    />
-    
-    <TextView
-        android:id="@android:id/empty"
-        android:textSize="20sp"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:paddingTop="10dp"
-        android:text="@string/tf_fbel_default" 
-    />
-    
-    <EditText
-        android:id="@+id/defaultValue"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-    />    
-    
-    <TextView
-        android:id="@android:id/empty"
-        android:inputType="textMultiLine"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"                    
-        android:text="@string/tf_fbel_default_hint" 
-    />    
-    
-    <!-- Hidden option -->
-    <!-- 
+        android:text="@string/tf_fbel_hint_hint" />
+        
+    <!-- Media type selection -->
     <RelativeLayout 
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/hiddenLayout"
+        android:id="@+id/mediaFieldTypeSelection"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:paddingTop="10dp">
         
-        <CheckBox             
-            android:id="@+id/hidden"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true" 
-            android:layout_width="wrap_content" 
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:gravity="top"
-        />
-
         <TextView
-            android:id="@+id/fbel_hidden"
-            android:textSize="20sp"            
-            android:layout_alignParentTop="true"
-            android:layout_toRightOf="@id/hidden"
+            android:id="@+id/mediaTypeLabel"
+            android:textSize="20sp"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:text="@string/tf_fbel_hidden"
-        />
+            android:paddingTop="10dp"
+            android:text="@string/tf_choose_media_type" />
+        
+        <RadioGroup
+            android:id="@+id/mediaRadioSelection"
+            android:layout_below="@id/mediaTypeLabel"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            
+            <RadioButton 
+                android:id="@+id/mediaTypeAudio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_audio_media_type" />
                 
+            <RadioButton 
+                android:id="@+id/mediaTypeImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_image_media_type" />
+                
+            <RadioButton 
+                android:id="@+id/mediaTypeVideo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_video_media_type" />                
+        </RadioGroup>
+        
         <TextView
             android:id="@android:id/empty"
-            android:inputType="textMultiLine"            
-            android:layout_toRightOf="@id/hidden"
-            android:layout_below="@id/fbel_hidden"
+            android:inputType="textMultiLine"
+            android:layout_below="@id/mediaRadioSelection"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"                    
-            android:text="@string/tf_fbel_hidden_hint" 
-        />
+            android:text="@string/tf_choose_media_type_hint" />    
+    </RelativeLayout>            
+    
+    <!-- Number type selection -->
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/numberFieldTypeSelection"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+        
+        <TextView
+            android:id="@+id/numberTypeLabel"
+            android:textSize="20sp"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:paddingTop="10dp"
+            android:text="@string/tf_choose_number_type" />
+        
+        <RadioGroup
+            android:id="@+id/numberRadioSelection"
+            android:layout_below="@id/numberTypeLabel"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            
+            <RadioButton 
+                android:id="@+id/numberTypeInteger"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_integer_number_type" />
+                
+            <RadioButton 
+                android:id="@+id/numberTypeDecimal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_decimal_number_type" />
+        </RadioGroup>
+        
+        <TextView
+            android:id="@android:id/empty"
+            android:inputType="textMultiLine"
+            android:layout_below="@id/numberRadioSelection"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"                    
+            android:text="@string/tf_choose_number_type_hint" />    
     </RelativeLayout>
-    -->
+    
+    <!-- Select type -->
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/selectFieldTypeSelection"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+        
+        <TextView
+            android:id="@+id/selectTypeLabel"
+            android:textSize="20sp"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:paddingTop="10dp"
+            android:text="@string/tf_choose_select_type" />
+        
+        <RadioGroup
+            android:id="@+id/selectRadioSelection"
+            android:layout_below="@id/selectTypeLabel"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">            
+
+            <RadioButton 
+                android:id="@+id/selectTypeSingle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_select_single_type" /> 
+                                
+            <RadioButton 
+                android:id="@+id/selectTypeMultiple"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_select_multiple_type" />    
+        </RadioGroup>
+        
+        <TextView
+            android:id="@android:id/empty"
+            android:inputType="textMultiLine"
+            android:layout_below="@id/selectRadioSelection"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"                    
+            android:text="@string/tf_choose_select_type_hint" />    
+    </RelativeLayout>
+    
+    <!-- Default value -->
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/defaultValueInput"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">    
+    
+        <TextView
+            android:id="@android:id/empty"
+            android:textSize="20sp"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:paddingTop="10dp"
+            android:text="@string/tf_fbel_default" />
+    
+        <EditText
+            android:id="@+id/defaultValue"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />    
+    
+        <TextView
+            android:id="@android:id/empty"
+            android:inputType="textMultiLine"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"                    
+            android:text="@string/tf_fbel_default_hint" />        
+    </LinearLayout>
     
     <!-- Read-only option -->
     <RelativeLayout 
@@ -135,8 +235,7 @@
             android:layout_width="wrap_content" 
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:gravity="top"
-        />
+            android:gravity="top" />
 
         <TextView
             android:id="@+id/fbel_readonly"
@@ -145,8 +244,7 @@
             android:layout_toRightOf="@id/readonly"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:text="@string/tf_fbel_readonly"
-        />
+            android:text="@string/tf_fbel_readonly" />
                 
         <TextView
             android:id="@android:id/empty"
@@ -155,8 +253,7 @@
             android:layout_below="@id/fbel_readonly"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"                    
-            android:text="@string/tf_fbel_readonly_hint" 
-        />
+            android:text="@string/tf_fbel_readonly_hint" />
     </RelativeLayout>
     
     <!-- Required option -->
@@ -174,8 +271,7 @@
             android:layout_width="wrap_content" 
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:gravity="top"
-        />
+            android:gravity="top" />
 
         <TextView
             android:id="@+id/fbel_required"
@@ -184,8 +280,7 @@
             android:layout_toRightOf="@id/required"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:text="@string/tf_fbel_required"
-        />
+            android:text="@string/tf_fbel_required" />
                 
         <TextView
             android:id="@android:id/empty"
@@ -194,8 +289,7 @@
             android:layout_below="@id/fbel_required"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"                    
-            android:text="@string/tf_fbel_required_hint" 
-        />
+            android:text="@string/tf_fbel_required_hint" />
     </RelativeLayout>    
 </LinearLayout>
 

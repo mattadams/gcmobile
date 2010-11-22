@@ -154,9 +154,18 @@
 	<string name="tf_add_form_element">Add Element</string>
 	<string name="tf_add_form_hint">Use &quot;Manage Forms&quot; to add a form</string>
 	<string name="tf_add_new">Add New</string>
+	<string name="tf_advanced">Advanced</string>
+	<string name="tf_advanced_settings">Advanced Settings</string>
+	<string name="tf_audio_media_type">Audio recording</string>
 	<string name="tf_begin_instance_hint">Select list item to begin new form</string>
 	<string name="tf_browse_instances_hint">Select item to browse %s</string>
+	<string name="tf_choose_media_type">Choose media type</string>
+	<string name="tf_choose_media_type_hint">Select the media type that this field should support.</string>
+	<string name="tf_choose_number_type">Choose number type</string>
+	<string name="tf_choose_number_type_hint">Select the number type that this field should support.</string>
 	<string name="tf_choose_one">Choose one</string>
+	<string name="tf_choose_select_type">Choose selection type</string>
+	<string name="tf_choose_select_type_hint">Choose whether to allow the user to select one or more items from the selection list</string>
 	<string name="tf_connection_established_status">Connection established</string>
 	<string name="tf_connection_interrupted_status">Connection interrupted</string>
 	<string name="tf_connection_interrupted_msg">Automatically retrying connection...</string>
@@ -165,6 +174,7 @@
 	<string name="tf_connection_reestablished_msg">TurboForm is now online</string>
 	<string name="tf_connectivity_settings">Connectivity settings</string>
 	<string name="tf_couchdb_prefix">turboform/</string>
+	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_default_couchdb_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_couchdb_port">5984</string>
 	<string name="tf_edit">Edit</string>
@@ -177,7 +187,7 @@
 	<string name="tf_element_number">Number field</string>
 	<string name="tf_element_select">Select from list</string>
 	<string name="tf_element_text">Text field</string>
-	<!--  fbel: Form Builder Element Label -->
+	<!--  fbel: Form Builder Element (aka "field") Label -->
 	<string name="tf_fbel_default">Default value</string>
 	<string name="tf_fbel_default_hint">Any value supplied here will be shown in the input area of the field and will be saved as-is unless otherwise changed by the user.</string>
 	<string name="tf_fbel_hidden">Hidden</string>
@@ -186,13 +196,16 @@
 	<string name="tf_fbel_hint_hint">You may provide longer instructions or a hint to help the user understand how to use this field.</string>
 	<string name="tf_fbel_label">Label</string>
 	<string name="tf_fbel_label_hint">The name, prompt or question for this field.</string>
-        <string name="tf_fbel_readonly">Read-only</string>
-        <string name="tf_fbel_readonly_hint">Read-only fields will be visible to the user but they will not be able to modify them directly.  The values of read-only fields may be manipulated by advanced properties.</string>
-        <string name="tf_fbel_required">Required</string>
-        <string name="tf_fbel_required_hint">Marking this field as required will force the user to respond to it before marking the form as complete.</string>
+    <string name="tf_fbel_readonly">Read-only</string>
+    <string name="tf_fbel_readonly_hint">Read-only fields will be visible to the user but they will not be able to modify them directly.  The values of read-only fields may be manipulated by advanced properties.</string>
+    <string name="tf_fbel_required">Required</string>
+    <string name="tf_fbel_required_hint">Marking this field as required will force the user to respond to it before marking the form as complete.</string>
+    <string name="tf_field">Field</string>
 	<string name="tf_general_preferences">Preferences</string>
 	<string name="tf_groups_unavailable_error">Unavailable</string>
 	<string name="tf_help">Help</string>
+	<string name="tf_image_media_type">Photograph</string>
+	<string name="tf_integer_number_type">Integers only</string>
 	<string name="tf_loading_please_wait">Loading, please wait...</string>
 	<string name="tf_main_menu_group_filter_label">Show Forms By Group</string>
 	<string name="tf_main_menu_group_filter_prompt">Choose form group</string>
@@ -206,12 +219,18 @@
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
+	<string name="tf_save_changes">Save Changes</string>
 	<string name="tf_save_form_definition">Save Form</string>
+	<string name="tf_select_multiple_type">Select multiple</string>
+	<string name="tf_select_single_type">Select one</string>
 	<string name="tf_server_connection_error">Cannot contact server - try again later</string>
 	<string name="tf_server_settings">Server settings</string>
 	<string name="tf_server_url_error">Invalid server URL</string>   
 	<string name="tf_synchronize">Synchronize</string>
 	<string name="tf_synchronization_settings">Synchronization settings</string>
+	<string name="tf_valid_number_range_integer">Default values for integer fields may only contain the numbers 0-9</string>
+    <string name="tf_valid_number_range_decimal">Decimal fields for integer fields may only contain the numbers 0-9 and a single decimal</string>
+    <string name="tf_video_media_type">Video recording</string>
 	<string name="tf_view_instance">View Output</string>
 	<string name="tf_viewing_instance">Output Fields for</string>
 </resources>

@@ -112,14 +112,18 @@ public class Instance
         return xpath;
     }
 
+    /*
+     * Default values may include entities that need to be encoded, similarly to
+     * labels and hints, so we take care of that here 
+     */
     public void setDefaultValue(String defaultValue)
     {
-        this.defaultValue = defaultValue;
+        this.defaultValue = FieldText.encodeXMLEntities(defaultValue);
     }
 
     public String getDefaultValue()
     {
-        return defaultValue;
+        return FieldText.decodeXMLEntities(defaultValue);
     }
     
     public String getName()

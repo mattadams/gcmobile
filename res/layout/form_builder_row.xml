@@ -3,26 +3,39 @@
     android:layout_width="fill_parent"
     android:layout_height="64dip"
     android:gravity="center_vertical"
-    android:ignoreGravity="@+id/icon">
+    android:ignoreGravity="@+id/icon">    
     <ImageView android:id="@+id/icon"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/grabber" />   
+    <ImageView android:id="@+id/field_type"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-				android:src="@drawable/grabber"
-		/>
-		<TextView android:id="@+id/label"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:layout_width="wrap_content"
-        android:paddingLeft="9dip"
-        android:paddingRight="9dip"
-        android:layout_height="wrap_content"
-        android:layout_alignWithParentIfMissing="true"
-				android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@id/icon"
-				android:layout_centerVertical="true"
-        android:ellipsize="marquee"
-        android:singleLine="true"
-		/>
+        android:src="@drawable/element_group" />     
+    <RelativeLayout
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"        
+        android:layout_height="fill_parent"
+        android:layout_toRightOf="@id/icon">
+        <TextView
+            android:id="@+id/label"            
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"         
+            android:textStyle="bold"
+            android:textColor="@color/solid_black" />        
+        <TextView
+            android:id="@+id/details"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"   
+            android:layout_below="@+id/label"    
+            android:singleLine="true"
+            android:textColor="@color/solid_black" />    
+    </RelativeLayout>
 </RelativeLayout>

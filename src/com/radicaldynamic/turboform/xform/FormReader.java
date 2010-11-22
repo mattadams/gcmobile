@@ -1,4 +1,4 @@
-package com.radicaldynamic.turboform.utilities;
+package com.radicaldynamic.turboform.xform;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -12,15 +12,10 @@ import com.mycila.xmltool.CallBack;
 import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.turboform.application.Collect;
-import com.radicaldynamic.turboform.xform.Bind;
-import com.radicaldynamic.turboform.xform.Field;
-import com.radicaldynamic.turboform.xform.Instance;
-import com.radicaldynamic.turboform.xform.Translation;
-import com.radicaldynamic.turboform.xform.TranslationText;
 
-public class FormUtils
+public class FormReader
 {
-    private static final String t = "FormUtils: ";
+    private static final String t = "FormReader: ";
     
     private XMLTag mForm;                           // The "form" as it was loaded by xmltool
     private String mInstanceRoot;                   // The name of the instance root element 
@@ -38,12 +33,7 @@ public class FormUtils
         Collections.addAll(mFieldList, "group", "input", "item", "repeat", "select", "select1", "trigger", "upload");
     }
     
-    public FormUtils(String title) {
-        //XMLTag mForm = XMLDoc.from(, false);
-        System.out.println(mForm.toString());
-    }
-    
-    public FormUtils(InputStream is)
+    public FormReader(InputStream is)
     {
         mForm = (XMLDoc.from(is, false));
         mDefaultPrefix = mForm.getPefix("http://www.w3.org/2002/xforms");
@@ -192,31 +182,14 @@ public class FormUtils
     private boolean recursivelyApplyProperty(Field targetField, XMLTag tag)
     {
         if (tag.getCurrentTagLocation().split("/").length - targetField.getLocation().split("/").length == 1 &&
-                targetField.getLocation().equals(tag.getCurrentTagLocation().substring(0, targetField.getLocation().length()))) {           
-            String label = tag.getInnerText();
-            
-            /*
-             * Obtain a single translation to represent this field on the form builder screen
-             * 
-             * FIXME: We should select the most appropriate language (not necessarily English)
-             *        before falling back to English.  The most appropriate language can be determined
-             *        by checking the locale of the device. 
-             */ 
-            if (tag.hasAttribute("ref")) {
-                String ref = tag.getAttribute("ref");
-                String [] items = ref.split("'");           // jr:itext('GroupLabel')
-                String id = items[1];                       // The string between the single quotes
-                
-                label = getTranslation("English", id);
-                label = label + " [i18n]";
-            }
+                targetField.getLocation().equals(tag.getCurrentTagLocation().substring(0, targetField.getLocation().length()))) {       
             
             // Set the label
             if (tag.getCurrentTagName().contains("label")) {
                 if (tag.hasAttribute("ref")) 
                     targetField.setLabel(tag.getAttribute("ref"));
-                    
-                targetField.setLabel(label);                
+                else
+                    targetField.setLabel(tag.getInnerText());
             }
             
             // Set the hint
@@ -224,9 +197,10 @@ public class FormUtils
                 if (tag.hasAttribute("ref")) 
                     targetField.setHint(tag.getAttribute("ref"));
                 
-                targetField.setHint(label);                
+                targetField.setHint(tag.getInnerText());                
             }
             
+            // Set the value of this item (used for select and select1 item lists)
             if (tag.getCurrentTagName().contains("value")) {
                 targetField.setItemValue(tag.getInnerText());
             }
@@ -274,33 +248,6 @@ public class FormUtils
                 }
             });
         }
-    }
-    
-    /*
-     * Retrieve a translation for a specific ID from a specific language.
-     */
-    private String getTranslation(String language, String id)
-    {
-        Iterator<Translation> translations = mTranslationState.iterator();
-        
-        while (translations.hasNext()) {
-            Translation translation = translations.next();
-            
-            if (translation.getLang().equals(language)) {
-                Iterator<TranslationText> texts = translation.texts.iterator();
-                
-                while (texts.hasNext()) {
-                    TranslationText text = texts.next();
-                    
-                    if (text.getId().equals(id)) {
-                        text.setUsed(true);
-                        return text.getValue();
-                    }
-                }
-            }
-        }
-        
-        return "[Translation Not Available]";
     }
     
     /*

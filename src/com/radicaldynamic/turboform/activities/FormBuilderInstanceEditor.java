@@ -194,7 +194,7 @@ public class FormBuilderInstanceEditor extends Activity
     {         
          mLabel.setText(mField.getLabel());
          mHint.setText(mField.getHint());
-         mDefaultValue.setText(mField.getDefaultValue());
+         mDefaultValue.setText(mField.getInstance().getDefaultValue());
          
          if (mField.getBind().isReadonly())
              mReadonly.setChecked(true);

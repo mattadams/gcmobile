@@ -26,10 +26,9 @@ public class Field
     
     private Field parent;
     private String itemValue;                   // Any value assigned to this node (if it is an item)
-    private String defaultValue;                // A default value assigned to this field (will be stored in the instance XML)
     
-    private FieldText label;                  // Any label assigned to this field
-    private FieldText hint;                   // Any hint assigned to this field   
+    private FieldText label;                    // Any label assigned to this field
+    private FieldText hint;                     // Any hint assigned to this field   
     
     private Bind bind = new Bind();
     private Instance instance = new Instance();
@@ -123,7 +122,7 @@ public class Field
 
     public void setLabel(String label)
     {
-        Log.v(Collect.LOGTAG, t + "setting label " + label + " for " + type + " at " + location);
+        Log.v(Collect.LOGTAG, t + "setting label for " + type + " at " + location);
         this.label = new FieldText(label);
     }
 
@@ -135,7 +134,7 @@ public class Field
      */
     public String getLabel()
     {
-        if (label == null || label.toString() == null) {
+        if (label == null) {
             Log.w(Collect.LOGTAG, t + "label unavailable for field");
             return "";
         } else
@@ -144,13 +143,13 @@ public class Field
 
     public void setHint(String hint)
     {
-        Log.v(Collect.LOGTAG, t + "setting hint " + hint + " for " + type + " at " + location);
+        Log.v(Collect.LOGTAG, t + "setting hint for " + type + " at " + location);
         this.hint = new FieldText(hint);
     }
 
     public String getHint()
     {
-        if (hint == null || hint.toString() == null) {
+        if (hint == null) {
             Log.w(Collect.LOGTAG, t + "hint unavailable for field");
             return "";
         } else 
@@ -185,16 +184,6 @@ public class Field
     public String getItemValue()
     {
         return itemValue;
-    }
-
-    public void setDefaultValue(String defaultValue)
-    {
-        this.defaultValue = defaultValue;
-    }
-
-    public String getDefaultValue()
-    {
-        return defaultValue;
     }
 
     public void setRef(String ref)

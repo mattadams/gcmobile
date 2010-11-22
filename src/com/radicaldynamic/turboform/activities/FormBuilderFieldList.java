@@ -28,9 +28,9 @@ import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.adapters.FormBuilderFieldListAdapter;
 import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.documents.FormDocument;
-import com.radicaldynamic.turboform.utilities.FormUtils;
 import com.radicaldynamic.turboform.views.TouchListView;
 import com.radicaldynamic.turboform.xform.Field;
+import com.radicaldynamic.turboform.xform.FormReader;
 
 public class FormBuilderFieldList extends ListActivity
 {
@@ -44,7 +44,7 @@ public class FormBuilderFieldList extends ListActivity
    
     private String mFormId;
     private FormDocument mForm;
-    private FormUtils mFormUtility;
+    private FormReader mFormReader;
     private ArrayList<Field> mFieldState;
     private ArrayList<String> mPath = new ArrayList<String>();          // Human readable location in mFieldState
     private ArrayList<String> mActualPath = new ArrayList<String>();    // Actual location in mFieldState
@@ -279,15 +279,16 @@ public class FormBuilderFieldList extends ListActivity
             
             Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
             AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(formId, "xml");
-            mFormUtility = new FormUtils(ais);
+            mFormReader = new FormReader(ais);
             
             try {
                 ais.close();
                 
-                mFormUtility.parseForm();            
-                mFieldState = mFormUtility.getFieldState();
+                mFormReader.parseForm();            
+                mFieldState = mFormReader.getFieldState();
                 Collect.getInstance().setFormBuilderFieldState(mFieldState);
-                Collect.getInstance().setFormBuilderInstanceState(mFormUtility.getInstanceState());
+                Collect.getInstance().setFormBuilderInstanceState(mFormReader.getInstanceState());
+                Collect.getInstance().setFormBuilderTranslationState(mFormReader.getTranslationState());
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

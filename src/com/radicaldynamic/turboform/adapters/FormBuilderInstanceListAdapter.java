@@ -21,7 +21,7 @@ public class FormBuilderInstanceListAdapter extends ArrayAdapter<Instance>
     private Context mContext;
     
     public FormBuilderInstanceListAdapter(Context context, ArrayList<Instance> instanceList) {
-        super(context, R.layout.form_builder_row2, instanceList);
+        super(context, R.layout.form_builder_row, instanceList);
         mInstances = instanceList;
         mContext = context;
     }
@@ -34,7 +34,7 @@ public class FormBuilderInstanceListAdapter extends ArrayAdapter<Instance>
 
         if (row == null) {
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            row = inflater.inflate(R.layout.form_builder_row2, parent, false);
+            row = inflater.inflate(R.layout.form_builder_row, parent, false);
         }
         
         // If these objects are not reset to suitable defaults they might be reused with undesired side effects
