@@ -35,12 +35,17 @@ public class FormReader
     
     public FormReader(InputStream is)
     {
-        mForm = (XMLDoc.from(is, false));
+        mForm = XMLDoc.from(is, false);
         mDefaultPrefix = mForm.getPefix("http://www.w3.org/2002/xforms");
         mInstanceRoot = mForm.gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getCurrentTagName();
         
         Log.d(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
         Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
+    }
+    
+    public ArrayList<Bind> getBindState()
+    {
+        return mBindState;
     }
     
     public ArrayList<Field> getFieldState()
@@ -57,10 +62,14 @@ public class FormReader
     {
         return mTranslationState;
     }
-
-    public XMLTag getForm()
+    
+    /*
+     * If there is no instance root to return then we should generate one but perhaps 
+     * this should be done elsewhere?
+     */
+    public String getInstanceRoot()
     {
-        return mForm;
+        return mInstanceRoot;
     }
     
     /*
@@ -196,8 +205,8 @@ public class FormReader
             if (tag.getCurrentTagName().contains("hint")) {
                 if (tag.hasAttribute("ref")) 
                     targetField.setHint(tag.getAttribute("ref"));
-                
-                targetField.setHint(tag.getInnerText());                
+                else
+                    targetField.setHint(tag.getInnerText());                
             }
             
             // Set the value of this item (used for select and select1 item lists)
@@ -231,11 +240,11 @@ public class FormReader
             mTranslationState.add(new Translation(tag.getAttribute("lang")));
         } else if (tag.getCurrentTagName().equals("text")) {
             Log.v(Collect.LOGTAG, t + "adding translation ID " + tag.getAttribute("id"));
-            mTranslationState.get(mTranslationState.size() -1).texts.add(new TranslationText(tag.getAttribute("id")));
+            mTranslationState.get(mTranslationState.size() -1).getTexts().add(new Translation(tag.getAttribute("id"), null));
         } else if (tag.getCurrentTagName().equals("value")) {
             Log.v(Collect.LOGTAG, t + "adding translation: " + tag.getInnerText());
             mTranslationState.get(mTranslationState.size() - 1)
-                .texts.get(mTranslationState.get(mTranslationState.size() - 1).texts.size() - 1)
+                .getTexts().get(mTranslationState.get(mTranslationState.size() - 1).getTexts().size() - 1)
                 .setValue(tag.getInnerText());
         }
  
@@ -261,7 +270,7 @@ public class FormReader
             public void execute(XMLTag arg0)
             {
                 if (arg0.getCurrentTagName().equals("bind"))
-                    mBindState.add(new Bind(arg0, mInstanceRoot));                    
+                    mBindState.add(new Bind(arg0, mInstanceRoot));               
             }
         });
     }

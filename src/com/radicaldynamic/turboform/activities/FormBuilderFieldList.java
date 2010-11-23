@@ -31,12 +31,15 @@ import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.views.TouchListView;
 import com.radicaldynamic.turboform.xform.Field;
 import com.radicaldynamic.turboform.xform.FormReader;
+import com.radicaldynamic.turboform.xform.FormWriter;
 
 public class FormBuilderFieldList extends ListActivity
 {
     private static final String t = "FormBuilderElementList: ";
     
     private LoadFormDefinitionTask mLoadFormDefinitionTask;
+    private SaveFormDefinitionTask mSaveFormDefinitionTask;
+    
     private FormBuilderFieldListAdapter adapter = null;  
     private Button jumpPreviousButton;
     private ProgressDialog mDialog;
@@ -45,7 +48,8 @@ public class FormBuilderFieldList extends ListActivity
     private String mFormId;
     private FormDocument mForm;
     private FormReader mFormReader;
-    private ArrayList<Field> mFieldState;
+    
+    private ArrayList<Field> mFieldState;    
     private ArrayList<String> mPath = new ArrayList<String>();          // Human readable location in mFieldState
     private ArrayList<String> mActualPath = new ArrayList<String>();    // Actual location in mFieldState
     
@@ -123,11 +127,13 @@ public class FormBuilderFieldList extends ListActivity
             
             if (data instanceof LoadFormDefinitionTask) {
                 mLoadFormDefinitionTask = (LoadFormDefinitionTask) data;
+            } else if (data instanceof SaveFormDefinitionTask) {
+                mSaveFormDefinitionTask = (SaveFormDefinitionTask) data;
             } else if (data == null) {
                 if (newForm == false) {
                     // Load important bits of the form definition from memory
-                    mFieldState = Collect.getInstance().getFormBuilderFieldState();
-                    mForm = Collect.getInstance().getFormBuilderForm();
+                    mFieldState = Collect.getInstance().getFbFieldState();
+                    mForm = Collect.getInstance().getFbForm();
                     
                     Field destination = gotoActiveField(null, true);
                     
@@ -136,8 +142,8 @@ public class FormBuilderFieldList extends ListActivity
                     else
                         refreshView(destination.children);
                 } else {
-                    Collect.getInstance().setFormBuilderFieldState(null);
-                    Collect.getInstance().setFormBuilderForm(null);
+                    Collect.getInstance().setFbFieldState(null);
+                    Collect.getInstance().setFbForm(null);
                 }
             }            
         } // end if savedInstanceState == null   
@@ -194,15 +200,15 @@ public class FormBuilderFieldList extends ListActivity
             if (field.getParent() != null && field.getParent().getParent() != null)
                 field.getParent().getParent().setActive(false);
             
-            mPath.add(field.getLabel());
+            mPath.add(field.getLabel().toString());
             
             // Special logic to hide the complexity of repeated elements
             if (field.children.size() == 1 && field.children.get(0).getType().equals("repeat")) {
-                mActualPath.add(field.getLabel());
-                mActualPath.add(field.children.get(0).getLabel());
+                mActualPath.add(field.getLabel().toString());
+                mActualPath.add(field.children.get(0).getLabel().toString());
                 refreshView(field.children.get(0).children);
             } else {
-                mActualPath.add(field.getLabel());
+                mActualPath.add(field.getLabel().toString());
                 refreshView(field.children);
             }
         } else {
@@ -254,6 +260,8 @@ public class FormBuilderFieldList extends ListActivity
             break;            
             
         case R.id.save_form:
+            mSaveFormDefinitionTask = new SaveFormDefinitionTask();
+            mSaveFormDefinitionTask.execute();
             break;
             
         case R.id.help:
@@ -264,7 +272,7 @@ public class FormBuilderFieldList extends ListActivity
     }
     
     /*
-     * Refresh the main form browser view as requested by the user
+     * Parse and load the form so that it can be displayed and manipulated
      */
     private class LoadFormDefinitionTask extends AsyncTask<String, Void, Void> 
     {
@@ -274,7 +282,7 @@ public class FormBuilderFieldList extends ListActivity
             String formId = args[0];            
             
             mForm = Collect.mDb.getDb().get(FormDocument.class, formId);
-            Collect.getInstance().setFormBuilderForm(mForm);
+            Collect.getInstance().setFbForm(mForm);
             Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
             
             Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
@@ -286,9 +294,10 @@ public class FormBuilderFieldList extends ListActivity
                 
                 mFormReader.parseForm();            
                 mFieldState = mFormReader.getFieldState();
-                Collect.getInstance().setFormBuilderFieldState(mFieldState);
-                Collect.getInstance().setFormBuilderInstanceState(mFormReader.getInstanceState());
-                Collect.getInstance().setFormBuilderTranslationState(mFormReader.getTranslationState());
+                Collect.getInstance().setFbBindState(mFormReader.getBindState());
+                Collect.getInstance().setFbFieldState(mFieldState);
+                Collect.getInstance().setFbInstanceState(mFormReader.getInstanceState());
+                Collect.getInstance().setFbTranslationState(mFormReader.getTranslationState());
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -311,6 +320,36 @@ public class FormBuilderFieldList extends ListActivity
         protected void onPostExecute(Void nothing)
         {
             refreshView(mFieldState);            
+            mDialog.cancel();
+        }
+    }
+    
+    /*
+     * Save the form as-is given the state of the XForm in memory 
+     */
+    private class SaveFormDefinitionTask extends AsyncTask<Void, Void, Void> 
+    {
+        @Override
+        protected Void doInBackground(Void... nothing) 
+        {
+            Log.d(Collect.LOGTAG, t + "Saving form to XML...");            
+            FormWriter.writeXml(mFormReader.getInstanceRoot());            
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute()
+        {
+            mDialog = new ProgressDialog(FormBuilderFieldList.this);
+            mDialog.setMessage(getText(R.string.tf_loading_please_wait));
+            mDialog.setIndeterminate(true);
+            mDialog.setCancelable(false);
+            mDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void nothing)
+        {    
             mDialog.cancel();
         }
     }
@@ -342,8 +381,8 @@ public class FormBuilderFieldList extends ListActivity
         else {
             // Special support for nested repeated groups
             if (destination.children.size() == 1 && destination.children.get(0).getType().equals("repeat")) {
-                mActualPath.add(destination.getLabel());
-                mActualPath.add(destination.children.get(0).getLabel());
+                mActualPath.add(destination.getLabel().toString());
+                mActualPath.add(destination.children.get(0).getLabel().toString());
                 refreshView(destination.children.get(0).children);
             } else {                            
                 refreshView(destination.children);
@@ -447,7 +486,7 @@ public class FormBuilderFieldList extends ListActivity
      */
     private void startElementEditor(String type, Field loadField)
     {
-        Collect.getInstance().setFormBuilderField(loadField);
+        Collect.getInstance().setFbField(loadField);
         
         Intent i = new Intent(this, FormBuilderFieldEditor.class);
         i.putExtra(FormBuilderFieldEditor.ELEMENT_TYPE, type);        

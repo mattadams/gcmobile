@@ -57,7 +57,7 @@ public class FormBuilderInstanceEditor extends Activity
                     + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1));
             
             // Retrieve field (if any)
-            mField = Collect.getInstance().getFormBuilderField();
+            mField = Collect.getInstance().getFbField();
                        
             if (mField == null) {
                 mField = new Field();
@@ -169,7 +169,7 @@ public class FormBuilderInstanceEditor extends Activity
     protected void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
-        Collect.getInstance().setFormBuilderField(mField);
+        Collect.getInstance().setFbField(mField);
     }    
     
     @Override
@@ -192,8 +192,8 @@ public class FormBuilderInstanceEditor extends Activity
     
     private void loadCommonAttributes()
     {         
-         mLabel.setText(mField.getLabel());
-         mHint.setText(mField.getHint());
+         mLabel.setText(mField.getLabel().toString());
+         mHint.setText(mField.getHint().toString());
          mDefaultValue.setText(mField.getInstance().getDefaultValue());
          
          if (mField.getBind().isReadonly())

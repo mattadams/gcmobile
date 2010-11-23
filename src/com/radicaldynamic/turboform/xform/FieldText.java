@@ -19,6 +19,18 @@ public class FieldText
     private String value    = null;         // Regular string value associated with this text object
     private String ref      = null;         // A reference to an itext translation
     
+    /*
+     * Used by Field class to supply a default empty FieldText (which will hopefully be replaced upon form parsing)
+     */
+    public FieldText()
+    {
+        
+    }
+    
+    /*
+     * This constructor is intended to be used by FormReader when it 
+     * parses and initialises labels & hints from recursivelyApplyProperty()
+     */
     public FieldText(String valueOrRef) 
     {
         Log.v(Collect.LOGTAG, t + "instantiating with " + valueOrRef);
@@ -28,8 +40,10 @@ public class FieldText
             String id = items[1];                       // The string between the single quotes
             
             ref = id;
-        } else 
+        } else {
+            // Store these values as-is (they should be pre-encoded in the XML)
             value = valueOrRef;
+        }
     }
         
     @Override
@@ -70,11 +84,13 @@ public class FieldText
         return result;
     }
     
+    // Takes a human readable string and encodes it for XMLs
     public void setValue(String value)
     {
         this.value = encodeXMLEntities(value);
     }
     
+    // Returns a decoded string ready for human consumption
     public String getValue()
     {
         return decodeXMLEntities(value);
@@ -103,12 +119,12 @@ public class FieldText
     }
     
     static public String encodeXMLEntities(String str)
-    {
+    {        
         str = str.replaceAll("&", "&amp;");
         str = str.replaceAll("'", "&apos;");
         str = str.replaceAll(">", "&gt;");
         str = str.replaceAll("<", "&lt;");
-        str = str.replaceAll("\"", "&quot;");
+        str = str.replaceAll("\"", "&quot;");        
         
         return str;
     }
@@ -118,25 +134,23 @@ public class FieldText
      */
     private String getTranslation(String language, String id)
     {
-        Iterator<Translation> translations = Collect.getInstance().getFormBuilderTranslationState().iterator();
+        Iterator<Translation> translations = Collect.getInstance().getFbTranslationState().iterator();
         
         while (translations.hasNext()) {
             Translation translation = translations.next();
             
             if (translation.getLang().equals(language)) {
-                Iterator<TranslationText> texts = translation.texts.iterator();
+                Iterator<Translation> texts = translation.getTexts().iterator();
                 
                 Log.v(Collect.LOGTAG, t + "looking up " + language + " translations");
                 
                 while (texts.hasNext()) {
-                    TranslationText text = texts.next();
+                    Translation text = texts.next();
                     
                     Log.v(Collect.LOGTAG, t + "looking at " + text.getId() + " for translation of " + id);
                     
-                    if (text.getId().equals(id)) {
-                        text.setUsed(true);
+                    if (text.getId().equals(id))
                         return text.getValue();
-                    }
                 }
             }
         }

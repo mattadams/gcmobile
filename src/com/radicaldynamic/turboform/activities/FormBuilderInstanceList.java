@@ -78,8 +78,8 @@ public class FormBuilderInstanceList extends ListActivity
             }
         });     
         
-        mInstanceState = Collect.getInstance().getFormBuilderInstanceState();                    
-        mForm = Collect.getInstance().getFormBuilderForm();
+        mInstanceState = Collect.getInstance().getFbInstanceState();                    
+        mForm = Collect.getInstance().getFbForm();
         
         if (savedInstanceState == null) {
             // Intent i = getIntent();

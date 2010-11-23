@@ -22,6 +22,7 @@ import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.documents.FormDocument;
 import com.radicaldynamic.turboform.logic.FileReferenceFactory;
 import com.radicaldynamic.turboform.services.CouchDbService;
+import com.radicaldynamic.turboform.xform.Bind;
 import com.radicaldynamic.turboform.xform.Field;
 import com.radicaldynamic.turboform.xform.Instance;
 import com.radicaldynamic.turboform.xform.Translation;
@@ -39,12 +40,13 @@ public class Collect extends Application {
     
     private ArrayList<String> instanceBrowseList            = new ArrayList<String>();
     
-    private FormDocument formBuilderForm                    = null;     // Form document in memory for use with the form builder
-    private ArrayList<Field> formBuilderFieldState          = null;     // XForm field state in memory for use with FormBuilderFieldList
-    private ArrayList<Instance> formBuilderInstanceState    = null;     // XForm instance state in memory for use with FormBuilderInstanceList
-    private ArrayList<Translation> formBuilderTranslationState = null;  // XForm translation state in memory for use with FieldText and itext management activities
-    private Field formBuilderField                          = null;     // SINGLE XForm field in memory for use with FormBuilderFieldEditor
-    private Instance formBuilderInstance                    = null;     // SINGLE XForm instance in memory for use with FormBuilderInstanceEditor
+    private FormDocument fbForm                    = null;     // Form document in memory for use with the form builder
+    private ArrayList<Bind> fbBindState            = null;     // XForm bind state in memory for use with the form builder
+    private ArrayList<Field> fbFieldState          = null;     // XForm field state in memory for use with fbFieldList
+    private ArrayList<Instance> fbInstanceState    = null;     // XForm instance state in memory for use with fbInstanceList
+    private ArrayList<Translation> fbTranslationState = null;  // XForm translation state in memory for use with FieldText and itext management activities
+    private Field fbField                          = null;     // SINGLE XForm field in memory for use with fbFieldEditor
+    private Instance fbInstance                    = null;     // SINGLE XForm instance in memory for use with fbInstanceEditor
 
 	/* (non-Javadoc)
 	 * @see android.app.Application#onConfigurationChanged(android.content.res.Configuration)
@@ -178,64 +180,74 @@ public class Collect extends Application {
 		t.show();
 	}
 
-    public void setFormBuilderFieldState(ArrayList<Field> formBuilderFieldState)
+    public void setFbFieldState(ArrayList<Field> fbFieldState)
     {
-        this.formBuilderFieldState = formBuilderFieldState;
+        this.fbFieldState = fbFieldState;
     }
 
-    public ArrayList<Field> getFormBuilderFieldState()
+    public ArrayList<Field> getFbFieldState()
     {
-        return formBuilderFieldState;
+        return fbFieldState;
     }
 
-    public void setFormBuilderInstanceState(ArrayList<Instance> formBuilderInstanceState)
+    public void setFbInstanceState(ArrayList<Instance> fbInstanceState)
     {
-        this.formBuilderInstanceState = formBuilderInstanceState;
+        this.fbInstanceState = fbInstanceState;
     }
 
-    public ArrayList<Instance> getFormBuilderInstanceState()
+    public ArrayList<Instance> getFbInstanceState()
     {
-        return formBuilderInstanceState;
+        return fbInstanceState;
     }
 
-    public void setFormBuilderForm(FormDocument formBuilderForm)
+    public void setFbForm(FormDocument fbForm)
     {
-        this.formBuilderForm = formBuilderForm;
+        this.fbForm = fbForm;
     }
 
-    public FormDocument getFormBuilderForm()
+    public FormDocument getFbForm()
     {
-        return formBuilderForm;
+        return fbForm;
     }
 
-    public void setFormBuilderField(Field formBuilderField)
+    public void setFbField(Field fbField)
     {
-        this.formBuilderField = formBuilderField;
+        this.fbField = fbField;
     }
 
-    public Field getFormBuilderField()
+    public Field getFbField()
     {
-        return formBuilderField;
+        return fbField;
     }
 
-    public void setFormBuilderInstance(Instance formBuilderInstance)
+    public void setFbInstance(Instance fbInstance)
     {
-        this.formBuilderInstance = formBuilderInstance;
+        this.fbInstance = fbInstance;
     }
 
-    public Instance getFormBuilderInstance()
+    public Instance getFbInstance()
     {
-        return formBuilderInstance;
+        return fbInstance;
     }
 
-    public void setFormBuilderTranslationState(
-            ArrayList<Translation> formBuilderTranslationState)
+    public void setFbTranslationState(
+            ArrayList<Translation> fbTranslationState)
     {
-        this.formBuilderTranslationState = formBuilderTranslationState;
+        this.fbTranslationState = fbTranslationState;
     }
 
-    public ArrayList<Translation> getFormBuilderTranslationState()
+    public ArrayList<Translation> getFbTranslationState()
     {
-        return formBuilderTranslationState;
+        return fbTranslationState;
+    }
+
+    public void setFbBindState(ArrayList<Bind> fbBindState)
+    {
+        this.fbBindState = fbBindState;
+    }
+
+    public ArrayList<Bind> getFbBindState()
+    {
+        return fbBindState;
     }
 }

@@ -27,8 +27,8 @@ public class Field
     private Field parent;
     private String itemValue;                   // Any value assigned to this node (if it is an item)
     
-    private FieldText label;                    // Any label assigned to this field
-    private FieldText hint;                     // Any hint assigned to this field   
+    private FieldText label = new FieldText();  // Any label assigned to this field
+    private FieldText hint = new FieldText();   // Any hint assigned to this field   
     
     private Bind bind = new Bind();
     private Instance instance = new Instance();
@@ -99,8 +99,18 @@ public class Field
 
                         // If a bind with a nodeset identical to this ref exists, associate it with this field
                         if (b.getNodeset().equals(ref)) {
+                            Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getNodeset() + " associated to field at " + getLocation());                            
                             setBind(b);
-                            Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getNodeset() + " bound to this field at " + getLocation());
+                            
+                            // Not all binds will have an associated type but our code expects them to
+                            if (b.getType() == null) {
+//                                if (getType().equals("input"))
+//                                    b.setType("string");
+//                                else 
+//                                    b.setType(getType());
+                                
+                                Log.w(Collect.LOGTAG, t + "bind for " + b.getNodeset() + " missing an explicit type");
+                            }
                         }
                     }
                 }
@@ -132,30 +142,22 @@ public class Field
      * displayed but include this failsafe here just in case so things don't crash
      * elsewhere if the label is null.
      */
-    public String getLabel()
+    public FieldText getLabel()
     {
-        if (label == null) {
-            Log.w(Collect.LOGTAG, t + "label unavailable for field");
-            return "";
-        } else
-            return label.toString();
+        return label;
     }
-
+    
     public void setHint(String hint)
     {
         Log.v(Collect.LOGTAG, t + "setting hint for " + type + " at " + location);
         this.hint = new FieldText(hint);
     }
 
-    public String getHint()
+    public FieldText getHint()
     {
-        if (hint == null) {
-            Log.w(Collect.LOGTAG, t + "hint unavailable for field");
-            return "";
-        } else 
-            return hint.toString();
+        return hint;
     }
-
+    
     public void setType(String type)
     {
         this.type = type;

@@ -13,17 +13,25 @@ public class Bind
 {
     private String t = "Bind: ";
     
-    // All attributes taken from the bind
+    // All unhandled attributes taken from the bind
     public Map<String, String> attributes = new HashMap<String, String>();
     
     // Indicates whether or not this bind contains attributes that we do not handle
     private boolean hasUnhandledAttribute;
     
-    // Important fields that we need easy access to
+    // Important fields that we need easy access to (none of these should be null after parsing the XForm)
     private String nodeset;
     private String type;
     private boolean required = false;
     private boolean readonly = false;
+    
+    // Other common bind attributes that we handle directly
+    private String preload;
+    private String preloadParams;    
+    private String constraint;
+    private String constraintMsg;
+    private String relevant;
+    private String calculate;
     
     /*
      * Used for instantiating binds created by the form builder and to ensure
@@ -38,8 +46,6 @@ public class Bind
     {
         // Read in attributes (includes "ref" to instance data output)
         for (String s : tag.getAttributeNames()) {
-            attributes.put(s, tag.getAttribute(s));
-
             // Special handling for certain attributes
             if (s.equals("nodeset")) {
                 String nodeset = tag.getAttribute(s);
@@ -56,8 +62,22 @@ public class Bind
                 setRequired(true);
             else if (s.equals("readonly") && tag.getAttribute(s).equals("true()"))
                 setReadonly(true);
-            else 
+            else if (s.equals("jr:preload"))
+                setPreload(tag.getAttribute(s));
+            else if (s.equals("jr:preloadParams"))
+                setPreloadParams(tag.getAttribute(s));
+            else if (s.equals("constraint")) 
+                setConstraint(tag.getAttribute(s));
+            else if (s.equals("jr:constraintMsg"))
+                setConstraintMsg(tag.getAttribute(s));
+            else if (s.equals("relevant"))
+                setRelevant(tag.getAttribute(s));
+            else if (s.equals("calculate"))
+                setCalculate(tag.getAttribute(s));
+            else {
+                attributes.put(s, tag.getAttribute(s));
                 setHasUnhandledAttribute(true);
+            }                
         }
         
         Log.v(Collect.LOGTAG, t + "created new bind for " + getNodeset());
@@ -80,43 +100,58 @@ public class Bind
 
     public void setType(String type)
     {   
-        attributes.put("type", type);
         this.type = type;
     }
 
     public String getType()
     {
-        return type;
+        /*
+         * Also see field/bind association bit in the Field class constructor where we 
+         * attempt to ensure that all binds have the minimum number of expected attributes
+         * 
+         * We do this here because a bind may not have a type nor a control field that will
+         * ensure that one is set.
+         */          
+//        if (type == null)
+//            return "string";
+//        else 
+            return type;
     }
 
     public void setRequired(boolean required)
     {
         this.required = required;
-        
-        if (required == true)
-            attributes.put("required", "true()");
-        else
-            attributes.remove("required");
     }
 
     public boolean isRequired()
     {
         return required;
     }
+    
+    public String getRequired()
+    {
+        if (isRequired())
+            return "true()";
+        else
+            return "false()";
+    }
 
     public void setReadonly(boolean readonly)
     {
         this.readonly = readonly;
-        
-        if (readonly == true)
-            attributes.put("readonly", "true()");
-        else
-            attributes.remove("readonly");
     }
 
     public boolean isReadonly()
     {
         return readonly;
+    }
+    
+    public String getReadonly()
+    {
+        if (isReadonly())
+            return "true()";
+        else
+            return "false()";
     }
 
     public void setHasUnhandledAttribute(boolean hasUnhandledAttribute)
@@ -124,8 +159,68 @@ public class Bind
         this.hasUnhandledAttribute = hasUnhandledAttribute;
     }
 
-    public boolean isHasUnhandledAttribute()
+    public boolean hasUnhandledAttribute()
     {
         return hasUnhandledAttribute;
+    }
+
+    public void setPreload(String preload)
+    {
+        this.preload = preload;
+    }
+
+    public String getPreload()
+    {
+        return preload;
+    }
+
+    public void setPreloadParams(String preloadParams)
+    {
+        this.preloadParams = preloadParams;
+    }
+
+    public String getPreloadParams()
+    {
+        return preloadParams;
+    }
+
+    public void setConstraint(String constraint)
+    {
+        this.constraint = constraint;
+    }
+
+    public String getConstraint()
+    {
+        return constraint;
+    }
+
+    public void setConstraintMsg(String constraintMsg)
+    {
+        this.constraintMsg = constraintMsg;
+    }
+
+    public String getConstraintMsg()
+    {
+        return constraintMsg;
+    }
+
+    public void setRelevant(String relevant)
+    {
+        this.relevant = relevant;
+    }
+
+    public String getRelevant()
+    {
+        return relevant;
+    }
+
+    public void setCalculate(String calculate)
+    {
+        this.calculate = calculate;
+    }
+
+    public String getCalculate()
+    {
+        return calculate;
     }
 }
