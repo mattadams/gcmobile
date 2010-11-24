@@ -143,12 +143,6 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                                         file, 
                                         Base64.encodeToString(FileUtils.getFileAsBytes(new File(FileUtils.CACHE_PATH + file)), Base64.DEFAULT), 
                                         MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1))));
-
-                        if (FileUtils.deleteFile(FileUtils.CACHE_PATH + file)) {
-                            Log.d(Collect.LOGTAG, t + mInstanceId + ": removed attached file " + file);                            
-                        } else {
-                            Log.e(Collect.LOGTAG, t + mInstanceId + ": failed removal of attached file " + file);
-                        }
                     }
                 }
                 

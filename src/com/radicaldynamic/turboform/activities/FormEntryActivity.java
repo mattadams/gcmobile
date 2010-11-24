@@ -15,6 +15,7 @@
 package com.radicaldynamic.turboform.activities;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
@@ -276,7 +277,11 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 // But only if it's done, otherwise the thread never returns
                 mSaveToDiskTask.cancel(false);    
             }            
-        }
+        }        
+
+        // Purge cache files that we no longer need
+        Log.d(Collect.LOGTAG, t + "removing instance cache files for instance " + mInstanceId);
+        FileUtils.deleteInstanceCacheFiles(mInstanceId);
     
         super.onDestroy();
     }
@@ -1354,10 +1359,6 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             Collect.mDb.getDb().delete(instance);
             Log.d(Collect.LOGTAG, t + mFormId + ": removed placeholder instance " + mInstanceId);
         }
-
-        // Purge unused media files
-        Log.d(Collect.LOGTAG, t + "removing unused files");
-        FileUtils.deleteInstanceCacheFiles(mInstanceId);
 
         finish();
     }
