@@ -173,10 +173,14 @@ public class LocalFormList extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAll();
-            DocumentUtils.sortByName(documents);                             
+            try {
+                documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAll();
+                DocumentUtils.sortByName(documents);                             
 
-            instanceTalliesByStatus = new FormRepository(Collect.mDb.getDb()).getFormsWithInstanceCounts();
+                instanceTalliesByStatus = new FormRepository(Collect.mDb.getDb()).getFormsWithInstanceCounts();                    
+            } catch (ClassCastException e) {
+                // TODO: is there a better way to handle empty lists?
+            }
             
             return null;
         }

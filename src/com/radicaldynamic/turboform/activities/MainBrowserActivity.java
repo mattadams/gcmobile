@@ -329,20 +329,20 @@ public class MainBrowserActivity extends ListActivity
         private Map<String, String> instanceTallies = new HashMap<String, String>();
 
         @Override
-        protected InstanceDocument.Status doInBackground(
-                InstanceDocument.Status... status)
+        protected InstanceDocument.Status doInBackground(InstanceDocument.Status... status)
         {
             if (status[0] == InstanceDocument.Status.nothing) {
-                documents = (ArrayList<FormDocument>) new FormRepository(
-                        Collect.mDb.getDb()).getAll();
-                DocumentUtils.sortByName(documents);
+                try {
+                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAll();
+                    DocumentUtils.sortByName(documents);
+                } catch (ClassCastException e) {
+                    // TODO: is there a better way to handle empty lists?
+                }
             } else {
-                instanceTallies = new FormRepository(Collect.mDb.getDb())
-                        .getFormsByInstanceStatus(status[0]);
+                instanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByInstanceStatus(status[0]);
                 
                 if (!instanceTallies.isEmpty()) {
-                    documents = (ArrayList<FormDocument>) new FormRepository(
-                            Collect.mDb.getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));
+                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));
                     
                     DocumentUtils.sortByName(documents);
                 }
