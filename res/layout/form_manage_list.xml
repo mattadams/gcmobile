@@ -45,7 +45,7 @@ the License.
      android:layout_height="wrap_content"
      android:padding="12dp"
      android:textSize="16dp" 
-	 android:layout_weight="1"      />
+	 android:layout_weight="1" />
 	 
     <Button 
      android:id="@+id/delete_button"
@@ -54,7 +54,7 @@ the License.
      android:layout_height="wrap_content"
      android:padding="12dp"
      android:textSize="16dp" 
-	 android:layout_weight="1"      />
+	 android:layout_weight="1" />
     
   </LinearLayout>
 

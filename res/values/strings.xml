@@ -206,6 +206,7 @@
 	<string name="tf_help">Help</string>
 	<string name="tf_image_media_type">Photograph</string>
 	<string name="tf_integer_number_type">Integers only</string>
+	<string name="tf_loading">Loading</string>
 	<string name="tf_loading_please_wait">Loading, please wait...</string>
 	<string name="tf_main_menu_group_filter_label">Show Forms By Group</string>
 	<string name="tf_main_menu_group_filter_prompt">Choose form group</string>
@@ -214,8 +215,10 @@
 	<string name="tf_manage">Manage Forms</string>
 	<string name="tf_manage_item">Manage %s</string>	
 	<string name="tf_missing_instances_hint">No %s to browse</string>
+	<string name="tf_my_forms">My Forms</string>
 	<string name="tf_next_instance">Next</string>
 	<string name="tf_notification_settings">Notification settings</string>
+	<string name="tf_odk_library">ODK Library</string>
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>

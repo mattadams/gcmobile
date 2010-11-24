@@ -46,7 +46,9 @@ import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ImageView.ScaleType;
@@ -78,8 +80,6 @@ public class MainBrowserActivity extends ListActivity
     private static boolean mShowSplash = true;
 
     private AlertDialog mAlertDialog;
-    private ProgressDialog mDialog;
-
     private RefreshViewTask mRefreshViewTask;
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -101,15 +101,8 @@ public class MainBrowserActivity extends ListActivity
     {
         super.onCreate(savedInstanceState);
 
-        mDialog = new ProgressDialog(this);
-        mDialog.setMessage(getText(R.string.tf_loading_please_wait));
-        mDialog.setIndeterminate(true);
-        mDialog.setCancelable(true);
-        mDialog.show();
-
         // If sd card error, quit
         if (!FileUtils.storageReady()) {
-            mDialog.cancel();
             createErrorDialog(getString(R.string.no_sd_error), true);
         }
 
@@ -121,8 +114,11 @@ public class MainBrowserActivity extends ListActivity
         setProgressBarIndeterminateVisibility(false);
 
         startService(new Intent(this, CouchDbService.class));
-        bindService(new Intent(this, CouchDbService.class), mConnection,
-                Context.BIND_AUTO_CREATE);
+        bindService(new Intent(this, CouchDbService.class), mConnection, Context.BIND_AUTO_CREATE);
+        
+        // We don't use the on-screen progress indicator here
+        RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
+        onscreenProgress.setVisibility(View.GONE);
 
         // Perform any needed application initialization
         new InitializeApplicationTask().execute();
@@ -369,6 +365,9 @@ public class MainBrowserActivity extends ListActivity
             if (status == InstanceDocument.Status.nothing) {
                 // Provide hints to user
                 if (documents.isEmpty()) {
+                    TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+                    nothingToDisplay.setVisibility(View.VISIBLE);
+                    
                     Toast.makeText(getApplicationContext(),
                             getString(R.string.tf_add_form_hint),
                             Toast.LENGTH_LONG).show();
@@ -385,10 +384,8 @@ public class MainBrowserActivity extends ListActivity
 
                 // Provide hints to user
                 if (documents.isEmpty()) {
-                    Toast.makeText(
-                            getApplicationContext(),
-                            getString(R.string.tf_missing_instances_hint,
-                                    descriptor), Toast.LENGTH_LONG).show();
+                    TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+                    nothingToDisplay.setVisibility(View.VISIBLE);
                 } else {
                     Toast.makeText(
                             getApplicationContext(),
@@ -506,32 +503,9 @@ public class MainBrowserActivity extends ListActivity
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
         triggerRefresh(s1.getSelectedItemPosition());
               
-        // Pull in a list of valid groups
-        // TODO: replace this when the actual groups stuff is implemented        
-        /*
-        Spinner s2 = (Spinner) findViewById(R.id.group_filter);
-        List<String> dbs = Collect.mDb.getAllDatabases();
-
-        if (dbs.isEmpty()) {
-            dbs.add(getString(R.string.tf_groups_unavailable_error));
-            s2.setEnabled(false);
-        } else {
-            // This control should be re-enabled if connections are
-            // re-established after the fact
-            s2.setEnabled(true);
-        }
-
-        ArrayAdapter<String> collections = new ArrayAdapter<String>(
-                MainBrowserActivity.this, android.R.layout.simple_spinner_item,
-                dbs);
-        collections
-                .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        s2.setAdapter(collections);
-        */
+        // TODO: pull in a list of valid groups
 
         registerForContextMenu(getListView());
-
-        mDialog.cancel();
     }
     
     /*
@@ -539,6 +513,10 @@ public class MainBrowserActivity extends ListActivity
      */
     private void triggerRefresh(int position)
     {
+        // Hide "nothing to display" message
+        TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+        nothingToDisplay.setVisibility(View.INVISIBLE);
+        
         mRefreshViewTask = new RefreshViewTask();
 
         switch (position) {

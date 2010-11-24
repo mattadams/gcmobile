@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import android.app.ListActivity;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,7 +28,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.adapters.LocalFormListAdapter;
@@ -45,8 +46,6 @@ public class LocalFormList extends ListActivity
 {
     private static final String t = "LocalFormList: ";
 
-    private ProgressDialog mDialog;
-
     private RefreshViewTask mRefreshViewTask;
 
     @Override
@@ -54,22 +53,14 @@ public class LocalFormList extends ListActivity
     {
         super.onCreate(savedInstanceState);
 
-        mDialog = new ProgressDialog(this);
-        mDialog.setMessage(getText(R.string.tf_loading_please_wait));
-        mDialog.setIndeterminate(true);
-        mDialog.setCancelable(true);
-        mDialog.show();
-
-        //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.main_browser);
-        setTitle(getString(R.string.app_name) + " > "
-                + getString(R.string.main_menu));
-        //setProgressBarIndeterminateVisibility(false);
+        
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.main_menu));
 
         // TODO: select "my forms" group/database
 
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-        s1.setVisibility(View.INVISIBLE);
+        s1.setVisibility(View.GONE);
     }
 
     @Override
@@ -135,8 +126,7 @@ public class LocalFormList extends ListActivity
      * Stores the path of selected form and finishes.
      */
     @Override
-    protected void onListItemClick(ListView listView, View view, int position,
-            long id)
+    protected void onListItemClick(ListView listView, View view, int position, long id)
     {
         FormDocument form = (FormDocument) getListAdapter().getItem(position);
 
@@ -150,15 +140,6 @@ public class LocalFormList extends ListActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        // Intent i = null;
-        //
-        // switch (item.getItemId()) {
-        // case R.id.tf_synchronize:
-        // i = new Intent(this, SynchronizeTabs.class);
-        // startActivity(i);
-        // return true;
-        // }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -194,13 +175,24 @@ public class LocalFormList extends ListActivity
         @Override
         protected void onPostExecute(Void nothing)
         {
-            LocalFormListAdapter adapter;
-            adapter = new LocalFormListAdapter(getApplicationContext(),
-                    R.layout.main_browser_list_item, documents,
-                    instanceTalliesByStatus, (Spinner) findViewById(R.id.form_filter));
-            setListAdapter(adapter);
-
-            //setProgressBarIndeterminateVisibility(false);
+            RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
+            onscreenProgress.setVisibility(View.GONE);
+            
+            if (documents.isEmpty()) {
+                TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+                nothingToDisplay.setVisibility(View.VISIBLE);
+            } else {
+                LocalFormListAdapter adapter;
+                
+                adapter = new LocalFormListAdapter(
+                        getApplicationContext(),
+                        R.layout.main_browser_list_item, 
+                        documents,
+                        instanceTalliesByStatus, 
+                        (Spinner) findViewById(R.id.form_filter));
+                
+                setListAdapter(adapter);
+            }            
         }
     }
 
@@ -214,7 +206,5 @@ public class LocalFormList extends ListActivity
         mRefreshViewTask.execute();
 
         registerForContextMenu(getListView());
-
-        mDialog.cancel();
     }
 }

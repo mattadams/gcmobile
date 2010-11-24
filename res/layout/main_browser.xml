@@ -18,60 +18,46 @@ the License.
     android:id="@+id/rl"
     android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">   
-        
-    <!-- 
-    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/filters"
-        android:layout_width="match_parent"  
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="6dip"          
-        android:stretchColumns="1"        
-        android:weightSum="1.0">  
-                
-        <TableRow>                       
-            <Spinner 
-                android:id="@+id/group_filter"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_weight=".50"               
-                android:drawSelectorOnTop="true"                
-                android:prompt="@string/tf_main_menu_group_filter_prompt" />
-           
-            <Spinner 
-                android:id="@+id/form_filter"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_weight=".50"               
-                android:drawSelectorOnTop="true"                
-                android:prompt="@string/tf_main_menu_form_filter_prompt" />
-        </TableRow>
-        
-        <TableRow>                       
-            <TextView
-                android:id="@+id/empty1"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.50"                
-                android:gravity="center_vertical|center_horizontal"
-                android:text="@string/tf_main_menu_group_filter_label" />            
-            <TextView
-                android:id="@+id/empty2"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.50"                
-                android:gravity="center_vertical|center_horizontal"
-                android:text="@string/tf_main_menu_form_filter_label" />
-        </TableRow>     
-    </TableLayout>
-    -->
+    android:layout_height="fill_parent">
         
     <ListView
         android:id="@id/android:list"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_above="@+id/form_filter" />        
+        android:layout_above="@+id/form_filter" />
+        
+    <RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/progress"
+        android:orientation="vertical"
+        android:layout_centerInParent="true"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content">
+    
+        <ProgressBar
+            android:id="@+id/progressIndicator"
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"         
+            style="?android:attr/progressBarStyleSmall" />
+        
+        <TextView 
+            android:id="@+id/progressLoading"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/progressIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tf_loading" />
+    </RelativeLayout>
+    
+    <TextView 
+        android:id="@+id/nothingToDisplay"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:text="@string/no_items_display"
+        android:textSize="19dp"
+        android:visibility="invisible"
+        android:gravity="center" />
             
     <Spinner 
         android:id="@+id/form_filter"        
