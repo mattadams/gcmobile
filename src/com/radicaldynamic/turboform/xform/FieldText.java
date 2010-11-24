@@ -118,13 +118,14 @@ public class FieldText
         return str;
     }
     
+    // Encoding with special support to ensure that <output value="/widgets/regex"/> is not encoded
     static public String encodeXMLEntities(String str)
     {        
         str = str.replaceAll("&", "&amp;");
         str = str.replaceAll("'", "&apos;");
-        str = str.replaceAll(">", "&gt;");
-        str = str.replaceAll("<", "&lt;");
-        str = str.replaceAll("\"", "&quot;");        
+        str = str.replaceAll("(?<!\"/)>", "&gt;");
+        str = str.replaceAll("(?!<output)<", "&lt;");
+        str = str.replaceAll("(?!value=\"|\"\\s*/)\"", "&quot;");
         
         return str;
     }

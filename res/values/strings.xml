@@ -221,6 +221,7 @@
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_save_changes">Save Changes</string>
 	<string name="tf_save_form_definition">Save Form</string>
+	<string name="tf_saving_please_wait">Saving, please wait...</string>
 	<string name="tf_select_multiple_type">Select multiple</string>
 	<string name="tf_select_single_type">Select one</string>
 	<string name="tf_server_connection_error">Cannot contact server - try again later</string>

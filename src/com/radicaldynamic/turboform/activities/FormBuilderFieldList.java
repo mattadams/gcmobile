@@ -341,7 +341,7 @@ public class FormBuilderFieldList extends ListActivity
         protected void onPreExecute()
         {
             mDialog = new ProgressDialog(FormBuilderFieldList.this);
-            mDialog.setMessage(getText(R.string.tf_loading_please_wait));
+            mDialog.setMessage(getText(R.string.tf_saving_please_wait));
             mDialog.setIndeterminate(true);
             mDialog.setCancelable(false);
             mDialog.show();
