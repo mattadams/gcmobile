@@ -14,23 +14,35 @@
 
 package com.radicaldynamic.turboform.activities;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.ektorp.Attachment;
+
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.method.QwertyKeyListener;
+import android.text.method.TextKeyListener;
+import android.util.Base64;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.adapters.LocalFormListAdapter;
@@ -42,10 +54,12 @@ import com.radicaldynamic.turboform.utilities.DocumentUtils;
 /*
  * 
  */
-public class LocalFormList extends ListActivity
+public class MyFormsList extends ListActivity
 {
-    private static final String t = "LocalFormList: ";
+    private static final String t = "MyFormsList: ";
 
+    private static final int MENU_ADD = Menu.FIRST;
+    
     private RefreshViewTask mRefreshViewTask;
 
     @Override
@@ -94,20 +108,16 @@ public class LocalFormList extends ListActivity
     }
 
     @Override
-    public void onCreateContextMenu(ContextMenu menu, View v,
-            ContextMenuInfo menuInfo)
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
     {
         super.onCreateContextMenu(menu, v, menuInfo);
-        // MenuInflater inflater = getMenuInflater();
-        // inflater.inflate(R.menu.tf_main_menu_context, menu);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        // MenuInflater inflater = getMenuInflater();
-        // inflater.inflate(R.menu.tf_main_menu_options, menu);
+        menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_form)).setIcon(R.drawable.ic_menu_add);
         return true;
     }
 
@@ -140,6 +150,12 @@ public class LocalFormList extends ListActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
+        switch (item.getItemId()) {
+        case MENU_ADD:
+            promptForNewFormName();
+            return true;
+        }
+        
         return super.onOptionsItemSelected(item);
     }
 
@@ -181,6 +197,8 @@ public class LocalFormList extends ListActivity
             if (documents.isEmpty()) {
                 TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                 nothingToDisplay.setVisibility(View.VISIBLE);
+                
+                openOptionsMenu();
             } else {
                 LocalFormListAdapter adapter;
                 
@@ -192,6 +210,12 @@ public class LocalFormList extends ListActivity
                         (Spinner) findViewById(R.id.form_filter));
                 
                 setListAdapter(adapter);
+                
+                Toast.makeText(
+                        getApplicationContext(),
+                        getString(R.string.tf_edit_form_definition_hint),
+                        Toast.LENGTH_LONG
+                ).show();
             }            
         }
     }
@@ -206,5 +230,65 @@ public class LocalFormList extends ListActivity
         mRefreshViewTask.execute();
 
         registerForContextMenu(getListView());
+    }    
+    
+    private void promptForNewFormName()
+    {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        alert.setTitle(getText(R.string.tf_create_form_dialog_title));
+        alert.setMessage(getText(R.string.tf_create_form_dialog_message));
+
+        // Set an EditText view to get user input 
+        final EditText input = new EditText(this);
+        input.setSingleLine();
+        input.setKeyListener(new QwertyKeyListener(TextKeyListener.Capitalize.WORDS, false));
+        alert.setView(input);
+
+        alert.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {                
+                FormDocument form = new FormDocument();
+                form.setName(input.getText().toString());
+                form.setStatus(FormDocument.Status.temporary);
+
+                // Create a new form document and use an XForm template as the "xml" attachment
+                try {
+                    InputStream is = getResources().openRawResource(R.raw.xform_template);
+
+                    // Set up variables to receive data
+                    ByteArrayOutputStream data = new ByteArrayOutputStream();
+                    byte[] inputbuf = new byte[8192];            
+                    int inputlen;
+
+                    while ((inputlen = is.read(inputbuf)) > 0) {
+                        data.write(inputbuf, 0, inputlen);
+                    }
+                    
+                    form.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT), "text/xml"));
+                    Collect.mDb.getDb().create(form);
+                    
+                    is.close();
+                    data.close();
+                    
+                    // Launch the form builder with the NEWFORM option set to true
+                    Intent i = new Intent(MyFormsList.this, FormBuilderFieldList.class);
+                    i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
+                    i.putExtra(FormEntryActivity.NEWFORM, true);
+                    startActivity(i);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        alert.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Cancelled.
+            }
+        });
+
+        alert.show();
     }
 }

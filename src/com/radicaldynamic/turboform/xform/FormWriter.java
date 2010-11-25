@@ -20,7 +20,7 @@ public final class FormWriter
     private static String mDefaultPrefix;
     private static String mInstanceRoot;
     
-    public static void writeXml(String instanceRoot)
+    public static byte[] writeXml(String instanceRoot)
     {
         // Retrieve and load a template XForm file (this makes it easier than hardcoding a new one from scratch)
         InputStream xis = Collect.getInstance().getResources().openRawResource(R.raw.xform_template);        
@@ -32,12 +32,21 @@ public final class FormWriter
         mFormDoc = Collect.getInstance().getFbForm();
         mFormTag.gotoRoot().gotoTag("h:head/h:title").setText(FieldText.encodeXMLEntities(mFormDoc.getName()));
         
-        writeTranslations(null);        
+        // Either write out translations or remove the unused itext tag
+        if (Collect.getInstance().getFbTranslationState().size() > 0) {
+            mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).addTag(mDefaultPrefix + ":itext");
+            writeTranslations(null);
+        } else {
+            if (mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix))
+                mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:itext", mDefaultPrefix).delete();
+        }
+        
         writeInstance(null);        
         writeBinds();        
         writeControls(null);
         
-        System.out.println(mFormTag.toString());
+        // Return XML for consumption
+        return mFormTag.toBytes();
     }
 
     private static void writeControls(Field incomingField)
@@ -144,7 +153,7 @@ public final class FormWriter
             
             // Initialize the instance root (only done once)
             mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
-            mFormTag.addTag(XMLDoc.from("<" + mInstanceRoot + " xmlns=\"" + mInstanceRoot + "\"></widgets>", false));
+            mFormTag.addTag(XMLDoc.from("<" + mInstanceRoot + " xmlns=\"" + mInstanceRoot + "\"></" + mInstanceRoot + ">", false));
         } else
             it = incomingInstance.getChildren().iterator();
             

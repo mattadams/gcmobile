@@ -20,11 +20,11 @@ public class SynchronizeTabs extends TabActivity
         final TabHost tabHost = getTabHost();
         
         tabHost.addTab(tabHost.newTabSpec("tab1")
-                .setIndicator("TurboForm")
+                .setIndicator(getString(R.string.app_name))
                 .setContent(new Intent(this, ServerPreferences.class)));
 
         tabHost.addTab(tabHost.newTabSpec("tab2")
-                .setIndicator("ODK Aggregate")
+                .setIndicator(getString(R.string.tf_odk_aggregate))
                 .setContent(new Intent(this, InstanceUploaderList.class)));
     }
 }

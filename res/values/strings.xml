@@ -174,10 +174,14 @@
 	<string name="tf_connection_reestablished_msg">TurboForm is now online</string>
 	<string name="tf_connectivity_settings">Connectivity settings</string>
 	<string name="tf_couchdb_prefix">turboform/</string>
+	<string name="tf_create_form">Create Form Template</string>
+	<string name="tf_create_form_dialog_title">Create Form</string>
+	<string name="tf_create_form_dialog_message">Provide a name for this form</string>
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_default_couchdb_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_couchdb_port">5984</string>
 	<string name="tf_edit">Edit</string>
+	<string name="tf_edit_form_definition_hint">Select list item to edit form template</string>
 	<string name="tf_editing">Editing</string>
 	<string name="tf_element_barcode">Barcode reader</string>
 	<string name="tf_element_date">Date selection</string>
@@ -218,6 +222,7 @@
 	<string name="tf_my_forms">My Forms</string>
 	<string name="tf_next_instance">Next</string>
 	<string name="tf_notification_settings">Notification settings</string>
+	<string name="tf_odk_aggregate">ODK Aggregate</string>
 	<string name="tf_odk_library">ODK Library</string>
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>

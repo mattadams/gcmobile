@@ -4,15 +4,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
+import org.javarosa.form.api.FormEntryController;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -23,33 +30,43 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.adapters.FormBuilderFieldListAdapter;
 import com.radicaldynamic.turboform.application.Collect;
 import com.radicaldynamic.turboform.documents.FormDocument;
+import com.radicaldynamic.turboform.listeners.FormLoaderListener;
+import com.radicaldynamic.turboform.listeners.FormSavedListener;
+import com.radicaldynamic.turboform.tasks.SaveToDiskTask;
 import com.radicaldynamic.turboform.views.TouchListView;
 import com.radicaldynamic.turboform.xform.Field;
 import com.radicaldynamic.turboform.xform.FormReader;
 import com.radicaldynamic.turboform.xform.FormWriter;
 
-public class FormBuilderFieldList extends ListActivity
+public class FormBuilderFieldList extends ListActivity implements FormLoaderListener, FormSavedListener
 {
     private static final String t = "FormBuilderElementList: ";
+    
+    private static final int LOADING_DIALOG = 1;
+    private static final int SAVING_DIALOG = 2;
     
     private LoadFormDefinitionTask mLoadFormDefinitionTask;
     private SaveFormDefinitionTask mSaveFormDefinitionTask;
     
+    private AlertDialog mAlertDialog;
+    private ProgressDialog mProgressDialog;
+    
     private FormBuilderFieldListAdapter adapter = null;  
     private Button jumpPreviousButton;
-    private ProgressDialog mDialog;
     private TextView mPathText;
    
     private String mFormId;
     private FormDocument mForm;
     private FormReader mFormReader;
+    private boolean mNewForm;
     
-    private ArrayList<Field> mFieldState;    
+    private ArrayList<Field> mFieldState = new ArrayList<Field>();    
     private ArrayList<String> mPath = new ArrayList<String>();          // Human readable location in mFieldState
     private ArrayList<String> mActualPath = new ArrayList<String>();    // Actual location in mFieldState
     
@@ -85,8 +102,6 @@ public class FormBuilderFieldList extends ListActivity
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);        
         setContentView(R.layout.form_builder_main);
         
-        Boolean newForm = true;
-        
         // Needed to manipulate the visual representation of our place in the form
         mPathText = (TextView) findViewById(R.id.pathText);
 
@@ -104,9 +119,13 @@ public class FormBuilderFieldList extends ListActivity
             // Load new form definition from scratch
             if (i != null) {
                 mFormId = i.getStringExtra(FormEntryActivity.KEY_FORMID);
+                mNewForm = i.getBooleanExtra(FormEntryActivity.NEWFORM, false);
         
                 mLoadFormDefinitionTask = new LoadFormDefinitionTask();
+                mLoadFormDefinitionTask.setFormLoaderListener(this);
                 mLoadFormDefinitionTask.execute(mFormId);
+                
+                showDialog(LOADING_DIALOG);
             }
         } else {          
             // Restore state information provided by this activity
@@ -120,7 +139,7 @@ public class FormBuilderFieldList extends ListActivity
                 mActualPath = savedInstanceState.getStringArrayList(FormEntryActivity.KEY_FORMACTUALPATH);
             
             if (savedInstanceState.containsKey(FormEntryActivity.NEWFORM))
-                newForm = savedInstanceState.getBoolean(FormEntryActivity.NEWFORM, true);
+                mNewForm = savedInstanceState.getBoolean(FormEntryActivity.NEWFORM, false);
             
             // Check to see if this is a screen flip or a new form load
             Object data = getLastNonConfigurationInstance();
@@ -130,21 +149,16 @@ public class FormBuilderFieldList extends ListActivity
             } else if (data instanceof SaveFormDefinitionTask) {
                 mSaveFormDefinitionTask = (SaveFormDefinitionTask) data;
             } else if (data == null) {
-                if (newForm == false) {
-                    // Load important bits of the form definition from memory
-                    mFieldState = Collect.getInstance().getFbFieldState();
-                    mForm = Collect.getInstance().getFbForm();
-                    
-                    Field destination = gotoActiveField(null, true);
-                    
-                    if (destination == null)
-                        refreshView(mFieldState);
-                    else
-                        refreshView(destination.children);
-                } else {
-                    Collect.getInstance().setFbFieldState(null);
-                    Collect.getInstance().setFbForm(null);
-                }
+                // Load important bits of the form definition from memory
+                mFieldState = Collect.getInstance().getFbFieldState();
+                mForm = Collect.getInstance().getFbForm();
+
+                Field destination = gotoActiveField(null, true);
+
+                if (destination == null)
+                    refreshView(mFieldState);
+                else
+                    refreshView(destination.children);
             }            
         } // end if savedInstanceState == null   
     } // end onCreate
@@ -167,6 +181,73 @@ public class FormBuilderFieldList extends ListActivity
         inflater.inflate(R.menu.form_builder_context, menu);
     }
     
+    /*
+     * (non-Javadoc)
+     * 
+     * @see android.app.Activity#onCreateDialog(int)
+     */
+    @Override
+    protected Dialog onCreateDialog(int id)
+    {
+        switch (id) {
+        case LOADING_DIALOG:
+            mProgressDialog = new ProgressDialog(this);
+//
+//            DialogInterface.OnClickListener loadingButtonListener = new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which)
+//                {
+//                    dialog.dismiss();
+//                    mFormLoaderTask.setFormLoaderListener(null);
+//                    mFormLoaderTask.cancel(true);
+//                    finish();
+//                }
+//            };
+//
+//            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
+//            mProgressDialog.setTitle(getString(R.string.loading_form));
+//            mProgressDialog.setMessage(getString(R.string.please_wait));
+//            mProgressDialog.setIndeterminate(true);
+//            mProgressDialog.setCancelable(false);
+//            mProgressDialog.setButton(getString(R.string.cancel_loading_form), loadingButtonListener);
+            
+            mProgressDialog.setMessage(getText(R.string.tf_loading_please_wait));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            
+            return mProgressDialog;
+            
+        case SAVING_DIALOG:
+            mProgressDialog = new ProgressDialog(this);
+
+//            DialogInterface.OnClickListener savingButtonListener = new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which)
+//                {
+//                    dialog.dismiss();
+//                    mSaveFormDefinitionTask.setFormSavedListener(null);
+//                    mSaveFormDefinitionTask.cancel(true);
+//                }
+//            };
+
+//            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
+//            mProgressDialog.setTitle(getString(R.string.saving_form));
+//            mProgressDialog.setMessage(getString(R.string.please_wait));
+//            mProgressDialog.setIndeterminate(true);
+//            mProgressDialog.setCancelable(false);
+//            mProgressDialog.setButton(getString(R.string.cancel), savingButtonListener);
+//            mProgressDialog.setButton(getString(R.string.cancel_saving_form), savingButtonListener);            
+            
+            mProgressDialog.setMessage(getText(R.string.tf_saving_please_wait));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            
+            return mProgressDialog;
+        }
+
+        return null;
+    }
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
@@ -174,6 +255,18 @@ public class FormBuilderFieldList extends ListActivity
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.form_builder_options, menu);
         return true;
+    }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)
+    {
+        switch (keyCode) {
+        case KeyEvent.KEYCODE_BACK:
+            createQuitDialog();
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
     
     @Override
@@ -261,7 +354,10 @@ public class FormBuilderFieldList extends ListActivity
             
         case R.id.save_form:
             mSaveFormDefinitionTask = new SaveFormDefinitionTask();
-            mSaveFormDefinitionTask.execute();
+            mSaveFormDefinitionTask.setFormSavedListener(FormBuilderFieldList.this);
+            mSaveFormDefinitionTask.execute(SaveToDiskTask.SAVED);
+            
+            showDialog(SAVING_DIALOG);
             break;
             
         case R.id.help:
@@ -276,10 +372,14 @@ public class FormBuilderFieldList extends ListActivity
      */
     private class LoadFormDefinitionTask extends AsyncTask<String, Void, Void> 
     {
+        FormLoaderListener mStateListener;
+        String mError = null;
+        String mErrorMsg = "Unexpected error: ";
+        
         @Override
         protected Void doInBackground(String... args) 
         {
-            String formId = args[0];            
+            String formId = args[0];      
             
             mForm = Collect.mDb.getDb().get(FormDocument.class, formId);
             Collect.getInstance().setFbForm(mForm);
@@ -287,7 +387,9 @@ public class FormBuilderFieldList extends ListActivity
             
             Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
             AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(formId, "xml");
-            mFormReader = new FormReader(ais);
+            mFormReader = new FormReader(ais, mNewForm);
+            
+            resetStates();
             
             try {
                 ais.close();
@@ -299,93 +401,88 @@ public class FormBuilderFieldList extends ListActivity
                 Collect.getInstance().setFbInstanceState(mFormReader.getInstanceState());
                 Collect.getInstance().setFbTranslationState(mFormReader.getTranslationState());
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                mError = e.toString();
             }
             
             return null;
         }
-
+        
         @Override
-        protected void onPreExecute()
-        {
-            mDialog = new ProgressDialog(FormBuilderFieldList.this);
-            mDialog.setMessage(getText(R.string.tf_loading_please_wait));
-            mDialog.setIndeterminate(true);
-            mDialog.setCancelable(false);
-            mDialog.show();
+        protected void onPostExecute(Void nothing) {
+            synchronized (this) {
+                if (mStateListener != null) {
+                    if (mError == null) {
+                        mStateListener.loadingComplete(null);                        
+                    } else {
+                        mStateListener.loadingError(mErrorMsg + mError); 
+                    }
+                }                    
+            }
         }
-
-        @Override
-        protected void onPostExecute(Void nothing)
+        
+        public void setFormLoaderListener(FormLoaderListener sl) {
+            synchronized (this) {
+                mStateListener = sl;
+            }
+        }
+        
+        private void resetStates()
         {
-            refreshView(mFieldState);            
-            mDialog.cancel();
+            // States stored in this object
+            mFieldState = new ArrayList<Field>();
+            mPath = new ArrayList<String>();
+            mActualPath = new ArrayList<String>();
+            
+            // States stored in the global application context
+            Collect.getInstance().setFbBindState(null);
+            Collect.getInstance().setFbFieldState(null);
+            Collect.getInstance().setFbInstanceState(null);
+            Collect.getInstance().setFbTranslationState(null);
         }
     }
     
     /*
      * Save the form as-is given the state of the XForm in memory 
      */
-    private class SaveFormDefinitionTask extends AsyncTask<Void, Void, Void> 
+    private class SaveFormDefinitionTask extends AsyncTask<Integer, Void, Integer> 
     {
+        private FormSavedListener mSavedListener;
+        
         @Override
-        protected Void doInBackground(Void... nothing) 
+        protected Integer doInBackground(Integer... resultCode)
         {
-            Log.d(Collect.LOGTAG, t + "Saving form to XML...");            
-            FormWriter.writeXml(mFormReader.getInstanceRoot());            
-            return null;
-        }
+            Log.d(Collect.LOGTAG, t + "Saving form to XML and attaching to database document...");
+            
+            Integer result = resultCode[0];
+            
+            try {
+                // Write out XML to database
+                mForm.addInlineAttachment(
+                        new Attachment(
+                                "xml", 
+                                Base64.encodeToString(FormWriter.writeXml(mFormReader.getInstanceRoot()), Base64.DEFAULT), 
+                                "text/xml"));
+                
+                mForm.setStatus(FormDocument.Status.inactive);
+                Collect.mDb.getDb().update(mForm);
+            } catch (Exception e) {
+                result = SaveToDiskTask.SAVE_ERROR;
+            }
+
+            return result;
+        }  
 
         @Override
-        protected void onPreExecute()
-        {
-            mDialog = new ProgressDialog(FormBuilderFieldList.this);
-            mDialog.setMessage(getText(R.string.tf_saving_please_wait));
-            mDialog.setIndeterminate(true);
-            mDialog.setCancelable(false);
-            mDialog.show();
-        }
-
-        @Override
-        protected void onPostExecute(Void nothing)
-        {    
-            mDialog.cancel();
-        }
-    }
-    
-    public void goUpLevel()
-    {
-        Field destination;
-        
-        // Special logic to hide the complexity of repeated elements
-        if (mActualPath.size() > mPath.size()) {
-            /*
-             * This will evaluate to true when we have navigated into a repeated group since
-             * the actual representation is <group><label>...</label><repeat ... /></group>
-             * and we want to represent it as one field vs. travelling two depths to get at
-             * the list of repeated elements.
-             */
-            mPath.remove(mPath.size() - 1);                 // Remove the "group" label
-            mActualPath.remove(mActualPath.size() - 1);     // Remove the repeated element 
-            mActualPath.remove(mActualPath.size() - 1);     // Remove the "group" element
-        } else {
-            mPath.remove(mPath.size() - 1);
-            mActualPath.remove(mActualPath.size() - 1);     // Remove the group element
+        protected void onPostExecute(Integer result) {
+            synchronized (this) {
+                if (mSavedListener != null)
+                    mSavedListener.savingComplete(result);
+            }
         }
         
-        destination = gotoActiveField(null, false);
-        
-        if (destination == null)
-            refreshView(mFieldState);
-        else {
-            // Special support for nested repeated groups
-            if (destination.children.size() == 1 && destination.children.get(0).getType().equals("repeat")) {
-                mActualPath.add(destination.getLabel().toString());
-                mActualPath.add(destination.children.get(0).getLabel().toString());
-                refreshView(destination.children.get(0).children);
-            } else {                            
-                refreshView(destination.children);
+        public void setFormSavedListener(FormSavedListener fsl) {
+            synchronized (this) {
+                mSavedListener = fsl;
             }
         }
     }
@@ -446,6 +543,126 @@ public class FormBuilderFieldList extends ListActivity
         return null;        
     }
     
+    public void goUpLevel()
+    {
+        Field destination;
+        
+        // Special logic to hide the complexity of repeated elements
+        if (mActualPath.size() > mPath.size()) {
+            /*
+             * This will evaluate to true when we have navigated into a repeated group since
+             * the actual representation is <group><label>...</label><repeat ... /></group>
+             * and we want to represent it as one field vs. travelling two depths to get at
+             * the list of repeated elements.
+             */
+            mPath.remove(mPath.size() - 1);                 // Remove the "group" label
+            mActualPath.remove(mActualPath.size() - 1);     // Remove the repeated element 
+            mActualPath.remove(mActualPath.size() - 1);     // Remove the "group" element
+        } else {
+            mPath.remove(mPath.size() - 1);
+            mActualPath.remove(mActualPath.size() - 1);     // Remove the group element
+        }
+        
+        destination = gotoActiveField(null, false);
+        
+        if (destination == null)
+            refreshView(mFieldState);
+        else {
+            // Special support for nested repeated groups
+            if (destination.children.size() == 1 && destination.children.get(0).getType().equals("repeat")) {
+                mActualPath.add(destination.getLabel().toString());
+                mActualPath.add(destination.children.get(0).getLabel().toString());
+                refreshView(destination.children.get(0).children);
+            } else {                            
+                refreshView(destination.children);
+            }
+        }
+    }
+    
+    /*
+     * This is repurposed from the FormLoadListener used for FormEntryActivity and as such
+     * the FormEntryController parameter has no use here and will be passed a null value.
+     * 
+     * (non-Javadoc)
+     * @see com.radicaldynamic.turboform.listeners.FormLoaderListener#loadingComplete(org.javarosa.form.api.FormEntryController)
+     */
+    @Override
+    public void loadingComplete(FormEntryController fec)
+    {
+        dismissDialog(LOADING_DIALOG);        
+        refreshView(mFieldState);
+    }
+
+    @Override
+    public void loadingError(String errorMsg)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void savingComplete(int saveStatus)
+    {
+        dismissDialog(SAVING_DIALOG);
+
+        switch (saveStatus) {
+        case SaveToDiskTask.SAVED:
+            Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();
+            break;
+        case SaveToDiskTask.SAVED_AND_EXIT:
+            Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();
+            finish();
+            break;
+        case SaveToDiskTask.SAVE_ERROR:
+            Toast.makeText(getApplicationContext(), getString(R.string.data_saved_error), Toast.LENGTH_LONG).show();
+            break;
+        }
+    }   
+
+    private void createQuitDialog()
+    {
+        String[] items = {
+                getString(R.string.do_not_save),
+                getString(R.string.quit_entry), 
+                getString(R.string.do_not_exit)
+        };
+    
+        mAlertDialog = new AlertDialog.Builder(this)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle(getString(R.string.quit_application))
+            .setItems(items,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        switch (which) {
+                        case 0:
+                            // Discard any changes and exit
+                            if (mForm.getStatus() == FormDocument.Status.temporary)
+                                Collect.mDb.getDb().delete(mForm);
+                            
+                            finish();
+                            break;
+    
+                        case 1:
+                            // Save and exit
+                            mSaveFormDefinitionTask = new SaveFormDefinitionTask();
+                            mSaveFormDefinitionTask.setFormSavedListener(FormBuilderFieldList.this);
+                            mSaveFormDefinitionTask.execute(SaveToDiskTask.SAVED_AND_EXIT);
+                            
+                            showDialog(SAVING_DIALOG);
+                            break;
+    
+                        case 2:
+                            // Do nothing
+                            break;    
+                        }
+                    }
+                }).create();
+    
+        mAlertDialog.show();
+    }
+
     private void refreshView(ArrayList<Field> fieldsToDisplay)
     {
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_editing) + " " + mForm.getName());

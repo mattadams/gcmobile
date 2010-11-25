@@ -85,6 +85,22 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     }
 
 
+    @Override
+    protected void onPostExecute(Integer result) {
+        synchronized (this) {
+            if (mSavedListener != null)
+                mSavedListener.savingComplete(result);
+        }
+    }
+
+
+    @Override
+    protected void onProgressUpdate(String... values) 
+    {
+        Collect.getInstance().createConstraintToast(values[0], Integer.valueOf(values[1]).intValue());
+    }
+
+
     public boolean exportData(Context context, boolean markCompleted) {
         ByteArrayPayload payload;
         
@@ -93,7 +109,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
             FormInstance datamodel = Collect.getInstance().getFormEntryController().getModel().getForm().getInstance();
             XFormSerializingVisitor serializer = new XFormSerializingVisitor();
             payload = (ByteArrayPayload) serializer.createSerializedPayload(datamodel);
-
+    
             // Write out XML
             exportXmlFile(payload, markCompleted);
         } catch (IOException e) {
@@ -101,8 +117,23 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
             e.printStackTrace();
             return false;
         }
-
+    
         return true;
+    }
+
+
+    public void setExportVars(Context context, String instanceId, Boolean saveAndExit, Boolean markCompleted) {        
+        mContext = context;
+        mSave = saveAndExit;
+        mMarkCompleted = markCompleted;
+        mInstanceId = instanceId;
+    }
+
+
+    public void setFormSavedListener(FormSavedListener fsl) {
+        synchronized (this) {
+            mSavedListener = fsl;
+        }
     }
 
 
@@ -110,7 +141,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         // Create data stream
         InputStream is = payload.getPayloadStream();
         int len = (int) payload.getLength();
-
+    
         // Read from data stream
         byte[] data = new byte[len];
         
@@ -158,32 +189,8 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
             e.printStackTrace();
             return false;
         }
-
+    
         return false;
-    }
-
-
-    @Override
-    protected void onPostExecute(Integer result) {
-        synchronized (this) {
-            if (mSavedListener != null)
-                mSavedListener.savingComplete(result);
-        }
-    }
-
-
-    public void setFormSavedListener(FormSavedListener fsl) {
-        synchronized (this) {
-            mSavedListener = fsl;
-        }
-    }
-
-
-    public void setExportVars(Context context, String instanceId, Boolean saveAndExit, Boolean markCompleted) {        
-        mContext = context;
-        mSave = saveAndExit;
-        mMarkCompleted = markCompleted;
-        mInstanceId = instanceId;
     }
 
 
@@ -198,9 +205,9 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     	FormEntryController fec = Collect.getInstance().getFormEntryController();
         FormEntryModel fem = fec.getModel();
         FormIndex i = fem.getFormIndex();
-
+    
         fec.jumpToIndex(FormIndex.createBeginningOfFormIndex());
-
+    
         int event;
         
         while ((event = fec.stepToNextEvent()) != FormEntryController.EVENT_END_OF_FORM) {
@@ -215,15 +222,9 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 }
             }
         }
-
+    
         fec.jumpToIndex(i);
         
         return VALIDATED;
-    }
-
-    @Override
-    protected void onProgressUpdate(String... values) 
-    {
-        Collect.getInstance().createConstraintToast(values[0], Integer.valueOf(values[1]).intValue());
     } 
 }

@@ -15,7 +15,6 @@
 package com.radicaldynamic.turboform.activities;
 
 import java.io.File;
-import java.util.regex.Pattern;
 
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;

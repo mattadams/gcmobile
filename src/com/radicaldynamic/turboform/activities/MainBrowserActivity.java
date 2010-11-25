@@ -149,7 +149,8 @@ public class MainBrowserActivity extends ListActivity
     @Override
     protected void onDestroy()
     {
-        unbindService(mConnection);
+        unbindService(mConnection);  
+
         super.onDestroy();
     }
 
@@ -355,6 +356,16 @@ public class MainBrowserActivity extends ListActivity
         @Override
         protected void onPostExecute(InstanceDocument.Status status)
         {
+            /*
+             * Special hack to ensure that our application doesn't crash if we terminate it
+             * before the AsyncTask has finished running.  This is stupid and I don't know
+             * another way around it.
+             * 
+             * See http://dimitar.me/android-displaying-dialogs-from-background-threads/
+             */
+            if (isFinishing())
+                return;
+            
             BrowserListAdapter adapter;
             adapter = new BrowserListAdapter(getApplicationContext(),
                     R.layout.main_browser_list_item, documents,

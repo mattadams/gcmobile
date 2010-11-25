@@ -116,6 +116,9 @@ public class CouchDbService extends Service {
         TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);         
         String database = getString(R.string.tf_couchdb_prefix) + "device/" + mTelephonyMgr.getDeviceId();
         
+        // TODO: replace this with something more sensible
+        database = "myforms";
+        
         return open(database);
     }
     

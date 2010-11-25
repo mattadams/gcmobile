@@ -33,11 +33,34 @@ public class FormReader
         Collections.addAll(mFieldList, "group", "input", "item", "repeat", "select", "select1", "trigger", "upload");
     }
     
-    public FormReader(InputStream is)
+    /*
+     * Used to read in a form definition for manipulation by the Form Builder.
+     * 
+     * If newForm is true then FormReader will expect that the form template is bare and
+     * requires initialization (add new instance root, etc).
+     */
+    public FormReader(InputStream is, boolean newForm)
     {
         mForm = XMLDoc.from(is, false);
         mDefaultPrefix = mForm.getPefix("http://www.w3.org/2002/xforms");
-        mInstanceRoot = mForm.gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getCurrentTagName();
+        
+        // Initialize new forms
+        if (newForm) {
+            // This might now be rigorous enough for i18n input
+            String formName = Collect.getInstance().getFbForm().getName(); 
+            String instanceRoot = formName.replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9]", "");
+            
+            Log.d(Collect.LOGTAG, t + "generated instance root name and name space word of " + instanceRoot);
+            
+            mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
+            mForm.addTag(XMLDoc.from("<" + instanceRoot + " xmlns=\"" + instanceRoot + "\"></" + instanceRoot + ">", false));
+        }
+        
+        mInstanceRoot = mForm
+            .gotoRoot()
+            .gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix)
+            .gotoChild()
+            .getCurrentTagName();
         
         Log.d(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
         Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
