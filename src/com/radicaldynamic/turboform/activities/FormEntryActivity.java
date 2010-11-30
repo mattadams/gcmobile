@@ -590,7 +590,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 saveCurrentAnswer(false);
             }
     
-            Intent i = new Intent(this, FormHierarchyList.class);            
+            Intent i = new Intent(this, FormHierarchyList.class);
+            i.putExtra(FormHierarchyList.KEY_INSTANCEID, mInstanceId);
             startActivityForResult(i, HIERARCHY_BROWSER);
         }
     
@@ -715,7 +716,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 
                 // We've just loaded a saved form, so start in the hierarchy view
                 Intent i = new Intent(this, FormHierarchyList.class);
-                i.putExtra(FormHierarchyList.KEY_AUTO_LOAD, true);
+                i.putExtra(FormHierarchyList.KEY_INSTANCEID, mInstanceId);
+                i.putExtra(FormHierarchyList.KEY_AUTO_LOAD, true);                
                 startActivityForResult(i, HIERARCHY_BROWSER);
 
                 // So we don't show the introduction screen before jumping to the hierarchy
@@ -845,7 +847,15 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         
         if (Collect.getInstance().getInstanceBrowseList().size() > 1) {            
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            mBrowserButtons = inflater.inflate(R.layout.form_browser_buttons, mRelativeLayout, false);            
+            mBrowserButtons = inflater.inflate(R.layout.form_browser_buttons, mRelativeLayout, false);
+            
+            TextView positionText = (TextView) mBrowserButtons.findViewById(R.id.position);
+            
+            // Set current position relative to the number of instances in the index
+            Integer currentPosition = Collect.getInstance().getInstanceBrowseList().indexOf(mInstanceId) + 1;            
+            positionText.setText(currentPosition + "/" + Collect.getInstance().getInstanceBrowseList().size());
+            
+            // Finalise the display
             mRelativeLayout.addView(mBrowserButtons);
             
             ((Button) mBrowserButtons.findViewById(R.id.next_instance)).setOnClickListener(

@@ -10,21 +10,30 @@
                 
     <TableRow>
         <Button
+            android:id="@+id/previous_instance"
             android:layout_width="0dip"
             android:layout_height="wrap_content"   
-            android:layout_weight=".50"     
+            android:layout_weight=".33"     
             android:drawableLeft="@drawable/previous_arrow_32"
-            android:textColor="@color/solid_black"
-            android:id="@+id/previous_instance"
-            android:text="@string/tf_previous_instance" />
+            android:textColor="@color/solid_black"            
+            android:text="" />
+            
+        <TextView
+            android:id="@+id/position"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:layout_height="wrap_content"
+            android:layout_width="0dip"
+            android:layout_weight=".33"
+            android:text="" />            
         
         <Button
+            android:id="@+id/next_instance"
             android:layout_width="0dip"
             android:layout_height="wrap_content"   
-            android:layout_weight=".50"         
+            android:layout_weight=".33"         
             android:drawableRight="@drawable/next_arrow_32"
-            android:textColor="@color/solid_black"
-            android:id="@+id/next_instance"
-            android:text="@string/tf_next_instance" />
+            android:textColor="@color/solid_black"            
+            android:text="" />
     </TableRow>
 </TableLayout>

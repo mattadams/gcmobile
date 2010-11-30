@@ -65,6 +65,7 @@ public class FormHierarchyList extends ListActivity {
     private Button jumpPreviousButton;
     
     private boolean mLoadedAutomatically;
+    private String mInstanceId = null;                              // Needed so that we can display our position in the index of instances
     
     List<HierarchyElement> formList;
     FormIndex mStartIndex;
@@ -80,12 +81,24 @@ public class FormHierarchyList extends ListActivity {
         // We use a static FormEntryController to make jumping faster
         mFormEntryController = Collect.getInstance().getFormEntryController();
         mFormEntryModel = mFormEntryController.getModel();
-        mStartIndex = mFormEntryModel.getFormIndex();
+        mStartIndex = mFormEntryModel.getFormIndex();        
+        
+        // Determine whether this activity was loaded automatically or manually
+        Intent intent = getIntent();
+        mLoadedAutomatically = intent.getBooleanExtra(KEY_AUTO_LOAD, false);
+        mInstanceId = intent.getStringExtra(KEY_INSTANCEID);
         
         if (Collect.getInstance().getInstanceBrowseList().size() > 1) {           
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             mRelativeLayout = (RelativeLayout) findViewById(R.id.rl);                        
             mBrowserButtons = inflater.inflate(R.layout.form_browser_buttons, mRelativeLayout, false);
+            
+            TextView positionText = (TextView) mBrowserButtons.findViewById(R.id.position);
+            
+            // Set current position relative to the number of instances in the index
+            Integer currentPosition = Collect.getInstance().getInstanceBrowseList().indexOf(mInstanceId) + 1;            
+            positionText.setText(currentPosition + "/" + Collect.getInstance().getInstanceBrowseList().size());
+            
             mRelativeLayout.addView(mBrowserButtons);
             mRelativeLayout.invalidate();            
             
@@ -114,6 +127,10 @@ public class FormHierarchyList extends ListActivity {
 
         mPath = (TextView) findViewById(R.id.pathtext);
 
+        /*
+         * Set up listeners on the jump buttons
+         */
+        
         jumpPreviousButton = (Button) findViewById(R.id.jumpPreviousButton);
         jumpPreviousButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -143,10 +160,6 @@ public class FormHierarchyList extends ListActivity {
         });
         
         refreshView();
-        
-        // Determine whether this activity was loaded automatically or manually
-        Intent intent = getIntent();
-        mLoadedAutomatically = intent.getBooleanExtra(KEY_AUTO_LOAD, false);
     }
 
     @Override
@@ -262,6 +275,7 @@ public class FormHierarchyList extends ListActivity {
         }
 
         int event = mFormEntryModel.getEvent();
+        
         if (event == FormEntryController.EVENT_BEGINNING_OF_FORM) {
             // The beginning of form has no valid prompt to display.
             mFormEntryController.stepToNextEvent();
@@ -293,10 +307,13 @@ public class FormHierarchyList extends ListActivity {
                     FormEntryPrompt fp = mFormEntryModel.getQuestionPrompt();
                     formList.add(new HierarchyElement(fp.getLongText(), fp.getAnswerText(), null,
                             Color.WHITE, QUESTION, fp.getIndex()));
+                    
                     break;
+                    
                 case FormEntryController.EVENT_GROUP:
                     // ignore group events
                     break;
+                    
                 case FormEntryController.EVENT_PROMPT_NEW_REPEAT:
                     if (enclosingGroupRef.compareTo(mFormEntryModel.getFormIndex().getReference()
                             .toString(false)) == 0) {
@@ -319,7 +336,9 @@ public class FormHierarchyList extends ListActivity {
                         // repeatedGroupName variable
                         repeatedGroupRef = "";
                     }
+                    
                     break;
+                    
                 case FormEntryController.EVENT_REPEAT:
                     FormEntryCaption fc = mFormEntryModel.getCaptionPrompt();
                     if (enclosingGroupRef.compareTo(mFormEntryModel.getFormIndex().getReference()
@@ -348,8 +367,10 @@ public class FormHierarchyList extends ListActivity {
                                 + (fc.getMultiplicity() + 1), null, null, Color.WHITE, CHILD, fc
                                 .getIndex()));
                     }
+                    
                     break;
             }
+            
             event = mFormEntryController.stepToNextEvent();
         }
 
