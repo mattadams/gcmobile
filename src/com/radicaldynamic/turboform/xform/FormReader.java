@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.UUID;
 
 import android.util.Base64;
 import android.util.Log;
@@ -44,13 +45,27 @@ public class FormReader
         mForm = XMLDoc.from(is, false);
         mDefaultPrefix = mForm.getPefix("http://www.w3.org/2002/xforms");
         
+        /*
+         * This hack is in place in case a new form has been created but fails the first save attempt,
+         * thereby creating a form that will not contain an instance root.  Since instance roots are
+         * expected, the lack of one will crash this application.
+         * 
+         * FIXME: eventually remove this hack
+         */
+        if (mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).getChildCount() == 0)
+            newForm = true;
+        
         // Initialize new forms
         if (newForm) {
             // This might now be rigorous enough for i18n input
             String formName = Collect.getInstance().getFbForm().getName(); 
             String instanceRoot = formName.replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9]", "");
             
-            Log.d(Collect.LOGTAG, t + "generated instance root name and name space word of " + instanceRoot);
+            // Just in case the form name did not have anything useful in it with which to generate a sane instance root
+            if (instanceRoot.length() == 0) {
+                Log.i(Collect.LOGTAG, t + "unable to construct instance root from form getName() of " + formName);
+                instanceRoot = UUID.randomUUID().toString();
+            }
             
             mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
             mForm.addTag(XMLDoc.from("<" + instanceRoot + " xmlns=\"" + instanceRoot + "\"></" + instanceRoot + ">", false));
@@ -172,16 +187,16 @@ public class FormReader
         if (incomingParent == null)
             it = mFieldState.iterator();
         else
-            it = incomingParent.children.iterator();
+            it = incomingParent.getChildren().iterator();
         
         while (it.hasNext()) {
             Field parent = it.next();
             
             if (child.getCurrentTagLocation().split("/").length - parent.getLocation().split("/").length == 1 &&
                     parent.getLocation().equals(child.getCurrentTagLocation().substring(0, parent.getLocation().length())))
-                parent.children.add(new Field(child, mBindState, mInstanceRoot, parent));
+                parent.getChildren().add(new Field(child, mBindState, mInstanceRoot, parent));
             
-            if (!parent.children.isEmpty())
+            if (!parent.getChildren().isEmpty())
                 attachChildToParentField(child, parent);
         }
     }
@@ -240,7 +255,7 @@ public class FormReader
             return true;
         }
         
-        Iterator<Field> children = targetField.children.iterator();
+        Iterator<Field> children = targetField.getChildren().iterator();
         
         while (children.hasNext()) {
             Field child = children.next();
@@ -344,14 +359,14 @@ public class FormReader
         if (field == null) {
             it = mFieldState.iterator();
         } else { 
-            if (field.getRef() != null && field.getRef().equals(instance.getXpath())) {
-                Log.v(Collect.LOGTAG, t + "instance matched with field object via " + instance.getXpath());
+            if (field.getXPath() != null && field.getXPath().equals(instance.getXPath())) {
+                Log.v(Collect.LOGTAG, t + "instance matched with field object via " + instance.getXPath());
                 field.setInstance(instance);
                 field.getInstance().setField(field);
                 return true;
             }
             
-            it = field.children.iterator();
+            it = field.getChildren().iterator();
         }
         
         while (it.hasNext()) {

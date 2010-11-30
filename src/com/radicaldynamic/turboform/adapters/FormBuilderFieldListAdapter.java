@@ -60,13 +60,13 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
             fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_group));            
             
             // Special logic to hide the complexity of repeated elements
-            if (field.children.size() == 1 && field.children.get(0).getType().equals("repeat"))
+            if (Field.isRepeatedGroup(field))
                 details.add("Repeated group");
             else 
-                if (field.children.size() == 1)
-                    details.add("Contains " + field.children.size() + " element");
+                if (field.getChildren().size() == 1)
+                    details.add("Contains " + field.getChildren().size() + " field");
                 else
-                    details.add("Contains " + field.children.size() + " elements");
+                    details.add("Contains " + field.getChildren().size() + " fields");
             
         } else if (field.getType().equals("input")) {
             Drawable icon = getDrawable(R.drawable.element_string);
@@ -91,18 +91,18 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
             
         } else if (field.getType().equals("select")) {
             fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_selectmulti));
-            details.add(field.children.size() + " items");
+            details.add(field.getChildren().size() + " items");
             
         } else if (field.getType().equals("select1")) {
             fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
-            details.add(field.children.size() + " items");
+            details.add(field.getChildren().size() + " items");
             
         } else if (field.getType().equals("trigger")) {
             fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_noicon));
             details.add("Trigger");
             
         } else if (field.getType().equals("upload")) {
-            String mediaType = field.attributes.get("mediatype");
+            String mediaType = field.getAttributes().get("mediatype");
             mediaType = mediaType.substring(0, 1).toUpperCase() + mediaType.substring(1, 5) + " media";
                         
             fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_media));

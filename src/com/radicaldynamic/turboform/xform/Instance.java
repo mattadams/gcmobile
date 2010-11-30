@@ -22,7 +22,7 @@ public class Instance
         
     private String location     = null;             // The XML element location of this node (e.g., *[2]/*[1])
     private String xpath        = null;             // The XPath to this element (same as "ref" or "nodeset" for fields)
-    private String defaultValue = "";               // Any defaultValue assigned to this element
+    private String defaultValue = null;             // Any defaultValue assigned to this element
     
     private boolean active      = false;            // Used to determine which field is "active" in form builder navigation
     private boolean hidden      = false;            // This is a hidden instance (it has no associated field)
@@ -33,7 +33,7 @@ public class Instance
      */
     public Instance()
     {
-        
+        this.defaultValue = "";
     }
     
     public Instance(String instancePath, String defaultValue, String location, ArrayList<Bind> binds)
@@ -50,9 +50,9 @@ public class Instance
             Bind b = it.next();
 
             // If a bind with a nodeset identical to this ref exists, associate it with this field
-            if (b.getNodeset().equals(instancePath)) {
+            if (b.getXPath().equals(instancePath)) {
                 setBind(b);
-                Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getNodeset() + " bound to this instance at " + instancePath);
+                Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getXPath() + " bound to this instance at " + instancePath);
             }
         }
     }
@@ -102,12 +102,12 @@ public class Instance
         return location;
     }
 
-    public void setXpath(String xpath)
+    public void setXPath(String xpath)
     {
         this.xpath = xpath;
     }
 
-    public String getXpath()
+    public String getXPath()
     {
         return xpath;
     }

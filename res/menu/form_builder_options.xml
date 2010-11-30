@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-<item android:icon="@android:drawable/ic_menu_add" android:id="@+id/add_form_element" android:title="@string/tf_add_form_element">
+<item android:icon="@android:drawable/ic_menu_add" android:id="@+id/add_form_field" android:title="@string/tf_add_form_field">
     <menu>
         <item android:id="@+id/barcode" android:title="@string/tf_element_barcode" />
         <item android:id="@+id/date" android:title="@string/tf_element_date" />

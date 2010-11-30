@@ -34,7 +34,8 @@ public final class FormWriter
         
         // Either write out translations or remove the unused itext tag
         if (Collect.getInstance().getFbTranslationState().size() > 0) {
-            mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).addTag(mDefaultPrefix + ":itext");
+            if (!mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix))
+                mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).addTag(mDefaultPrefix + ":itext");
             writeTranslations(null);
         } else {
             if (mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix))
@@ -65,11 +66,11 @@ public final class FormWriter
             mFormTag.addTag(field.getType());
 
             // Support for repeat (nodeset) references as well as regular references
-            if (field.getRef() != null)
-                if (field.getAttributes().containsKey("nodeset"))
-                    mFormTag.getCurrentTag().setAttribute("nodeset", field.getRef());
+            if (field.getXPath() != null)
+                if (field.getType().equals("repeat"))
+                    mFormTag.getCurrentTag().setAttribute("nodeset", field.getXPath());
                 else 
-                    mFormTag.getCurrentTag().setAttribute("ref", field.getRef());
+                    mFormTag.getCurrentTag().setAttribute("ref", field.getXPath());
             
             // Upload control fields only
             if (field.getAttributes().containsKey("mediatype"))
@@ -120,9 +121,9 @@ public final class FormWriter
             Bind bind = it.next();
             
             if (bind.hasUnhandledAttribute())
-                Log.w(Collect.LOGTAG, t + "bind " + bind.getNodeset() + " has unhandled attributes that will not be written; data will be lost!");
+                Log.w(Collect.LOGTAG, t + "bind " + bind.getXPath() + " has unhandled attributes that will not be written; data will be lost!");
             
-            mFormTag.addTag("bind").addAttribute("nodeset", bind.getNodeset());
+            mFormTag.addTag("bind").addAttribute("nodeset", bind.getXPath());
             
             // The following are conditional attributes
             if (bind.getType() != null) mFormTag.getCurrentTag().setAttribute("type", bind.getType());
@@ -153,7 +154,10 @@ public final class FormWriter
             
             // Initialize the instance root (only done once)
             mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
-            mFormTag.addTag(XMLDoc.from("<" + mInstanceRoot + " xmlns=\"" + mInstanceRoot + "\"></" + mInstanceRoot + ">", false));
+            mFormTag.addTag(mInstanceRoot);            
+            
+            // TODO: find another way to accomplish this, xmltool makes it possible but very difficult
+            //mFormTag.addTag(XMLDoc.from("<" + mInstanceRoot + " xmlns=\"" + mInstanceRoot + "\"></" + mInstanceRoot + ">", false));
         } else
             it = incomingInstance.getChildren().iterator();
             

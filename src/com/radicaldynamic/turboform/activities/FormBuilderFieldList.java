@@ -51,6 +51,10 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private static final int LOADING_DIALOG = 1;
     private static final int SAVING_DIALOG = 2;
     
+    private static final int EDIT_FIELD = 1;
+    
+    private static final String INSTANCE_ROOT = "instanceroot";
+    
     private LoadFormDefinitionTask mLoadFormDefinitionTask;
     private SaveFormDefinitionTask mSaveFormDefinitionTask;
     
@@ -62,6 +66,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private TextView mPathText;
    
     private String mFormId;
+    private String mInstanceRoot;
     private FormDocument mForm;
     private FormReader mFormReader;
     private boolean mNewForm;
@@ -92,7 +97,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         {
             adapter.remove(adapter.getItem(which));
         }
-    };    
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -141,6 +146,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             if (savedInstanceState.containsKey(FormEntryActivity.NEWFORM))
                 mNewForm = savedInstanceState.getBoolean(FormEntryActivity.NEWFORM, false);
             
+            if (savedInstanceState.containsKey(INSTANCE_ROOT))
+                mInstanceRoot = savedInstanceState.getString(INSTANCE_ROOT);
+            
             // Check to see if this is a screen flip or a new form load
             Object data = getLastNonConfigurationInstance();
             
@@ -153,24 +161,37 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 mFieldState = Collect.getInstance().getFbFieldState();
                 mForm = Collect.getInstance().getFbForm();
 
-                Field destination = gotoActiveField(null, true);
-
-                if (destination == null)
-                    refreshView(mFieldState);
-                else
-                    refreshView(destination.children);
+                refreshView();
             }            
         } // end if savedInstanceState == null   
     } // end onCreate
     
-    @Override
-    protected void onSaveInstanceState(Bundle outState)
+    // Listen for results
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(FormEntryActivity.NEWFORM, false);
-        outState.putString(FormEntryActivity.KEY_FORMID, mFormId);
-        outState.putStringArrayList(FormEntryActivity.KEY_FORMPATH, mPath);
-        outState.putStringArrayList(FormEntryActivity.KEY_FORMACTUALPATH, mActualPath);
+        if (resultCode == RESULT_CANCELED)
+            return;
+        
+        switch (requestCode) {
+        case EDIT_FIELD:
+            Field field = Collect.getInstance().getFbField();
+            
+            if (field.isSaved()) {
+                field.setSaved(false);
+                Toast.makeText(
+                        getApplicationContext(),
+                        getString(R.string.data_saved_ok), 
+                        Toast.LENGTH_SHORT).show();
+            }
+
+            // New fields require further initialization after being "saved" (hallelujah!)
+            if (field.isNewField())
+                addNewField(field);
+            else 
+                updateExistingField(field);
+            
+            break;
+        }
     }
 
     @Override
@@ -192,56 +213,16 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         switch (id) {
         case LOADING_DIALOG:
             mProgressDialog = new ProgressDialog(this);
-//
-//            DialogInterface.OnClickListener loadingButtonListener = new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which)
-//                {
-//                    dialog.dismiss();
-//                    mFormLoaderTask.setFormLoaderListener(null);
-//                    mFormLoaderTask.cancel(true);
-//                    finish();
-//                }
-//            };
-//
-//            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
-//            mProgressDialog.setTitle(getString(R.string.loading_form));
-//            mProgressDialog.setMessage(getString(R.string.please_wait));
-//            mProgressDialog.setIndeterminate(true);
-//            mProgressDialog.setCancelable(false);
-//            mProgressDialog.setButton(getString(R.string.cancel_loading_form), loadingButtonListener);
-            
             mProgressDialog.setMessage(getText(R.string.tf_loading_please_wait));
             mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            
+            mProgressDialog.setCancelable(false);            
             return mProgressDialog;
             
         case SAVING_DIALOG:
-            mProgressDialog = new ProgressDialog(this);
-
-//            DialogInterface.OnClickListener savingButtonListener = new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which)
-//                {
-//                    dialog.dismiss();
-//                    mSaveFormDefinitionTask.setFormSavedListener(null);
-//                    mSaveFormDefinitionTask.cancel(true);
-//                }
-//            };
-
-//            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
-//            mProgressDialog.setTitle(getString(R.string.saving_form));
-//            mProgressDialog.setMessage(getString(R.string.please_wait));
-//            mProgressDialog.setIndeterminate(true);
-//            mProgressDialog.setCancelable(false);
-//            mProgressDialog.setButton(getString(R.string.cancel), savingButtonListener);
-//            mProgressDialog.setButton(getString(R.string.cancel_saving_form), savingButtonListener);            
-            
+            mProgressDialog = new ProgressDialog(this);   
             mProgressDialog.setMessage(getText(R.string.tf_saving_please_wait));
             mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            
+            mProgressDialog.setCancelable(false);            
             return mProgressDialog;
         }
 
@@ -282,7 +263,13 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
          * option menu that will become enabled if the user has navigated below the top).
          */
         if (field.getType().equals("group") || field.getType().equals("repeat")) {
-            // So we can find our way back "up" the tree later
+            /*
+             * So we can find our way back "up" the tree later
+             * 
+             * Note that the "repeated" portions of repeated groups never become active; 
+             * we just hide this from the user using specific control decisions.  This might
+             * become a candidate for refactoring later, though.  It is a bit hairy.
+             */
             field.setActive(true);
             
             // Deactivate the parent, if applicable
@@ -295,19 +282,19 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             
             mPath.add(field.getLabel().toString());
             
-            // Special logic to hide the complexity of repeated elements
-            if (field.children.size() == 1 && field.children.get(0).getType().equals("repeat")) {
+            // Special logic to hide the complexity of repeated groups
+            if (Field.isRepeatedGroup(field)) {
                 mActualPath.add(field.getLabel().toString());
-                mActualPath.add(field.children.get(0).getLabel().toString());
-                refreshView(field.children.get(0).children);
+                mActualPath.add(field.getRepeat().getLabel().toString());
+                refreshView(field.getRepeat().getChildren());
             } else {
                 mActualPath.add(field.getLabel().toString());
-                refreshView(field.children);
+                refreshView(field.getChildren());
             }
         } else {
             /*
              * There is no case here for groups/repeated groups since this is not how
-             * 
+             * we access them via the form builder field editor
              */
             String humanFieldType = null;
             
@@ -327,7 +314,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 humanFieldType = "trigger";
             
             if (humanFieldType != null) 
-                startElementEditor(humanFieldType, field);
+                startFieldEditor(humanFieldType, field);
             else 
                 Log.w(Collect.LOGTAG, t + "Unable to determine field type and start element editor");            
         } // end if field type is group or repeat        
@@ -338,14 +325,14 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     {
         switch (item.getItemId()) {
         
-        case R.id.barcode:  startElementEditor("barcode",   null);  break;
-        case R.id.date:     startElementEditor("date",      null);  break;
-        case R.id.geopoint: startElementEditor("geopoint",  null);  break;
-        case R.id.group:    startElementEditor("group",     null);  break;
-        case R.id.media:    startElementEditor("media",     null);  break;
-        case R.id.number:   startElementEditor("number",    null);  break;
-        case R.id.select:   startElementEditor("select",    null);  break;
-        case R.id.text:     startElementEditor("text",      null);  break;
+        case R.id.barcode:  startFieldEditor("barcode",   null);  break;
+        case R.id.date:     startFieldEditor("date",      null);  break;
+        case R.id.geopoint: startFieldEditor("geopoint",  null);  break;
+        case R.id.group:    startFieldEditor("group",     null);  break;
+        case R.id.media:    startFieldEditor("media",     null);  break;
+        case R.id.number:   startFieldEditor("number",    null);  break;
+        case R.id.select:   startFieldEditor("select",    null);  break;
+        case R.id.text:     startFieldEditor("text",      null);  break;
         
         case R.id.view_instance:
             Intent i = new Intent(this, FormBuilderInstanceList.class);       
@@ -367,6 +354,17 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         return super.onOptionsItemSelected(item);
     }
     
+    @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(FormEntryActivity.NEWFORM, false);
+        outState.putString(FormEntryActivity.KEY_FORMID, mFormId);
+        outState.putString(INSTANCE_ROOT, mInstanceRoot);
+        outState.putStringArrayList(FormEntryActivity.KEY_FORMPATH, mPath);
+        outState.putStringArrayList(FormEntryActivity.KEY_FORMACTUALPATH, mActualPath);
+    }
+
     /*
      * Parse and load the form so that it can be displayed and manipulated
      */
@@ -394,8 +392,11 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             try {
                 ais.close();
                 
-                mFormReader.parseForm();            
+                mFormReader.parseForm();
+                
                 mFieldState = mFormReader.getFieldState();
+                mInstanceRoot = mFormReader.getInstanceRoot();
+                
                 Collect.getInstance().setFbBindState(mFormReader.getBindState());
                 Collect.getInstance().setFbFieldState(mFieldState);
                 Collect.getInstance().setFbInstanceState(mFormReader.getInstanceState());
@@ -451,7 +452,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         @Override
         protected Integer doInBackground(Integer... resultCode)
         {
-            Log.d(Collect.LOGTAG, t + "Saving form to XML and attaching to database document...");
+            Log.d(Collect.LOGTAG, t + "converting form to XML and attaching to database document...");
             
             Integer result = resultCode[0];
             
@@ -466,6 +467,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 mForm.setStatus(FormDocument.Status.inactive);
                 Collect.mDb.getDb().update(mForm);
             } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "failed writing XForm to XML: " + e.toString());
+                e.printStackTrace();
+                
                 result = SaveToDiskTask.SAVE_ERROR;
             }
 
@@ -488,61 +492,74 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     }
     
     /*
-     * Finds the current active field, sets it to inactive and either returns 
-     * null to signal that the "top level" of the form has been reached or 
-     * sets the parent field to active and returns it.
+     * Finds the currently active fields and returns it (or null to indicate no active field)
      * 
-     * If returnActiveField is true then the active field itself will be 
-     * returned vs. the parent field.
+     * Does not change the state of the currently active field, as opposed to gotoParentField()
      */
-    public Field gotoActiveField(Field c, Boolean returnActiveField)
+    public Field gotoActiveField(Field f)
     {
         Iterator<Field> it = null;
         
-        if (c == null)
+        if (f == null)
             it = mFieldState.iterator();
         else {
-            if (c.isActive()) {
-                /* 
-                 * This is convoluted logic that lets us use this method both for "go up" navigation 
-                 * and also to reset navigation to the correct place on orientation changes
-                 */
-                if (returnActiveField)
-                    return c;
-                else 
-                    c.setActive(false);
+            if (f.isActive())
                 
-                if (c.getParent() == null) {
-                    return c;
-                } else {
-                    // Special support for nested repeated groups
-                    if (c.getParent().getType().equals("repeat")) {
-                        // Set the parent of our parent (e.g., a group) active and return it
-                        c.getParent().getParent().setActive(true);
-                        return c.getParent().getParent();
-                    } else {
-                        c.getParent().setActive(true);
-                        return c.getParent();
-                    }
-                }
-            }            
+                return f;       
             
-            it = c.children.iterator();
+            it = f.getChildren().iterator();
         }        
         
         while (it.hasNext()) {                  
-            Field result = gotoActiveField(it.next(), returnActiveField);
+            Field result = gotoActiveField(it.next());
             
             if (result instanceof Field)
-                if (result.isActive() == false)
-                    return null;
-                else
-                    return result;
+                return result;
         }
 
         return null;        
     }
     
+    /*
+     * Finds the current active field, sets it to inactive and either returns 
+     * null to signal that the "top level" of the form has been reached or 
+     * sets the parent field to active and returns it.
+     */
+    public Field gotoParentField(Field f)
+    {
+        Iterator<Field> it = null;
+        
+        if (f == null)
+            it = mFieldState.iterator();
+        else {
+            if (f.isActive()) {                
+                f.setActive(false);
+                
+                if (f.getParent() == null) {
+                    return null;
+                } else if (f.getParent().getType().equals("repeat")) {
+                    // Set the parent of our parent (e.g., a group) active and return it
+                    f.getParent().getParent().setActive(true);
+                    return f.getParent().getParent();
+                } else {
+                    f.getParent().setActive(true);
+                    return f.getParent();
+                }
+            }
+            
+            it = f.getChildren().iterator();
+        }        
+        
+        while (it.hasNext()) {                  
+            Field result = gotoParentField(it.next());
+            
+            if (result instanceof Field)
+                return result;
+        }
+    
+        return null;        
+    }
+
     public void goUpLevel()
     {
         Field destination;
@@ -563,18 +580,18 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             mActualPath.remove(mActualPath.size() - 1);     // Remove the group element
         }
         
-        destination = gotoActiveField(null, false);
+        destination = gotoParentField(null);
         
         if (destination == null)
             refreshView(mFieldState);
         else {
             // Special support for nested repeated groups
-            if (destination.children.size() == 1 && destination.children.get(0).getType().equals("repeat")) {
+            if (Field.isRepeatedGroup(destination)) {
                 mActualPath.add(destination.getLabel().toString());
-                mActualPath.add(destination.children.get(0).getLabel().toString());
-                refreshView(destination.children.get(0).children);
-            } else {                            
-                refreshView(destination.children);
+                mActualPath.add(destination.getRepeat().getLabel().toString());
+                refreshView(destination.getRepeat().getChildren());
+            } else {
+                refreshView(destination.getChildren());
             }
         }
     }
@@ -584,7 +601,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
      * the FormEntryController parameter has no use here and will be passed a null value.
      * 
      * (non-Javadoc)
-     * @see com.radicaldynamic.turboform.listeners.FormLoaderListener#loadingComplete(org.javarosa.form.api.FormEntryController)
+     * @see com.radicaldynamic.turboform.listeners.FormLoaderListener#loadingComplete
      */
     @Override
     public void loadingComplete(FormEntryController fec)
@@ -617,8 +634,150 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             Toast.makeText(getApplicationContext(), getString(R.string.data_saved_error), Toast.LENGTH_LONG).show();
             break;
         }
-    }   
+    }
+    
+    /*
+     * Perform final initialization of the new field and assign it and it's related 
+     * objects a place in the respective field, bind, instance (and itext) state arrays.
+     */
+    private void addNewField(Field f)
+    {
+        // No longer a virgin
+        f.setNewField(false);
+        
+        // Handle groups, repeated groups and other control field types separately
+        if (f.getType().equals("group"))
+            if (Field.isRepeatedGroup(f))
+                addNewRepeatedGroupField(f);
+            else
+                addNewGroupField(f);
+        else
+            addNewRegularField(f);
+        
+        // Display with the new field included
+        mFieldState = Collect.getInstance().getFbFieldState();
+        refreshView();
+    }
+    
+    private void addNewGroupField(Field f)
+    {
+        // Assign this group field as a child of the currently active field
+        Field parent = gotoActiveField(null);
+        
+        if (Field.isRepeatedGroup(parent)) {
+            f.setParent(parent.getRepeat());
+            parent.getRepeat().getChildren().add(f);
+        } else {
+            f.setParent(parent);
+            
+            // If parent is null then we are at the top of the form
+            if (parent == null)
+                Collect.getInstance().getFbFieldState().add(f);
+            else
+                parent.getChildren().add(f);
+        }
+    }
+    
+    private void addNewRepeatedGroupField(Field f)
+    {
+        /* 
+         * Assign this repeated group field as a child of the currently active field
+         * (taking into account the complexity of repeated groups)
+         */
+        Field parent = gotoActiveField(null);
+        String xpath = "";
+        
+        // Determine proper XPath for our new repeated group
+        if (Field.isRepeatedGroup(parent)) {
+            // If the parent of this repeated group is itself a repeated group then use that group's repeat XPath as a basis
+            xpath = parent.getRepeat().getXPath() + "/" + Field.makeFieldName(f.getLabel());
+        } else {
+            xpath = "/" + mInstanceRoot + "/" + Field.makeFieldName(f.getLabel());            
+        }
+        
+        // Set xpath of repeat
+        f.getRepeat().setXPath(xpath);
+        
+        // Set XPath of bind
+        f.getRepeat().getBind().setXPath(xpath);
+        
+        // Set xpath of instance        
+        f.getRepeat().getInstance().setXPath(xpath);
+        
+        // Associate field with instance
+        f.getRepeat().getInstance().setField(f);
+        
+        // Add the field either at the top level or as the child of a group
+        if (Field.isRepeatedGroup(parent)) {
+            f.setParent(parent.getRepeat());
+            parent.getRepeat().getChildren().add(f);
+            
+            // Also add the instance
+            parent.getRepeat().getInstance().getChildren().add(f.getRepeat().getInstance());
+        } else {
+            f.setParent(parent);
+            
+            // If parent is null then we are at the top of the form
+            if (parent == null)
+                Collect.getInstance().getFbFieldState().add(f);
+            else
+                parent.getChildren().add(f);
+            
+            // Also add the instance
+            Collect.getInstance().getFbInstanceState().add(f.getRepeat().getInstance());
+        }
+        
+        // Also add the bind
+        Collect.getInstance().getFbBindState().add(f.getRepeat().getBind());        
+    }
+    
+    private void addNewRegularField(Field f)
+    {
+        // Assign this field as a child of the currently active field
+        Field parent = gotoActiveField(null);
+        String xpath = "";
+        
+        // Associated parent to field and set proper XPath
+        if (Field.isRepeatedGroup(parent)) {
+            f.setParent(parent.getRepeat());
+            xpath = parent.getRepeat().getXPath() + "/" + Field.makeFieldName(f.getLabel());
+        } else {
+            f.setParent(parent);    
+            xpath = "/" + mInstanceRoot + "/" + Field.makeFieldName(f.getLabel());
+        }
+        
+        // Use XPath for associated instance and bind as well as this field
+        f.getInstance().setXPath(xpath);
+        f.getBind().setXPath(xpath);
+        f.setXPath(xpath);
+        
+        // Associate field with instance
+        f.getInstance().setField(f);
+        
+        // Add the field either at the top level or as the child of a group
+        if (Field.isRepeatedGroup(parent)) {
+            parent.getRepeat().getChildren().add(f);
+        } else {
+            if (parent == null)
+                Collect.getInstance().getFbFieldState().add(f);
+            else
+                parent.getChildren().add(f);
+        }
+        
+        // Binds are a flat list, so it does not matter where they are added
+        Collect.getInstance().getFbBindState().add(f.getBind());
+        
+        // Whether the parent is a repeated group influences how the instance is recorded
+        if (Field.isRepeatedGroup(parent))
+            parent.getRepeat().getInstance().getChildren().add(f.getInstance());
+        else
+            Collect.getInstance().getFbInstanceState().add(f.getInstance());
+    }
 
+    /*
+     * Prompt shown to the user before they leave the field list 
+     * (discard changes & quit, save changes & quit, return to form field list)
+     */
     private void createQuitDialog()
     {
         String[] items = {
@@ -662,7 +821,29 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     
         mAlertDialog.show();
     }
+    
+    /* 
+     * Refresh the view (displaying the currently active field 
+     * or the top level of the form if no field is currently active)
+     */
+    private void refreshView()
+    {
+        Field destination = gotoActiveField(null);
 
+        if (destination == null)
+            refreshView(mFieldState);
+        else {
+            // Special support for nested repeated groups
+            if (Field.isRepeatedGroup(destination))                        
+                refreshView(destination.getRepeat().getChildren());
+            else 
+                refreshView(destination.getChildren());
+        }
+    }
+
+    /*
+     * Refresh the view and display whatever fields are passed here
+     */
     private void refreshView(ArrayList<Field> fieldsToDisplay)
     {
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_editing) + " " + mForm.getName());
@@ -701,12 +882,18 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     /*
      * Launch the element editor either to add a new field or to modify an existing one 
      */
-    private void startElementEditor(String type, Field loadField)
+    private void startFieldEditor(String type, Field field)
     {
-        Collect.getInstance().setFbField(loadField);
+        Collect.getInstance().setFbField(field);
         
         Intent i = new Intent(this, FormBuilderFieldEditor.class);
-        i.putExtra(FormBuilderFieldEditor.ELEMENT_TYPE, type);        
-        startActivity(i);
+        i.putExtra(FormBuilderFieldEditor.FIELD_TYPE, type);        
+        startActivityForResult(i, EDIT_FIELD);
+    }    
+    
+    private void updateExistingField(Field field)
+    {
+        // Update all references and nodesets, recursively
+        
     }
 }

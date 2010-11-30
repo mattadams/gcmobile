@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import com.mycila.xmltool.XMLTag;
@@ -13,35 +14,38 @@ import android.util.Log;
 
 public class Field
 {
-    private String t = "Field: ";
+    private static String t = "Field: ";
     
     // Any attributes found on this element
-    public Map<String, String> attributes = new HashMap<String, String>();
+    private Map<String, String> attributes = new HashMap<String, String>();
     // Any children (other fields) of this one, e.g., groups and repeats (or items for a select or select1 field)
-    public ArrayList<Field> children = new ArrayList<Field>();    
+    private ArrayList<Field> children = new ArrayList<Field>();    
     
     private String type;                        // The XML element name of this field  (e.g., group, input, etc.)
     private String location;                    // The XML element location of this node (e.g., *[2]/*[1])
-    private String ref;                         // Value of the "ref" attribute (if any)
+    private String xpath;                       // Value of the "ref" or "nodeset" attribute (if any)
     
     private Field parent;
     private String itemValue;                   // Any value assigned to this node (if it is an item)
     
     private FieldText label = new FieldText();  // Any label assigned to this field
-    private FieldText hint = new FieldText();   // Any hint assigned to this field   
+    private FieldText hint = new FieldText();   // Any hint assigned to this field 
     
     private Bind bind = new Bind();
     private Instance instance = new Instance();
     
-    private boolean active   = false;           // Used to determine which field is "active" in form builder navigation
-    private boolean repeated = false;           // Whether this is a repeated field (e.g., a child of a <repeat> element.
-                                                // This has a bearing on how the resulting XML will be output.
+    private boolean active   = false;           // Used to determine which field is "active" in form builder navigation               
+    private boolean empty    = false;           // This is an "empty" or new field and requires further initialization
+    private boolean newField = false;           // Whether this field is new and should be added to the (control) field state list
+    private boolean saved    = false;           // Whether changes to a field that has been loaded into the field editor were saved
     
     /* 
      * For fields instantiated by the form builder
      */
     public Field()
-    {        
+    {
+        empty = true;
+        newField = true;
     }
     
     // For fields instantiated from entries in <h:body>
@@ -67,14 +71,14 @@ public class Field
              * when it comes time to write out the XML. 
              */
             if (s.equals("ref") || s.equals("nodeset")) {
-                String ref = tag.getAttribute(s);
+                String xpath = tag.getAttribute(s);
                 
                 // If this reference is not to an itext translation then it must be to an instance/bind
                 // FIXME: does this even happen?
-                if (!Pattern.matches("^jr:.*", ref)) {
+                if (!Pattern.matches("^jr:.*", xpath)) {
                     // If the reference is not literal then make it so
-                    if (!Pattern.matches("^/.*", ref)) {
-                        String newRef = "/" + instanceRoot + "/" + ref;
+                    if (!Pattern.matches("^/.*", xpath)) {
+                        String newRef = "/" + instanceRoot + "/" + xpath;
                         
                         /*
                          * This logic exists to support repeated elements.  We must ensure that their refs
@@ -84,12 +88,11 @@ public class Field
                          */
                         if (parent != null) {
                             if (parent.getType().equals("repeat")) {
-                                setRepeated(true);
-                                newRef = parent.getRef() + "/" + ref;
+                                newRef = parent.getXPath() + "/" + xpath;
                             }
                         }
                         
-                        ref = newRef;                        
+                        xpath = newRef;                        
                     }
 
                     Iterator<Bind> it = binds.iterator();                    
@@ -98,8 +101,8 @@ public class Field
                         Bind b = it.next();
 
                         // If a bind with a nodeset identical to this ref exists, associate it with this field
-                        if (b.getNodeset().equals(ref)) {
-                            Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getNodeset() + " associated to field at " + getLocation());                            
+                        if (b.getXPath().equals(xpath)) {
+                            Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getXPath() + " associated to field at " + getLocation());                            
                             setBind(b);
                             
                             // Not all binds will have an associated type but our code expects them to
@@ -109,13 +112,13 @@ public class Field
 //                                else 
 //                                    b.setType(getType());
                                 
-                                Log.w(Collect.LOGTAG, t + "bind for " + b.getNodeset() + " missing an explicit type");
+                                Log.w(Collect.LOGTAG, t + "bind for " + b.getXPath() + " missing an explicit type");
                             }
                         }
                     }
                 }
                 
-                setRef(ref);
+                setXPath(xpath);
             }
         }
     }
@@ -129,6 +132,20 @@ public class Field
     {
         return children;
     }
+    
+    /* 
+     * If this field is a group, containing exactly one field which is a repeat then return it.
+     * Else, return null.  This should only be used on fields that are known to be repeated groups.
+     */
+    public Field getRepeat()
+    {
+        if (type.equals("group")
+                && children.size() == 1 
+                && children.get(0).getType().equals("repeat"))
+            return children.get(0);
+        else
+            return null;
+    }
 
     public void setLabel(String label)
     {
@@ -136,12 +153,7 @@ public class Field
         this.label = new FieldText(label);
     }
 
-    /*
-     * FIXME
-     * We should really be able to return a label for anything that is going to be
-     * displayed but include this failsafe here just in case so things don't crash
-     * elsewhere if the label is null.
-     */
+    // If you want a human readable textual string then you need to perform .toString() on the result
     public FieldText getLabel()
     {
         return label;
@@ -153,6 +165,7 @@ public class Field
         this.hint = new FieldText(hint);
     }
 
+    // If you want a human readable textual string then you need to perform .toString() on the result
     public FieldText getHint()
     {
         return hint;
@@ -188,14 +201,14 @@ public class Field
         return itemValue;
     }
 
-    public void setRef(String ref)
+    public void setXPath(String xpath)
     {
-        this.ref = ref;
+        this.xpath = xpath;
     }
 
-    public String getRef()
+    public String getXPath()
     {
-        return ref;
+        return xpath;
     }
 
     public void setBind(Bind bind)
@@ -218,17 +231,7 @@ public class Field
     {
         return active;
     }
-
-    public void setRepeated(boolean repeated)
-    {
-        this.repeated = repeated;
-    }
-
-    public boolean isRepeated()
-    {
-        return repeated;
-    }
-
+    
     public void setParent(Field parent)
     {
         this.parent = parent;
@@ -247,5 +250,70 @@ public class Field
     public Instance getInstance()
     {
         return instance;
+    }
+
+    public void setEmpty(boolean empty)
+    {
+        this.empty = empty;
+    }
+
+    public boolean isEmpty()
+    {
+        return empty;
+    }
+
+    public void setSaved(boolean saved)
+    {
+        this.saved = saved;
+    }
+
+    public boolean isSaved()
+    {
+        return saved;
+    }
+
+    public void setNewField(boolean newField)
+    {
+        this.newField = newField;
+    }
+
+    public boolean isNewField()
+    {
+        return newField;
+    }    
+    
+    /*
+     * Returns true if the field it has been passed is a repeated group, otherwise false
+     */
+    public static boolean isRepeatedGroup(Field f)
+    {
+        if (f != null
+                && f.getType().equals("group") 
+                && f.getChildren().size() == 1 
+                && f.getChildren().get(0).getType().equals("repeat"))
+            return true;
+        else
+            return false;        
+    }
+    
+    /*
+     * Creates a suitable instance field name from the label.  This should only be used on new fields.
+     * 
+     * TODO: the user should probably be aware if this method returns false
+     */
+    public static String makeFieldName(FieldText label)
+    {
+        String instanceFieldName = label.toString().replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9]", "");
+        
+        // Just in case the label did not have anything in it from which to generate a sane field name
+        if (instanceFieldName.length() == 0) {
+            Log.i(Collect.LOGTAG, t 
+                    + "unable to construct field name from getLabel().toString() of " 
+                    + label.toString());
+            
+            instanceFieldName = UUID.randomUUID().toString();
+        }
+        
+        return instanceFieldName;
     }
 }

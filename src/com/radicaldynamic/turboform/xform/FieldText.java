@@ -24,7 +24,7 @@ public class FieldText
      */
     public FieldText()
     {
-        
+        this.value = "";
     }
     
     /*
@@ -49,7 +49,7 @@ public class FieldText
     @Override
     public String toString()
     {
-        Log.v(Collect.LOGTAG, t + "trying to turn toString() a FieldText with value " + value + " and ref " + ref);
+        //Log.v(Collect.LOGTAG, t + "trying to turn toString() a FieldText with value " + value + " and ref " + ref);
         
         String result = "";
         

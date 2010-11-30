@@ -30,25 +30,79 @@
         android:layout_width="fill_parent"                    
         android:text="@string/tf_fbel_label_hint" />
     
-    <TextView
-        android:id="@android:id/empty"
-        android:textSize="20sp"
-        android:layout_height="wrap_content"
+    <!-- Hint -->
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/hintInput"
+        android:orientation="vertical"
         android:layout_width="fill_parent"
-        android:paddingTop="10dp"
-        android:text="@string/tf_fbel_hint" />
+        android:layout_height="wrap_content">   
+        
+        <TextView
+            android:id="@android:id/empty"
+            android:textSize="20sp"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:paddingTop="10dp"
+            android:text="@string/tf_fbel_hint" />
     
-    <EditText
-        android:id="@+id/hint"
+        <EditText
+            android:id="@+id/hint"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+    
+        <TextView
+            android:id="@android:id/empty"
+            android:inputType="textMultiLine"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"                    
+            android:text="@string/tf_fbel_hint_hint" />
+    </LinearLayout>
+        
+    <!-- Group type selection -->
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/groupFieldTypeSelection"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
-    
-    <TextView
-        android:id="@android:id/empty"
-        android:inputType="textMultiLine"
         android:layout_height="wrap_content"
-        android:layout_width="fill_parent"                    
-        android:text="@string/tf_fbel_hint_hint" />
+        android:paddingTop="10dp">
+        
+        <TextView
+            android:id="@+id/groupTypeLabel"
+            android:textSize="20sp"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:paddingTop="10dp"
+            android:text="@string/tf_choose_group_type" />
+        
+        <RadioGroup
+            android:id="@+id/groupRadioSelection"
+            android:layout_below="@id/groupTypeLabel"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            
+            <RadioButton 
+                android:id="@+id/groupTypeRegular"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_regular_group_type" />
+                
+            <RadioButton 
+                android:id="@+id/groupTypeRepeated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_repeated_group_type" />            
+        </RadioGroup>
+        
+        <TextView
+            android:id="@android:id/empty"
+            android:inputType="textMultiLine"
+            android:layout_below="@id/groupRadioSelection"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"                    
+            android:text="@string/tf_choose_group_type_hint" />    
+    </RelativeLayout>     
         
     <!-- Media type selection -->
     <RelativeLayout 

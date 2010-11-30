@@ -20,7 +20,7 @@ public class Bind
     private boolean hasUnhandledAttribute;
     
     // Important fields that we need easy access to (none of these should be null after parsing the XForm)
-    private String nodeset;
+    private String xpath;                           // Value of the "nodeset" attribute (same as "ref" or "nodeset" in fields)
     private String type;
     private boolean required = false;
     private boolean readonly = false;
@@ -55,7 +55,7 @@ public class Bind
                     nodeset = "/" + instanceRoot + "/" + nodeset;
                 }
 
-                setNodeset(nodeset);         
+                setXPath(nodeset);         
             } else if (s.equals("type"))
                 setType(tag.getAttribute(s));
             else if (s.equals("required") && tag.getAttribute(s).equals("true()"))
@@ -80,7 +80,7 @@ public class Bind
             }                
         }
         
-        Log.v(Collect.LOGTAG, t + "created new bind for " + getNodeset());
+        Log.v(Collect.LOGTAG, t + "created new bind for " + getXPath());
     }
     
     public Map<String, String> getAttributes()
@@ -88,14 +88,14 @@ public class Bind
         return attributes;
     }
     
-    public void setNodeset(String nodeset)
+    public void setXPath(String xpath)
     {
-        this.nodeset = nodeset;
+        this.xpath = xpath;
     }
     
-    public String getNodeset()
+    public String getXPath()
     {
-        return nodeset;
+        return xpath;
     }
 
     public void setType(String type)
