@@ -168,6 +168,8 @@
 	<string name="tf_choose_one">Choose one</string>
 	<string name="tf_choose_select_type">Choose selection type</string>
 	<string name="tf_choose_select_type_hint">Choose whether to allow the user to select one or more items from the selection list</string>
+	<string name="tf_confirm_removal">Confirm Removal</string>
+	<string name="tf_confirm_removal_msg">Are you sure you want to remove %s?</string>
 	<string name="tf_connection_established_status">Connection established</string>
 	<string name="tf_connection_interrupted_status">Connection interrupted</string>
 	<string name="tf_connection_interrupted_msg">Automatically retrying connection...</string>
@@ -211,6 +213,7 @@
     <string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_general_preferences">Preferences</string>
 	<string name="tf_groups_unavailable_error">Unavailable</string>
+	<string name="tf_group">group</string>
 	<string name="tf_help">Help</string>
 	<string name="tf_image_media_type">Photograph</string>
 	<string name="tf_integer_number_type">Integers only</string>
@@ -231,6 +234,11 @@
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
 	<string name="tf_regular_group_type">Regular group of fields</string>
+	<string name="tf_removal_failed">Could not remove %s: group contains fields.\n\nRemove the inner fields first.</string>
+	<string name="tf_removed_field">Removed field "%s"</string>
+	<string name="tf_removed_group">Removed group "%s"</string>
+	<string name="tf_removed_repeated_group">Removed repeated group "%s"</string>
+	<string name="tf_repeated_group">repeated group</string>
 	<string name="tf_repeated_group_type">Repeated group of fields</string>
 	<string name="tf_save_changes">Save Changes</string>
 	<string name="tf_save_field_and_exit">Save field and exit</string>
@@ -243,6 +251,7 @@
 	<string name="tf_server_url_error">Invalid server URL</string>   
 	<string name="tf_synchronize">Synchronize</string>
 	<string name="tf_synchronization_settings">Synchronization settings</string>
+	<string name="tf_unable_to_remove">Unable to Remove</string>
 	<string name="tf_valid_number_range_integer">Default values for integer fields may only contain the numbers 0-9</string>
     <string name="tf_valid_number_range_decimal">Decimal fields for integer fields may only contain the numbers 0-9 and a single decimal</string>
     <string name="tf_video_media_type">Video recording</string>

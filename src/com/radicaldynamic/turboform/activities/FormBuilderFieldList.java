@@ -40,9 +40,11 @@ import com.radicaldynamic.turboform.listeners.FormLoaderListener;
 import com.radicaldynamic.turboform.listeners.FormSavedListener;
 import com.radicaldynamic.turboform.tasks.SaveToDiskTask;
 import com.radicaldynamic.turboform.views.TouchListView;
+import com.radicaldynamic.turboform.xform.Bind;
 import com.radicaldynamic.turboform.xform.Field;
 import com.radicaldynamic.turboform.xform.FormReader;
 import com.radicaldynamic.turboform.xform.FormWriter;
+import com.radicaldynamic.turboform.xform.Instance;
 
 public class FormBuilderFieldList extends ListActivity implements FormLoaderListener, FormSavedListener
 {
@@ -95,7 +97,137 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         @Override
         public void remove(int which)
         {
-            adapter.remove(adapter.getItem(which));
+            final Field item = adapter.getItem(which);
+            
+            mAlertDialog = new AlertDialog.Builder(FormBuilderFieldList.this)
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_alert)
+                .setTitle(R.string.tf_confirm_removal)
+                .setMessage(getString(R.string.tf_confirm_removal_msg, item.getLabel().toString()))
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        removeItem(item);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                }
+            })
+            .create();
+    
+            mAlertDialog.show();
+        }
+
+        private void displayRemovalFailed(String msg)
+        {
+            mAlertDialog = new AlertDialog.Builder(FormBuilderFieldList.this)
+                .setIcon(R.drawable.ic_dialog_alert)
+                .setTitle(R.string.tf_unable_to_remove)
+                .setMessage(msg)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                    }
+                })
+                .create();
+            
+            mAlertDialog.show();
+        }
+        
+        private void displayRemovedMsg(String msg)        
+        {
+            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+        }
+        
+        private void removeItem(Field item)
+        {            
+            /*
+             * Group removal must be dealt with separately from regular items and repeated groups differ from regular groups.  
+             * This code takes the easy way out and refuses to remove groups that are not empty.  This saves us from having to
+             * worry about recursive removal of binds and instances.
+             * 
+             * TODO: improve this once the mechanism for storing states has been improved.
+             */
+            if (item.getType().equals("group")) {
+                if (Field.isRepeatedGroup(item)) {
+                    if (item.getRepeat().getChildren().isEmpty())
+                        removeByXPath(item.getXPath());
+                    else {
+                        displayRemovalFailed(getString(R.string.tf_removal_failed, item.getLabel().toString()));
+                        return;
+                    }
+                } else {
+                    if (!item.getChildren().isEmpty()) {
+                        displayRemovalFailed(getString(R.string.tf_removal_failed, item.getLabel().toString()));
+                        return;
+                    }
+                }                
+            } else {
+                removeByXPath(item.getXPath());
+            }
+            
+            // This removes the (control) field from mFieldState
+            adapter.remove(item);
+            
+            // Display a suitable "removed field" message
+            if (item.getType().equals("group"))
+                if (Field.isRepeatedGroup(item))
+                    displayRemovedMsg(getString(R.string.tf_removed_repeated_group, item.getLabel().toString()));
+                else 
+                    displayRemovedMsg(getString(R.string.tf_removed_group, item.getLabel().toString()));
+            else
+                displayRemovedMsg(getString(R.string.tf_removed_field, item.getLabel().toString()));       
+        }
+        
+        private void removeByXPath(String xpath)
+        {
+            // Also remove the related instance
+            removeInstanceByXPath(xpath, null);
+            
+            // Also remove the related bind
+            Iterator<Bind> it = Collect.getInstance().getFbBindState().iterator();
+            
+            while (it.hasNext()) {
+                Bind bind = it.next();
+                
+                Log.v(Collect.LOGTAG, t + "evaluating bind for XPath " + bind.getXPath() + " for removal");
+                
+                // Remove any binds with an identical XPath to the field in question or those that are logical children
+                if (bind.getXPath().equals(xpath) || bind.getXPath().matches("^" + xpath + "/*$")) {
+                    Log.d(Collect.LOGTAG, t + "removing bind for XPath " + bind.getXPath());
+                    it.remove();
+                }
+            }
+        }        
+        
+        /* 
+         * Iterate through the instances recursively and remove the instance
+         * (and all children) that match the XPath passed to this method.
+         * 
+         * This is intended to be called when a (control) field is removed 
+         * from a list.
+         */
+        private void removeInstanceByXPath(String xpath, Instance incomingInstance)
+        {
+            Iterator<Instance> it;
+            
+            if (incomingInstance == null)
+                it = Collect.getInstance().getFbInstanceState().iterator();
+            else
+                it = incomingInstance.getChildren().iterator();
+            
+            while (it.hasNext()) {
+                Instance i = it.next();
+                
+                Log.v(Collect.LOGTAG, t + "evaluating instance with XPath " + i.getXPath() + " for removal");
+                
+                if (i.getXPath().equals(xpath)) {
+                    Log.d(Collect.LOGTAG, t + "removing instance with XPath " + i.getXPath());
+                    it.remove();
+                    return;
+                }
+                    
+                removeInstanceByXPath(xpath, i);
+            }
         }
     };
 
@@ -461,7 +593,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 mForm.addInlineAttachment(
                         new Attachment(
                                 "xml", 
-                                Base64.encodeToString(FormWriter.writeXml(mFormReader.getInstanceRoot()), Base64.DEFAULT), 
+                                Base64.encodeToString(FormWriter.writeXml(mInstanceRoot), Base64.DEFAULT), 
                                 "text/xml"));
                 
                 mForm.setStatus(FormDocument.Status.inactive);
