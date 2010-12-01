@@ -19,6 +19,7 @@ import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.activities.FormEntryActivity;
+import com.radicaldynamic.turboform.utilities.DateUtils;
 import com.radicaldynamic.turboform.views.AbstractFolioView;
 import com.radicaldynamic.turboform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
 
@@ -211,7 +212,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
 
         File f = new File(binarypath);
         String s = mInstanceFolder + "/" + mInstanceId
-        + mPrompt.getFormElement().getID() + "."
+        + DateUtils.now("yyyyMMdd-HHmmss") + "."
         + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
         if (!f.renameTo(new File(s))) {
             Log.e(t, "Failed to rename " + f.getAbsolutePath());
