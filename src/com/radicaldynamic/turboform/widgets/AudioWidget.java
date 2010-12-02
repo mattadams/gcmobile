@@ -62,12 +62,12 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
     private int mReplaceText;
     private int mPlayText;
     
-    private FormEntryPrompt mPrompt;
+//    private FormEntryPrompt mPrompt;
 
     public AudioWidget(Handler handler, Context context, FormEntryPrompt prompt, String instancePath) {
         super(handler, context, prompt);
         initialize(instancePath);
-        mPrompt = prompt;
+//        mPrompt = prompt;
     }
 
     private void initialize(String instancePath) {

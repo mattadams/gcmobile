@@ -68,13 +68,13 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
     private int mCaptureText;
     private int mReplaceText;
     
-    private FormEntryPrompt mPrompt;
+//    private FormEntryPrompt mPrompt;
 
 
     public ImageWidget(Handler handler, Context context, FormEntryPrompt prompt, String instancePath) {
         super(handler, context, prompt);
         initialize(instancePath);
-        mPrompt = prompt;
+//        mPrompt = prompt;
     }
 
 

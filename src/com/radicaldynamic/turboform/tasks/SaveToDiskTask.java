@@ -15,11 +15,13 @@
 package com.radicaldynamic.turboform.tasks;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.regex.Pattern;
 
 import org.ektorp.Attachment;
+import org.ektorp.AttachmentInputStream;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.instance.FormInstance;
@@ -69,6 +71,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     protected Integer doInBackground(Void... nothing) {
         // Validation failed, pass specific failure
         int validateStatus = validateAnswers(mMarkCompleted);
+        
         if (validateStatus != VALIDATED) {
             return validateStatus;
         }
@@ -158,8 +161,9 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 
                 // Save form data
                 instance.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data, Base64.DEFAULT), "text/xml"));
+                Collect.mDb.getDb().update(instance);
                 
-                // Save media attachments
+                // Save media attachments one by one
                 File cacheDir = new File(FileUtils.CACHE_PATH);
                 String[] fileNames = cacheDir.list();                           
                                             
@@ -169,15 +173,21 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                     if (Pattern.matches("^" + mInstanceId + "[.].*", file)) {                                
                         Log.d(Collect.LOGTAG, t + mInstanceId + ": attaching " + file);
                         
-                        instance.addInlineAttachment(
-                                new Attachment(
-                                        file, 
-                                        Base64.encodeToString(FileUtils.getFileAsBytes(new File(FileUtils.CACHE_PATH + file)), Base64.DEFAULT), 
-                                        MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1))));
+                        // Make sure we have the most current revision number
+                        InstanceDocument document = Collect.mDb.getDb().get(InstanceDocument.class, mInstanceId);
+
+                        FileInputStream fis = new FileInputStream(new File(FileUtils.CACHE_PATH + file));
+                        String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1));
+                        
+                        AttachmentInputStream a = new AttachmentInputStream(file, fis, contentType);
+                        
+                        // Must use the revision number (why?) http://code.google.com/p/ektorp/issues/detail?id=28
+                        Collect.mDb.getDb().createAttachment(document.getId(), document.getRevision(), a);
+                        
+                        a.close();
+                        fis.close();
                     }
                 }
-                
-                Collect.mDb.getDb().update(instance);   
                 
                 if (instance.getId().length() > 0) 
                     return true;
