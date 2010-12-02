@@ -471,14 +471,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             startActivity(i);
             break;            
             
-        case R.id.save_form:
-            mSaveFormDefinitionTask = new SaveFormDefinitionTask();
-            mSaveFormDefinitionTask.setFormSavedListener(FormBuilderFieldList.this);
-            mSaveFormDefinitionTask.execute(SaveToDiskTask.SAVED);
-            
-            showDialog(SAVING_DIALOG);
-            break;
-            
         case R.id.help:
             break;            
         }

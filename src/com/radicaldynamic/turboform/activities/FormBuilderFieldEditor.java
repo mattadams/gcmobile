@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.method.DigitsKeyListener;
 import android.text.method.QwertyKeyListener;
@@ -20,7 +21,9 @@ import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RadioButton;
+import android.widget.TextView;
 
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.application.Collect;
@@ -36,6 +39,10 @@ public class FormBuilderFieldEditor extends Activity
     
     private Field mField = null;
     private String mFieldType = null;
+    
+    // Header
+    private TextView mHeaderType;
+    private ImageView mHeaderIcon;
     
     // Common input elements
     private EditText mLabel;
@@ -66,17 +73,19 @@ public class FormBuilderFieldEditor extends Activity
         // Create a new field if one is needed (further init will occur in the field-specific method)
         if (mField == null)
             mField = new Field();
+        
+        String title = "";
             
         // Activity should have a relevant title (e.g., add new or edit existing)
         if (mField.isNewField()) {
-            setTitle(getString(R.string.app_name) + " > " 
-                    + getString(R.string.tf_add_new) + " "
-                    + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field));
+            title = getString(R.string.tf_add_new) + " "
+                    + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field);
         } else {
-            setTitle(getString(R.string.app_name) + " > " 
-                    + getString(R.string.tf_edit) + " "
-                    + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field));            
+            title = getString(R.string.tf_edit) + " "
+                    + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field);            
         }
+        
+        setTitle(getString(R.string.app_name) + " > " + title);
         
         // Get a handle on common input elements
         mLabel          = (EditText) findViewById(R.id.label);
@@ -115,6 +124,48 @@ public class FormBuilderFieldEditor extends Activity
         else if (mFieldType.equals("text"))       loadTextElement();                    
         else 
             Log.w(Collect.LOGTAG, t + "unhandled field type");
+        
+        // Set up header
+        mHeaderType     = (TextView) findViewById(R.id.headerType);
+        mHeaderIcon     = (ImageView) findViewById(R.id.headerIcon);
+        
+        // Field type string
+        mHeaderType.setText(mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field));
+        
+        /*
+         * Set header icon
+         * 
+         * TODO: figure out a better way to do with without duplicating code from FormBuilderFieldListAdapter
+         */        
+        if (mField.getType().equals("group")) {
+            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_group));            
+        } else if (mField.getType().equals("input")) {
+            Drawable icon = getDrawable(R.drawable.element_string);
+            
+            try {
+                String specificType = mField.getBind().getType();
+                
+                if (specificType.equals("barcode"))     icon = getDrawable(R.drawable.element_barcode);     else
+                if (specificType.equals("date"))        icon = getDrawable(R.drawable.element_calendar);    else
+                if (specificType.equals("decimal"))     icon = getDrawable(R.drawable.element_number);      else
+                if (specificType.equals("geopoint"))    icon = getDrawable(R.drawable.element_location);    else
+                if (specificType.equals("int"))         icon = getDrawable(R.drawable.element_number);
+            } catch (NullPointerException e){
+                // TODO: is this really a problem?    
+            } finally {
+                mHeaderIcon.setImageDrawable(icon);
+            }            
+        } else if (mField.getType().equals("repeat")) { 
+            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_group));          
+        } else if (mField.getType().equals("select")) {
+            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectmulti));
+        } else if (mField.getType().equals("select1")) {
+            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
+        } else if (mField.getType().equals("trigger")) {
+            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_noicon));            
+        } else if (mField.getType().equals("upload")) {
+            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_media));            
+        }
     }
     
     @Override
@@ -142,8 +193,6 @@ public class FormBuilderFieldEditor extends Activity
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch (item.getItemId()) {
-        case R.id.save:
-            break;
         }
     
         return super.onOptionsItemSelected(item);
@@ -209,6 +258,12 @@ public class FormBuilderFieldEditor extends Activity
     {
         ViewGroup component = (ViewGroup) findViewById(componentResource);
         component.setVisibility(View.GONE);
+    }
+    
+    // Convenience method
+    private Drawable getDrawable(int image)
+    {
+        return getResources().getDrawable(image);
     }
     
     /*
@@ -444,9 +499,11 @@ public class FormBuilderFieldEditor extends Activity
                 
                 switch (rb.getId()) {
                 case R.id.selectTypeMultiple:
+                    mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectmulti));                    
                     break;                    
                 case R.id.selectTypeSingle:                    
-                    // TODO: reduce possible multiple default values to a single one -- confirm with user before doing so                    
+                    // TODO: reduce possible multiple default values to a single one -- confirm with user before doing so
+                    mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
                     break;
                 }
             }
