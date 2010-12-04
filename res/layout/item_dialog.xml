@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:padding="10dip">
+    
+    <TextView
+        android:id="@android:id/empty"  
+        android:text="@string/tf_item_label"        
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content" 
+        android:textSize="20sp" />
+
+    <EditText
+        android:id="@+id/label" 
+        android:text=""         
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content" />        
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_item_label_hint" />        
+
+    <TextView
+        android:id="@android:id/empty"  
+        android:text="@string/tf_item_value"        
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp" 
+        android:textSize="20sp" />
+
+    <EditText         
+        android:id="@+id/value"
+        android:text="" 
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content" />        
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:singleLine="true"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_item_value_hint" />        
+
+    <CheckBox          
+        android:id="@+id/preselected"
+        android:text="@string/tf_item_default" 
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" />
+        
+    <TextView
+        android:id="@android:id/empty"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_item_default_hint" />  
+</LinearLayout>

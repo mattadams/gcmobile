@@ -159,6 +159,8 @@
 	<string name="tf_audio_media_type">Audio recording</string>
 	<string name="tf_begin_instance_hint">Select list item to begin new form</string>
 	<string name="tf_browse_instances_hint">Select item to browse %s</string>
+	<string name="tf_change_select_type">Change select type?</string>
+	<string name="tf_change_select_type_message">This multiple select field has more than one preselected list item.  A single select field can only have one preselected item.\n\nIf you choose to change to a single select field all of the preselected list items will be unselected.\n\nDo you wish to continue?</string>
 	<string name="tf_choose_group_type">Choose group type</string>
 	<string name="tf_choose_group_type_hint">Regular groups are collections of like fields displayed under a common group label.  Repeated groups are similar and allow the user to fill out one or more fields repeatedly.</string>
 	<string name="tf_choose_media_type">Choose media type</string>
@@ -181,12 +183,15 @@
 	<string name="tf_create_form">Create Form Template</string>
 	<string name="tf_create_form_dialog_title">Create Form</string>
 	<string name="tf_create_form_dialog_message">Provide a name for this form</string>
+	<string name="tf_create_list_item">Add List Item</string>
+	<string name="tf_create_list_item_message"></string>
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_default_couchdb_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_couchdb_port">5984</string>
 	<string name="tf_do_not_exit_field">Return to field</string>
 	<string name="tf_edit">Edit</string>
 	<string name="tf_edit_form_definition_hint">Select list item to edit form template</string>
+	<string name="tf_edit_list_item">Edit List Item</string>
 	<string name="tf_editing">Editing</string>
 	<string name="tf_element_barcode">Barcode reader</string>
 	<string name="tf_element_date">Date selection</string>
@@ -210,6 +215,7 @@
     <string name="tf_fbel_required">Required</string>
     <string name="tf_fbel_required_hint">Marking this field as required will force the user to respond to it before marking the form as complete.</string>
     <string name="tf_field">Field</string>
+    <string name="tf_field_cannot_be_saved">Cannot save: this field must have a Label</string>
     <string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_general_preferences">Preferences</string>
 	<string name="tf_groups_unavailable_error">Unavailable</string>
@@ -217,6 +223,15 @@
 	<string name="tf_help">Help</string>
 	<string name="tf_image_media_type">Photograph</string>
 	<string name="tf_integer_number_type">Integers only</string>
+	<string name="tf_item_missing_label_or_value">Cannot save: label and value required</string>
+	<string name="tf_item_default">Selected by default</string>
+	<string name="tf_item_default_hint">Checking this box will cause this item to be preselected when the list of items is displayed.</string>
+	<string name="tf_item_label">Label</string>
+	<string name="tf_item_label_hint">Text shown to users making a selection from the list.</string>
+	<string name="tf_item_value">Value</string>
+	<string name="tf_item_value_hint">Value stored in the output record when this item is selected.</string>
+	<string name="tf_item_value_not_unique">Cannot save: item must have a unique value</string>
+	<string name="tf_list_items">List Items</string>
 	<string name="tf_loading">Loading</string>
 	<string name="tf_loading_please_wait">Loading, please wait...</string>
 	<string name="tf_main_menu_group_filter_label">Show Forms By Group</string>
@@ -235,9 +250,8 @@
 	<string name="tf_previous_instance">Previous</string>
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_removal_failed">Could not remove %s: group contains fields.\n\nRemove the inner fields first.</string>
-	<string name="tf_removed_field">Removed field "%s"</string>
-	<string name="tf_removed_group">Removed group "%s"</string>
-	<string name="tf_removed_repeated_group">Removed repeated group "%s"</string>
+	<string name="tf_removed_field">Removed field %s</string>	
+	<string name="tf_removed_item">Removed item %s</string>
 	<string name="tf_repeated_group">repeated group</string>
 	<string name="tf_repeated_group_type">Repeated group of fields</string>
 	<string name="tf_save_changes">Save Changes</string>
@@ -257,4 +271,5 @@
     <string name="tf_video_media_type">Video recording</string>
 	<string name="tf_view_instance">View Output</string>
 	<string name="tf_viewing_instance">Output Fields for</string>
+	<string name="tf_yes">Yes</string>
 </resources>

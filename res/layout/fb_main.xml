@@ -7,8 +7,10 @@
     
     <TextView 
         android:id="@+id/pathText"
-        android:background="@drawable/blue"
-        android:drawablePadding="4dp"
+        android:background="@drawable/pathText"
+        android:textColor="@color/solid_white"
+        android:padding="4dp"        
+        android:layout_marginBottom="4dp"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"/>
         
@@ -36,4 +38,13 @@
         tlv:normal_height="64dip"
         tlv:grabber="@+id/icon"
         tlv:remove_mode="slideRight" />
+    
+    <TextView 
+        android:id="@+id/nothingToDisplay"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:text="@string/no_items_display"
+        android:textSize="19dp"
+        android:visibility="invisible"
+        android:gravity="center" />
 </RelativeLayout>
