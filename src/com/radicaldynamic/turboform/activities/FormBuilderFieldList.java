@@ -53,7 +53,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private static final int LOADING_DIALOG = 1;
     private static final int SAVING_DIALOG = 2;
     
-    private static final int EDIT_FIELD = 1;
+    private static final int REQUEST_EDITFIELD = 1;
     
     private static final String INSTANCE_ROOT = "instanceroot";
     
@@ -107,6 +107,10 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         removeItem(item);
+                        
+                        // Trigger a refresh of the view (and display any pertenent messages)
+                        if (adapter.isEmpty())
+                            refreshView();
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -168,14 +172,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             // This removes the (control) field from mFieldState
             adapter.remove(item);
             
-            // Display a suitable "removed field" message
-            if (item.getType().equals("group"))
-                if (Field.isRepeatedGroup(item))
-                    displayRemovedMsg(getString(R.string.tf_removed_repeated_group, item.getLabel().toString()));
-                else 
-                    displayRemovedMsg(getString(R.string.tf_removed_group, item.getLabel().toString()));
-            else
-                displayRemovedMsg(getString(R.string.tf_removed_field, item.getLabel().toString()));       
+            displayRemovedMsg(getString(R.string.tf_removed_field, item.getLabel().toString()));       
         }
         
         private void removeByXPath(String xpath)
@@ -237,7 +234,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         super.onCreate(savedInstanceState);
         
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);        
-        setContentView(R.layout.form_builder_main);
+        setContentView(R.layout.fb_main);
         
         // Needed to manipulate the visual representation of our place in the form
         mPathText = (TextView) findViewById(R.id.pathText);
@@ -305,7 +302,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             return;
         
         switch (requestCode) {
-        case EDIT_FIELD:
+        case REQUEST_EDITFIELD:
             Field field = Collect.getInstance().getFbField();
             
             if (field.isSaved()) {
@@ -476,6 +473,12 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         }
         
         return super.onOptionsItemSelected(item);
+    }
+    
+    @Override 
+    protected void onResume()
+    {
+        super.onResume();
     }
     
     @Override
@@ -737,7 +740,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     @Override
     public void loadingError(String errorMsg)
     {
-        // TODO Auto-generated method stub
         
     }
 
@@ -995,6 +997,19 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         mPathText.setText(pathText);
         
         adapter = new FormBuilderFieldListAdapter(getApplicationContext(), fieldsToDisplay);
+        
+        // Provide a hint to users if the list is empty
+        if (adapter.isEmpty()) {
+            TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+            nothingToDisplay.setVisibility(View.VISIBLE);
+            
+            // FIXME: figure out why this does not work (shouldn't it?)
+//            openOptionsMenu();
+        } else {
+            TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+            nothingToDisplay.setVisibility(View.INVISIBLE);
+        }
+        
         setListAdapter(adapter);
 
         TouchListView tlv = (TouchListView) getListView();
@@ -1011,8 +1026,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         Collect.getInstance().setFbField(field);
         
         Intent i = new Intent(this, FormBuilderFieldEditor.class);
-        i.putExtra(FormBuilderFieldEditor.FIELD_TYPE, type);        
-        startActivityForResult(i, EDIT_FIELD);
+        i.putExtra(FormBuilderFieldEditor.KEY_FIELDTYPE, type);        
+        startActivityForResult(i, REQUEST_EDITFIELD);
     }    
     
     private void updateExistingField(Field field)

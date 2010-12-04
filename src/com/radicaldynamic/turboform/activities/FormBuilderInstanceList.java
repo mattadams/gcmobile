@@ -65,7 +65,7 @@ public class FormBuilderInstanceList extends ListActivity
         super.onCreate(savedInstanceState);
         
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);        
-        setContentView(R.layout.form_builder_main);
+        setContentView(R.layout.fb_main);
         
         // Needed to manipulate the visual representation of our place in the form
         mPathText = (TextView) findViewById(R.id.pathText);

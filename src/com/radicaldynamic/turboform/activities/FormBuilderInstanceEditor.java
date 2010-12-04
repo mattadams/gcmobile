@@ -40,7 +40,7 @@ public class FormBuilderInstanceEditor extends Activity
         super.onCreate(savedInstanceState);
         
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);        
-        setContentView(R.layout.form_builder_field_editor);
+        setContentView(R.layout.fb_field_editor);
         
         mLabel          = (EditText) findViewById(R.id.label);
         mHint           = (EditText) findViewById(R.id.hint);

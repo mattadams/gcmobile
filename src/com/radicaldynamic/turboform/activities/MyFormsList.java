@@ -276,7 +276,6 @@ public class MyFormsList extends ListActivity
                     i.putExtra(FormEntryActivity.NEWFORM, true);
                     startActivity(i);
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
                     Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
                     e.printStackTrace();
                 }

@@ -117,7 +117,6 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                     ais.close();
                     output.close();
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
 
@@ -127,12 +126,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                 if (contentType.equals("text/xml"))
                     entity.addPart("xml_submission_file", fb);
                 else 
-                    entity.addPart(f.getName(), fb);
-                
-//                if (f.delete())
-//                    Log.d(Collect.LOGTAG, t + "removed " + f.getName());
-//                else
-//                    Log.e(Collect.LOGTAG, t + "unable to remove " + f.getName());                
+                    entity.addPart(f.getName(), fb);      
                 
                 Log.i(Collect.LOGTAG, t + "added " + contentType + " file named " + f.getName() + " prior to httpPost");                
             }

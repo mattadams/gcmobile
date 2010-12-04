@@ -1,6 +1,7 @@
 package com.radicaldynamic.turboform.activities;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -14,7 +15,6 @@ import android.text.method.TextKeyListener;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +24,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.radicaldynamic.turboform.R;
 import com.radicaldynamic.turboform.application.Collect;
@@ -33,7 +34,14 @@ public class FormBuilderFieldEditor extends Activity
 {
     private static final String t = "FormBuilderElementEditor: ";
     
-    public static final String FIELD_TYPE = "fieldtype";
+    public static final String KEY_FIELDTYPE = "fieldtype";
+    public static final String KEY_SELECTDEFAULT = "selectinstancedefault";
+    
+    private static final int REQUEST_ITEMLIST = 1;
+    
+    private static final int MENU_ADVANCED = Menu.FIRST;
+    private static final int MENU_ITEMS = Menu.FIRST + 1;
+    private static final int MENU_HELP = Menu.FIRST + 2;
     
     private AlertDialog mAlertDialog;
     
@@ -51,29 +59,43 @@ public class FormBuilderFieldEditor extends Activity
     private CheckBox mReadonly;
     private CheckBox mRequired;
     
+    // Special hack to deal with the added complexity of selecte fields
+    private String mSelectInstanceDefault = "";
+    
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         
-        setContentView(R.layout.form_builder_field_editor);      
+        setContentView(R.layout.fb_field_editor);  
         
-        // If there is no instance state (e.g., this activity was loaded by another/this is not a flip)
-        if (savedInstanceState == null) {           
-            Intent i = getIntent();
-            mFieldType = i.getStringExtra(FIELD_TYPE);
-        } else {
-            if (savedInstanceState.containsKey(FIELD_TYPE))
-                mFieldType = savedInstanceState.getString(FIELD_TYPE);
-        }
-            
         // Retrieve field (if any)
         mField = Collect.getInstance().getFbField();
 
         // Create a new field if one is needed (further init will occur in the field-specific method)
         if (mField == null)
-            mField = new Field();
+            mField = new Field();     
         
+        // If there is no instance state (e.g., this activity was loaded by another/this is not a flip)
+        if (savedInstanceState == null) {           
+            Intent i = getIntent();
+            mFieldType = i.getStringExtra(KEY_FIELDTYPE);
+            
+            // We store off the instance default string for select types (this is special)
+            if (mFieldType.equals("select")) {
+                mSelectInstanceDefault = mField.getInstance().getDefaultValue();
+                
+                // This is becoming problematic but we must reset this somewhere
+                Collect.getInstance().setFbItemList(null);
+            }
+        } else {
+            if (savedInstanceState.containsKey(KEY_FIELDTYPE))
+                mFieldType = savedInstanceState.getString(KEY_FIELDTYPE);
+            
+            if (savedInstanceState.containsKey(KEY_SELECTDEFAULT))
+                mSelectInstanceDefault = savedInstanceState.getString(KEY_SELECTDEFAULT);
+        }
+
         String title = "";
             
         // Activity should have a relevant title (e.g., add new or edit existing)
@@ -169,11 +191,52 @@ public class FormBuilderFieldEditor extends Activity
     }
     
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        switch (requestCode) {
+        case REQUEST_ITEMLIST:
+            if (resultCode == RESULT_OK) {
+                // Preselected list items may have changed, store off this list
+                ArrayList<String> defaults = new ArrayList<String>();
+                
+                Iterator<Field> it = Collect.getInstance().getFbItemList().iterator();
+                
+                while (it.hasNext()) {
+                    Field item = it.next();
+
+                    // If an item is marked as a default (preselected)
+                    if (item.isItemDefault()) {
+                        defaults.add(item.getItemValue());
+                        item.setItemDefault(false);
+                    }
+                }
+                
+                /* 
+                 * This will either be processed by saveSelectElement() or sent back to 
+                 * FormBuilderSelectItemList by way of onOptionsItemSelected() 
+                 */
+                mSelectInstanceDefault = defaults.toString().replaceAll(",\\s", " ").replaceAll("[\\[\\]]", "");
+            }
+            
+            break;
+        }
+    }
+    
+    @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.form_builder_field_editor_options, menu);
+        
+        menu.add(0, MENU_ADVANCED, 0, getString(R.string.tf_advanced))
+            .setIcon(R.drawable.options);
+        
+        menu.add(0, MENU_ITEMS, 0, getString(R.string.tf_list_items))
+            .setIcon(R.drawable.ic_menu_mark)
+            .setEnabled(mFieldType.equals("select") ? true : false);        
+        
+        menu.add(0, MENU_HELP, 0, getString(R.string.tf_help))
+            .setIcon(R.drawable.ic_menu_help);
+        
         return true;
     }
     
@@ -193,6 +256,29 @@ public class FormBuilderFieldEditor extends Activity
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch (item.getItemId()) {
+        // Launch the advanced properties editor
+        case MENU_ADVANCED:
+            break;
+         
+        // Launch the form builder select item editor
+        case MENU_ITEMS:
+            Intent i = new Intent(this, FormBuilderSelectItemList.class);            
+            /* 
+             * Use the state of the select radio option to determine whether to indicate to
+             * the select item list which mode the select list is operating in. 
+             * 
+             * This makes sense because the user may have switched select modes but may
+             * not have saved the field yet, so we cannot determine this from the field itself.
+             */
+            final RadioButton radioSingle = (RadioButton) findViewById(R.id.selectTypeSingle);            
+            i.putExtra(FormBuilderSelectItemList.KEY_SINGLE, radioSingle.isChecked());
+            i.putExtra(FormBuilderSelectItemList.KEY_DEFAULT, mSelectInstanceDefault);
+            startActivityForResult(i, REQUEST_ITEMLIST);
+            break;
+            
+         // TODO: display field-specific help text (from web site)
+        case MENU_HELP:
+            break;
         }
     
         return super.onOptionsItemSelected(item);
@@ -202,8 +288,10 @@ public class FormBuilderFieldEditor extends Activity
     protected void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
-        outState.putString(FIELD_TYPE, mFieldType);
+        outState.putString(KEY_FIELDTYPE, mFieldType);
+        outState.putString(KEY_SELECTDEFAULT, mSelectInstanceDefault);
         
+        // Save this specific field state for orientation changes & select item editor
         Collect.getInstance().setFbField(mField);
     }
 
@@ -232,9 +320,10 @@ public class FormBuilderFieldEditor extends Activity
     
                         case 1:
                             // Save and exit
-                            saveChanges();
-                            setResult(RESULT_OK);
-                            finish();
+                            if (saveChanges()) {
+                                setResult(RESULT_OK);
+                                finish();
+                            }
                             break;
     
                         case 2:
@@ -244,6 +333,32 @@ public class FormBuilderFieldEditor extends Activity
                     }
                 }).create();
     
+        mAlertDialog.show();
+    }
+    
+    // See loadSelectElement() for further information on this dialog
+    private void createSelectChangeDialog()
+    {
+        mAlertDialog = new AlertDialog.Builder(this)
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle(R.string.tf_change_select_type)
+            .setMessage(R.string.tf_change_select_type_message)            
+            .setPositiveButton(R.string.tf_yes, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    mSelectInstanceDefault = "";
+                }
+            })
+            .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // Return to a multiple select field type
+                    RadioButton radioMultiple = (RadioButton) findViewById(R.id.selectTypeMultiple);
+                    radioMultiple.setChecked(true);
+                    
+                    dialog.cancel();
+                }
+            }).create();
+        
         mAlertDialog.show();
     }
     
@@ -501,9 +616,17 @@ public class FormBuilderFieldEditor extends Activity
                 case R.id.selectTypeMultiple:
                     mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectmulti));                    
                     break;                    
-                case R.id.selectTypeSingle:                    
-                    // TODO: reduce possible multiple default values to a single one -- confirm with user before doing so
+                case R.id.selectTypeSingle:
                     mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
+                    
+                    /* 
+                     * Single selects may only have one preselected default.  This presents a problem
+                     * if the user is switching from a multiple to a single default and requires user
+                     * intervention.
+                     */
+                    if (mSelectInstanceDefault.split("\\s+").length > 1)
+                        createSelectChangeDialog();
+                                        
                     break;
                 }
             }
@@ -542,12 +665,24 @@ public class FormBuilderFieldEditor extends Activity
     /*
      * Save any changes that the user has made to the form field
      */
-    private void saveChanges()
+    private boolean saveChanges()
     {
+        // Ensure that a label is present
+        if (mLabel.getText().toString().replaceAll("\\s+", "").length() == 0) {
+            mLabel.requestFocusFromTouch();
+            
+            Toast.makeText(
+                    getApplicationContext(), 
+                    getString(R.string.tf_field_cannot_be_saved), 
+                    Toast.LENGTH_SHORT).show();            
+            
+            return false;            
+        }
+        
         // Save common attributes
-        mField.setLabel(mLabel.getText().toString());
-        mField.setHint(mHint.getText().toString());
-        mField.getInstance().setDefaultValue(mDefaultValue.getText().toString());        
+        mField.setLabel(mLabel.getText().toString().trim());
+        mField.setHint(mHint.getText().toString().trim());
+        mField.getInstance().setDefaultValue(mDefaultValue.getText().toString().trim());        
         
         if (mReadonly.isChecked())
             mField.getBind().setReadonly(true);
@@ -575,6 +710,8 @@ public class FormBuilderFieldEditor extends Activity
         mField.setSaved(true);
         
         Collect.getInstance().setFbField(mField);
+        
+        return true;
     }
     
     private void saveBarcodeElement() 
@@ -584,13 +721,11 @@ public class FormBuilderFieldEditor extends Activity
     
     private void saveDateElement()
     {
-        // TODO Auto-generated method stub
         
     }
     
     private void saveGeopointElement()
     {
-        // TODO Auto-generated method stub
         
     }
 
@@ -661,6 +796,7 @@ public class FormBuilderFieldEditor extends Activity
         }
     }
     
+    @SuppressWarnings("unchecked")
     private void saveSelectElement()
     {
         final RadioButton radioSingle = (RadioButton) findViewById(R.id.selectTypeSingle);
@@ -671,12 +807,21 @@ public class FormBuilderFieldEditor extends Activity
         } else {
             mField.setType("select");
             mField.getBind().setType("select");                        
+        }   
+        
+        // Save any changes to the list of items
+        if (Collect.getInstance().getFbItemList() != null) {            
+            mField.getChildren().clear();
+            mField.getChildren().addAll((ArrayList<Field>) Collect.getInstance().getFbItemList().clone());
+            
+            Collect.getInstance().setFbItemList(null);
         }
+        
+        mField.getInstance().setDefaultValue(mSelectInstanceDefault);
     }
     
     private void saveTextElement()
     {
-        // TODO Auto-generated method stub
         
     }
 }

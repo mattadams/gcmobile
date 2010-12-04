@@ -21,7 +21,7 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
     private Context mContext;
     
     public FormBuilderFieldListAdapter(Context context, ArrayList<Field> fieldList) {
-        super(context, R.layout.form_builder_row, fieldList);
+        super(context, R.layout.fb_field_row, fieldList);
         mFields = fieldList;
         mContext = context;
     }
@@ -34,7 +34,7 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
 
         if (row == null) {
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            row = inflater.inflate(R.layout.form_builder_row, parent, false);
+            row = inflater.inflate(R.layout.fb_field_row, parent, false);
         }
         
         // If these objects are not reset to suitable defaults they might be reused with undesired side effects

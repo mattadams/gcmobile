@@ -25,8 +25,10 @@ public class Field
     private String location;                    // The XML element location of this node (e.g., *[2]/*[1])
     private String xpath;                       // Value of the "ref" or "nodeset" attribute (if any)
     
-    private Field parent;
-    private String itemValue;                   // Any value assigned to this node (if it is an item)
+    private Field parent;                       // The parent of this field item (null if at top of form hierarchy)
+    
+    private String itemValue = "";              // Any value assigned to this node (if it is an item)
+    private boolean itemDefault = false;        // Whether this value should be preselected
     
     private FieldText label = new FieldText();  // Any label assigned to this field
     private FieldText hint = new FieldText();   // Any hint assigned to this field 
@@ -105,7 +107,7 @@ public class Field
                             Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getXPath() + " associated to field at " + getLocation());                            
                             setBind(b);
                             
-                            // Not all binds will have an associated type but our code expects them to
+                            // Not all binds will have an associated type but our code (may) expect them to
                             if (b.getType() == null) {
 //                                if (getType().equals("input"))
 //                                    b.setType("string");
@@ -123,15 +125,9 @@ public class Field
         }
     }
 
-    public Map<String, String> getAttributes()
-    {
-        return attributes;
-    }
+    public Map<String, String> getAttributes() { return attributes; }
 
-    public ArrayList<Field> getChildren()
-    {
-        return children;
-    }
+    public ArrayList<Field> getChildren() { return children; }
     
     /* 
      * If this field is a group, containing exactly one field which is a repeat then return it.
@@ -171,55 +167,23 @@ public class Field
         return hint;
     }
     
-    public void setType(String type)
-    {
-        this.type = type;
-    }
+    public void setType(String type) { this.type = type; }
+    public String getType() { return type; }
 
-    public String getType()
-    {
-        return type;
-    }
+    public void setLocation(String location) { this.location = location; }
+    public String getLocation() { return location; }
 
-    public void setLocation(String location)
-    {
-        this.location = location;
-    }
+    public void setItemValue(String itemValue) { this.itemValue = itemValue; }
+    public String getItemValue() { return itemValue; }
+    
+    public void setItemDefault(boolean itemDefault) { this.itemDefault = itemDefault; }
+    public boolean isItemDefault() { return itemDefault; }
+    
+    public void setXPath(String xpath) { this.xpath = xpath; }
+    public String getXPath() { return xpath; }
 
-    public String getLocation()
-    {
-        return location;
-    }
-
-    public void setItemValue(String itemValue)
-    {
-        this.itemValue = itemValue;
-    }
-
-    public String getItemValue()
-    {
-        return itemValue;
-    }
-
-    public void setXPath(String xpath)
-    {
-        this.xpath = xpath;
-    }
-
-    public String getXPath()
-    {
-        return xpath;
-    }
-
-    public void setBind(Bind bind)
-    {
-        this.bind = bind;
-    }
-
-    public Bind getBind()
-    {
-        return bind;
-    }
+    public void setBind(Bind bind) { this.bind = bind; }
+    public Bind getBind() { return bind; }
 
     public void setActive(boolean active)
     {
@@ -232,55 +196,20 @@ public class Field
         return active;
     }
     
-    public void setParent(Field parent)
-    {
-        this.parent = parent;
-    }
-
-    public Field getParent()
-    {
-        return parent;
-    }
+    public void setParent(Field parent) { this.parent = parent; }
+    public Field getParent() { return parent; }
     
-    public void setInstance(Instance instance)
-    {
-        this.instance = instance;
-    }
+    public void setInstance(Instance instance) { this.instance = instance; }
+    public Instance getInstance() { return instance; }
 
-    public Instance getInstance()
-    {
-        return instance;
-    }
+    public void setEmpty(boolean empty) { this.empty = empty; }
+    public boolean isEmpty() { return empty; }
 
-    public void setEmpty(boolean empty)
-    {
-        this.empty = empty;
-    }
+    public void setSaved(boolean saved) { this.saved = saved; }
+    public boolean isSaved() { return saved; }
 
-    public boolean isEmpty()
-    {
-        return empty;
-    }
-
-    public void setSaved(boolean saved)
-    {
-        this.saved = saved;
-    }
-
-    public boolean isSaved()
-    {
-        return saved;
-    }
-
-    public void setNewField(boolean newField)
-    {
-        this.newField = newField;
-    }
-
-    public boolean isNewField()
-    {
-        return newField;
-    }    
+    public void setNewField(boolean newField) { this.newField = newField; }
+    public boolean isNewField() { return newField; }    
     
     /*
      * Returns true if the field it has been passed is a repeated group, otherwise false
@@ -311,7 +240,8 @@ public class Field
                     + "unable to construct field name from getLabel().toString() of " 
                     + label.toString());
             
-            instanceFieldName = UUID.randomUUID().toString();
+            // Get rid of - characters (not valid in XML tag names)
+            instanceFieldName = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
         }
         
         return instanceFieldName;

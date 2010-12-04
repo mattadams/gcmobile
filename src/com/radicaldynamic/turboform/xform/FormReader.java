@@ -64,11 +64,12 @@ public class FormReader
             // Just in case the form name did not have anything useful in it with which to generate a sane instance root
             if (instanceRoot.length() == 0) {
                 Log.i(Collect.LOGTAG, t + "unable to construct instance root from form getName() of " + formName);
-                instanceRoot = UUID.randomUUID().toString();
+                instanceRoot = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
             }
             
+            // FIXME: See "Form ID Guidelines" (id is preferred vs. xmlns) http://code.google.com/p/opendatakit/wiki/XFormDesignGuidelines
             mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
-            mForm.addTag(XMLDoc.from("<" + instanceRoot + " xmlns=\"" + instanceRoot + "\"></" + instanceRoot + ">", false));
+            mForm.addTag(XMLDoc.from("<" + instanceRoot + " id=\"" + instanceRoot + "\"></" + instanceRoot + ">", false));
         }
         
         mInstanceRoot = mForm

@@ -29,7 +29,7 @@ import com.radicaldynamic.turboform.xform.Translation;
 
 public class Collect extends Application {
     public final static String LOGTAG = "TurboForm";
-    public static CouchDbService mDb = null;    
+    public static CouchDbService mDb = null;
 	private static Collect singleton = null;
 	
 	private FormEntryController formEntryController = null;
@@ -38,15 +38,16 @@ public class Collect extends Application {
     
     private boolean firstReferenceInitialization = true;
     
-    private ArrayList<String> instanceBrowseList            = new ArrayList<String>();
+    private ArrayList<String> instanceBrowseList = new ArrayList<String>();
     
-    private FormDocument fbForm                    = null;     // Form document in memory for use with the form builder
-    private ArrayList<Bind> fbBindState            = null;     // XForm bind state in memory for use with the form builder
-    private ArrayList<Field> fbFieldState          = null;     // XForm field state in memory for use with fbFieldList
-    private ArrayList<Instance> fbInstanceState    = null;     // XForm instance state in memory for use with fbInstanceList
-    private ArrayList<Translation> fbTranslationState = null;  // XForm translation state in memory for use with FieldText and itext management activities
-    private Field fbField                          = null;     // SINGLE XForm field in memory for use with fbFieldEditor
-    private Instance fbInstance                    = null;     // SINGLE XForm instance in memory for use with fbInstanceEditor
+    private FormDocument fbForm                    = null;
+    private ArrayList<Bind> fbBindState            = null;
+    private ArrayList<Field> fbFieldState          = null;
+    private ArrayList<Instance> fbInstanceState    = null;
+    private ArrayList<Translation> fbTranslationState = null;  
+    private Field fbField                          = null;
+    private Instance fbInstance                    = null;
+    private ArrayList<Field> fbItemList            = null;
 
 	/* (non-Javadoc)
 	 * @see android.app.Application#onConfigurationChanged(android.content.res.Configuration)
@@ -61,7 +62,6 @@ public class Collect extends Application {
 	 */
 	@Override
 	public void onCreate() {
-		// TODO Auto-generated method stub
 		super.onCreate();
 		singleton = this;
 	}
@@ -80,16 +80,6 @@ public class Collect extends Application {
 	{
 		return formEntryController;
 	}	
-
-    public void setInstanceBrowseList(ArrayList<String> instanceBrowseList)
-    {
-        this.instanceBrowseList = instanceBrowseList;
-    }
-
-    public ArrayList<String> getInstanceBrowseList()
-    {
-        return instanceBrowseList;
-    }
 
 	public void registerMediaPath(String mediaPath)
 	{
@@ -179,75 +169,31 @@ public class Collect extends Application {
 		t.setGravity(Gravity.CENTER, 0, 0);
 		t.show();
 	}
+	
+    public void setInstanceBrowseList(ArrayList<String> instanceBrowseList) { this.instanceBrowseList = instanceBrowseList; }
+    public ArrayList<String> getInstanceBrowseList() { return instanceBrowseList; }
 
-    public void setFbFieldState(ArrayList<Field> fbFieldState)
-    {
-        this.fbFieldState = fbFieldState;
-    }
+    public void setFbTranslationState(ArrayList<Translation> fbTranslationState) { this.fbTranslationState = fbTranslationState; }
+    public ArrayList<Translation> getFbTranslationState() { return fbTranslationState; }
+    
+    public void setFbFieldState(ArrayList<Field> fbFieldState) { this.fbFieldState = fbFieldState; }
+    public ArrayList<Field> getFbFieldState() { return fbFieldState; }
+    
+    public void setFbBindState(ArrayList<Bind> fbBindState) { this.fbBindState = fbBindState; }
+    public ArrayList<Bind> getFbBindState() { return fbBindState; }
 
-    public ArrayList<Field> getFbFieldState()
-    {
-        return fbFieldState;
-    }
+    public void setFbInstanceState(ArrayList<Instance> fbInstanceState) { this.fbInstanceState = fbInstanceState; }
+    public ArrayList<Instance> getFbInstanceState() { return fbInstanceState; }
 
-    public void setFbInstanceState(ArrayList<Instance> fbInstanceState)
-    {
-        this.fbInstanceState = fbInstanceState;
-    }
+    public void setFbForm(FormDocument fbForm) { this.fbForm = fbForm; }
+    public FormDocument getFbForm() { return fbForm; }
 
-    public ArrayList<Instance> getFbInstanceState()
-    {
-        return fbInstanceState;
-    }
+    public void setFbField(Field fbField) { this.fbField = fbField; }
+    public Field getFbField() { return fbField; }
 
-    public void setFbForm(FormDocument fbForm)
-    {
-        this.fbForm = fbForm;
-    }
+    public void setFbInstance(Instance fbInstance) { this.fbInstance = fbInstance; }
+    public Instance getFbInstance() { return fbInstance; }
 
-    public FormDocument getFbForm()
-    {
-        return fbForm;
-    }
-
-    public void setFbField(Field fbField)
-    {
-        this.fbField = fbField;
-    }
-
-    public Field getFbField()
-    {
-        return fbField;
-    }
-
-    public void setFbInstance(Instance fbInstance)
-    {
-        this.fbInstance = fbInstance;
-    }
-
-    public Instance getFbInstance()
-    {
-        return fbInstance;
-    }
-
-    public void setFbTranslationState(
-            ArrayList<Translation> fbTranslationState)
-    {
-        this.fbTranslationState = fbTranslationState;
-    }
-
-    public ArrayList<Translation> getFbTranslationState()
-    {
-        return fbTranslationState;
-    }
-
-    public void setFbBindState(ArrayList<Bind> fbBindState)
-    {
-        this.fbBindState = fbBindState;
-    }
-
-    public ArrayList<Bind> getFbBindState()
-    {
-        return fbBindState;
-    }
+    public void setFbItemList(ArrayList<Field> fbItemList) { this.fbItemList = fbItemList; }
+    public ArrayList<Field> getFbItemList() { return fbItemList; }
 }
