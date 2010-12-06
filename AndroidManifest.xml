@@ -12,7 +12,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="10" android:versionName="1.1.6-tip-0.9.1" package="com.radicaldynamic.turboform">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="10" android:versionName="1.1.6-tip-0.9.1" package="com.radicaldynamic.groupinform">
     <application android:label="@string/app_name" android:theme="@android:style/Theme.Light" android:icon="@drawable/app_icon_check" android:name=".application.Collect" android:debuggable="true">
         <activity android:label="@string/app_name" android:configChanges="orientation" android:name=".activities.MainBrowserActivity">
             <intent-filter>
@@ -24,7 +24,7 @@ the License.
         <activity android:name=".activities.FormEntryActivity" android:label="@string/app_name" android:windowSoftInputMode="adjustResize" android:configChanges="orientation"> 
             <!-- the intent filter below is a bit of a hack until we create a content provider for forms -->
             <intent-filter>
-                <action android:name="com.radicaldynamic.turboform.action.FormEntry" />
+                <action android:name="com.radicaldynamic.groupinform.action.FormEntry" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <!-- this is what we should be doing once we have the content provider working -->

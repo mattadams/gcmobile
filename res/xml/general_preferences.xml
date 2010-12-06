@@ -75,7 +75,7 @@
         <CheckBoxPreference
             android:key="use_custom_server"
             android:title="Use custom server"
-            android:summaryOff="Currently using TurboForm Online" 
+            android:summaryOff="Currently using Inform Online" 
             android:summaryOn="Currently using Custom Server" />
             
         <EditTextPreference            

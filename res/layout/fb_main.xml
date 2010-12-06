@@ -26,9 +26,9 @@
         android:layout_marginTop="4dp"
         android:layout_weight="1" />
 
-    <com.radicaldynamic.turboform.views.TouchListView 
+    <com.radicaldynamic.groupinform.views.TouchListView 
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tlv="http://schemas.android.com/apk/res/com.radicaldynamic.turboform"
+        xmlns:tlv="http://schemas.android.com/apk/res/com.radicaldynamic.groupinform"
         android:id="@android:id/list"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
