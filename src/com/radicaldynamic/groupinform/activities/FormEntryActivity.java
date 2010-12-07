@@ -895,7 +895,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
     private void browseToInstance(String instanceId)
     {        
-        Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
+        Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
         i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
         i.putExtra(FormEntryActivity.KEY_INSTANCEID, instanceId);
         i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);

@@ -226,7 +226,7 @@ public class MainBrowserActivity extends ListActivity
         switch (s1.getSelectedItemPosition()) {
         // Show all forms (in group)
         case 0:
-            Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
+            Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
             i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, new ArrayList<String>());
             i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
             startActivity(i);
@@ -304,7 +304,7 @@ public class MainBrowserActivity extends ListActivity
         @Override
         protected void onPostExecute(Void nothing)
         {
-            Intent i = new Intent("com.radicaldynamic.turboform.action.FormEntry");
+            Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
             i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstanceIds);
             i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstanceIds.get(0));
             i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);            

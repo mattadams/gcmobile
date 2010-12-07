@@ -43,21 +43,6 @@ public class GenericDocument extends CouchDbDocument
     
     GenericDocument(String type) {
         setType(type);
-        
-        String timestamp = generateTimestamp(); 
-        
-        if (isNew()) {
-            if (getDateCreated() == null) {
-                Log.v(Collect.LOGTAG, t + "new " + type + ": setting dateCreated and dateUpdated to " + timestamp);
-                setDateCreated(timestamp);
-                setDateUpdated(timestamp);
-            }            
-        } else {
-            if (getDateCreated() instanceof String) { 
-                Log.v(Collect.LOGTAG, t + "existing " + type + ": setting dateUpdated to " + timestamp);
-                setDateUpdated(timestamp);
-            }
-        }
     }
     
     @JsonIgnore
