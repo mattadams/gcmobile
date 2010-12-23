@@ -30,7 +30,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.ConditionVariable;
 import android.os.IBinder;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
@@ -113,11 +112,8 @@ public class CouchDbService extends Service {
      * @return TFCouchDbAdapter
      */
     public CouchDbService open() {
-        TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);         
-        String database = getString(R.string.tf_couchdb_prefix) + "device/" + mTelephonyMgr.getDeviceId();
-        
         // TODO: replace this with something more sensible
-        database = "myforms";
+        String database = "myforms";
         
         return open(database);
     }

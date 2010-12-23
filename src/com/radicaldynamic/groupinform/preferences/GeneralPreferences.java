@@ -26,13 +26,15 @@ import com.radicaldynamic.groupinform.utilities.UrlUtils;
 
 public class GeneralPreferences extends PreferenceActivity implements
         OnSharedPreferenceChangeListener {
+    public static final String PREFS_NAME = "GeneralPreferences";
     
     public static String KEY_SERVER   = "server_host_preference";
     public static String KEY_USERNAME = "server_username_preference";
     public static String KEY_PASSWORD = "server_password_preference";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) 
+    {
         super.onCreate(savedInstanceState);
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_general_preferences));
         
@@ -45,7 +47,8 @@ public class GeneralPreferences extends PreferenceActivity implements
     }
     
     @Override
-    protected void onPause() {
+    protected void onPause() 
+    {
         super.onPause();
         getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(
             this);
@@ -53,11 +56,12 @@ public class GeneralPreferences extends PreferenceActivity implements
 
 
     @Override
-    protected void onResume() {
+    protected void onResume() 
+    {
         super.onResume();
         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
-
+    
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
     {
@@ -70,13 +74,15 @@ public class GeneralPreferences extends PreferenceActivity implements
         }
     }
     
-    private void updatePassword() {
+    private void updatePassword() 
+    {
         EditTextPreference etp =
             (EditTextPreference) this.getPreferenceScreen().findPreference(KEY_PASSWORD);
         etp.setSummary(etp.getText().replaceAll(".", "*"));
     } 
     
-    private void updateServer() {
+    private void updateServer() 
+    {
         EditTextPreference etp = (EditTextPreference) this.getPreferenceScreen().findPreference(KEY_SERVER);
         String s = etp.getText().trim();
 
@@ -92,7 +98,8 @@ public class GeneralPreferences extends PreferenceActivity implements
         }
     }
     
-    private void updateUsername() {
+    private void updateUsername() 
+    {
         EditTextPreference etp =
             (EditTextPreference) this.getPreferenceScreen().findPreference(KEY_USERNAME);
         etp.setSummary(etp.getText());

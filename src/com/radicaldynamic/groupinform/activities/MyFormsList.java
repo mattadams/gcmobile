@@ -24,15 +24,15 @@ import org.ektorp.Attachment;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.method.QwertyKeyListener;
-import android.text.method.TextKeyListener;
 import android.util.Base64;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -235,16 +235,17 @@ public class MyFormsList extends ListActivity
     private void promptForNewFormName()
     {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
+        
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.create_form, null);        
+        
+        alert.setView(view);
+        alert.setInverseBackgroundForced(true);
         alert.setTitle(getText(R.string.tf_create_form_dialog_title));
-        alert.setMessage(getText(R.string.tf_create_form_dialog_message));
 
         // Set an EditText view to get user input 
-        final EditText input = new EditText(this);
-        input.setSingleLine();
-        input.setKeyListener(new QwertyKeyListener(TextKeyListener.Capitalize.WORDS, false));
-        alert.setView(input);
-
+        final EditText input = (EditText) view.findViewById(R.id.formName);
+        
         alert.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {                
                 FormDocument form = new FormDocument();
