@@ -21,6 +21,7 @@ import android.widget.Toast;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
+import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.CouchDbService;
 import com.radicaldynamic.groupinform.xform.Bind;
 import com.radicaldynamic.groupinform.xform.Field;
@@ -28,26 +29,36 @@ import com.radicaldynamic.groupinform.xform.Instance;
 import com.radicaldynamic.groupinform.xform.Translation;
 
 public class Collect extends Application {
-    public final static String LOGTAG = "TurboForm";
-    public static CouchDbService mDb = null;
-	private static Collect singleton = null;
+    public final static String LOGTAG = "Inform";
 	
+	// Things from upstream
+	private static Collect singleton = null;
 	private FormEntryController formEntryController = null;
     private FileReferenceFactory factory = null;
-    private IBinder viewToken = null;
-    
+    private IBinder viewToken = null;    
     private boolean firstReferenceInitialization = true;
     
+    // The database connection
+    public static CouchDbService mDb = null;
+    
+    // Current registration state of this device
+    private InformOnlineState informOnline = new InformOnlineState();
+    
+    // Instance browse list, used for switching between instances of a given form
     private ArrayList<String> instanceBrowseList = new ArrayList<String>();
     
-    private FormDocument fbForm                    = null;
-    private ArrayList<Bind> fbBindState            = null;
-    private ArrayList<Field> fbFieldState          = null;
-    private ArrayList<Instance> fbInstanceState    = null;
+    /*
+     * State variables for the form builder
+     * TODO: it would be nice to refactor the form builder so we don't need these here
+     */
+    private FormDocument fbForm = null;
+    private ArrayList<Bind> fbBindState = null;
+    private ArrayList<Field> fbFieldState = null;
+    private ArrayList<Instance> fbInstanceState = null;
     private ArrayList<Translation> fbTranslationState = null;  
-    private Field fbField                          = null;
-    private Instance fbInstance                    = null;
-    private ArrayList<Field> fbItemList            = null;
+    private Field fbField = null;
+    private Instance fbInstance = null;
+    private ArrayList<Field> fbItemList = null;
 
 	/* (non-Javadoc)
 	 * @see android.app.Application#onConfigurationChanged(android.content.res.Configuration)
@@ -196,4 +207,14 @@ public class Collect extends Application {
 
     public void setFbItemList(ArrayList<Field> fbItemList) { this.fbItemList = fbItemList; }
     public ArrayList<Field> getFbItemList() { return fbItemList; }
+
+    public void setInformOnline(InformOnlineState informOnline)
+    {
+        this.informOnline = informOnline;
+    }
+
+    public InformOnlineState getInformOnline()
+    {
+        return informOnline;
+    }
 }

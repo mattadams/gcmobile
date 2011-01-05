@@ -108,11 +108,13 @@ public class GenericDocument extends CouchDbDocument
         SimpleDateFormat sdf = new SimpleDateFormat(DATETIME);
         Calendar calendar = Calendar.getInstance();
         
-        try {
-            calendar.setTime(sdf.parse(dateUpdated));
-        } catch (ParseException e1) {
-            Log.e(Collect.LOGTAG, t + "unable to parse dateCreated, returning a valid date anyway: " + e1.toString());            
-        }
+        // FIXME: yeah, fix this shit
+        
+//        try {
+//            calendar.setTime(sdf.parse(dateUpdated));
+//        } catch (ParseException e1) {
+//            Log.e(Collect.LOGTAG, t + "unable to parse dateCreated, returning a valid date anyway: " + e1.toString());            
+//        }
         
         return calendar;
     }

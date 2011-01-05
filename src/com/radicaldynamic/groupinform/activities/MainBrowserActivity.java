@@ -57,11 +57,10 @@ import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.documents.InstanceDocument;
-import com.radicaldynamic.groupinform.preferences.GeneralPreferences;
+import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.repository.InstanceRepository;
 import com.radicaldynamic.groupinform.services.CouchDbService;
-import com.radicaldynamic.groupinform.tasks.InitializeApplicationTask;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
@@ -75,8 +74,12 @@ import com.radicaldynamic.groupinform.utilities.FileUtils;
 public class MainBrowserActivity extends ListActivity
 {
     private static final String t = "MainBrowserActivity: ";
+    
+    // Request codes for returning data from specified intent 
+    private static final int ABOUT_INFORM = 1;
 
     private static boolean mShowSplash = true;
+    private boolean mIsBound = false;
 
     private AlertDialog mAlertDialog;
     private RefreshViewTask mRefreshViewTask;
@@ -87,11 +90,13 @@ public class MainBrowserActivity extends ListActivity
             Collect.mDb = ((CouchDbService.LocalBinder) service).getService();
             Collect.mDb.open();
             loadScreen();
+            
+            mIsBound = true;
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
-            Log.d(Collect.LOGTAG, t + "TFCouchDbService unbound");
+            Log.d(Collect.LOGTAG, t + "CouchDbService unbound");
         }
     };
 
@@ -100,9 +105,9 @@ public class MainBrowserActivity extends ListActivity
     {
         super.onCreate(savedInstanceState);
 
-        // If sd card error, quit
+        // If SD card error, quit
         if (!FileUtils.storageReady()) {
-            createErrorDialog(getString(R.string.no_sd_error), true);
+            displayErrorDialog(getString(R.string.no_sd_error), true);
         }
 
         displaySplash();
@@ -112,44 +117,49 @@ public class MainBrowserActivity extends ListActivity
         setTitle(getString(R.string.app_name));
         setProgressBarIndeterminateVisibility(false);
 
-        startService(new Intent(this, CouchDbService.class));
-        bindService(new Intent(this, CouchDbService.class), mConnection, Context.BIND_AUTO_CREATE);
-        
         // We don't use the on-screen progress indicator here
         RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
-        onscreenProgress.setVisibility(View.GONE);
+        onscreenProgress.setVisibility(View.GONE);        
 
         // Perform any needed application initialization
-        new InitializeApplicationTask().execute();
+        Collect.getInstance().setInformOnline(new InformOnlineState(getApplicationContext()));
+        
+        if (Collect.getInstance().getInformOnline().isRegistered()) {
+            startService(new Intent(this, CouchDbService.class));            
+            bindService(new Intent(this, CouchDbService.class), mConnection, Context.BIND_AUTO_CREATE);
+            
+            // Initiate and populate spinner to filter forms displayed by instances types
+            ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
+                .createFromResource(this, R.array.tf_main_menu_form_filters, android.R.layout.simple_spinner_item);        
+            instanceStatus.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            
+            Spinner s1 = (Spinner) findViewById(R.id.form_filter);
+            s1.setAdapter(instanceStatus);
+            s1.setOnItemSelectedListener(new OnItemSelectedListener() {
+                public void onItemSelected(AdapterView<?> parent, View view,
+                        int position, long id)
+                {
+                    triggerRefresh(position);
+                }
 
-        /*
-         * Initiate and populate spinner to filter forms displayed by instances
-         * types
-         */
-        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-        ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
-                .createFromResource(this, R.array.tf_main_menu_form_filters,
-                        android.R.layout.simple_spinner_item);
-        instanceStatus
-                .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        s1.setAdapter(instanceStatus);
-        s1.setOnItemSelectedListener(new OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View view,
-                    int position, long id)
-            {
-                triggerRefresh(position);
-            }
-
-            public void onNothingSelected(AdapterView<?> parent)
-            {
-            }
-        });
+                public void onNothingSelected(AdapterView<?> parent)
+                {
+                }
+            });
+        } else {
+            // Disable this if this device isn't yet registered
+            Spinner s1 = (Spinner) findViewById(R.id.form_filter);
+            s1.setVisibility(View.GONE);
+            
+            new InitializeApplicationTask().execute(getApplicationContext());
+        }
     }
 
     @Override
     protected void onDestroy()
     {
-        unbindService(mConnection);  
+        if (mIsBound)
+            unbindService(mConnection);
 
         super.onDestroy();
     }
@@ -157,7 +167,11 @@ public class MainBrowserActivity extends ListActivity
     @Override
     protected void onPause()
     {
-        dismissDialogs();
+        // Dismiss any dialogs that might be showing
+        if (mAlertDialog != null && mAlertDialog.isShowing()) {
+            mAlertDialog.dismiss();
+        }
+        
         super.onPause();
     }
 
@@ -178,6 +192,21 @@ public class MainBrowserActivity extends ListActivity
     {
         super.onStop();
         mShowSplash = true;
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        
+        if (resultCode == RESULT_CANCELED)
+            return;
+        
+        switch (requestCode) {
+        // "Exit" if the user resets Inform
+        case ABOUT_INFORM:
+            finish();
+            break; 
+        }        
     }
 
     @Override
@@ -261,13 +290,52 @@ public class MainBrowserActivity extends ListActivity
             i = new Intent(this, ManageFormsTabs.class);
             startActivity(i);
             return true;
-        case R.id.tf_preferences:
-            i = new Intent(this, GeneralPreferences.class);
-            startActivity(i);
+        case R.id.tf_info:
+            i = new Intent(this, ClientInformationActivity.class);
+            startActivityForResult(i, ABOUT_INFORM);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public class InitializeApplicationTask extends AsyncTask<Object, Void, Void> 
+    {
+        private boolean mRegistered;
+        
+        @Override
+        protected Void doInBackground(Object... args)
+        {  
+            // Create necessary directories
+            FileUtils.createFolder(FileUtils.ODK_ROOT);
+            FileUtils.createFolder(FileUtils.CACHE_PATH);
+
+            // If registered then attempt to check-in and obtain list of groups
+            if (Collect.getInstance().getInformOnline().isRegistered()) {
+                mRegistered = true;
+            } else {
+                mRegistered = false;
+            }
+            
+            return null;
+        }    
+    
+        @Override
+        protected void onPreExecute()
+        {
+            setProgressBarIndeterminateVisibility(true);
+        }
+    
+        @Override
+        protected void onPostExecute(Void nothing) 
+        {
+            setProgressBarIndeterminateVisibility(false);
+            
+            if (Collect.getInstance().getInformOnline().isServerAlive() == false)
+                displayConnectionErrorDialog(mRegistered);
+            else
+                postInitializeWorkflow(mRegistered);
+        }    
     }
 
     /*
@@ -277,8 +345,7 @@ public class MainBrowserActivity extends ListActivity
      * instance directly. If there is more than one instance then load the
      * instance browser.
      */
-    private class InstanceLoadPathTask extends
-            AsyncTask<Object, Integer, Void>
+    private class InstanceLoadPathTask extends AsyncTask<Object, Integer, Void>
     {
         String mFormId;
         ArrayList<String> mInstanceIds = new ArrayList<String>();
@@ -289,8 +356,7 @@ public class MainBrowserActivity extends ListActivity
             mFormId = (String) params[0];
             InstanceDocument.Status status = (InstanceDocument.Status) params[1];
 
-            mInstanceIds = new InstanceRepository(Collect.mDb.getDb())
-                    .findByFormAndStatus(mFormId, status);
+            mInstanceIds = new InstanceRepository(Collect.mDb.getDb()).findByFormAndStatus(mFormId, status);
             
             return null;
         }
@@ -313,13 +379,11 @@ public class MainBrowserActivity extends ListActivity
             setProgressBarIndeterminateVisibility(false);
         }
     }
-
+    
     /*
      * Refresh the main form browser view as requested by the user
      */
-    private class RefreshViewTask
-            extends
-            AsyncTask<InstanceDocument.Status, Integer, InstanceDocument.Status>
+    private class RefreshViewTask extends AsyncTask<InstanceDocument.Status, Integer, InstanceDocument.Status>
     {
         private ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
         private Map<String, String> instanceTallies = new HashMap<String, String>();
@@ -338,8 +402,7 @@ public class MainBrowserActivity extends ListActivity
                 instanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByInstanceStatus(status[0]);
                 
                 if (!instanceTallies.isEmpty()) {
-                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));
-                    
+                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
                     DocumentUtils.sortByName(documents);
                 }
             }
@@ -366,10 +429,13 @@ public class MainBrowserActivity extends ListActivity
             if (isFinishing())
                 return;
             
-            BrowserListAdapter adapter;
-            adapter = new BrowserListAdapter(getApplicationContext(),
-                    R.layout.main_browser_list_item, documents,
-                    instanceTallies, (Spinner) findViewById(R.id.form_filter));
+            BrowserListAdapter adapter = new BrowserListAdapter(
+                    getApplicationContext(),
+                    R.layout.main_browser_list_item, 
+                    documents,
+                    instanceTallies, 
+                    (Spinner) findViewById(R.id.form_filter));
+            
             setListAdapter(adapter);
 
             if (status == InstanceDocument.Status.nothing) {
@@ -381,6 +447,7 @@ public class MainBrowserActivity extends ListActivity
                     Toast.makeText(getApplicationContext(),
                             getString(R.string.tf_add_form_hint),
                             Toast.LENGTH_LONG).show();
+
                     openOptionsMenu();
                 } else {
                     Toast.makeText(getApplicationContext(),
@@ -389,8 +456,7 @@ public class MainBrowserActivity extends ListActivity
                 }
             } else {
                 Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-                String descriptor = s1.getSelectedItem().toString()
-                        .toLowerCase();
+                String descriptor = s1.getSelectedItem().toString().toLowerCase();
 
                 // Provide hints to user
                 if (documents.isEmpty()) {
@@ -407,11 +473,51 @@ public class MainBrowserActivity extends ListActivity
             setProgressBarIndeterminateVisibility(false);
         }
     }
-
-    private void createErrorDialog(String errorMsg, final boolean shouldExit)
+    
+    /*
+     * An initial connection error should be handled differently depending on
+     * a) whether this device has already been registered, and
+     * b) whether this device has a local (and properly initialized) CouchDB installation
+     */
+    private void displayConnectionErrorDialog(boolean registered)
     {
         mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setIcon(R.drawable.ic_dialog_info);
+        
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);        
+        mAlertDialog.setTitle("Connection Error");
+        
+        if (registered) 
+            mAlertDialog.setMessage("");
+        else 
+            mAlertDialog.setMessage("We were unable to connect to the Inform Online service to register this installation.\n\nPlease try again in a few minutes or visit us at groupinform.com/support and let us know that you're getting this message.  Thanks!");
+                
+        mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                new InitializeApplicationTask().execute(getApplicationContext());
+            }
+        });
+        
+//        mAlertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
+//            public void onClick(DialogInterface dialog, int whichButton) {
+//                // Continue and work offline -- only valid for registered users with a local CouchDB installation
+//            }
+//        });     
+                        
+        mAlertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                finish();
+            }
+        });
+                
+        mAlertDialog.show();
+    }
+
+    private void displayErrorDialog(String errorMsg, final boolean shouldExit)
+    {
+        mAlertDialog = new AlertDialog.Builder(this).create();
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
         mAlertDialog.setMessage(errorMsg);
 
         DialogInterface.OnClickListener errorListener = new DialogInterface.OnClickListener() {
@@ -423,84 +529,14 @@ public class MainBrowserActivity extends ListActivity
                     if (shouldExit) {
                         finish();
                     }
+                    
                     break;
                 }
             }
         };
-
-        mAlertDialog.setCancelable(false);
+        
         mAlertDialog.setButton(getString(R.string.ok), errorListener);
         mAlertDialog.show();
-    }
-
-    /**
-     * Dismiss any showing dialogs that we manage.
-     */
-    private void dismissDialogs()
-    {
-        if (mAlertDialog != null && mAlertDialog.isShowing()) {
-            mAlertDialog.dismiss();
-        }
-    }
-
-    /**
-     * displaySplash
-     * 
-     * Shows the splash screen if the mShowSplash member variable is true.
-     * Otherwise a no-op.
-     */
-    void displaySplash()
-    {
-        if (!mShowSplash)
-            return;
-
-        // Fetch the splash screen Drawable
-        Drawable image = null;
-
-        try {
-            // Attempt to load the configured default splash screen
-            // The following code only works in 1.6+
-            // BitmapDrawable bitImage = new BitmapDrawable(getResources(), FileUtils.SPLASH_SCREEN_FILE_PATH);
-            BitmapDrawable bitImage = new BitmapDrawable(FileUtils.SPLASH_SCREEN_FILE_PATH);
-
-            if (bitImage.getBitmap() != null
-                    && bitImage.getIntrinsicHeight() > 0
-                    && bitImage.getIntrinsicWidth() > 0) {
-                image = bitImage;
-            }
-        } catch (Exception e) {
-            // TODO: log exception for debugging?
-        }
-
-        if (image == null) {
-            // no splash provided, so do nothing...
-            return;
-        }
-
-        // Create ImageView to hold the Drawable...
-        ImageView view = new ImageView(getApplicationContext());
-
-        // Initialise it with Drawable and full-screen layout parameters
-        view.setImageDrawable(image);
-        int width = getWindowManager().getDefaultDisplay().getWidth();
-        int height = getWindowManager().getDefaultDisplay().getHeight();
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width,
-                height, 0);
-        view.setLayoutParams(lp);
-        view.setScaleType(ScaleType.CENTER);
-        view.setBackgroundColor(Color.WHITE);
-
-        // And wrap the image view in a frame layout so that the full-screen
-        // layout parameters are honoured
-        FrameLayout layout = new FrameLayout(getApplicationContext());
-        layout.addView(view);
-
-        // Create the toast and set the view to be that of the FrameLayout
-        Toast t = Toast.makeText(getApplicationContext(), "splash screen",
-                Toast.LENGTH_SHORT);
-        t.setView(layout);
-        t.setGravity(Gravity.CENTER, 0, 0);
-        t.show();
     }
 
     /**
@@ -519,8 +555,23 @@ public class MainBrowserActivity extends ListActivity
     }
     
     /*
-     * 
+     * After InitializeApplicationTask() has completed this (may) be run to 
+     * determine where to send the user according to whether the device was 
+     * determined to be registered.
      */
+    private void postInitializeWorkflow(boolean registered)
+    {
+        if (registered) {
+            Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
+            startActivity(i);
+            finish();
+        } else {
+            Intent i = new Intent(getApplicationContext(), ClientRegistrationActivity.class);
+            startActivity(i);
+            finish();
+        }
+    }
+    
     private void triggerRefresh(int position)
     {
         // Hide "nothing to display" message
@@ -547,5 +598,65 @@ public class MainBrowserActivity extends ListActivity
             mRefreshViewTask.execute(InstanceDocument.Status.updated);
             break;
         }   
+    }
+
+    /**
+     * displaySplash
+     * 
+     * Shows the splash screen if the mShowSplash member variable is true.
+     * Otherwise a no-op.
+     */
+    void displaySplash()
+    {
+        if (!mShowSplash)
+            return;
+    
+        // Fetch the splash screen Drawable
+        Drawable image = null;
+    
+        try {
+            // Attempt to load the configured default splash screen
+            // The following code only works in 1.6+
+            // BitmapDrawable bitImage = new BitmapDrawable(getResources(), FileUtils.SPLASH_SCREEN_FILE_PATH);
+            BitmapDrawable bitImage = new BitmapDrawable(FileUtils.SPLASH_SCREEN_FILE_PATH);
+    
+            if (bitImage.getBitmap() != null
+                    && bitImage.getIntrinsicHeight() > 0
+                    && bitImage.getIntrinsicWidth() > 0) {
+                image = bitImage;
+            }
+        } catch (Exception e) {
+            // TODO: log exception for debugging?
+        }
+    
+        if (image == null) {
+            // no splash provided, so do nothing...
+            return;
+        }
+    
+        // Create ImageView to hold the Drawable...
+        ImageView view = new ImageView(getApplicationContext());
+    
+        // Initialise it with Drawable and full-screen layout parameters
+        view.setImageDrawable(image);
+        int width = getWindowManager().getDefaultDisplay().getWidth();
+        int height = getWindowManager().getDefaultDisplay().getHeight();
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width,
+                height, 0);
+        view.setLayoutParams(lp);
+        view.setScaleType(ScaleType.CENTER);
+        view.setBackgroundColor(Color.WHITE);
+    
+        // And wrap the image view in a frame layout so that the full-screen
+        // layout parameters are honoured
+        FrameLayout layout = new FrameLayout(getApplicationContext());
+        layout.addView(view);
+    
+        // Create the toast and set the view to be that of the FrameLayout
+        Toast t = Toast.makeText(getApplicationContext(), "splash screen",
+                Toast.LENGTH_SHORT);
+        t.setView(layout);
+        t.setGravity(Gravity.CENTER, 0, 0);
+        t.show();
     }
 }
