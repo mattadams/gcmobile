@@ -43,11 +43,13 @@ public class ClientInformationActivity extends Activity
     private static final String t = "ClientInformationActivity: ";
     
     private static final int MENU_CHANGE_ACCOUNT = 0;
-    private static final int MENU_RESET_INFORM = 1;
+    private static final int MENU_ACCOUNT_MEMBERS = 1;
+    private static final int MENU_RESET_INFORM = 2;    
     
-    private static final String LOCKED = "locked";
-    private static final String UNLOCKED = "unlocked";
+    // Strings returned by the Group Inform Server specific to this activity
     private static final String STATE = "state";
+    private static final String LOCKED = "locked";
+    private static final String UNLOCKED = "unlocked";    
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -86,7 +88,9 @@ public class ClientInformationActivity extends Activity
     {
         super.onCreateOptionsMenu(menu);
         //menu.add(0, MENU_CHANGE_ACCOUNT, 0, "Switch Account").setIcon(R.drawable.ic_menu_account_list);
+        menu.add(0, MENU_ACCOUNT_MEMBERS, 0, "Account Members").setIcon(R.drawable.ic_menu_allfriends);
         menu.add(0, MENU_RESET_INFORM, 0, getString(R.string.tf_reset_inform)).setIcon(R.drawable.ic_menu_close_clear_cancel);
+        
         return true;
     }    
 

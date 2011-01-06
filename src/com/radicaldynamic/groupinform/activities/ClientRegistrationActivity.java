@@ -686,8 +686,7 @@ public class ClientRegistrationActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_device_locked), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_TRANSFER_DELAYED)) {
                     Log.e(Collect.LOGTAG, t + "transfer delayed for " + transfer.getString("delay"));
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_transfer_delayed_pt1), Toast.LENGTH_LONG).show();
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_transfer_delayed_pt2), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_transfer_delayed), Toast.LENGTH_LONG).show();
                 } else {
                     // Unhandled response
                     Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    

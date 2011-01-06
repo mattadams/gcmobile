@@ -187,6 +187,8 @@
 	<string name="tf_confirm_removal">Confirm Removal</string>
 	<string name="tf_confirm_removal_msg">Are you sure you want to remove %s?</string>
 	<string name="tf_connection_established_status">Connection established</string>
+	<string name="tf_connection_error">Connection Error</string>
+	<string name="tf_connection_error_msg">Unable to connect to the Group Inform service to register this installation.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
 	<string name="tf_connection_interrupted_status">Connection interrupted</string>
 	<string name="tf_connection_interrupted_msg">Automatically retrying connection...</string>
 	<string name="tf_connection_status_notification">CONNECTION STATUS NOTIFICATION</string>	
@@ -205,7 +207,7 @@
 	<string name="tf_default_couchdb_port">5984</string>
 	<string name="tf_default_nodejs_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_nodejs_port">5100</string>
-	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device.  This may be you or someone else.  This email address must be unique to your account.</string>
+	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device.  This may be you or someone else.  This email address must be unique to this Group Inform account.</string>
 	<string name="tf_device_locked">The specified device is currently LOCKED.  Unlock that device and try again.</string>
 	<string name="tf_device_pin_label">Device PIN</string>
 	<string name="tf_device_pin_hint">If you are changing devices enter the PIN of the device that you are switching from.  This will move the private \"My Forms\" group to this device and unregister the old one.\n\nIf you are activating an unused registration enter the PIN to have the registration activated and assigned to this device.</string>
@@ -244,6 +246,7 @@
     <string name="tf_fbel_required_hint">Marking this field as required will force the user to respond to it before marking the form as complete.</string>
     <string name="tf_field">Field</string>
     <string name="tf_field_cannot_be_saved">Cannot save: this field must have a Label</string>
+    <string name="tf_form_groups">Form Groups</string>
     <string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_general_preferences">Preferences</string>
 	<string name="tf_go_offline">Go Offline</string>
@@ -320,8 +323,7 @@
 	<string name="tf_synchronization_settings">Synchronization settings</string>
 	<string name="tf_system_error_dialog_title">An error occurred!</string>
 	<string name="tf_system_error_dialog_message">We encountered a system error.  A team of trained monkeys has been dispatched to fix the problem.  Please try again later!</string>
-	<string name="tf_transfer_delayed_pt1">Device registrations cannot be transferred more than once every 5 minutes.</string>
-	<string name="tf_transfer_delayed_pt2">Wait at least 5 minutes between transfers.</string>
+	<string name="tf_transfer_delayed">Please wait at least 5 minutes between transfers and deactivations.</string>
 	<string name="tf_transfer_locked">Locked</string>
 	<string name="tf_transfer_unlocked">Unlocked</string>
 	<string name="tf_unable_to_email_key_without_number">A licence number or the email address registered with the account is needed.</string>

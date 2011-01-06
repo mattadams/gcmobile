@@ -45,6 +45,7 @@ import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -79,6 +80,8 @@ public class MainBrowserActivity extends ListActivity
     private static final int ABOUT_INFORM = 1;
 
     private static boolean mShowSplash = true;
+    
+    // Used to determine whether the CouchDB service has been bound; see onDestroy()
     private boolean mIsBound = false;
 
     private AlertDialog mAlertDialog;
@@ -112,10 +115,8 @@ public class MainBrowserActivity extends ListActivity
 
         displaySplash();
 
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
         setContentView(R.layout.main_browser);
-        setTitle(getString(R.string.app_name));
-        setProgressBarIndeterminateVisibility(false);
 
         // We don't use the on-screen progress indicator here
         RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
@@ -125,6 +126,8 @@ public class MainBrowserActivity extends ListActivity
         Collect.getInstance().setInformOnline(new InformOnlineState(getApplicationContext()));
         
         if (Collect.getInstance().getInformOnline().isRegistered()) {
+            getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.group_selector_title);
+            
             startService(new Intent(this, CouchDbService.class));            
             bindService(new Intent(this, CouchDbService.class), mConnection, Context.BIND_AUTO_CREATE);
             
@@ -282,6 +285,10 @@ public class MainBrowserActivity extends ListActivity
         Intent i = null;
 
         switch (item.getItemId()) {
+        case R.id.tf_refresh:
+            Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
+            triggerRefresh(s1.getSelectedItemPosition());
+            break;
         case R.id.tf_synchronize:
             i = new Intent(this, SynchronizeTabs.class);
             startActivity(i);
@@ -323,13 +330,13 @@ public class MainBrowserActivity extends ListActivity
         @Override
         protected void onPreExecute()
         {
-            setProgressBarIndeterminateVisibility(true);
+            setProgressVisibility(true);
         }
     
         @Override
         protected void onPostExecute(Void nothing) 
         {
-            setProgressBarIndeterminateVisibility(false);
+            setProgressVisibility(false);
             
             if (Collect.getInstance().getInformOnline().isServerAlive() == false)
                 displayConnectionErrorDialog(mRegistered);
@@ -364,7 +371,7 @@ public class MainBrowserActivity extends ListActivity
         @Override
         protected void onPreExecute()
         {
-            setProgressBarIndeterminateVisibility(true);
+            setProgressVisibility(true);
         }
 
         @Override
@@ -376,7 +383,7 @@ public class MainBrowserActivity extends ListActivity
             i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);            
             startActivity(i);
 
-            setProgressBarIndeterminateVisibility(false);
+            setProgressVisibility(false);
         }
     }
     
@@ -413,7 +420,7 @@ public class MainBrowserActivity extends ListActivity
         @Override
         protected void onPreExecute()
         {
-            setProgressBarIndeterminateVisibility(true);
+            setProgressVisibility(true);
         }
 
         @Override
@@ -444,15 +451,10 @@ public class MainBrowserActivity extends ListActivity
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
                     
-                    Toast.makeText(getApplicationContext(),
-                            getString(R.string.tf_add_form_hint),
-                            Toast.LENGTH_LONG).show();
-
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
                     openOptionsMenu();
                 } else {
-                    Toast.makeText(getApplicationContext(),
-                            getString(R.string.tf_begin_instance_hint),
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Spinner s1 = (Spinner) findViewById(R.id.form_filter);
@@ -463,14 +465,11 @@ public class MainBrowserActivity extends ListActivity
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
                 } else {
-                    Toast.makeText(
-                            getApplicationContext(),
-                            getString(R.string.tf_browse_instances_hint,
-                                    descriptor), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
                 }
             }
 
-            setProgressBarIndeterminateVisibility(false);
+            setProgressVisibility(false);
         }
     }
     
@@ -485,12 +484,12 @@ public class MainBrowserActivity extends ListActivity
         
         mAlertDialog.setCancelable(false);
         mAlertDialog.setIcon(R.drawable.ic_dialog_alert);        
-        mAlertDialog.setTitle("Connection Error");
+        mAlertDialog.setTitle(R.string.tf_connection_error);
         
         if (registered) 
             mAlertDialog.setMessage("");
         else 
-            mAlertDialog.setMessage("We were unable to connect to the Inform Online service to register this installation.\n\nPlease try again in a few minutes or visit us at groupinform.com/support and let us know that you're getting this message.  Thanks!");
+            mAlertDialog.setMessage(getString(R.string.tf_connection_error_msg));
                 
         mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
@@ -569,6 +568,19 @@ public class MainBrowserActivity extends ListActivity
             Intent i = new Intent(getApplicationContext(), ClientRegistrationActivity.class);
             startActivity(i);
             finish();
+        }
+    }
+    
+    private void setProgressVisibility(boolean visible)
+    {
+        ProgressBar pb = (ProgressBar) getWindow().findViewById(R.id.titleProgressBar);
+        
+        if (pb != null) {
+            if (visible) {
+                pb.setVisibility(View.VISIBLE);
+            } else {
+                pb.setVisibility(View.GONE);
+            }
         }
     }
     

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-<item android:icon="@android:drawable/ic_menu_share" android:id="@+id/tf_synchronize" android:title="@string/tf_synchronize"></item>
-<item android:icon="@android:drawable/ic_menu_manage" android:id="@+id/tf_manage" android:title="@string/tf_manage"></item>
-<!-- <item android:icon="@android:drawable/ic_menu_preferences" android:id="@+id/tf_preferences" android:title="@string/tf_preferences"></item> -->
-<item android:icon="@android:drawable/ic_menu_info_details" android:id="@+id/tf_info" android:title="@string/tf_inform_info"></item>
+<item android:icon="@drawable/ic_menu_refresh" android:id="@+id/tf_refresh" android:title="@string/refresh"></item>
+<item android:icon="@drawable/ic_menu_archive" android:id="@+id/tf_groups" android:title="@string/tf_form_groups"></item>
+<item android:icon="@drawable/ic_menu_share" android:id="@+id/tf_synchronize" android:title="@string/tf_synchronize"></item>
+<item android:icon="@drawable/ic_menu_manage" android:id="@+id/tf_manage" android:title="@string/tf_manage"></item>
+<!-- <item android:icon="@drawable/ic_menu_preferences" android:id="@+id/tf_preferences" android:title="@string/tf_preferences"></item> -->
+<item android:icon="@drawable/ic_menu_info_details" android:id="@+id/tf_info" android:title="@string/tf_inform_info"></item>
 </menu>

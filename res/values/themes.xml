@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<style name="GroupInformTheme" parent="android:Theme.Light">
+    <item name="android:windowTitleSize">37dip</item>
+    <item name="android:windowTitleBackgroundStyle">@style/WindowTitleBackgroundCustom</item>
+</style>
+</resources>
