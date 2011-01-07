@@ -14,6 +14,7 @@
 
 package com.radicaldynamic.groupinform.activities;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -641,8 +642,15 @@ public class MainBrowserActivity extends ListActivity
         }
     
         if (image == null) {
-            // no splash provided, so do nothing...
-            return;
+            // no splash provided...
+            if (FileUtils.storageReady() && !((new File(FileUtils.DEFAULT_CONFIG_PATH)).exists())) {
+                // Show the built-in splash image if the config directory 
+                // does not exist. Otherwise, suppress the icon.
+                image = getResources().getDrawable(R.drawable.odk_color);
+            }
+            
+            if (image == null) 
+                return;
         }
     
         // Create ImageView to hold the Drawable...
