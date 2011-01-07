@@ -50,12 +50,9 @@ public class ClientRegistrationActivity extends Activity
     private static final String REASON_DEVICE_LOCKED = "device locked";                     // Transfer failure
     private static final String REASON_TRANSFER_DELAYED = "transfer delayed";               // Transfer failure
     private static final String REASON_UNKNOWN_ACCOUNT_CONTACT = "unknown account contact"; // Remind failure
-
-//    private String mAccountId;    
+    
     private String mAccountNumber = "";      // Licence number
     private String mAccountKey = "";         // Licence key    
-//    private String mDeviceId;
-//    private String mDeviceKey;
     private String mDevicePin = "";    
     private String mContactEmailAddress = "";
     
@@ -453,8 +450,7 @@ public class ClientRegistrationActivity extends Activity
      * Set information about the associated account/device registration to the installation preferences
      */
     private void setRegistrationInformation(JSONObject container) throws JSONException
-    {        
-        Collect.getInstance().getInformOnline().setAccountId(container.getString("accountId"));
+    {
         Collect.getInstance().getInformOnline().setAccountNumber(container.getString("accountNumber"));
         Collect.getInstance().getInformOnline().setAccountKey(container.getString("accountKey"));
         Collect.getInstance().getInformOnline().setDeviceId(container.getString("deviceId"));
@@ -556,8 +552,7 @@ public class ClientRegistrationActivity extends Activity
                 String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
                 
                 // Match
-                if (result.equals(InformOnlineState.OK)) {
-//                    mAccountId = verify.getString("accountId");               
+                if (result.equals(InformOnlineState.OK)) {               
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_licence_validation_succeeded), Toast.LENGTH_SHORT).show();                    
                     return true;                   
                 } else if (result.equals(InformOnlineState.FAILURE)) {

@@ -84,12 +84,32 @@ public class HttpUtils
         
         try {
             DefaultHttpClient client = new DefaultHttpClient();
+            
+            // Load any cookies that have been stored
+            if (Collect.getInstance().getInformOnline().getSession() == null) 
+                Log.w(Collect.LOGTAG, t + "connection without session");
+            else
+                client.setCookieStore(Collect.getInstance().getInformOnline().getSession());
+            
             URI uri = new URI(url);
             HttpPost method = new HttpPost(uri);
             method.setEntity(new UrlEncodedFormEntity(params));            
             HttpResponse response = client.execute(method);
             InputStream data = response.getEntity().getContent();
             websiteData = generateString(data);
+            
+            // Remember any session cookies that may have been returned
+            List<Cookie> cookies = client.getCookieStore().getCookies();
+            
+            if (cookies.isEmpty())
+                Log.d(Collect.LOGTAG, t + "GET resulted in no cookies");
+            else {
+                Log.i(Collect.LOGTAG, t + "GET resulted in " + cookies.size() + " cookies");
+                Collect.getInstance().getInformOnline().setSession(client.getCookieStore());
+                
+                for (int i = 0; i < cookies.size(); i++)
+                    Log.d(Collect.LOGTAG, t + "parsed cookie " + cookies.get(i).toString());
+            }
             
             // Shutdown client manager to ensure deallocation of all system resources
             client.getConnectionManager().shutdown();

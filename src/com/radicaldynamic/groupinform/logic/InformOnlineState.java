@@ -23,13 +23,13 @@ public class InformOnlineState
     
     // Constants for strings commonly encountered when interacting with the Inform Online service
     public static final String OK = "ok";
+    public static final String ERROR = "error";
     public static final String FAILURE = "failure";
     public static final String RESULT = "result";
     public static final String REASON = "reason";
-    
+   
     // Constants for account information stored in preferences
-    public static final String ACCOUNT_ID  = "informonline_accountid";      // Invisible to users
-    public static final String ACCOUNT_KEY = "informonline_accountkey";     // Accessible to users
+    public static final String ACCOUNT_KEY = "informonline_accountkey";     // Accessible
     public static final String ACCOUNT_NUM = "informonline_accountnum";     // Accessible
     
     // Constants for device information stored in preferences
@@ -37,10 +37,11 @@ public class InformOnlineState
     public static final String DEVICE_KEY  = "informonline_devicekey";      // Invisible 
     public static final String DEVICE_PIN  = "informonline_devicepin";      // Accessible
     
-    private String serverUrl;
-    private boolean serverAlive = false;
+    // Constants for session information stored in preferences
+    public static final String SESSION     = "informonline_session";        // Invisible
     
-    private String accountId;
+    private String serverUrl;
+    
     private String accountNumber;           // The licence number
     private String accountKey;              // The licence key    
     private String deviceId;
@@ -49,146 +50,110 @@ public class InformOnlineState
     
     private CookieStore session = null;
     private SharedPreferences prefs;
+    
+    private boolean ready = false;
        
+    // Used by Collect
     public InformOnlineState()
-    {
-        
+    {        
     }
     
+    // Used by MainBrowserActivity.onCreate()
     public InformOnlineState(Context context)
     {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         loadPreferences();
         
         // Initialize server URL
-        setServerUrl("http://" + context.getText(R.string.tf_default_nodejs_server) 
-                + ":" + context.getText(R.string.tf_default_nodejs_port));
+        setServerUrl("http://" + context.getText(R.string.tf_default_nodejs_server) + ":" + context.getText(R.string.tf_default_nodejs_port));
     }
     
-    /*
-     * TODO: error messages and error handling needs to be suitable 
-     */
-    public boolean isRegistered()
+    public boolean checkin()
     {
-        boolean registered = false;
+        // Assume we are registered unless told otherwise
+        boolean registered = true;
         
-        if (accountId == null) {
-            registered = false;
+        String checkinUrl = serverUrl + "/checkin/" + deviceId + "/" + deviceKey;
+        String jsonResult = HttpUtils.getUrlData(checkinUrl);            
+        JSONObject checkin;
+        
+        try {
+            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
+            checkin = (JSONObject) new JSONTokener(jsonResult).nextValue();
             
-            // Try to ping the service to see if it is "up"
-            String pingUrl = serverUrl + "/ping";
-            String jsonResult = HttpUtils.getUrlData(pingUrl);
-            JSONObject ping;
+            String result = checkin.optString(RESULT, FAILURE);
             
-            try {
-                Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-                ping = (JSONObject) new JSONTokener(jsonResult).nextValue();
-                
-                String result = ping.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
-                
-                if (result.equals(InformOnlineState.OK))
-                    serverAlive = true;                    
-                else
-                    serverAlive = false;
-            } catch (NullPointerException e) {
-                /* 
-                 * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-                 * either as a result of a communication error with the node.js server
-                 * or something else.
-                 */
-                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
-                e.printStackTrace();
-                serverAlive = false;
-            } catch (JSONException e) {
-                // Parse errors (malformed result) but assume we are still registered
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
-                e.printStackTrace();                
-                registered = true;
-                serverAlive = false;
-            }
-        } else {
-            String checkinUrl = serverUrl + "/checkin/" + deviceId + "/" + deviceKey;
-            String jsonResult = HttpUtils.getUrlData(checkinUrl);            
-            JSONObject checkin;
-            
-            try {
-                Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-                checkin = (JSONObject) new JSONTokener(jsonResult).nextValue();
-                
-                String result = checkin.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
-                
-                if (result.equals(InformOnlineState.OK)) {
-                    Log.i(Collect.LOGTAG, t + "successful checkin");
-                    registered = true;
-                    serverAlive = true;
-                } else if (result.equals(InformOnlineState.FAILURE)) {
-                    Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
-                    registered = false;
-                    serverAlive = true;
-                } else {
-                    // Something bad happened (but assume we are still registered)
-                    Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
-                    registered = true;
-                    serverAlive = false;
-                }                
-            } catch (NullPointerException e) {
-                /* 
-                 * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-                 * either as a result of a communication error with the node.js server
-                 * or something else.
-                 * 
-                 * Assume we are still registered
-                 */
-                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
-                e.printStackTrace();
-                registered = true;
-                serverAlive = false;
-            } catch (JSONException e) {
-                // Parse errors (malformed result) but assume we are still registered
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
-                e.printStackTrace();                
-                registered = true;
-                serverAlive = false;
-            }
+            if (result.equals(OK)) {
+                Log.i(Collect.LOGTAG, t + "successful checkin");
+            } else if (result.equals(FAILURE)) {
+                Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
+                registered = false;
+            } else {
+                // Something bad happened
+                Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");
+            }                
+        } catch (NullPointerException e) {
+            /* 
+             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
+             * either as a result of a communication error with the node.js server
+             * or something else.
+             * 
+             * Assume we are still registered
+             */
+            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            e.printStackTrace();            
+        } catch (JSONException e) {
+            // Parse errors (malformed result) but assume we are still registered
+            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            e.printStackTrace();
         }
         
-        Log.i(Collect.LOGTAG, t + "device registration state is " + registered + " according to server-alive state " + serverAlive);
-        
-        if (registered == false) {
-            // Clear the session for subsequent requests
+        Log.i(Collect.LOGTAG, t + "device registration state is " + registered);
+
+        // Clear the session for subsequent requests and reset stored state
+        if (registered == false) {                 
+            resetPreferences();
             session = null;
-            
-            // If this device is not registered ACCORDING TO AN ACTIVE SERVICE...
-            if (serverAlive) {
-                // Purge the account and device registration info from the device
-                resetPreferences();
-                
-                // TODO: tell the user that this device is no longer registered ... explain the possible causes
-            }
+            ready = false;
         }
         
-        return registered;        
+        return registered;
     }
     
-    public boolean isServerAlive()
+    public boolean ping()
     {
-        return serverAlive;
+        boolean alive = false;
+        
+        // Try to ping the service to see if it is "up"
+        String pingUrl = serverUrl + "/ping";
+        String jsonResult = HttpUtils.getUrlData(pingUrl);
+        JSONObject ping;
+        
+        try {
+            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
+            ping = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            
+            String result = ping.optString(RESULT, ERROR);
+            
+            if (result.equals(OK) || result.equals(FAILURE))
+                alive = true;
+        } catch (NullPointerException e) {
+            /* 
+             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
+             * either as a result of a communication error with the node.js server
+             * or something else.
+             */
+            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            e.printStackTrace();
+        } catch (JSONException e) {
+            // Parse errors (malformed result)
+            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            e.printStackTrace();
+        }
+        
+        return alive;
     }
 
-    public void setAccountId(String accountId)
-    {
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(ACCOUNT_ID, accountId);
-        editor.commit();
-        
-        this.accountId = accountId;
-    }
-    
-    public String getAccountId()
-    {
-        return accountId;
-    }
-    
     public void setAccountKey(String accountKey)
     {
         SharedPreferences.Editor editor = prefs.edit();
@@ -259,6 +224,16 @@ public class InformOnlineState
         return devicePin;
     }
     
+    public void setReady(boolean ready)
+    {
+        this.ready = ready;
+    }
+
+    public boolean isReady()
+    {
+        return ready;
+    }
+
     public void setServerUrl(String serverUrl)
     {
         this.serverUrl = serverUrl;
@@ -279,25 +254,35 @@ public class InformOnlineState
         return session;
     }
 
-    private void loadPreferences()
+    // Whether this device appears to be registered
+    public boolean hasRegistration()
     {
-        setAccountId(prefs.getString(ACCOUNT_ID, null));
-        setAccountKey(prefs.getString(ACCOUNT_KEY, null));
-        setAccountNumber(prefs.getString(ACCOUNT_NUM, null));
-        
-        setDeviceId(prefs.getString(DEVICE_ID, null));
-        setDeviceKey(prefs.getString(DEVICE_KEY, null));
-        setDevicePin(prefs.getString(DEVICE_PIN, null));
+        if (deviceId == null)
+            return false;
+        else {
+            return true;
+        }
     }
-    
+
     public void resetPreferences()
     {
-        setAccountId(null);
         setAccountKey(null);
         setAccountNumber(null);
         
         setDeviceId(null);
         setDeviceKey(null);
         setDevicePin(null);
+        
+        ready = false;
+    }
+
+    private void loadPreferences()
+    {
+        setAccountKey(prefs.getString(ACCOUNT_KEY, null));
+        setAccountNumber(prefs.getString(ACCOUNT_NUM, null));
+        
+        setDeviceId(prefs.getString(DEVICE_ID, null));
+        setDeviceKey(prefs.getString(DEVICE_KEY, null));
+        setDevicePin(prefs.getString(DEVICE_PIN, null));
     }
 }

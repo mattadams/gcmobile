@@ -315,23 +315,20 @@ public class ClientInformationActivity extends Activity
             Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);   
             result = (JSONObject) new JSONTokener(jsonResult).nextValue();
             
-            if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK)) {
+            if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK))
                 reset = true;
-            } else {
-                reset = false;
-            }
         } catch (NullPointerException e) {
             /* 
              * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
              * either as a result of a communication error with the node.js server
              * or something else.
              */
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");               
-            reset = false;
+            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            e.printStackTrace();
         } catch (JSONException e) {
             // Parse errors (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                
-            reset = false;
+            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            e.printStackTrace();
         }
         
         return reset;

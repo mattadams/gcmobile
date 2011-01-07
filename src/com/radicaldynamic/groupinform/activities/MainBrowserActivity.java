@@ -122,10 +122,7 @@ public class MainBrowserActivity extends ListActivity
         RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
         onscreenProgress.setVisibility(View.GONE);        
 
-        // Perform any needed application initialization
-        Collect.getInstance().setInformOnline(new InformOnlineState(getApplicationContext()));
-        
-        if (Collect.getInstance().getInformOnline().isRegistered()) {
+        if (Collect.getInstance().getInformOnline().isReady()) {
             getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.group_selector_title);
             
             startService(new Intent(this, CouchDbService.class));            
@@ -213,8 +210,7 @@ public class MainBrowserActivity extends ListActivity
     }
 
     @Override
-    public void onCreateContextMenu(ContextMenu menu, View v,
-            ContextMenuInfo menuInfo)
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
     {
         super.onCreateContextMenu(menu, v, menuInfo);
         MenuInflater inflater = getMenuInflater();
@@ -245,8 +241,7 @@ public class MainBrowserActivity extends ListActivity
      * Stores the path of selected form and finishes.
      */
     @Override
-    protected void onListItemClick(ListView listView, View view, int position,
-            long id)
+    protected void onListItemClick(ListView listView, View view, int position, long id)
     {
         FormDocument form = (FormDocument) getListAdapter().getItem(position);
         InstanceLoadPathTask ilp;
@@ -308,7 +303,8 @@ public class MainBrowserActivity extends ListActivity
 
     public class InitializeApplicationTask extends AsyncTask<Object, Void, Void> 
     {
-        private boolean mRegistered;
+        private boolean mIsRegistered = false;
+        private boolean mIsOnline = false;
         
         @Override
         protected Void doInBackground(Object... args)
@@ -316,13 +312,14 @@ public class MainBrowserActivity extends ListActivity
             // Create necessary directories
             FileUtils.createFolder(FileUtils.ODK_ROOT);
             FileUtils.createFolder(FileUtils.CACHE_PATH);
+            
+            // Initialize client registration details as stored in preferences
+            Collect.getInstance().setInformOnline(new InformOnlineState(getApplicationContext()));
+            
+            if (Collect.getInstance().getInformOnline().hasRegistration())
+                mIsRegistered = Collect.getInstance().getInformOnline().checkin();
 
-            // If registered then attempt to check-in and obtain list of groups
-            if (Collect.getInstance().getInformOnline().isRegistered()) {
-                mRegistered = true;
-            } else {
-                mRegistered = false;
-            }
+            mIsOnline = Collect.getInstance().getInformOnline().ping();
             
             return null;
         }    
@@ -338,10 +335,11 @@ public class MainBrowserActivity extends ListActivity
         {
             setProgressVisibility(false);
             
-            if (Collect.getInstance().getInformOnline().isServerAlive() == false)
-                displayConnectionErrorDialog(mRegistered);
+            if (mIsOnline)
+                postInitializeWorkflow(mIsRegistered);
             else
-                postInitializeWorkflow(mRegistered);
+                displayConnectionErrorDialog(mIsRegistered);
+                
         }    
     }
 
@@ -548,8 +546,6 @@ public class MainBrowserActivity extends ListActivity
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
         triggerRefresh(s1.getSelectedItemPosition());
               
-        // TODO: pull in a list of valid groups
-
         registerForContextMenu(getListView());
     }
     
@@ -561,6 +557,9 @@ public class MainBrowserActivity extends ListActivity
     private void postInitializeWorkflow(boolean registered)
     {
         if (registered) {
+            // Initialization is complete
+            Collect.getInstance().getInformOnline().setReady(true);
+            
             Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
             startActivity(i);
             finish();

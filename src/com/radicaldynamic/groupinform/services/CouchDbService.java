@@ -37,10 +37,7 @@ import com.radicaldynamic.groupinform.activities.MainBrowserActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 
 /**
- * Manages the files the application uses.
- * 
- * @author Yaw Anokwa (yanokwa@gmail.com)
- * @author Carl Hartung (carlhartung@gmail.com)
+ *
  */
 public class CouchDbService extends Service {    
     private static final String t = "CouchDbService: ";
@@ -68,7 +65,7 @@ public class CouchDbService extends Service {
             for (int i = 1; i > 0; ++i) {
                 if (mInit == false)
                     connect(true);
-                // Retry every 120 seconds
+                // Retry connection to CouchDB every 120 seconds
                 if (mCondition.block(120 * 1000))
                     break;
             }
@@ -79,7 +76,7 @@ public class CouchDbService extends Service {
     public void onCreate() {
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         
-        Thread persistentConnectionThread = new Thread(null, mTask, "TFCouchDbService");        
+        Thread persistentConnectionThread = new Thread(null, mTask, "CouchDbService");        
         mCondition = new ConditionVariable(false);
         persistentConnectionThread.start();
     }
@@ -172,11 +169,10 @@ public class CouchDbService extends Service {
         mHost = getString(R.string.tf_default_couchdb_server);
         mPort = 5984;
         
-        if (persistent) {
-            Log.d(Collect.LOGTAG, t + "establishing persistent connection to " + mHost);
-        } else {
-            Log.d(Collect.LOGTAG, t + "connecting to " + mHost);
-        }            
+        if (persistent) 
+            Log.d(Collect.LOGTAG, t + "establishing persistent connection to " + mHost + ":" + mPort);
+        else
+            Log.d(Collect.LOGTAG, t + "connecting to " + mHost + ":" + mPort);
         
         try {                        
             mHttpClient = new StdHttpClient.Builder().host(mHost).port(mPort).build();     
@@ -206,7 +202,7 @@ public class CouchDbService extends Service {
     
     private void notifyOfConnectionAttempt(int status, int message) {        
         Notification notification = new Notification(
-                R.drawable.status_icon_check, 
+                R.drawable.ic_stat_group_complete, 
                 getText(status), 
                 System.currentTimeMillis());
     
