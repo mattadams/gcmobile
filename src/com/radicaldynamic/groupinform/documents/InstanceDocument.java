@@ -18,13 +18,13 @@ public class InstanceDocument extends GenericDocument
 
     /*
      * Placeholder: Created when a new instance is created for entry (may be deleted if instance entry is cancelled before being saved)
-     * Incomplete:  A form instance that is saved but not marked complete
+     * Draft:       A form instance that is saved but not marked complete
      * Complete:    A form instance that is saved and marked complete
      * Updated:     Not an actual status (represents forms that have been updated/created by others)
      * Deleted:     A form instance marked for delayed deletion
      * Nothing:     Not an actual status (represents queries for forms without regard for instance status)
      */
-    public static enum Status {placeholder, incomplete, complete, submitted, updated, deleted, nothing};
+    public static enum Status {placeholder, draft, complete, submitted, updated, deleted, nothing};
     
     private String formId;
     private Status status;

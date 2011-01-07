@@ -198,7 +198,7 @@
 	<string name="tf_connectivity_settings">Connectivity settings</string>
 	<string name="tf_continue">Continue</string>
 	<string name="tf_couchdb_prefix">groupinform/</string>
-	<string name="tf_create_form">Create Form Template</string>
+	<string name="tf_create_form">Create Form</string>
 	<string name="tf_create_form_dialog_title">Create Form</string>
 	<string name="tf_create_form_dialog_message">New Form Name</string>
 	<string name="tf_create_list_item">Add List Item</string>

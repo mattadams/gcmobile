@@ -129,7 +129,7 @@ public class HttpUtils
     private static String generateString(InputStream stream) throws IOException
     {
         InputStreamReader reader = new InputStreamReader(stream);
-        BufferedReader buffer = new BufferedReader(reader);
+        BufferedReader buffer = new BufferedReader(reader, 8192);
         StringBuilder sb = new StringBuilder();
         
         String cur;

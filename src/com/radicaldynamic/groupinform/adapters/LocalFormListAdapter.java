@@ -50,21 +50,21 @@ public class LocalFormListAdapter extends ArrayAdapter<FormDocument>
 
             if (bt != null) {
                 String tallies = "";
-                String incomplete = null;
+                String draft = null;
                 String complete = null;
                 
                 if (mInstanceTalliesByStatus.containsKey(f.getId())) {
-                    incomplete = mInstanceTalliesByStatus.get(f.getId()).get(InstanceDocument.Status.incomplete.toString());
+                    draft = mInstanceTalliesByStatus.get(f.getId()).get(InstanceDocument.Status.draft.toString());
                     complete = mInstanceTalliesByStatus.get(f.getId()).get(InstanceDocument.Status.complete.toString());
                 }
                 
-                if (incomplete == null) 
-                    incomplete = "0";
+                if (draft == null) 
+                    draft = "0";
                 
                 if (complete == null)
                     complete = "0";
                 
-                tallies = incomplete + " incomplete, " + complete + " complete";
+                tallies = draft + " draft(s), " + complete + " complete";
                 
                 bt.setText(tallies);
             }

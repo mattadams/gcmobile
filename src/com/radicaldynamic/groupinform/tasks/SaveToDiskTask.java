@@ -157,7 +157,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 if (markCompleted)
                     instance.setStatus(InstanceDocument.Status.complete);
                 else
-                    instance.setStatus(InstanceDocument.Status.incomplete);
+                    instance.setStatus(InstanceDocument.Status.draft);
                 
                 // Save form data
                 instance.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data, Base64.DEFAULT), "text/xml"));

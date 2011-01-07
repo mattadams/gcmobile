@@ -63,6 +63,7 @@ import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.repository.InstanceRepository;
 import com.radicaldynamic.groupinform.services.CouchDbService;
+import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
@@ -83,24 +84,40 @@ public class MainBrowserActivity extends ListActivity
     private static boolean mShowSplash = true;
     
     // Used to determine whether the CouchDB service has been bound; see onDestroy()
-    private boolean mIsBound = false;
+    private boolean mDatabaseIsBound = false;
+    
+    // Used to determine whether the Inform Online service has been bound; see Destroy()
+    private boolean mOnlineIsBound = false;
 
     private AlertDialog mAlertDialog;
     private RefreshViewTask mRefreshViewTask;
 
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private ServiceConnection mDatabaseConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
             Collect.mDb = ((CouchDbService.LocalBinder) service).getService();
             Collect.mDb.open();
             loadScreen();
             
-            mIsBound = true;
+            mDatabaseIsBound = true;
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
             Log.d(Collect.LOGTAG, t + "CouchDbService unbound");
+        }
+    };
+    
+    private ServiceConnection mOnlineConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service)
+        {
+            ((InformOnlineService.LocalBinder) service).getService();         
+            mOnlineIsBound = true;
+        }
+
+        public void onServiceDisconnected(ComponentName className)
+        {
+            Log.d(Collect.LOGTAG, t + "InformOnline unbound");
         }
     };
 
@@ -124,10 +141,16 @@ public class MainBrowserActivity extends ListActivity
         onscreenProgress.setVisibility(View.GONE);        
 
         if (Collect.getInstance().getInformOnline().isReady()) {
+            // Load our custom window title
             getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.group_selector_title);
             
+            // Start the database connection
             startService(new Intent(this, CouchDbService.class));            
-            bindService(new Intent(this, CouchDbService.class), mConnection, Context.BIND_AUTO_CREATE);
+            bindService(new Intent(this, CouchDbService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE);
+            
+            // Start the persistent online connection
+            startService(new Intent(this, InformOnlineService.class));
+            bindService(new Intent(this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE);
             
             // Initiate and populate spinner to filter forms displayed by instances types
             ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
@@ -159,8 +182,11 @@ public class MainBrowserActivity extends ListActivity
     @Override
     protected void onDestroy()
     {
-        if (mIsBound)
-            unbindService(mConnection);
+        if (mDatabaseIsBound)
+            unbindService(mDatabaseConnection);
+        
+        if (mOnlineIsBound)
+            unbindService(mOnlineConnection);
 
         super.onDestroy();
     }
@@ -259,10 +285,10 @@ public class MainBrowserActivity extends ListActivity
             i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
             startActivity(i);
             break;
-        // Show all incomplete forms
+        // Show all draft forms
         case 1:
             ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), InstanceDocument.Status.incomplete);
+            ilp.execute(form.getId(), InstanceDocument.Status.draft);
             break;
         // Show all completed forms
         case 2:
@@ -450,8 +476,8 @@ public class MainBrowserActivity extends ListActivity
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
                     
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
-                    openOptionsMenu();
+//                    Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
+//                    openOptionsMenu();
                 } else {
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
                 }
@@ -597,9 +623,9 @@ public class MainBrowserActivity extends ListActivity
         case 0:
             mRefreshViewTask.execute(InstanceDocument.Status.nothing);
             break;
-        // Show all incomplete forms
+        // Show all draft forms
         case 1:
-            mRefreshViewTask.execute(InstanceDocument.Status.incomplete);
+            mRefreshViewTask.execute(InstanceDocument.Status.draft);
             break;
         // Show all completed forms
         case 2:
@@ -646,7 +672,7 @@ public class MainBrowserActivity extends ListActivity
             if (FileUtils.storageReady() && !((new File(FileUtils.DEFAULT_CONFIG_PATH)).exists())) {
                 // Show the built-in splash image if the config directory 
                 // does not exist. Otherwise, suppress the icon.
-                image = getResources().getDrawable(R.drawable.odk_color);
+                image = getResources().getDrawable(R.drawable.gc_color);
             }
             
             if (image == null) 
@@ -658,22 +684,22 @@ public class MainBrowserActivity extends ListActivity
     
         // Initialise it with Drawable and full-screen layout parameters
         view.setImageDrawable(image);
+        
         int width = getWindowManager().getDefaultDisplay().getWidth();
         int height = getWindowManager().getDefaultDisplay().getHeight();
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width,
-                height, 0);
+        
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width, height, 0);
+        
         view.setLayoutParams(lp);
         view.setScaleType(ScaleType.CENTER);
         view.setBackgroundColor(Color.WHITE);
     
-        // And wrap the image view in a frame layout so that the full-screen
-        // layout parameters are honoured
+        // And wrap the image view in a frame layout so that the full-screen layout parameters are honoured
         FrameLayout layout = new FrameLayout(getApplicationContext());
         layout.addView(view);
     
         // Create the toast and set the view to be that of the FrameLayout
-        Toast t = Toast.makeText(getApplicationContext(), "splash screen",
-                Toast.LENGTH_SHORT);
+        Toast t = Toast.makeText(getApplicationContext(), "splash screen", Toast.LENGTH_LONG);
         t.setView(layout);
         t.setGravity(Gravity.CENTER, 0, 0);
         t.show();
