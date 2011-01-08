@@ -40,6 +40,7 @@ public class InformOnlineService extends Service {
     private int mPort;
     
     // Assume that we are connected when this service starts (we *should* be)
+    @SuppressWarnings("unused")
     private boolean mConnected = true;
     
     // Whether or not we are currently attempting to connect to the service
@@ -126,7 +127,7 @@ public class InformOnlineService extends Service {
                     /*
                      * We're no longer registered even though we thought we were at one point.
                      * 
-                     * Now what?                      
+                     * Now what?
                      */
                 }
             } else {
@@ -135,18 +136,12 @@ public class InformOnlineService extends Service {
                 // Fatal error (we're offline)
             }
         } catch (NullPointerException e) {
-            /* 
-             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-             * either as a result of a communication error with the node.js server
-             * or something else.
-             * 
-             * This fatal error will send us into an offline state.
-             */
+            // This usually indicates a communication error and will send us into an offline state
             Log.e(Collect.LOGTAG, t + "ping error while communicating with service (we are offline)");
             e.printStackTrace();
             mConnected = false;
         } catch (JSONException e) {
-            // Parse errors (malformed result) -- sends us into an offline state
+            // Parse errors (malformed result) send us into an offline state
             Log.e(Collect.LOGTAG, t + "ping error while parsing jsonResult " + jsonResult + " (we are offline)");
             e.printStackTrace();
             mConnected = false;

@@ -78,33 +78,12 @@ public class MyFormsList extends ListActivity
     }
 
     @Override
-    protected void onDestroy()
-    {
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onPause()
-    {
-        super.onPause();
-    }
-
-    @Override
     protected void onResume()
     {
         super.onResume();
 
         if (Collect.mDb != null)
             loadScreen();
-    }
-
-    /**
-     * onStop Re-enable the splash screen.
-     */
-    @Override
-    protected void onStop()
-    {
-        super.onStop();
     }
 
     @Override

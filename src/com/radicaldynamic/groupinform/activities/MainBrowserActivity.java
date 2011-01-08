@@ -41,8 +41,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -168,6 +170,16 @@ public class MainBrowserActivity extends ListActivity
 
                 public void onNothingSelected(AdapterView<?> parent)
                 {
+                }
+            });
+            
+            // Set up listener for Group Selector button in title
+            Button b1 = (Button) findViewById(R.id.groupTitleButton);
+            b1.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v)
+                {
+                    startActivity(new Intent(MainBrowserActivity.this, FormGroupsList.class));
                 }
             });
         } else {
@@ -304,24 +316,22 @@ public class MainBrowserActivity extends ListActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        Intent i = null;
-
         switch (item.getItemId()) {
+        case R.id.tf_groups:
+            startActivity(new Intent(this, FormGroupsList.class));
+            break;
         case R.id.tf_refresh:
             Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
             triggerRefresh(s1.getSelectedItemPosition());
             break;
         case R.id.tf_synchronize:
-            i = new Intent(this, SynchronizeTabs.class);
-            startActivity(i);
+            startActivity(new Intent(this, SynchronizeTabs.class));
             return true;
         case R.id.tf_manage:
-            i = new Intent(this, ManageFormsTabs.class);
-            startActivity(i);
+            startActivity(new Intent(this, ManageFormsTabs.class));
             return true;
         case R.id.tf_info:
-            i = new Intent(this, ClientInformationActivity.class);
-            startActivityForResult(i, ABOUT_INFORM);
+            startActivityForResult(new Intent(this, ClientInformationActivity.class), ABOUT_INFORM);
             return true;
         }
 
@@ -338,7 +348,9 @@ public class MainBrowserActivity extends ListActivity
         {  
             // Create necessary directories
             FileUtils.createFolder(FileUtils.ODK_ROOT);
+            FileUtils.createFolder(FileUtils.DATABASE_PATH);
             FileUtils.createFolder(FileUtils.CACHE_PATH);
+            FileUtils.createFolder(FileUtils.FORMS_PATH);
             
             // Initialize client registration details as stored in preferences
             Collect.getInstance().setInformOnline(new InformOnlineState(getApplicationContext()));

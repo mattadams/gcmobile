@@ -102,14 +102,13 @@ public class GenericDocument extends CouchDbDocument
     public String getDateUpdated() {         
         return dateUpdated;
     }  
-    
+
+    // FIXME: yeah, fix this shit
     @JsonIgnore
     public Calendar getDateUpdatedAsCalendar() {
-        SimpleDateFormat sdf = new SimpleDateFormat(DATETIME);
         Calendar calendar = Calendar.getInstance();
-        
-        // FIXME: yeah, fix this shit
-        
+//        SimpleDateFormat sdf = new SimpleDateFormat(DATETIME);        
+                
 //        try {
 //            calendar.setTime(sdf.parse(dateUpdated));
 //        } catch (ParseException e1) {

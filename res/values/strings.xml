@@ -201,6 +201,7 @@
 	<string name="tf_create_form">Create Form</string>
 	<string name="tf_create_form_dialog_title">Create Form</string>
 	<string name="tf_create_form_dialog_message">New Form Name</string>
+	<string name="tf_create_group">Create Group</string>
 	<string name="tf_create_list_item">Add List Item</string>
 	<string name="tf_create_list_item_message"></string>
 	<string name="tf_decimal_number_type">Integers and decimals</string>

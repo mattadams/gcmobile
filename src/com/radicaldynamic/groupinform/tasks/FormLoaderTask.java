@@ -127,7 +127,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         // TODO: we need to handle what happens when a form document no longer exists
         // or perhaps we don't do that here at all...
         FormDocument form = Collect.mDb.getDb().get(FormDocument.class, formId);                
-        File formBin = new File(FileUtils.CACHE_PATH + formId + ".formdef");
+        File formBin = new File(FileUtils.FORMS_PATH + formId + ".formdef");
         
         Log.i(Collect.LOGTAG, t + formId + ": loading form named " + form.getName());
 
@@ -365,27 +365,24 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      */
     public void serializeFormDef(FormDef fd, String id) {
         Log.i(Collect.LOGTAG, t + id + ": serializing form as binary");
-        
-        // If cache folder is missing, create it.
-        if (FileUtils.createFolder(FileUtils.CACHE_PATH)) {
-            // Calculate unique md5 identifier            
-            File formDef = new File(FileUtils.CACHE_PATH + id + ".formdef");
 
-            // If formDef does not exist, create one
-            if (!formDef.exists()) {
-                FileOutputStream fos;
-                
-                try {
-                    fos = new FileOutputStream(formDef);
-                    DataOutputStream dos = new DataOutputStream(fos);
-                    fd.writeExternal(dos);
-                    dos.flush();
-                    dos.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        // Calculate unique md5 identifier            
+        File formDef = new File(FileUtils.FORMS_PATH + id + ".formdef");
+
+        // If formDef does not exist, create one
+        if (!formDef.exists()) {
+            FileOutputStream fos;
+
+            try {
+                fos = new FileOutputStream(formDef);
+                DataOutputStream dos = new DataOutputStream(fos);
+                fd.writeExternal(dos);
+                dos.flush();
+                dos.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

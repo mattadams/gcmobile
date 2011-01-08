@@ -93,17 +93,11 @@ public class InformOnlineState
                 Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");
             }                
         } catch (NullPointerException e) {
-            /* 
-             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-             * either as a result of a communication error with the node.js server
-             * or something else.
-             * 
-             * Assume we are still registered
-             */
+            // Communication error
             Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
             e.printStackTrace();            
         } catch (JSONException e) {
-            // Parse errors (malformed result) but assume we are still registered
+            // Parse error (malformed result)
             Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
             e.printStackTrace();
         }
@@ -138,15 +132,11 @@ public class InformOnlineState
             if (result.equals(OK) || result.equals(FAILURE))
                 alive = true;
         } catch (NullPointerException e) {
-            /* 
-             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-             * either as a result of a communication error with the node.js server
-             * or something else.
-             */
+            // Communication error
             Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
-            // Parse errors (malformed result)
+            // Parse error (malformed result)
             Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
             e.printStackTrace();
         }
