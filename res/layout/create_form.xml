@@ -8,7 +8,7 @@
     
     <TextView
         android:id="@android:id/empty"  
-        android:text="@string/tf_create_form_dialog_message"        
+        android:text="@string/tf_form_name"        
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:textSize="20sp" />

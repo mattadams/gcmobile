@@ -220,7 +220,7 @@ public class MyFormsList extends ListActivity
         
         alert.setView(view);
         alert.setInverseBackgroundForced(true);
-        alert.setTitle(getText(R.string.tf_create_form_dialog_title));
+        alert.setTitle(getText(R.string.tf_create_form_dialog));
 
         // Set an EditText view to get user input 
         final EditText input = (EditText) view.findViewById(R.id.formName);

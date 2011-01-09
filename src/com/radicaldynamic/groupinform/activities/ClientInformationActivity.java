@@ -7,12 +7,14 @@ import org.json.JSONTokener;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -44,12 +46,20 @@ public class ClientInformationActivity extends Activity
     
     private static final int MENU_CHANGE_ACCOUNT = 0;
     private static final int MENU_ACCOUNT_MEMBERS = 1;
-    private static final int MENU_RESET_INFORM = 2;    
+    private static final int MENU_THIS_DEVICE = 2;
+    private static final int MENU_RESET_INFORM = 3;    
     
     // Strings returned by the Group Inform Server specific to this activity
     private static final String STATE = "state";
     private static final String LOCKED = "locked";
-    private static final String UNLOCKED = "unlocked";    
+    private static final String UNLOCKED = "unlocked";  
+    
+    // Intent constant for determining which "screen" to display
+    private static final String SCREEN = "screen";
+    private static final int SCREEN_DEFAULT = 0;
+    private static final int SCREEN_DEVICE_INFO = 1;    
+    
+    private int mScreen;
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -57,39 +67,86 @@ public class ClientInformationActivity extends Activity
         super.onCreate(savedInstanceState);
         
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        setContentView(R.layout.about_inform);
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_inform_info));
+        setContentView(R.layout.about_inform);        
         
-        new RetrieveTransferState().execute();
+        Intent intent = getIntent();
+
+        mScreen = intent.getIntExtra(SCREEN, 0);
+
+        switch (mScreen) {
+        case SCREEN_DEFAULT:
+            disableFormComponent(R.id.deviceInformation);
+
+            setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_inform_info));
+
+            TextView accountNumber = (TextView) findViewById(R.id.accountNumber);
+            TextView accountKey = (TextView) findViewById(R.id.accountKey);
+
+            accountNumber.setText(Collect.getInstance().getInformOnline().getAccountNumber());
+            accountKey.setText(Collect.getInstance().getInformOnline().getAccountKey());
+
+            break;
+
+        case SCREEN_DEVICE_INFO:
+            disableFormComponent(R.id.accountInformation);
+
+            setTitle(getString(R.string.app_name) + " > " + "Device Info");
+
+            new RetrieveTransferState().execute();
+
+            TextView devicePin = (TextView) findViewById(R.id.devicePin);
+            TextView deviceEmail = (TextView) findViewById(R.id.deviceEmail);                
+
+            devicePin.setText(Collect.getInstance().getInformOnline().getDevicePin());
+            deviceEmail.setText(Collect.getInstance().getInformOnline().getDeviceEmail());
+
+            // Set up transfer state button to lock/unlock when clicked
+            final ToggleButton transferState = (ToggleButton) findViewById(R.id.deviceTransferStatus);
+
+            transferState.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v)
+                {
+                    transferState.setEnabled(false);
+                    new ToggleTransferState().execute();   
+                }            
+            });
+
+            break;
+        }
+
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
         
-        TextView accountNumber = (TextView) findViewById(R.id.accountNumber);
-        TextView accountKey = (TextView) findViewById(R.id.accountKey);
-        TextView devicePin = (TextView) findViewById(R.id.devicePin);
+        if (resultCode == RESULT_CANCELED)
+            return;
         
-        accountNumber.setText(Collect.getInstance().getInformOnline().getAccountNumber());
-        accountKey.setText(Collect.getInstance().getInformOnline().getAccountKey());
-        devicePin.setText(Collect.getInstance().getInformOnline().getDevicePin());
-        
-        // Set up transfer state button to lock/unlock when clicked
-        final ToggleButton transferState = (ToggleButton) findViewById(R.id.deviceTransferStatus);
-        
-        transferState.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                transferState.setEnabled(false);
-                new ToggleTransferState().execute();   
-            }            
-        });
+        switch (requestCode) {
+        // "Exit" if the user resets Inform
+        case SCREEN_DEVICE_INFO:
+            setResult(RESULT_OK);
+            finish();
+            break;
+        }
     }
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        //menu.add(0, MENU_CHANGE_ACCOUNT, 0, "Switch Account").setIcon(R.drawable.ic_menu_account_list);
-        menu.add(0, MENU_ACCOUNT_MEMBERS, 0, "Account Members").setIcon(R.drawable.ic_menu_allfriends);
-        menu.add(0, MENU_RESET_INFORM, 0, getString(R.string.tf_reset_inform)).setIcon(R.drawable.ic_menu_close_clear_cancel);
+        
+        switch (mScreen) {
+        case SCREEN_DEFAULT:
+            menu.add(0, MENU_ACCOUNT_MEMBERS, 0, "Account Members").setIcon(R.drawable.ic_menu_allfriends);
+            menu.add(0, MENU_THIS_DEVICE, 0, "This Device").setIcon(R.drawable.ic_menu_myinfo);
+            break;
+        case SCREEN_DEVICE_INFO:
+            menu.add(0, MENU_RESET_INFORM, 0, getString(R.string.tf_reset_inform)).setIcon(R.drawable.ic_menu_close_clear_cancel);
+            break;
+        }
         
         return true;
     }    
@@ -97,8 +154,13 @@ public class ClientInformationActivity extends Activity
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
+        Intent i;
+        
         switch (item.getItemId()) {
-        case MENU_CHANGE_ACCOUNT:            
+        case MENU_THIS_DEVICE:
+            i = new Intent(this, ClientInformationActivity.class);
+            i.putExtra(SCREEN, SCREEN_DEVICE_INFO);
+            startActivityForResult(i, SCREEN_DEVICE_INFO);
             return true;
         case MENU_RESET_INFORM:
             resetInformDialog();
@@ -128,16 +190,14 @@ public class ClientInformationActivity extends Activity
                     return null;
                 }
             } catch (NullPointerException e) {
-                /* 
-                 * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-                 * either as a result of a communication error with the node.js server
-                 * or something else.
-                 */
-                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");               
+                // Communication error
+                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");  
+                e.printStackTrace();
                 return null;
             } catch (JSONException e) {
-                // Parse errors (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                
+                // Parse error (malformed result)
+                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+                e.printStackTrace();
                 return null;
             }
         }
@@ -190,16 +250,14 @@ public class ClientInformationActivity extends Activity
                     return null;
                 }
             } catch (NullPointerException e) {
-                /* 
-                 * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-                 * either as a result of a communication error with the node.js server
-                 * or something else.
-                 */
-                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");               
+                // Communication error
+                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+                e.printStackTrace();
                 return null;
             } catch (JSONException e) {
-                // Parse errors (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                
+                // Parse error (malformed result)
+                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+                e.printStackTrace();
                 return null;
             }
         }    
@@ -230,6 +288,12 @@ public class ClientInformationActivity extends Activity
         }
     }
     
+    private void disableFormComponent(int componentResource)
+    {
+        ViewGroup component = (ViewGroup) findViewById(componentResource);
+        component.setVisibility(View.GONE);
+    }
+    
     private void resetCompleteDialog()
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -237,8 +301,8 @@ public class ClientInformationActivity extends Activity
         builder
         .setCancelable(false)
         .setIcon(R.drawable.ic_dialog_info)
-        .setMessage(R.string.tf_reset_complete)
-        .setTitle(R.string.tf_reset_complete_prompt)
+        .setMessage(R.string.tf_reset_complete_msg)
+        .setTitle(R.string.tf_reset_complete)
         
         .setPositiveButton(R.string.tf_exit_inform, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
@@ -257,8 +321,8 @@ public class ClientInformationActivity extends Activity
         builder
         .setCancelable(false)
         .setIcon(R.drawable.ic_dialog_alert)
-        .setMessage(R.string.tf_reset_incomplete)
-        .setTitle(R.string.tf_reset_incomplete_prompt)
+        .setMessage(R.string.tf_reset_incomplete_msg)
+        .setTitle(R.string.tf_reset_incomplete)
         
         .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
@@ -275,8 +339,8 @@ public class ClientInformationActivity extends Activity
         builder
         .setCancelable(false)
         .setIcon(R.drawable.ic_dialog_alert)
-        .setMessage(R.string.tf_reset_warning)
-        .setTitle(R.string.tf_reset_warning_prompt)
+        .setMessage(R.string.tf_reset_warning_msg)
+        .setTitle(R.string.tf_reset_warning)
         
         .setPositiveButton(R.string.tf_reset, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {            
@@ -318,15 +382,11 @@ public class ClientInformationActivity extends Activity
             if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK))
                 reset = true;
         } catch (NullPointerException e) {
-            /* 
-             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-             * either as a result of a communication error with the node.js server
-             * or something else.
-             */
+            // Communication error
             Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
-            // Parse errors (malformed result)
+            // Parse error (malformed result)
             Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
             e.printStackTrace();
         }

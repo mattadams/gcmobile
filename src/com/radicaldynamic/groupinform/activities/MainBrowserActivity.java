@@ -191,6 +191,15 @@ public class MainBrowserActivity extends ListActivity
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * @see android.app.ListActivity#onDestroy()
+     * 
+     * Recall:
+     * Because onPause() is the first of the three [killable methods], it's the only one that's guaranteed to be called 
+     * before the process is killed — onStop() and onDestroy() may not be. Therefore, you should use onPause() to write 
+     * any persistent data (such as user edits) to storage. 
+     */
     @Override
     protected void onDestroy()
     {
@@ -200,6 +209,10 @@ public class MainBrowserActivity extends ListActivity
         if (mOnlineIsBound)
             unbindService(mOnlineConnection);
 
+        // Make a best effort attempt to notify Inform Online that we are leaving prematurely
+        if (!isFinishing()) 
+            Collect.getInstance().getInformOnline().checkout();
+        
         super.onDestroy();
     }
 
@@ -324,8 +337,8 @@ public class MainBrowserActivity extends ListActivity
             Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
             triggerRefresh(s1.getSelectedItemPosition());
             break;
-        case R.id.tf_synchronize:
-            startActivity(new Intent(this, SynchronizeTabs.class));
+        case R.id.tf_aggregate:
+            startActivity(new Intent(this, InstanceUploaderList.class));
             return true;
         case R.id.tf_manage:
             startActivity(new Intent(this, ManageFormsTabs.class));
@@ -361,7 +374,7 @@ public class MainBrowserActivity extends ListActivity
             mIsOnline = Collect.getInstance().getInformOnline().ping();
             
             return null;
-        }    
+        }
     
         @Override
         protected void onPreExecute()

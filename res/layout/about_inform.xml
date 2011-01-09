@@ -8,75 +8,107 @@
     
     <TextView
         android:id="@android:id/empty" 
-        android:text="This screen displays information about your Group Inform installation, the account it is registered to and information about this specific device.  Certain details are only available to the account owner."
+        android:text="@string/tf_about_inform_introduction"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:layout_marginBottom="15dp" />
     
-    <!-- Account number -->
-    <TextView
-        android:id="@android:id/empty" 
-        android:text="Account Licence Number"
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="3dp"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/accountNumber"  
-        android:text="Unavailable"
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="15dp" />
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/accountInformation"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">  
     
-    <!-- Account key -->
-    <TextView
-        android:id="@android:id/empty" 
-        android:text="Account Licence Key"
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="3dp"
-        android:textSize="20sp" />
+        <!-- Account number -->
+        <TextView
+            android:id="@android:id/empty" 
+            android:text="Account Licence Number"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dp"
+            android:textSize="20sp" />
 
-    <TextView
-        android:id="@+id/accountKey"  
-        android:text="Unavailable"
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="15dp" />   
-        
-    <!-- Device PIN -->
-    <TextView
-        android:id="@android:id/empty" 
-        android:text="Device Transfer PIN"
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="3dp"
-        android:textSize="20sp" />
+        <TextView
+            android:id="@+id/accountNumber"  
+            android:text="Unavailable"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp" />
+    
+        <!-- Account key -->
+        <TextView
+            android:id="@android:id/empty" 
+            android:text="Account Licence Key"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dp"
+            android:textSize="20sp" />
 
-    <TextView
-        android:id="@+id/devicePin"  
-        android:text="Unavailable"
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="15dp" />
+        <TextView
+            android:id="@+id/accountKey"  
+            android:text="Unavailable"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp" />
+    </LinearLayout> 
         
-    <!-- Device transfer status -->
-    <TextView
-        android:id="@android:id/empty" 
-        android:text="Device Transfer Status"
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="3dp"
-        android:textSize="20sp" />
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/deviceInformation"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">          
         
-    <ToggleButton
-        android:id="@+id/deviceTransferStatus"
-        android:enabled="false"
-        android:checked="false"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:layout_marginBottom="15dp"
-        android:textOff="@string/tf_transfer_unlocked"
-        android:textOn="@string/tf_transfer_locked" />
+        <!-- Device email -->
+        <TextView
+            android:id="@android:id/empty" 
+            android:text="Device Registered To"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dp"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/deviceEmail"  
+            android:text="Unavailable"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp" />
+        
+        <!-- Device PIN -->
+        <TextView
+            android:id="@android:id/empty" 
+            android:text="Device Transfer PIN"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dp"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/devicePin"  
+            android:text="Unavailable"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp" />
+        
+        <!-- Device transfer status -->
+        <TextView
+            android:id="@android:id/empty" 
+            android:text="Device Transfer Status"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dp"
+            android:textSize="20sp" />
+        
+        <ToggleButton
+            android:id="@+id/deviceTransferStatus"
+            android:enabled="false"
+            android:checked="false"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginBottom="15dp"
+            android:textOff="@string/tf_transfer_unlocked"
+            android:textOn="@string/tf_transfer_locked" />
+    </LinearLayout>        
 </LinearLayout>

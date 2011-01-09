@@ -1,6 +1,12 @@
 package com.radicaldynamic.groupinform.logic;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.apache.http.NameValuePair;
 import org.apache.http.client.CookieStore;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -8,6 +14,7 @@ import org.json.JSONTokener;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
@@ -36,6 +43,7 @@ public class InformOnlineState
     public static final String DEVICE_ID   = "informonline_deviceid";       // Invisible 
     public static final String DEVICE_KEY  = "informonline_devicekey";      // Invisible 
     public static final String DEVICE_PIN  = "informonline_devicepin";      // Accessible
+    public static final String DEVICE_EMAIL = "informonline_deviceemail";   // Accessible
     
     // Constants for session information stored in preferences
     public static final String SESSION     = "informonline_session";        // Invisible
@@ -47,6 +55,9 @@ public class InformOnlineState
     private String deviceId;
     private String deviceKey;
     private String devicePin;
+    private String deviceEmail;
+    
+    private String deviceFingerprint;
     
     private CookieStore session = null;
     private SharedPreferences prefs;
@@ -66,6 +77,9 @@ public class InformOnlineState
         
         // Initialize server URL
         setServerUrl("http://" + context.getText(R.string.tf_default_nodejs_server) + ":" + context.getText(R.string.tf_default_nodejs_port));
+        
+        // Set the device finger print
+        setDeviceFingerprint(context);
     }
     
     public boolean checkin()
@@ -73,8 +87,13 @@ public class InformOnlineState
         // Assume we are registered unless told otherwise
         boolean registered = true;
         
-        String checkinUrl = serverUrl + "/checkin/" + deviceId + "/" + deviceKey;
-        String jsonResult = HttpUtils.getUrlData(checkinUrl);            
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("deviceId", deviceId));
+        params.add(new BasicNameValuePair("deviceKey", deviceKey));
+        params.add(new BasicNameValuePair("fingerprint", getDeviceFingerprint()));
+        
+        String checkinUrl = serverUrl + "/checkin";
+        String jsonResult = HttpUtils.postUrlData(checkinUrl, params);            
         JSONObject checkin;
         
         try {
@@ -107,11 +126,53 @@ public class InformOnlineState
         // Clear the session for subsequent requests and reset stored state
         if (registered == false) {                 
             resetPreferences();
-            session = null;
             ready = false;
+            session = null;            
         }
         
         return registered;
+    }
+    
+    /*
+     * Try and say "goodbye" to Inform Online so that we know that 
+     * this client's session is no longer needed.
+     * 
+     * This is a "best effort" method and it is possible that the device may
+     * have already been checked out by another process (such as resetting the device).
+     */
+    public boolean checkout()
+    {
+        boolean saidGoodbye = false;
+        
+        String pingUrl = getServerUrl() + "/checkout";
+        String jsonResult = HttpUtils.getUrlData(pingUrl);
+        JSONObject ping;
+        
+        try {
+            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
+            ping = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            
+            String result = ping.optString(RESULT, ERROR);
+            
+            if (result.equals(OK)) {
+                Log.i(Collect.LOGTAG, t + "said goodbye to Inform Online");
+                saidGoodbye = true;
+            } else 
+                Log.i(Collect.LOGTAG, t + "device checkout unnecessary");
+        } catch (NullPointerException e) {
+            // Communication error
+            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            e.printStackTrace();
+        } catch (JSONException e) {
+            // Parse error (malformed result)
+            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            e.printStackTrace();
+        }
+        
+        ready = false;
+        session = null;
+        
+        return saidGoodbye;
     }
     
     public boolean ping()
@@ -214,6 +275,20 @@ public class InformOnlineState
         return devicePin;
     }
     
+    public void setDeviceEmail(String deviceEmail)
+    {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(DEVICE_EMAIL, deviceEmail);
+        editor.commit();              
+        
+        this.deviceEmail = deviceEmail;
+    }
+    
+    public String getDeviceEmail()
+    {
+        return deviceEmail;
+    }
+
     public void setReady(boolean ready)
     {
         this.ready = ready;
@@ -244,6 +319,29 @@ public class InformOnlineState
         return session;
     }
 
+    /*
+     * See http://stackoverflow.com/questions/2785485/is-there-a-unique-android-device-id
+     */
+    public void setDeviceFingerprint(Context context)
+    {
+        final TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+
+        final String tmDevice, tmSerial, androidId;
+        
+        tmDevice = "" + tm.getDeviceId();
+        tmSerial = "" + tm.getSimSerialNumber();
+        androidId = "" + android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+
+        UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
+        
+        this.deviceFingerprint = deviceUuid.toString();
+    }
+
+    public String getDeviceFingerprint()
+    {
+        return deviceFingerprint;
+    }
+
     // Whether this device appears to be registered
     public boolean hasRegistration()
     {
@@ -262,6 +360,7 @@ public class InformOnlineState
         setDeviceId(null);
         setDeviceKey(null);
         setDevicePin(null);
+        setDeviceEmail(null);
         
         ready = false;
     }
@@ -274,5 +373,6 @@ public class InformOnlineState
         setDeviceId(prefs.getString(DEVICE_ID, null));
         setDeviceKey(prefs.getString(DEVICE_KEY, null));
         setDevicePin(prefs.getString(DEVICE_PIN, null));
+        setDeviceEmail(prefs.getString(DEVICE_EMAIL, null));
     }
 }

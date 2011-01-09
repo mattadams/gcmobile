@@ -72,6 +72,7 @@ public class InstanceUploaderList extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.instance_uploader_list);
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_odk_aggregate));
 
         mActionButton = (Button) findViewById(R.id.upload_button);
         mActionButton.setOnClickListener(new OnClickListener() {

@@ -343,7 +343,7 @@ public class FormBuilderFieldEditor extends Activity
             .setCancelable(false)
             .setIcon(R.drawable.ic_dialog_alert)
             .setTitle(R.string.tf_change_select_type)
-            .setMessage(R.string.tf_change_select_type_message)            
+            .setMessage(R.string.tf_change_select_type_msg)            
             .setPositiveButton(R.string.tf_yes, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     mSelectInstanceDefault = "";

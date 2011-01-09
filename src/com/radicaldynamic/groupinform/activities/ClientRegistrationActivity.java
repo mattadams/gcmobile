@@ -110,7 +110,7 @@ public class ClientRegistrationActivity extends Activity
                 builder
                 .setCancelable(false)
                 .setTitle(R.string.tf_do_you_have_an_account)
-                .setMessage(R.string.tf_do_you_have_an_account_message)
+                .setMessage(R.string.tf_do_you_have_an_account_msg)
                 .setPositiveButton(R.string.tf_yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         registerExistingAccountDialog();
@@ -127,7 +127,7 @@ public class ClientRegistrationActivity extends Activity
                 builder
                 .setCancelable(false)
                 .setTitle(R.string.tf_are_you_transferring_devices)
-                .setMessage(R.string.tf_are_you_transferring_devices_message)
+                .setMessage(R.string.tf_are_you_transferring_devices_msg)
                 .setPositiveButton(R.string.tf_yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         transferDeviceDialog();
@@ -145,7 +145,7 @@ public class ClientRegistrationActivity extends Activity
                 .setCancelable(false)
                 .setIcon(R.drawable.ic_dialog_info)
                 .setTitle(R.string.tf_account_created)
-                .setMessage(getString(R.string.tf_account_created_message, mContactEmailAddress))
+                .setMessage(getString(R.string.tf_account_created_msg, mContactEmailAddress))
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         // Return user to the main screen (application will be reinitialized with this information)
@@ -161,7 +161,7 @@ public class ClientRegistrationActivity extends Activity
                 .setCancelable(false)
                 .setIcon(R.drawable.ic_dialog_info)
                 .setTitle(R.string.tf_device_registered)
-                .setMessage(R.string.tf_device_registered_message)
+                .setMessage(R.string.tf_device_registered_msg)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         // Return user to the main screen (application will be reinitialized with this information)
@@ -176,8 +176,8 @@ public class ClientRegistrationActivity extends Activity
                 builder
                 .setCancelable(false)
                 .setIcon(R.drawable.ic_dialog_alert)
-                .setTitle(R.string.tf_system_error_dialog_title)
-                .setMessage(R.string.tf_system_error_dialog_message)
+                .setTitle(R.string.tf_system_error_dialog)
+                .setMessage(R.string.tf_system_error_dialog_msg)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         // Do something?
@@ -255,7 +255,7 @@ public class ClientRegistrationActivity extends Activity
         builder
         .setCancelable(false)
         .setInverseBackgroundForced(true)
-        .setTitle("Supply account details")
+        .setTitle(getString(R.string.tf_supply_account_details))
         .setView(view)
         
         .setPositiveButton(R.string.tf_continue, new DialogInterface.OnClickListener() {
@@ -417,30 +417,26 @@ public class ClientRegistrationActivity extends Activity
                 } else {
                     // Unhandled response
                     Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }   
                 
                 return false;
             } else {
                 // Something bad happened
                 Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();                
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
                 return false;
             }
         } catch (NullPointerException e) {
-            /* 
-             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-             * either as a result of a communication error with the node.js server
-             * or something else.
-             */
+            // Communication error
             Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");                        
-            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
-            // Parse errors (malformed result)
+            // Parse error (malformed result)
             Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                        
-            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         }        
@@ -456,6 +452,7 @@ public class ClientRegistrationActivity extends Activity
         Collect.getInstance().getInformOnline().setDeviceId(container.getString("deviceId"));
         Collect.getInstance().getInformOnline().setDeviceKey(container.getString("deviceKey"));
         Collect.getInstance().getInformOnline().setDevicePin(container.getString("devicePin"));
+        Collect.getInstance().getInformOnline().setDeviceEmail(container.getString("deviceEmail"));
     }
 
     private void transferDeviceDialog()
@@ -562,23 +559,19 @@ public class ClientRegistrationActivity extends Activity
                 } else {
                     // Something bad happened
                     Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                   
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();                    
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                    
                     return false;
                 }
             } catch (NullPointerException e) {
-                /* 
-                 * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-                 * either as a result of a communication error with the node.js server
-                 * or something else.
-                 */
+                // Communication error
                 Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
                 return false;
             } catch (JSONException e) {
-                // Parse errors (malformed result)
+                // Parse error (malformed result)
                 Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();                
                 return false;
             }
@@ -592,6 +585,7 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("licenceNumber", mAccountNumber));
         params.add(new BasicNameValuePair("licenceKey", mAccountKey));
         params.add(new BasicNameValuePair("email", email));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnline().getDeviceFingerprint()));
         
         String transferUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/register/device";
         String jsonResult = HttpUtils.postUrlData(transferUrl, params);
@@ -620,30 +614,26 @@ public class ClientRegistrationActivity extends Activity
                 } else {
                     // Unhandled response
                     Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }   
                 
                 return false;
             } else {
                 // Something bad happened
                 Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();                
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
                 return false;
             }
         } catch (NullPointerException e) {
-            /* 
-             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-             * either as a result of a communication error with the node.js server
-             * or something else.
-             */
+            // Communication error
             Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
-            // Parse errors (malformed result)
+            // Parse error (malformed result)
             Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                        
-            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         }      
@@ -674,41 +664,63 @@ public class ClientRegistrationActivity extends Activity
                 String reason = transfer.optString(InformOnlineState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_PIN)) {
-                    Log.e(Collect.LOGTAG, t + "transfer failed (invalid PIN)");
+                    Log.i(Collect.LOGTAG, t + "transfer failed (invalid PIN)");
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_pin), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_DEVICE_LOCKED)) {
-                    Log.e(Collect.LOGTAG, t + "transfer failed (device locked)");
+                    Log.i(Collect.LOGTAG, t + "transfer failed (device locked)");
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_device_locked), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_TRANSFER_DELAYED)) {
-                    Log.e(Collect.LOGTAG, t + "transfer delayed for " + transfer.getString("delay"));
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_transfer_delayed), Toast.LENGTH_LONG).show();
+                    Log.i(Collect.LOGTAG, t + "transfer delayed for " + transfer.getString("delay") + "ms");
+                    
+                    String approximation = " ";
+                    String period = "";
+                    String unit = "";
+
+                    // The delay time is returned in milliseconds
+                    Integer delayMilliseconds = transfer.getInt("delay");
+                    
+                    if (delayMilliseconds / 1000 / 60 > 0) {
+                        approximation = " about ";
+                        period = Integer.toString(delayMilliseconds / 1000 / 60);
+                        unit = "minutes";
+                    } else if (delayMilliseconds / 1000 > 0) {
+                        period = Integer.toString(delayMilliseconds / 1000);
+                        unit = "seconds";
+                    } else {
+                        period = "a few";
+                        unit = "seconds";
+                    }
+                    
+                    // Hack to turn "minutes" into "minute" or whatever
+                    if (period.equals("1")) {
+                        unit = unit.substring(0, unit.length() - 1);
+                    }
+                    
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_transfer_delayed_reason), Toast.LENGTH_LONG).show();                    
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_transfer_delayed_wait, approximation, period, unit), Toast.LENGTH_LONG).show();
                 } else {
                     // Unhandled response
                     Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }
                 
                 return false;
             } else {
                 // Something bad happened
                 Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();                
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
                 return false;
             }
         } catch (NullPointerException e) {
-            /* 
-             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-             * either as a result of a communication error with the node.js server
-             * or something else.
-             */
+            // Communication error
             Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
-            // Parse errors (malformed result)
+            // Parse error (malformed result)
             Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                        
-            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         }
@@ -719,6 +731,7 @@ public class ClientRegistrationActivity extends Activity
         // Data to POST
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("email", email));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnline().getDeviceFingerprint()));
         
         String verifyUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/register/account";
         
@@ -750,30 +763,26 @@ public class ClientRegistrationActivity extends Activity
                 } else {
                     // Unhandled response
                     Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }   
                 
                 return false;
             } else {
                 // Something bad happened
                 Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();                
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
                 return false;
             }
         } catch (NullPointerException e) {
-            /* 
-             * Null pointers occur to jsonResult when HttpUtils.getUrlData() fails
-             * either as a result of a communication error with the node.js server
-             * or something else.
-             */
+            // Communication error
             Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
-            // Parse errors (malformed result)
+            // Parse error (malformed result)
             Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                        
-            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_message), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         }         
