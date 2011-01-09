@@ -179,7 +179,7 @@ public class MainBrowserActivity extends ListActivity
                 @Override
                 public void onClick(View v)
                 {
-                    startActivity(new Intent(MainBrowserActivity.this, FormGroupsList.class));
+                    startActivity(new Intent(MainBrowserActivity.this, FormGroupList.class));
                 }
             });
         } else {
@@ -331,7 +331,7 @@ public class MainBrowserActivity extends ListActivity
     {
         switch (item.getItemId()) {
         case R.id.tf_groups:
-            startActivity(new Intent(this, FormGroupsList.class));
+            startActivity(new Intent(this, FormGroupList.class));
             break;
         case R.id.tf_refresh:
             Spinner s1 = (Spinner) findViewById(R.id.form_filter);        

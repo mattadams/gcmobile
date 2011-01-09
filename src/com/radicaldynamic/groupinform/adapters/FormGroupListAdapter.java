@@ -12,12 +12,12 @@ import android.widget.TextView;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.logic.FormGroup;
 
-public class GroupListAdapter extends ArrayAdapter<FormGroup>
+public class FormGroupListAdapter extends ArrayAdapter<FormGroup>
 {       
     private Context mContext;
     private ArrayList<FormGroup> mItems;
     
-    public GroupListAdapter(Context context, int textViewResourceId, ArrayList<FormGroup> items) {
+    public FormGroupListAdapter(Context context, int textViewResourceId, ArrayList<FormGroup> items) {
         super(context, textViewResourceId, items);
         mContext = context;
         mItems = items;
@@ -40,7 +40,7 @@ public class GroupListAdapter extends ArrayAdapter<FormGroup>
             TextView bt = (TextView) v.findViewById(R.id.bottomtext);
 
             if (tt != null) {
-                tt.setText(f.getName());
+                tt.setText("[" + f.getVisibility().toUpperCase() + "] " + f.getName());
             }
 
             if (bt != null) {

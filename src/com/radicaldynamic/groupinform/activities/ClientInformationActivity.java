@@ -44,10 +44,9 @@ public class ClientInformationActivity extends Activity
 {
     private static final String t = "ClientInformationActivity: ";
     
-    private static final int MENU_CHANGE_ACCOUNT = 0;
-    private static final int MENU_ACCOUNT_MEMBERS = 1;
-    private static final int MENU_THIS_DEVICE = 2;
-    private static final int MENU_RESET_INFORM = 3;    
+    private static final int MENU_ACCOUNT_MEMBERS = 0;
+    private static final int MENU_THIS_DEVICE = 1;
+    private static final int MENU_RESET_INFORM = 2;    
     
     // Strings returned by the Group Inform Server specific to this activity
     private static final String STATE = "state";

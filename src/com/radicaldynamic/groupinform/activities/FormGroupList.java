@@ -42,7 +42,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.adapters.GroupListAdapter;
+import com.radicaldynamic.groupinform.adapters.FormGroupListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.FormGroup;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
@@ -52,7 +52,7 @@ import com.radicaldynamic.groupinform.utilities.HttpUtils;
 /*
  * 
  */
-public class FormGroupsList extends ListActivity
+public class FormGroupList extends ListActivity
 {
     private static final String t = "FormGroupsList: ";
 
@@ -168,9 +168,9 @@ public class FormGroupsList extends ListActivity
                 TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                 nothingToDisplay.setVisibility(View.VISIBLE);
             } else {
-                GroupListAdapter adapter;
+                FormGroupListAdapter adapter;
                 
-                adapter = new GroupListAdapter(
+                adapter = new FormGroupListAdapter(
                         getApplicationContext(),
                         R.layout.group_list_item,
                         groups);
