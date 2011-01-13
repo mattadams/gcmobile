@@ -186,12 +186,12 @@ public class AccountGroupList extends ListActivity
         
         // Try to ping the service to see if it is "up"
         String groupListUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/group/list";
-        String jsonResult = HttpUtils.getUrlData(groupListUrl);
+        String getResult = HttpUtils.getUrlData(groupListUrl);
         JSONObject jsonGroupList;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-            jsonGroupList = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+            jsonGroupList = (JSONObject) new JSONTokener(getResult).nextValue();
             
             String result = jsonGroupList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
             
@@ -224,11 +224,11 @@ public class AccountGroupList extends ListActivity
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
             e.printStackTrace();
         }
     }

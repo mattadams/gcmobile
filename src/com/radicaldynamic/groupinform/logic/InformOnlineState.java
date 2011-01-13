@@ -92,13 +92,12 @@ public class InformOnlineState
         params.add(new BasicNameValuePair("deviceKey", deviceKey));
         params.add(new BasicNameValuePair("fingerprint", getDeviceFingerprint()));
         
-        String checkinUrl = serverUrl + "/checkin";
-        String jsonResult = HttpUtils.postUrlData(checkinUrl, params);            
+        String postResult = HttpUtils.postUrlData(getServerUrl() + "/checkin", params);            
         JSONObject checkin;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-            checkin = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);                
+            checkin = (JSONObject) new JSONTokener(postResult).nextValue();
             
             String result = checkin.optString(RESULT, FAILURE);
             
@@ -109,15 +108,15 @@ public class InformOnlineState
                 registered = false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");
+                Log.e(Collect.LOGTAG, t + "system error while processing postResult");
             }                
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");
             e.printStackTrace();            
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);
             e.printStackTrace();
         }
         
@@ -141,15 +140,14 @@ public class InformOnlineState
     {
         boolean saidGoodbye = false;
         
-        String pingUrl = getServerUrl() + "/checkout";
-        String jsonResult = HttpUtils.getUrlData(pingUrl);
-        JSONObject ping;
+        String getResult = HttpUtils.getUrlData(getServerUrl() + "/checkout");
+        JSONObject checkout;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-            ping = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+            checkout = (JSONObject) new JSONTokener(getResult).nextValue();
             
-            String result = ping.optString(RESULT, ERROR);
+            String result = checkout.optString(RESULT, ERROR);
             
             if (result.equals(OK)) {
                 Log.i(Collect.LOGTAG, t + "said goodbye to Inform Online");
@@ -158,11 +156,11 @@ public class InformOnlineState
                 Log.i(Collect.LOGTAG, t + "device checkout unnecessary");
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
             e.printStackTrace();
         }
         
@@ -177,13 +175,12 @@ public class InformOnlineState
         boolean alive = false;
         
         // Try to ping the service to see if it is "up"
-        String pingUrl = serverUrl + "/ping";
-        String jsonResult = HttpUtils.getUrlData(pingUrl);
+        String getResult = HttpUtils.getUrlData(getServerUrl() + "/ping");
         JSONObject ping;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-            ping = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+            ping = (JSONObject) new JSONTokener(getResult).nextValue();
             
             String result = ping.optString(RESULT, ERROR);
             
@@ -191,11 +188,11 @@ public class InformOnlineState
                 alive = true;
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
             e.printStackTrace();
         }
         

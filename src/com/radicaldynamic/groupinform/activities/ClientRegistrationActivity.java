@@ -393,12 +393,12 @@ public class ClientRegistrationActivity extends Activity
         
         String verifyUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/send/account/reminder";
         
-        String jsonResult = HttpUtils.postUrlData(verifyUrl, params);
+        String postResult = HttpUtils.postUrlData(verifyUrl, params);
         JSONObject verify;
         
         try {            
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);            
-            verify = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);            
+            verify = (JSONObject) new JSONTokener(postResult).nextValue();
             
             String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
             
@@ -416,26 +416,26 @@ public class ClientRegistrationActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_unknown_contact_email), Toast.LENGTH_LONG).show();
                 } else {
                     // Unhandled response
-                    Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
+                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }   
                 
                 return false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                
+                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
                 return false;
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");                        
+            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                        
+            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
@@ -538,12 +538,12 @@ public class ClientRegistrationActivity extends Activity
             params.add(new BasicNameValuePair("licenceKey", key));
             
             String verifyUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/verify/licence";
-            String jsonResult = HttpUtils.postUrlData(verifyUrl, params);
+            String postResult = HttpUtils.postUrlData(verifyUrl, params);
             JSONObject verify;
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-                verify = (JSONObject) new JSONTokener(jsonResult).nextValue();                
+                Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);                
+                verify = (JSONObject) new JSONTokener(postResult).nextValue();                
                 
                 String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
                 
@@ -557,19 +557,19 @@ public class ClientRegistrationActivity extends Activity
                     return false;
                 } else {
                     // Something bad happened
-                    Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                   
+                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                    
                     return false;
                 }
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");               
+                Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
                 return false;
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                
+                Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();                
                 return false;
@@ -587,12 +587,12 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnline().getDeviceFingerprint()));
         
         String transferUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/register/device";
-        String jsonResult = HttpUtils.postUrlData(transferUrl, params);
+        String postResult = HttpUtils.postUrlData(transferUrl, params);
         JSONObject verify;
         
         try {            
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);            
-            verify = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);            
+            verify = (JSONObject) new JSONTokener(postResult).nextValue();
             
             String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
             
@@ -612,26 +612,26 @@ public class ClientRegistrationActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_registration_error_email_in_use), Toast.LENGTH_LONG).show();
                 } else {
                     // Unhandled response
-                    Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
+                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }   
                 
                 return false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                
+                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
                 return false;
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");                        
+            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                        
+            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
@@ -647,12 +647,12 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("devicePin", devicePin));
         
         String transferUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/transfer/do";
-        String jsonResult = HttpUtils.postUrlData(transferUrl, params);
+        String postResult = HttpUtils.postUrlData(transferUrl, params);
         JSONObject transfer;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);
-            transfer = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);
+            transfer = (JSONObject) new JSONTokener(postResult).nextValue();
             
             String result = transfer.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
             
@@ -699,26 +699,26 @@ public class ClientRegistrationActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_transfer_delayed_wait, approximation, period, unit), Toast.LENGTH_LONG).show();
                 } else {
                     // Unhandled response
-                    Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
+                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }
                 
                 return false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                
+                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
                 return false;
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");                        
+            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                        
+            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
@@ -734,12 +734,12 @@ public class ClientRegistrationActivity extends Activity
         
         String verifyUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/register/account";
         
-        String jsonResult = HttpUtils.postUrlData(verifyUrl, params);
+        String postResult = HttpUtils.postUrlData(verifyUrl, params);
         JSONObject verify;
         
         try {            
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);            
-            verify = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);            
+            verify = (JSONObject) new JSONTokener(postResult).nextValue();
             
             String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
             
@@ -761,26 +761,26 @@ public class ClientRegistrationActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_registration_error_email_in_use), Toast.LENGTH_LONG).show();
                 } else {
                     // Unhandled response
-                    Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
+                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }   
                 
                 return false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                
+                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
                 return false;
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");                        
+            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                        
+            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;

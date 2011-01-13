@@ -189,11 +189,11 @@ public class ClientInformationActivity extends Activity
             String url = Collect.getInstance().getInformOnline().getServerUrl() + "/transfer/show";
             
             JSONObject result;
-            String jsonResult = HttpUtils.getUrlData(url);
+            String getResult = HttpUtils.getUrlData(url);
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);   
-                result = (JSONObject) new JSONTokener(jsonResult).nextValue();
+                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
+                result = (JSONObject) new JSONTokener(getResult).nextValue();
                 
                 if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK)) {
                     return result.getString(TRANSFER_STATE);
@@ -202,12 +202,12 @@ public class ClientInformationActivity extends Activity
                 }
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");  
+                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");  
                 e.printStackTrace();
                 return null;
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
                 e.printStackTrace();
                 return null;
             }
@@ -248,12 +248,12 @@ public class ClientInformationActivity extends Activity
         {
             String url = Collect.getInstance().getInformOnline().getServerUrl() + "/transfer/toggle";
             
-            String jsonResult = HttpUtils.getUrlData(url);
+            String getResult = HttpUtils.getUrlData(url);
             JSONObject result;
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);   
-                result = (JSONObject) new JSONTokener(jsonResult).nextValue();
+                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
+                result = (JSONObject) new JSONTokener(getResult).nextValue();
                 
                 if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK)) {
                     return result.optString(TRANSFER_STATE, null);
@@ -262,12 +262,12 @@ public class ClientInformationActivity extends Activity
                 }
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
                 e.printStackTrace();
                 return null;
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
                 e.printStackTrace();
                 return null;
             }
@@ -383,22 +383,22 @@ public class ClientInformationActivity extends Activity
         
         String url = Collect.getInstance().getInformOnline().getServerUrl() + "/reset";
         
-        String jsonResult = HttpUtils.getUrlData(url);
+        String getResult = HttpUtils.getUrlData(url);
         JSONObject result;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);   
-            result = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
+            result = (JSONObject) new JSONTokener(getResult).nextValue();
             
             if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK))
                 reset = true;
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
             e.printStackTrace();
         }
         

@@ -112,12 +112,12 @@ public class InformOnlineService extends Service {
         
         // Try to ping the service to see if it is "up" (and determine whether we are registered)
         String pingUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/ping";
-        String jsonResult = HttpUtils.getUrlData(pingUrl);
+        String getResult = HttpUtils.getUrlData(pingUrl);
         JSONObject ping;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-            ping = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+            ping = (JSONObject) new JSONTokener(getResult).nextValue();
             
             String result = ping.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
             
@@ -158,7 +158,7 @@ public class InformOnlineService extends Service {
             mConnected = false;
         } catch (JSONException e) {
             // Parse errors (malformed result) send us into an offline state
-            Log.e(Collect.LOGTAG, t + "ping error while parsing jsonResult " + jsonResult + " (we are offline)");
+            Log.e(Collect.LOGTAG, t + "ping error while parsing getResult " + getResult + " (we are offline)");
             e.printStackTrace();
             mConnected = false;
         } finally {
@@ -214,7 +214,7 @@ public class InformOnlineService extends Service {
                 }
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + sb.toString());
+                Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
                 e.printStackTrace();
             }
         } catch (Exception e) {

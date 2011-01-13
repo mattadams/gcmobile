@@ -23,7 +23,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -183,15 +182,15 @@ public class AccountDeviceActivity extends Activity
         }
 
         @Override
-        protected void onPostExecute(String jsonResult)
+        protected void onPostExecute(String postResult)
         {
             JSONObject update;
             
             mProgressDialog.cancel();
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-                update = (JSONObject) new JSONTokener(jsonResult).nextValue();
+                Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);                
+                update = (JSONObject) new JSONTokener(postResult).nextValue();
                 
                 String result = update.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
                 
@@ -225,22 +224,22 @@ public class AccountDeviceActivity extends Activity
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_registration_error_email_in_use), Toast.LENGTH_LONG).show();
                     } else {
                         // Unhandled response
-                        Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                    
+                        Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                     }                    
                 } else {
                     // Something bad happened
-                    Log.e(Collect.LOGTAG, t + "system error while processing jsonResult");                   
+                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }                
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");               
+                Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);                
+                Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }

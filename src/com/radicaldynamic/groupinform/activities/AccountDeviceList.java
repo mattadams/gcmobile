@@ -191,12 +191,12 @@ public class AccountDeviceList extends ListActivity
                 
         // Try to ping the service to see if it is "up"
         String deviceListUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/device/list";
-        String jsonResult = HttpUtils.getUrlData(deviceListUrl);
+        String getResult = HttpUtils.getUrlData(deviceListUrl);
         JSONObject jsonDeviceList;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-            jsonDeviceList = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+            jsonDeviceList = (JSONObject) new JSONTokener(getResult).nextValue();
             
             String result = jsonDeviceList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
             
@@ -218,11 +218,11 @@ public class AccountDeviceList extends ListActivity
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no jsonResult to parse.  Communication error with node.js server?");
+            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + jsonResult);
+            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
             e.printStackTrace();
         }
     }
@@ -270,7 +270,7 @@ public class AccountDeviceList extends ListActivity
                 }
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + sb.toString());
+                Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
                 e.printStackTrace();
             }
         } catch (Exception e) {
