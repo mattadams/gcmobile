@@ -18,11 +18,12 @@ public class AccountDevice implements Serializable
     private String transferStatus;      // R/W by account owner, device owner
     
     
-    public AccountDevice(String id, String alias, String email)
+    public AccountDevice(String id, String alias, String email, String status)
     {
         setId(id);
         setAlias(alias);
         setEmail(email);
+        setStatus(status);
     }
     
     public void setId(String id) { this.id = id; }

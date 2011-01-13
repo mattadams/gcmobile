@@ -42,7 +42,11 @@ public class AccountDeviceActivity extends Activity
     
     public static final String KEY_DEVICEID = "deviceid";
     
+    private static final int MENU_REMOVE_DEVICE = 0;
+    
     public static final int SAVING_DIALOG = 0;
+    public static final int REMOVING_DIALOG = 1;
+    public static final int CONFIRM_REMOVAL_DIALOG = 2;
         
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
@@ -120,6 +124,30 @@ public class AccountDeviceActivity extends Activity
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);            
             return mProgressDialog;
+        case REMOVING_DIALOG:
+            mProgressDialog = new ProgressDialog(this);   
+            mProgressDialog.setMessage(getText(R.string.tf_removing_please_wait));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);            
+            return mProgressDialog;
+        case CONFIRM_REMOVAL_DIALOG:
+            mAlertDialog = new AlertDialog.Builder(this)
+                .setIcon(R.drawable.ic_dialog_alert)
+                .setTitle(R.string.tf_remove_device_dialog_title)
+                .setMessage(R.string.tf_remove_device_dialog_msg)
+                .setPositiveButton(R.string.tf_remove, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        new RemoveDevice().execute();
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                })
+                .create();
+            
+            mAlertDialog.show();
         }
 
         return null;
@@ -129,6 +157,12 @@ public class AccountDeviceActivity extends Activity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
+        menu.add(0, MENU_REMOVE_DEVICE, 0, getString(R.string.tf_remove_device)).setIcon(R.drawable.ic_menu_delete);
+        
+        // TODO: removal of self is not handled yet so don't allow it
+        if (Collect.getInstance().getInformOnline().getDeviceId() == mDeviceId)
+            menu.getItem(MENU_REMOVE_DEVICE).setEnabled(false);
+        
         return true;
     }    
     
@@ -150,6 +184,9 @@ public class AccountDeviceActivity extends Activity
         Intent i;
         
         switch (item.getItemId()) {
+        case MENU_REMOVE_DEVICE:
+            showDialog(CONFIRM_REMOVAL_DIALOG);
+            return true;
         }
         
         return super.onOptionsItemSelected(item);
@@ -170,9 +207,9 @@ public class AccountDeviceActivity extends Activity
             else 
                 params.add(new BasicNameValuePair("transfer", "unlocked"));
             
-            String verifyUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/device/update";
+            String updateUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/device/update";
             
-            return HttpUtils.postUrlData(verifyUrl, params);
+            return HttpUtils.postUrlData(updateUrl, params);
         }
 
         @Override
@@ -246,6 +283,65 @@ public class AccountDeviceActivity extends Activity
         }
     }
     
+    private class RemoveDevice extends AsyncTask<Void, Void, String>
+    {        
+        @Override
+        protected String doInBackground(Void... nothing)
+        {            
+            String removeUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/device/remove/" + mDeviceId;            
+            return HttpUtils.getUrlData(removeUrl);
+        }
+    
+        @Override
+        protected void onPreExecute()
+        {
+            showDialog(REMOVING_DIALOG);
+        }
+    
+        @Override
+        protected void onPostExecute(String getResult)
+        {
+            JSONObject update;
+            
+            mProgressDialog.cancel();
+            
+            try {
+                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+                update = (JSONObject) new JSONTokener(getResult).nextValue();
+                
+                String result = update.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+                
+                // Update successful
+                if (result.equals(InformOnlineState.OK)) {  
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_device, mDevice.getDisplayName()), Toast.LENGTH_SHORT).show();                    
+                    
+                    // Force the list to refresh (do not be destructive in case something bad happens later)
+                    new File(FileUtils.DEVICE_CACHE_FILE_PATH).setLastModified(0);
+                    
+                    // Get out of here
+                    finish();
+                } else if (result.equals(InformOnlineState.FAILURE)) {
+                    // TODO: user tried to remove self is the only possible failure (implement at some point)
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_self), Toast.LENGTH_LONG).show();
+                } else {
+                    // Something bad happened
+                    Log.e(Collect.LOGTAG, t + "system error while processing getResult");                   
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
+                }                
+            } catch (NullPointerException e) {
+                // Communication error
+                Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            } catch (JSONException e) {
+                // Parse error (malformed result)
+                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);                
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+    }
+
     /*
      * Prompt shown to the user before they leave the field list 
      * (discard changes & quit, save changes & quit, return to form field list)

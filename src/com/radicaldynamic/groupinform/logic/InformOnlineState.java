@@ -39,6 +39,7 @@ public class InformOnlineState
     // Constants for account information stored in preferences
     public static final String ACCOUNT_KEY = "informonline_accountkey";     // Accessible
     public static final String ACCOUNT_NUM = "informonline_accountnum";     // Accessible
+    private static final String ACCOUNT_OWNER = "informonline_accountown";  // Invisible
     
     // Constants for device information stored in preferences
     public static final String DEVICE_ID   = "informonline_deviceid";       // Invisible 
@@ -52,7 +53,8 @@ public class InformOnlineState
     private String serverUrl;
     
     private String accountNumber;           // The licence number
-    private String accountKey;              // The licence key    
+    private String accountKey;              // The licence key
+    private boolean accountOwner;
     private String deviceId;
     private String deviceKey;
     private String devicePin;
@@ -227,6 +229,21 @@ public class InformOnlineState
         return accountNumber;
     }
 
+    public void setAccountOwner(boolean accountOwner)
+    {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(ACCOUNT_OWNER, accountOwner);
+        editor.commit();  
+        
+        this.accountOwner = accountOwner;
+    }
+
+    // This is a convenience method for making UI decisions ONLY.  NOTHING secure should be based upon this.
+    public boolean isAccountOwner()
+    {
+        return accountOwner;
+    }
+
     public void setDeviceId(String deviceId)
     {
         SharedPreferences.Editor editor = prefs.edit();
@@ -336,6 +353,7 @@ public class InformOnlineState
     {
         setAccountKey(null);
         setAccountNumber(null);
+        setAccountOwner(false);
         
         setDeviceId(null);
         setDeviceKey(null);
@@ -353,6 +371,7 @@ public class InformOnlineState
     {
         setAccountKey(prefs.getString(ACCOUNT_KEY, null));
         setAccountNumber(prefs.getString(ACCOUNT_NUM, null));
+        setAccountOwner(prefs.getBoolean(ACCOUNT_OWNER, false));
         
         setDeviceId(prefs.getString(DEVICE_ID, null));
         setDeviceKey(prefs.getString(DEVICE_KEY, null));

@@ -41,6 +41,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.AccountDeviceListAdapter;
@@ -114,9 +115,14 @@ public class AccountDeviceList extends ListActivity
         
         Log.d(Collect.LOGTAG, t + "selected device " + device.getId() + " from list");
         
-        Intent i = new Intent(this, AccountDeviceActivity.class);
-        i.putExtra(AccountDeviceActivity.KEY_DEVICEID, device.getId());
-        startActivity(i);
+        // Only account owners should proceed to the next screen
+        if (Collect.getInstance().getInformOnline().isAccountOwner()) {
+            Intent i = new Intent(this, AccountDeviceActivity.class);
+            i.putExtra(AccountDeviceActivity.KEY_DEVICEID, device.getId());
+            startActivity(i);
+        } else {
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_contact_account_owner), Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -258,15 +264,17 @@ public class AccountDeviceList extends ListActivity
                     AccountDevice device = new AccountDevice(
                             jsonDevice.getString("id"),
                             jsonDevice.getString("alias"),
-                            jsonDevice.getString("email"));
+                            jsonDevice.getString("email"),
+                            jsonDevice.getString("status"));
 
                     // Optional information that will only be present if the user is also an account owner
                     device.setLastCheckin(jsonDevice.optString("lastCheckin"));
                     device.setPin(jsonDevice.optString("pin"));
-                    device.setStatus(jsonDevice.optString("status"));
                     device.setTransferStatus(jsonDevice.optString("transferStatus"));
-
-                    groups.add(device);
+                    
+                    // Show a device so long as it hasn't been marked as removed
+                    if (!device.getStatus().equals("removed"))
+                        groups.add(device);
                 }
             } catch (JSONException e) {
                 // Parse error (malformed result)

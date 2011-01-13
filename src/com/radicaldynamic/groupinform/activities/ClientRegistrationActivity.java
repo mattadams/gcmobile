@@ -446,9 +446,10 @@ public class ClientRegistrationActivity extends Activity
      * Set information about the associated account/device registration to the installation preferences
      */
     private void setRegistrationInformation(JSONObject container) throws JSONException
-    {
-        Collect.getInstance().getInformOnline().setAccountNumber(container.getString("accountNumber"));
+    {        
         Collect.getInstance().getInformOnline().setAccountKey(container.getString("accountKey"));
+        Collect.getInstance().getInformOnline().setAccountNumber(container.getString("accountNumber"));
+        Collect.getInstance().getInformOnline().setAccountOwner(container.getBoolean("accountOwner"));
         Collect.getInstance().getInformOnline().setDeviceId(container.getString("deviceId"));
         Collect.getInstance().getInformOnline().setDeviceKey(container.getString("deviceKey"));
         Collect.getInstance().getInformOnline().setDevicePin(container.getString("devicePin"));

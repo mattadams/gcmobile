@@ -157,8 +157,8 @@
 	<string name="tf_abort_exit">Abort exit</string>
 	<string name="tf_account_created">Account Created</string>
 	<string name="tf_account_created_msg">You have successfully created an account and registered this device!  Information about this account and device is available from the \"About Inform\" option menu.\n\nWe have sent an email to %s confirming this new account.\n\nSelect OK to begin using Group Inform!</string>
-	<string name="tf_account_device">Account Member</string>
-	<string name="tf_account_devices">Account Members</string>
+	<string name="tf_account_device">Registered Device</string>
+	<string name="tf_account_devices">Account Devices</string>
 	<string name="tf_account_email_label">Email Address</string>
 	<string name="tf_account_email_hint">Enter the email address of the person who will be the account owner.  We will send important information to this address.</string>
 	<string name="tf_account_details">If you do not know these details you can have a reminder sent to the account owner.</string>
@@ -198,6 +198,7 @@
 	<string name="tf_connection_reestablished_status">Connection reestablished</string>
 	<string name="tf_connection_reestablished_msg">Group Inform is now online</string>
 	<string name="tf_connectivity_settings">Connectivity settings</string>
+	<string name="tf_contact_account_owner">Action reserved for your account owner!</string>
 	<string name="tf_continue">Continue</string>
 	<string name="tf_create_form">Create Form</string>
 	<string name="tf_create_form_dialog">Create Form</string>
@@ -304,7 +305,13 @@
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_remind">Remind</string>
 	<string name="tf_reminder_sent">Reminder sent to the account owner</string>
+	<string name="tf_remove">Remove</string>
+	<string name="tf_removing_please_wait">Removing, please wait...</string>
 	<string name="tf_removal_failed">Could not remove %s: group contains fields.\n\nRemove the inner fields first.</string>
+	<string name="tf_remove_device">Remove Registration</string>
+	<string name="tf_remove_device_dialog_title">Remove Registration?</string>
+	<string name="tf_remove_device_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed!  If you remove this registered device the following things will happen:\n\n1) The associated device will reset itself the next time it checks in with Group Inform. Following this the user will no longer be able to access this account.\n\n2) This alias or email address will continue to appear in association with records in various places but no further operations will be able to be performed using this device registration.\n\n3) You will be assigned as the owner of any folders currently registered to this user.</string>
+	<string name="tf_removed_device">Removed %s</string>
 	<string name="tf_removed_field">Removed field %s</string>	
 	<string name="tf_removed_item">Removed item %s</string>
 	<string name="tf_repeated_group">repeated group</string>
@@ -340,6 +347,7 @@
 	<string name="tf_transfer_unlocked">Unlocked</string>
 	<string name="tf_unable_to_proceed_without_licence_number_and_key">A licence number and key are required</string>
 	<string name="tf_unable_to_remove">Unable to Remove</string>
+	<string name="tf_unable_to_remove_self">You cannot remove yourself!</string>
 	<string name="tf_unavailable">Unavailable</string>
 	<string name="tf_unknown_contact_email">Unknown email address</string>
     <string name="tf_video_media_type">Video recording</string>

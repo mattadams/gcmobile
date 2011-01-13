@@ -202,13 +202,13 @@ public class InformOnlineService extends Service {
                     AccountDevice device = new AccountDevice(
                             jsonDevice.getString("id"),
                             jsonDevice.getString("alias"),
-                            jsonDevice.getString("email"));
+                            jsonDevice.getString("email"),
+                            jsonDevice.getString("status"));
     
                     // Optional information that will only be present if the user is also an account owner
-                    device.setLastCheckin(jsonDevice.getString("lastCheckin"));
-                    device.setPin(jsonDevice.getString("pin"));
-                    device.setStatus(jsonDevice.getString("status"));
-                    device.setTransferStatus(jsonDevice.getString("transfer"));
+                    device.setLastCheckin(jsonDevice.optString("lastCheckin"));
+                    device.setPin(jsonDevice.optString("pin"));
+                    device.setTransferStatus(jsonDevice.optString("transfer"));
     
                     Collect.getInstance().getAccountDevices().put(device.getId(), device);
                 }
