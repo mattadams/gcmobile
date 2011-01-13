@@ -7,8 +7,8 @@
     android:padding="10dp">
     
     <TextView
-        android:id="@android:id/empty" 
-        android:text="@string/tf_about_inform_introduction"
+        android:id="@+id/aboutInformHeader" 
+        android:text=""
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:layout_marginBottom="15dp" />

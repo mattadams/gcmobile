@@ -16,7 +16,7 @@
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
-        android:text="Register this Device"
+        android:text="@string/tf_register_this_device"
         android:textSize="24dp" />
         
     <TextView 

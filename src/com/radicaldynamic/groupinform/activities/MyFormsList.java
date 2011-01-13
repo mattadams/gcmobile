@@ -45,7 +45,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.adapters.LocalFormListAdapter;
+import com.radicaldynamic.groupinform.adapters.MyFormsListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.repository.FormRepository;
@@ -67,14 +67,11 @@ public class MyFormsList extends ListActivity
     {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.main_browser);
+        setContentView(R.layout.generic_list);
         
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.main_menu));
 
         // TODO: select "my forms" group/database
-
-        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-        s1.setVisibility(View.GONE);
     }
 
     @Override
@@ -179,9 +176,9 @@ public class MyFormsList extends ListActivity
                 
                 openOptionsMenu();
             } else {
-                LocalFormListAdapter adapter;
+                MyFormsListAdapter adapter;
                 
-                adapter = new LocalFormListAdapter(
+                adapter = new MyFormsListAdapter(
                         getApplicationContext(),
                         R.layout.main_browser_list_item, 
                         documents,

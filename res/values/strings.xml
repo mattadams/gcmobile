@@ -152,9 +152,13 @@
 	<string name="url_error">Sorry, invalid URL!</string>
 	<string name="username">Username</string>
 	<string name="view_hierarchy">Go To Prompt</string>
-	<string name="tf_about_inform_introduction">This screen displays information about your Group Inform installation.  Certain details are only available to the account owner.</string>
+	<string name="tf_about_inform_account_header">This screen displays information about your Group Inform installation.  Certain details are only available to the account owner.</string>
+	<string name="tf_about_inform_device_header">Information about the device you are currently using.</string>
+	<string name="tf_abort_exit">Abort exit</string>
 	<string name="tf_account_created">Account Created</string>
 	<string name="tf_account_created_msg">You have successfully created an account and registered this device!  Information about this account and device is available from the \"About Inform\" option menu.\n\nWe have sent an email to %s confirming this new account.\n\nSelect OK to begin using Group Inform!</string>
+	<string name="tf_account_device">Account Member</string>
+	<string name="tf_account_devices">Account Members</string>
 	<string name="tf_account_email_label">Email Address</string>
 	<string name="tf_account_email_hint">Enter the email address of the person who will be the account owner.  We will send important information to this address.</string>
 	<string name="tf_account_details">If you do not know these details you can have a reminder sent to the account owner.</string>
@@ -166,6 +170,7 @@
 	<string name="tf_add_form_hint">Use &quot;Manage Forms&quot; to add a form</string>
 	<string name="tf_add_new">Add New</string>
 	<string name="tf_advanced">Advanced</string>
+	<string name="tf_alias_not_assigned">Alias not assigned</string>
 	<string name="tf_are_you_transferring_devices">Changing devices?</string>
 	<string name="tf_are_you_transferring_devices_msg">Answering \"yes\" to this step will allow you to transfer a device registration from another device to this one.\n\nYou may also answer \"yes\" to activate an unused registration, possibly one that was deactivated by resetting Inform on this device or another one.\n\nIf you answer \"no\" then Inform will register this device as a new seat with the account that you have specified.\n\nAre you changing devices or activating an unused registration?</string>
 	<string name="tf_audio_media_type">Audio recording</string>
@@ -203,7 +208,19 @@
 	<string name="tf_default_couchdb_port">5984</string>
 	<string name="tf_default_nodejs_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_nodejs_port">5100</string>
+	<string name="tf_device_admin_alias_label">Alias</string>
+	<string name="tf_device_admin_alias_hint">If set this alias will be displayed in various places instead of using the email address to identify this user.  Examples: Joe Smith, North Warehouse or Survey Team.</string>
+	<string name="tf_device_admin_checkin_label">Last Checkin</string>
+	<string name="tf_device_admin_checkin_hint">This is the last time that this device checked in to your account.</string>
+	<string name="tf_device_admin_email_label">Email</string>
+	<string name="tf_device_admin_email_hint">This email address should usually be set to whatever address the user of this device regularly receives email at.  This email address must be unique to your account.</string>
+	<string name="tf_device_admin_pin_label">Device PIN</string>
+	<string name="tf_device_admin_pin_hint">If the device transfer status is \"unlocked\" this PIN may be used to transfer this registration to a new device.  This is useful if you are upgrading or replacing a device that is currently in use.</string>
+	<string name="tf_device_admin_transfer_status_locked">Transfer Status: Locked</string>
+	<string name="tf_device_admin_transfer_status_unlocked">Transfer Status: Unlocked</string>
+	<string name="tf_device_admin_transfer_status_hint">When the device transfer status is \"unlocked\" the PIN may be used to transfer this registration to a new device.</string>	
 	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device.  This may be you or someone else.  This email address must be unique to this Group Inform account.</string>
+	<string name="tf_device_info">Device Info</string>
 	<string name="tf_device_locked">The specified device is currently LOCKED.  Unlock that device and try again.</string>
 	<string name="tf_device_pin_label">Device PIN</string>
 	<string name="tf_device_pin_hint">If you are changing devices enter the PIN of the device that you are switching from.  This will move the private \"My Forms\" group to this device and unregister the old one.\n\nIf you are activating an unused registration enter the PIN to have the registration activated and assigned to this device.</string>
@@ -226,6 +243,7 @@
 	<string name="tf_element_select">Select from list</string>
 	<string name="tf_element_text">Text field</string>
 	<string name="tf_email_address_required">An email address is required</string>
+	<string name="tf_email_not_available">Email address not available</string>
 	<string name="tf_exit_inform">Exit Inform</string>
 	<!--  fbel: Form Builder Element (aka "field") Label -->
 	<string name="tf_fbel_default">Default value</string>
@@ -279,9 +297,10 @@
 	<string name="tf_odk_library">ODK Library</string>
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
+	<string name="tf_register_this_device">Register this Device</string>
 	<string name="tf_registration_error_email_in_use">This email address is already in use</string>
 	<string name="tf_registration">Register Device</string>
-	<string name="tf_registration_msg">Welcome to Group Inform: mobile data collection made easy!  This installation must be registered before it can be used.\n\nIf you are using Inform for team-based collaborative data collection then all devices must be registered to the same account.  Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you during this registration process.\n\nCollaborative data collection with Group Inform is made possible by our Simple Sharing services. First-time installations come with a free 30 day Simple Sharing subscription. Standalone use (non-sharing) is free as per our website.\n\nPlease see www.groupcomplete.com for more information.</string>
+	<string name="tf_registration_msg">Welcome to Group Inform: mobile data collection made easy! This installation must be registered before it can be used.\n\nIf you are using Inform for team-based collaborative data collection then all devices must be registered to the same account.  Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you during this registration process.\n\nCollaborative data collection with Group Inform is made possible by our Simple Sharing services. New accounts receive a Free Simple Sharing subscription as per our website.\n\nPlease visit http://groupcomplete.com for more information on Group Complete and Simple Sharing plans &amp; pricing.</string>
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_remind">Remind</string>
 	<string name="tf_reminder_sent">Reminder sent to the account owner</string>
@@ -302,6 +321,7 @@
 	<string name="tf_reset_warning_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all Inform data stored on this device and cause this device to forget its device registration.  This will not remove Group Inform from your handheld.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) You are giving this device to another person and do not want them to have access to Group Inform.\n\nIf you need to access your data after resetting you must reactivate this device registration on this device or another one by using your existing licence number, key and device PIN.\n\nMake sure to record your licence number, key and device PIN.  They will not be available through Inform after resetting.</string>
 	<string name="tf_reset_warning">Reset Group Inform?</string>
 	<string name="tf_retry">Retry</string>
+	<string name="tf_save_and_exit">Save and exit</string>
 	<string name="tf_save_field_and_exit">Save field and exit</string>
 	<string name="tf_saving_please_wait">Saving, please wait...</string>
 	<string name="tf_select_multiple_type">Select multiple</string>
@@ -313,6 +333,7 @@
 	<string name="tf_synchronization_settings">Synchronization settings</string>
 	<string name="tf_system_error_dialog">An Error Occurred</string>
 	<string name="tf_system_error_dialog_msg">We encountered a system error.  A team of trained monkeys has been dispatched to fix the problem.  Please try again later!</string>
+	<string name="tf_this_device">This Device</string>
 	<string name="tf_transfer_delayed_reason">Please wait at least 5 minutes between transfers and resets &amp; activations</string>
 	<string name="tf_transfer_delayed_wait">PIN will be accepted in%1$s%2$s %3$s</string>	
 	<string name="tf_transfer_locked">Locked</string>

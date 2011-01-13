@@ -15,13 +15,13 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.documents.InstanceDocument;
 
-public class LocalFormListAdapter extends ArrayAdapter<FormDocument>
+public class MyFormsListAdapter extends ArrayAdapter<FormDocument>
 {       
     private Context mContext;
     private ArrayList<FormDocument> mItems;
     private HashMap<String, HashMap<String, String>> mInstanceTalliesByStatus;
     
-    public LocalFormListAdapter(Context context, int textViewResourceId, ArrayList<FormDocument> items, HashMap<String, HashMap<String, String>> instanceTalliesByStatus, Spinner spinner) {
+    public MyFormsListAdapter(Context context, int textViewResourceId, ArrayList<FormDocument> items, HashMap<String, HashMap<String, String>> instanceTalliesByStatus, Spinner spinner) {
         super(context, textViewResourceId, items);
         mContext = context;
         mItems = items;           

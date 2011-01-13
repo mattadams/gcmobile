@@ -43,9 +43,9 @@ public class ClientRegistrationActivity extends Activity
     private static final int DIALOG_SYSTEM_ERROR = 10;
     
     // Constants used to match server responses
-    private static final String REASON_INVALID_EMAIL = "invalid email address";             // New account failure
-    private static final String REASON_EMAIL_ASSIGNED = "email address assigned";           // New account failure
-    private static final String REASON_UNKNOWN = "unknown reason";                          // Unknown failure (default only)
+    public static final String REASON_INVALID_EMAIL = "invalid email address";             // New account failure
+    public static final String REASON_EMAIL_ASSIGNED = "email address assigned";           // New account failure
+    public static final String REASON_UNKNOWN = "unknown reason";                          // Unknown failure (default only)
     private static final String REASON_INVALID_PIN = "invalid pin";                         // Transfer failure
     private static final String REASON_DEVICE_LOCKED = "device locked";                     // Transfer failure
     private static final String REASON_TRANSFER_DELAYED = "transfer delayed";               // Transfer failure
@@ -452,7 +452,6 @@ public class ClientRegistrationActivity extends Activity
         Collect.getInstance().getInformOnline().setDeviceId(container.getString("deviceId"));
         Collect.getInstance().getInformOnline().setDeviceKey(container.getString("deviceKey"));
         Collect.getInstance().getInformOnline().setDevicePin(container.getString("devicePin"));
-        Collect.getInstance().getInformOnline().setDeviceEmail(container.getString("deviceEmail"));
     }
 
     private void transferDeviceDialog()

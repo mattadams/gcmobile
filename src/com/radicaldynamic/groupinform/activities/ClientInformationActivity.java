@@ -48,10 +48,10 @@ public class ClientInformationActivity extends Activity
     private static final int MENU_THIS_DEVICE = 1;
     private static final int MENU_RESET_INFORM = 2;    
     
-    // Strings returned by the Group Inform Server specific to this activity
-    private static final String STATE = "state";
-    private static final String LOCKED = "locked";
-    private static final String UNLOCKED = "unlocked";  
+    // Strings returned by the Group Inform Server
+    private static final String TRANSFER_STATE = "transfer";
+    public static final String LOCKED = "locked";
+    public static final String UNLOCKED = "unlocked";  
     
     // Intent constant for determining which "screen" to display
     private static final String SCREEN = "screen";
@@ -71,16 +71,19 @@ public class ClientInformationActivity extends Activity
         Intent intent = getIntent();
 
         mScreen = intent.getIntExtra(SCREEN, 0);
+        
+        TextView header = (TextView) findViewById(R.id.aboutInformHeader);
 
         switch (mScreen) {
         case SCREEN_DEFAULT:
             disableFormComponent(R.id.deviceInformation);
 
             setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_inform_info));
-
+            
             TextView accountNumber = (TextView) findViewById(R.id.accountNumber);
             TextView accountKey = (TextView) findViewById(R.id.accountKey);
 
+            header.setText(getString(R.string.tf_about_inform_account_header));
             accountNumber.setText(Collect.getInstance().getInformOnline().getAccountNumber());
             accountKey.setText(Collect.getInstance().getInformOnline().getAccountKey());
 
@@ -89,15 +92,20 @@ public class ClientInformationActivity extends Activity
         case SCREEN_DEVICE_INFO:
             disableFormComponent(R.id.accountInformation);
 
-            setTitle(getString(R.string.app_name) + " > " + "Device Info");
+            setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_device_info));
 
             new RetrieveTransferState().execute();
 
+            header.setText(getString(R.string.tf_about_inform_device_header));
             TextView devicePin = (TextView) findViewById(R.id.devicePin);
             TextView deviceEmail = (TextView) findViewById(R.id.deviceEmail);                
 
             devicePin.setText(Collect.getInstance().getInformOnline().getDevicePin());
-            deviceEmail.setText(Collect.getInstance().getInformOnline().getDeviceEmail());
+            deviceEmail.setText(
+                    Collect.getInstance().getAccountDevices().get(
+                            Collect.getInstance().getInformOnline().getDeviceId()
+                            ).getEmail()        
+            );
 
             // Set up transfer state button to lock/unlock when clicked
             final ToggleButton transferState = (ToggleButton) findViewById(R.id.deviceTransferStatus);
@@ -139,8 +147,8 @@ public class ClientInformationActivity extends Activity
         
         switch (mScreen) {
         case SCREEN_DEFAULT:
-            menu.add(0, MENU_ACCOUNT_MEMBERS, 0, "Account Members").setIcon(R.drawable.ic_menu_allfriends);
-            menu.add(0, MENU_THIS_DEVICE, 0, "This Device").setIcon(R.drawable.ic_menu_myinfo);
+            menu.add(0, MENU_ACCOUNT_MEMBERS, 0, getString(R.string.tf_account_devices)).setIcon(R.drawable.ic_menu_allfriends);
+            menu.add(0, MENU_THIS_DEVICE, 0, getString(R.string.tf_this_device)).setIcon(R.drawable.ic_menu_myinfo);
             break;
         case SCREEN_DEVICE_INFO:
             menu.add(0, MENU_RESET_INFORM, 0, getString(R.string.tf_reset_inform)).setIcon(R.drawable.ic_menu_close_clear_cancel);
@@ -156,6 +164,10 @@ public class ClientInformationActivity extends Activity
         Intent i;
         
         switch (item.getItemId()) {
+        case MENU_ACCOUNT_MEMBERS:
+            i = new Intent(this, AccountDeviceList.class);
+            startActivity(i);
+            break;
         case MENU_THIS_DEVICE:
             i = new Intent(this, ClientInformationActivity.class);
             i.putExtra(SCREEN, SCREEN_DEVICE_INFO);
@@ -184,7 +196,7 @@ public class ClientInformationActivity extends Activity
                 result = (JSONObject) new JSONTokener(jsonResult).nextValue();
                 
                 if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK)) {
-                    return result.getString(STATE);
+                    return result.getString(TRANSFER_STATE);
                 } else {
                     return null;
                 }
@@ -244,7 +256,7 @@ public class ClientInformationActivity extends Activity
                 result = (JSONObject) new JSONTokener(jsonResult).nextValue();
                 
                 if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK)) {
-                    return result.optString(STATE, null);
+                    return result.optString(TRANSFER_STATE, null);
                 } else {
                     return null;
                 }
@@ -344,7 +356,7 @@ public class ClientInformationActivity extends Activity
         .setPositiveButton(R.string.tf_reset, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {            
                 if (verifyReset()) {
-                    Collect.getInstance().getInformOnline().resetPreferences();
+                    Collect.getInstance().getInformOnline().resetDevice();
                     resetCompleteDialog();
                 } else {
                     resetIncompleteDialog();

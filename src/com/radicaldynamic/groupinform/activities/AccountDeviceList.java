@@ -14,11 +14,11 @@
 
 package com.radicaldynamic.groupinform.activities;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -28,6 +28,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -35,16 +36,16 @@ import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.adapters.FormGroupListAdapter;
+import com.radicaldynamic.groupinform.adapters.AccountDeviceListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.logic.FormGroup;
+import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
@@ -52,9 +53,9 @@ import com.radicaldynamic.groupinform.utilities.HttpUtils;
 /*
  * 
  */
-public class FormGroupList extends ListActivity
+public class AccountDeviceList extends ListActivity
 {
-    private static final String t = "FormGroupsList: ";
+    private static final String t = "AccountDeviceList: ";
 
     private static final int MENU_ADD = Menu.FIRST;
     
@@ -65,12 +66,10 @@ public class FormGroupList extends ListActivity
     {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.main_browser);        
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_form_groups));
-
-        // Not needed
-        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-        s1.setVisibility(View.GONE);
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        
+        setContentView(R.layout.generic_list);        
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_account_devices));
     }
 
     @Override
@@ -90,7 +89,7 @@ public class FormGroupList extends ListActivity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_group)).setIcon(R.drawable.ic_menu_add);
+//        menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_group)).setIcon(R.drawable.ic_menu_add);
         return true;
     }
 
@@ -111,13 +110,13 @@ public class FormGroupList extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-//        FormDocument form = (FormDocument) getListAdapter().getItem(position);
-//
-//        Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
-//
-//        Intent i = new Intent(this, FormBuilderFieldList.class);
-//        i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
-//        startActivity(i);
+        AccountDevice device = (AccountDevice) getListAdapter().getItem(position);
+        
+        Log.d(Collect.LOGTAG, t + "selected device " + device.getId() + " from list");
+        
+        Intent i = new Intent(this, AccountDeviceActivity.class);
+        i.putExtra(AccountDeviceActivity.KEY_DEVICEID, device.getId());
+        startActivity(i);
     }
 
     @Override
@@ -136,18 +135,18 @@ public class FormGroupList extends ListActivity
      */
     private class RefreshViewTask extends AsyncTask<Void, Void, Void>
     {
-        private ArrayList<FormGroup> groups = new ArrayList<FormGroup>();
+        private ArrayList<AccountDevice> devices = new ArrayList<AccountDevice>();
 
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            File groupCache = new File(FileUtils.GROUP_CACHE_FILE_PATH);
+            File deviceCache = new File(FileUtils.DEVICE_CACHE_FILE_PATH);
 
             // If cache is older than 120 seconds
-            if (groupCache.lastModified() < (Calendar.getInstance().getTimeInMillis() - 120 * 1000))                    
-                fetchGroupList();
+            if (deviceCache.lastModified() < (Calendar.getInstance().getTimeInMillis() - 120 * 1000))                    
+                fetchDeviceList();
 
-            groups = loadGroupList();
+            devices = loadDeviceList();
             
             return null;
         }
@@ -155,7 +154,7 @@ public class FormGroupList extends ListActivity
         @Override
         protected void onPreExecute()
         {
-            //setProgressBarIndeterminateVisibility(true);
+            setProgressBarIndeterminateVisibility(true);
         }
 
         @Override
@@ -164,64 +163,54 @@ public class FormGroupList extends ListActivity
             RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
             onscreenProgress.setVisibility(View.GONE);
             
-            if (groups.isEmpty()) {
+            if (devices.isEmpty()) {
                 TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                 nothingToDisplay.setVisibility(View.VISIBLE);
             } else {
-                FormGroupListAdapter adapter;
+                AccountDeviceListAdapter adapter;
                 
-                adapter = new FormGroupListAdapter(
+                adapter = new AccountDeviceListAdapter(
                         getApplicationContext(),
                         R.layout.group_list_item,
-                        groups);
+                        devices);
 
                 setListAdapter(adapter);
-            }            
+            }      
+            
+            setProgressBarIndeterminateVisibility(false);
         }
     }
     
     /*
-     * Fetch a new group list from Inform Online and store it on disk
+     * Fetch a new group list from Inform Online and store it on disk 
+     * (also store a hashed copy for later)
      */
-    private void fetchGroupList()
+    static public void fetchDeviceList()
     {
-        Log.d(Collect.LOGTAG, t + "fetching new list of groups");
-        
-        ArrayList<FormGroup> groups = new ArrayList<FormGroup>();
-        
+        Log.d(Collect.LOGTAG, t + "fetching new list of devices");
+                
         // Try to ping the service to see if it is "up"
-        String groupListUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/group/list";
-        String jsonResult = HttpUtils.getUrlData(groupListUrl);
-        JSONObject jsonGroupList;
+        String deviceListUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/device/list";
+        String jsonResult = HttpUtils.getUrlData(deviceListUrl);
+        JSONObject jsonDeviceList;
         
         try {
             Log.d(Collect.LOGTAG, t + "parsing jsonResult " + jsonResult);                
-            jsonGroupList = (JSONObject) new JSONTokener(jsonResult).nextValue();
+            jsonDeviceList = (JSONObject) new JSONTokener(jsonResult).nextValue();
             
-            String result = jsonGroupList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+            String result = jsonDeviceList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
             
             if (result.equals(InformOnlineState.OK)) {
-                JSONArray jsonGroups = jsonGroupList.getJSONArray("groups");
-                
-                for (int i = 0; i < jsonGroups.length(); i++) {
-                    JSONObject jsonGroup = jsonGroups.getJSONObject(i);
-                    
-                    groups.add(new FormGroup(
-                            jsonGroup.getString("id"),
-                            jsonGroup.getString("owner"),
-                            jsonGroup.getString("name"),
-                            jsonGroup.getString("description"),
-                            jsonGroup.getString("visibility")));
-                }
+                // Write out list of jsonDevices for later retrieval by loadDevicesLisst() and InformOnlineService.loadDevicesHash()                
+                JSONArray jsonDevices = jsonDeviceList.getJSONArray("devices");
                 
                 try {
-                    FileOutputStream fos = new FileOutputStream(new File(FileUtils.GROUP_CACHE_FILE_PATH));
-                    ObjectOutputStream out = new ObjectOutputStream(fos);
-                    out.writeObject(groups);   
-                    out.close();
+                    // Write out a device list cache file
+                    FileOutputStream fos = new FileOutputStream(new File(FileUtils.DEVICE_CACHE_FILE_PATH));
+                    fos.write(jsonDevices.toString().getBytes());
                     fos.close();
                 } catch (Exception e) {                    
-                    Log.e(Collect.LOGTAG, t + "unable to write form group cache: " + e.toString());
+                    Log.e(Collect.LOGTAG, t + "unable to write device cache: " + e.toString());
                     e.printStackTrace();
                 }
             } else {
@@ -238,24 +227,57 @@ public class FormGroupList extends ListActivity
         }
     }
     
-    @SuppressWarnings("unchecked")
-    private ArrayList<FormGroup> loadGroupList()
+    private ArrayList<AccountDevice> loadDeviceList()
     {
-        Log.d(Collect.LOGTAG , t + "loading group cache");
+        Log.d(Collect.LOGTAG , t + "loading device cache");
         
-        ArrayList<FormGroup> groups = new ArrayList<FormGroup>();
+        ArrayList<AccountDevice> groups = new ArrayList<AccountDevice>();
         
         try {
-            FileInputStream fis = new FileInputStream(new File(FileUtils.GROUP_CACHE_FILE_PATH));
-            ObjectInputStream in = new ObjectInputStream(fis);            
-            groups = (ArrayList<FormGroup>) in.readObject();
-            in.close();
+            FileInputStream fis = new FileInputStream(new File(FileUtils.DEVICE_CACHE_FILE_PATH));        
+            InputStreamReader reader = new InputStreamReader(fis);
+            BufferedReader buffer = new BufferedReader(reader, 8192);
+            StringBuilder sb = new StringBuilder();
+            
+            String cur;
+
+            while ((cur = buffer.readLine()) != null) {
+                sb.append(cur + "\n");
+            }
+            
+            buffer.close();
+            reader.close();
             fis.close();
+            
+            try {
+                JSONArray jsonDevices = (JSONArray) new JSONTokener(sb.toString()).nextValue();
+                
+                for (int i = 0; i < jsonDevices.length(); i++) {
+                    JSONObject jsonDevice = jsonDevices.getJSONObject(i);
+
+                    AccountDevice device = new AccountDevice(
+                            jsonDevice.getString("id"),
+                            jsonDevice.getString("alias"),
+                            jsonDevice.getString("email"));
+
+                    // Optional information that will only be present if the user is also an account owner
+                    device.setLastCheckin(jsonDevice.optString("lastCheckin"));
+                    device.setPin(jsonDevice.optString("pin"));
+                    device.setStatus(jsonDevice.optString("status"));
+                    device.setTransferStatus(jsonDevice.optString("transferStatus"));
+
+                    groups.add(device);
+                }
+            } catch (JSONException e) {
+                // Parse error (malformed result)
+                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + sb.toString());
+                e.printStackTrace();
+            }
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "unable to read form group cache: " + e.toString());
+            Log.e(Collect.LOGTAG, t + "unable to read device cache: " + e.toString());
             e.printStackTrace();
         }
-     
+      
         return groups;
     }
 

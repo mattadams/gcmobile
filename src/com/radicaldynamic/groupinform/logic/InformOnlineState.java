@@ -19,6 +19,7 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 /*
@@ -55,7 +56,6 @@ public class InformOnlineState
     private String deviceId;
     private String deviceKey;
     private String devicePin;
-    private String deviceEmail;
     
     private String deviceFingerprint;
     
@@ -124,11 +124,8 @@ public class InformOnlineState
         Log.i(Collect.LOGTAG, t + "device registration state is " + registered);
 
         // Clear the session for subsequent requests and reset stored state
-        if (registered == false) {                 
-            resetPreferences();
-            ready = false;
-            session = null;            
-        }
+        if (registered == false)          
+            resetDevice();
         
         return registered;
     }
@@ -274,20 +271,6 @@ public class InformOnlineState
     {
         return devicePin;
     }
-    
-    public void setDeviceEmail(String deviceEmail)
-    {
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(DEVICE_EMAIL, deviceEmail);
-        editor.commit();              
-        
-        this.deviceEmail = deviceEmail;
-    }
-    
-    public String getDeviceEmail()
-    {
-        return deviceEmail;
-    }
 
     public void setReady(boolean ready)
     {
@@ -352,7 +335,7 @@ public class InformOnlineState
         }
     }
 
-    public void resetPreferences()
+    public void resetDevice()
     {
         setAccountKey(null);
         setAccountNumber(null);
@@ -360,9 +343,13 @@ public class InformOnlineState
         setDeviceId(null);
         setDeviceKey(null);
         setDevicePin(null);
-        setDeviceEmail(null);
         
-        ready = false;
+        ready = false;        
+        session = null;  
+        
+        // Remove cached files
+        FileUtils.deleteFile(FileUtils.DEVICE_CACHE_FILE_PATH);
+        FileUtils.deleteFile(FileUtils.GROUP_CACHE_FILE_PATH);
     }
 
     private void loadPreferences()
@@ -373,6 +360,5 @@ public class InformOnlineState
         setDeviceId(prefs.getString(DEVICE_ID, null));
         setDeviceKey(prefs.getString(DEVICE_KEY, null));
         setDevicePin(prefs.getString(DEVICE_PIN, null));
-        setDeviceEmail(prefs.getString(DEVICE_EMAIL, null));
     }
 }

@@ -14,14 +14,15 @@
 
 package com.radicaldynamic.groupinform.services;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-
-import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
-import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 import android.app.Service;
 import android.content.Intent;
@@ -29,6 +30,14 @@ import android.os.Binder;
 import android.os.ConditionVariable;
 import android.os.IBinder;
 import android.util.Log;
+
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.AccountDeviceList;
+import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.logic.AccountDevice;
+import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 /**
  * 
@@ -57,8 +66,8 @@ public class InformOnlineService extends Service {
             for (int i = 1; i > 0; ++i) {
                 if (mConnecting == false)
                     connect();
-                // Retry connection to Inform Online service every 5 minutes
-                if (mCondition.block(300 * 1000))
+                // Retry connection to Inform Online service every 10 minutes
+                if (mCondition.block(600 * 1000))
                     break;
             }
         }
@@ -116,6 +125,13 @@ public class InformOnlineService extends Service {
                 // Online and registered (checked in)
                 Log.i(Collect.LOGTAG, t + "ping successful (we are connected and checked in)");
                 mConnected = true;
+                
+                // Update our list of account devices (aka members)
+                AccountDeviceList.fetchDeviceList();
+                loadDeviceHash();
+                
+                // Update our list of account groups (aka form groups)
+                // TODO
             } else if (result.equals(InformOnlineState.FAILURE)) {
                 Log.w(Collect.LOGTAG, t + "ping failed (will attempt checkin)");
                 
@@ -150,6 +166,60 @@ public class InformOnlineService extends Service {
             
             // Unblock
             mConnecting = false;
+        }
+    }
+
+    /*
+     * Parse the cached device hash and load it into memory for lookup by other pieces of this application.
+     * This allows us to have some fall back if we cannot connect to Inform Online immediately.
+     */
+    private void loadDeviceHash()
+    {
+        Log.d(Collect.LOGTAG , t + "loading device cache");
+              
+        try {
+            FileInputStream fis = new FileInputStream(new File(FileUtils.DEVICE_CACHE_FILE_PATH));        
+            InputStreamReader reader = new InputStreamReader(fis);
+            BufferedReader buffer = new BufferedReader(reader, 8192);
+            StringBuilder sb = new StringBuilder();
+            
+            String cur;
+    
+            while ((cur = buffer.readLine()) != null) {
+                sb.append(cur + "\n");
+            }
+            
+            buffer.close();
+            reader.close();
+            fis.close();
+            
+            try {
+                JSONArray jsonDevices = (JSONArray) new JSONTokener(sb.toString()).nextValue();
+                
+                for (int i = 0; i < jsonDevices.length(); i++) {
+                    JSONObject jsonDevice = jsonDevices.getJSONObject(i);
+    
+                    AccountDevice device = new AccountDevice(
+                            jsonDevice.getString("id"),
+                            jsonDevice.getString("alias"),
+                            jsonDevice.getString("email"));
+    
+                    // Optional information that will only be present if the user is also an account owner
+                    device.setLastCheckin(jsonDevice.getString("lastCheckin"));
+                    device.setPin(jsonDevice.getString("pin"));
+                    device.setStatus(jsonDevice.getString("status"));
+                    device.setTransferStatus(jsonDevice.getString("transfer"));
+    
+                    Collect.getInstance().getAccountDevices().put(device.getId(), device);
+                }
+            } catch (JSONException e) {
+                // Parse error (malformed result)
+                Log.e(Collect.LOGTAG, t + "failed to parse jsonResult " + sb.toString());
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, t + "unable to read device cache: " + e.toString());
+            e.printStackTrace();
         }
     }
 }

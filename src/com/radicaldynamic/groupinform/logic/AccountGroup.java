@@ -6,7 +6,7 @@ import java.io.Serializable;
 /*
  * This class represents a form group result as returned from Inform Online
  */
-public class FormGroup implements Serializable
+public class AccountGroup implements Serializable
 {
     /**
      * 
@@ -19,7 +19,7 @@ public class FormGroup implements Serializable
     private String description;
     private String visibility;
 
-    public FormGroup(String id, String ownerId, String name, String description, String visibility)
+    public AccountGroup(String id, String ownerId, String name, String description, String visibility)
     {
         this.setId(id);
         this.setOwnerId(ownerId);

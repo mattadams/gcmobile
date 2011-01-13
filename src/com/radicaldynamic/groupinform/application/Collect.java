@@ -1,6 +1,9 @@
 package com.radicaldynamic.groupinform.application;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.javarosa.core.reference.ReferenceManager;
 import org.javarosa.core.reference.RootTranslator;
@@ -20,6 +23,7 @@ import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.documents.FormDocument;
+import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.CouchDbService;
@@ -43,6 +47,10 @@ public class Collect extends Application {
     
     // Current registration state of this device
     private InformOnlineState informOnline = new InformOnlineState();
+    
+    // Lookup map for account devices, indexed by device ID
+    private Map<String, AccountDevice> accountDevicesMap = new HashMap<String, AccountDevice>();
+    private Map<String, AccountDevice> accountDevicesSyncMap = Collections.synchronizedMap(accountDevicesMap);
     
     // Instance browse list, used for switching between instances of a given form
     private ArrayList<String> instanceBrowseList = new ArrayList<String>();
@@ -181,8 +189,8 @@ public class Collect extends Application {
 		t.show();
 	}
 	
-    public void setInstanceBrowseList(ArrayList<String> instanceBrowseList) { this.instanceBrowseList = instanceBrowseList; }
-    public ArrayList<String> getInstanceBrowseList() { return instanceBrowseList; }
+    public void setAccountDevices(Map<String, AccountDevice> accountDevices) { this.accountDevicesSyncMap = accountDevices; }
+    public Map<String, AccountDevice> getAccountDevices() { return accountDevicesSyncMap; }
 
     public void setFbTranslationState(ArrayList<Translation> fbTranslationState) { this.fbTranslationState = fbTranslationState; }
     public ArrayList<Translation> getFbTranslationState() { return fbTranslationState; }
@@ -208,13 +216,9 @@ public class Collect extends Application {
     public void setFbItemList(ArrayList<Field> fbItemList) { this.fbItemList = fbItemList; }
     public ArrayList<Field> getFbItemList() { return fbItemList; }
 
-    public void setInformOnline(InformOnlineState informOnline)
-    {
-        this.informOnline = informOnline;
-    }
+    public void setInformOnline(InformOnlineState informOnline) { this.informOnline = informOnline; }
+    public InformOnlineState getInformOnline() { return informOnline; }
 
-    public InformOnlineState getInformOnline()
-    {
-        return informOnline;
-    }
+    public void setInstanceBrowseList(ArrayList<String> instanceBrowseList) { this.instanceBrowseList = instanceBrowseList; }
+    public ArrayList<String> getInstanceBrowseList() { return instanceBrowseList; }
 }
