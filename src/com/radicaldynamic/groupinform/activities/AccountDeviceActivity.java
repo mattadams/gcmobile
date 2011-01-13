@@ -40,9 +40,10 @@ public class AccountDeviceActivity extends Activity
 {
     private static final String t = "AccountDeviceActivity: ";
     
-    public static final String KEY_DEVICEID = "deviceid";
+    public static final String KEY_DEVICEID = "deviceid";    
     
-    private static final int MENU_REMOVE_DEVICE = 0;
+    private static final int MENU_RESET_DEVICE = 0;
+    private static final int MENU_REMOVE_DEVICE = 1;
     
     public static final int SAVING_DIALOG = 0;
     public static final int REMOVING_DIALOG = 1;
@@ -157,12 +158,8 @@ public class AccountDeviceActivity extends Activity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_REMOVE_DEVICE, 0, getString(R.string.tf_remove_device)).setIcon(R.drawable.ic_menu_delete);
-        
-        // TODO: removal of self is not handled yet so don't allow it
-        if (Collect.getInstance().getInformOnline().getDeviceId() == mDeviceId)
-            menu.getItem(MENU_REMOVE_DEVICE).setEnabled(false);
-        
+        menu.add(0, MENU_RESET_DEVICE, 0, getString(R.string.tf_reset_device)).setIcon(R.drawable.ic_menu_close_clear_cancel);
+        menu.add(0, MENU_REMOVE_DEVICE, 0, getString(R.string.tf_remove_device)).setIcon(R.drawable.ic_menu_delete);        
         return true;
     }    
     
@@ -183,7 +180,10 @@ public class AccountDeviceActivity extends Activity
     {
         Intent i;
         
-        switch (item.getItemId()) {
+        switch (item.getItemId()) {        
+        case MENU_RESET_DEVICE:
+            return true;
+        
         case MENU_REMOVE_DEVICE:
             showDialog(CONFIRM_REMOVAL_DIALOG);
             return true;

@@ -36,13 +36,13 @@ public class AccountGroupListAdapter extends ArrayAdapter<AccountGroup>
         AccountGroup f = mItems.get(position);
 
         if (f != null) {
-            TextView tt = (TextView) v.findViewById(R.id.toptext);
-            TextView bt = (TextView) v.findViewById(R.id.bottomtext);
+            TextView tt = (TextView) v.findViewById(R.id.firstLine);
+            TextView bt = (TextView) v.findViewById(R.id.secondLine);
 
             if (tt != null) {
                 tt.setText("[" + f.getVisibility().toUpperCase() + "] " + f.getName());
             }
-
+            
             if (bt != null) {
                 bt.setText(f.getDescription());
             }

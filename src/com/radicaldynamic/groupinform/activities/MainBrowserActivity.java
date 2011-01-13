@@ -84,6 +84,7 @@ public class MainBrowserActivity extends ListActivity
     private static final int ABOUT_INFORM = 1;
 
     private static boolean mShowSplash = true;
+    private Toast mSplashToast;
     
     // Used to determine whether the CouchDB service has been bound; see onDestroy()
     private boolean mDatabaseIsBound = false;
@@ -107,6 +108,7 @@ public class MainBrowserActivity extends ListActivity
         public void onServiceDisconnected(ComponentName className)
         {
             Log.d(Collect.LOGTAG, t + "CouchDbService unbound");
+            mDatabaseIsBound = false;
         }
     };
     
@@ -120,6 +122,7 @@ public class MainBrowserActivity extends ListActivity
         public void onServiceDisconnected(ComponentName className)
         {
             Log.d(Collect.LOGTAG, t + "InformOnline unbound");
+            mOnlineIsBound = false;
         }
     };
 
@@ -138,13 +141,13 @@ public class MainBrowserActivity extends ListActivity
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
         setContentView(R.layout.main_browser);
 
-        // We don't use the on-screen progress indicator here
-        RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
-        onscreenProgress.setVisibility(View.GONE);        
-
         if (Collect.getInstance().getInformOnline().isReady()) {
             // Load our custom window title
-            getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.group_selector_title);
+            getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.group_selector_title);            
+
+            // We don't use the on-screen progress indicator here
+            RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
+            onscreenProgress.setVisibility(View.GONE);        
             
             // Start the database connection
             startService(new Intent(this, CouchDbService.class));            
@@ -256,6 +259,13 @@ public class MainBrowserActivity extends ListActivity
         switch (requestCode) {
         // "Exit" if the user resets Inform
         case ABOUT_INFORM:
+            // Close down our services         
+            if (mDatabaseIsBound)
+                getApplicationContext().stopService(new Intent(this, CouchDbService.class));
+            
+            if (mOnlineIsBound)
+                getApplicationContext().stopService(new Intent(this, InformOnlineService.class));
+            
             finish();
             break; 
         }        
@@ -721,12 +731,12 @@ public class MainBrowserActivity extends ListActivity
     
         // And wrap the image view in a frame layout so that the full-screen layout parameters are honoured
         FrameLayout layout = new FrameLayout(getApplicationContext());
-        layout.addView(view);
-    
+        layout.addView(view);        
+
         // Create the toast and set the view to be that of the FrameLayout
-        Toast t = Toast.makeText(getApplicationContext(), "splash screen", Toast.LENGTH_LONG);
-        t.setView(layout);
-        t.setGravity(Gravity.CENTER, 0, 0);
-        t.show();
+        mSplashToast = Toast.makeText(getApplicationContext(), "splash screen", Toast.LENGTH_LONG);
+        mSplashToast.setView(layout);
+        mSplashToast.setGravity(Gravity.CENTER, 0, 0);
+        mSplashToast.show();
     }
 }

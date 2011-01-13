@@ -156,7 +156,7 @@
 	<string name="tf_about_inform_device_header">Information about the device you are currently using.</string>
 	<string name="tf_abort_exit">Abort exit</string>
 	<string name="tf_account_created">Account Created</string>
-	<string name="tf_account_created_msg">You have successfully created an account and registered this device!  Information about this account and device is available from the \"About Inform\" option menu.\n\nWe have sent an email to %s confirming this new account.\n\nSelect OK to begin using Group Inform!</string>
+	<string name="tf_account_created_msg">You have successfully created an account and registered this device!  More information is available from the \"About Inform\" option menu.\n\nWe have sent an email to %s confirming this new account.\n\nSelect OK to begin using Group Inform!</string>
 	<string name="tf_account_device">Registered Device</string>
 	<string name="tf_account_devices">Account Devices</string>
 	<string name="tf_account_email_label">Email Address</string>
@@ -319,7 +319,8 @@
 	<string name="tf_request_account_reminder">Request Reminder</string>
 	<string name="tf_request_account_reminder_hint">Hint: this is probably the email address of the person in your team that told you to use Group Inform.</string>
 	<string name="tf_request_account_reminder_msg">Enter the email address of the account owner.  A reminder email containing the licence info will be sent to this person.</string>
-	<string name="tf_reset">Reset</string>	
+	<string name="tf_reset">Reset</string>
+	<string name="tf_reset_device">Reset Device</string>	
 	<string name="tf_reset_inform">Reset Inform</string>	
 	<string name="tf_reset_complete">Reset Complete</string>
     <string name="tf_reset_complete_msg">Group Inform has been successfully reset.  All Inform data stored on this device have been removed.</string>	
