@@ -65,7 +65,7 @@ public class AccountGroupList extends ListActivity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.generic_list);        
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_form_groups));
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_form_folders));
     }
 
     @Override
@@ -85,7 +85,7 @@ public class AccountGroupList extends ListActivity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_group)).setIcon(R.drawable.ic_menu_add);
+        menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_folder)).setIcon(R.drawable.ic_menu_add);
         return true;
     }
 

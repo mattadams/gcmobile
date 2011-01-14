@@ -340,7 +340,7 @@ public class MainBrowserActivity extends ListActivity
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch (item.getItemId()) {
-        case R.id.tf_groups:
+        case R.id.tf_folders:
             startActivity(new Intent(this, AccountGroupList.class));
             break;
         case R.id.tf_refresh:

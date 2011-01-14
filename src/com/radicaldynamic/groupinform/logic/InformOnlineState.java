@@ -45,7 +45,8 @@ public class InformOnlineState
     public static final String DEVICE_ID   = "informonline_deviceid";       // Invisible 
     public static final String DEVICE_KEY  = "informonline_devicekey";      // Invisible 
     public static final String DEVICE_PIN  = "informonline_devicepin";      // Accessible
-    public static final String DEVICE_EMAIL = "informonline_deviceemail";   // Accessible
+    
+    public static final String DEFAULT_DATABASE = "informonline_defaultdb"; // Invisible
     
     // Constants for session information stored in preferences
     public static final String SESSION     = "informonline_session";        // Invisible
@@ -60,6 +61,7 @@ public class InformOnlineState
     private String devicePin;
     
     private String deviceFingerprint;
+    private String defaultDatabase;
     
     private CookieStore session = null;
     private SharedPreferences prefs;
@@ -105,6 +107,11 @@ public class InformOnlineState
             
             if (result.equals(OK)) {
                 Log.i(Collect.LOGTAG, t + "successful checkin");
+                
+                if (checkin.has("defaultdb")) {
+                    Log.i(Collect.LOGTAG, t + "assigning default database " + checkin.getString("defaultDb"));
+                    setDefaultDatabase(checkin.getString("defaultDb"));
+                }
             } else if (result.equals(FAILURE)) {
                 Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
                 registered = false;
@@ -316,6 +323,20 @@ public class InformOnlineState
         return session;
     }
 
+    public void setDefaultDatabase(String defaultDatabase)
+    {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(DEFAULT_DATABASE, defaultDatabase);
+        editor.commit(); 
+        
+        this.defaultDatabase = defaultDatabase;
+    }
+
+    public String getDefaultDatabase()
+    {
+        return defaultDatabase;
+    }
+
     /*
      * See http://stackoverflow.com/questions/2785485/is-there-a-unique-android-device-id
      */
@@ -355,6 +376,8 @@ public class InformOnlineState
         setAccountNumber(null);
         setAccountOwner(false);
         
+        setDefaultDatabase(null);
+        
         setDeviceId(null);
         setDeviceKey(null);
         setDevicePin(null);
@@ -372,6 +395,8 @@ public class InformOnlineState
         setAccountKey(prefs.getString(ACCOUNT_KEY, null));
         setAccountNumber(prefs.getString(ACCOUNT_NUM, null));
         setAccountOwner(prefs.getBoolean(ACCOUNT_OWNER, false));
+        
+        setDefaultDatabase(prefs.getString(DEFAULT_DATABASE, null));
         
         setDeviceId(prefs.getString(DEVICE_ID, null));
         setDeviceKey(prefs.getString(DEVICE_KEY, null));
