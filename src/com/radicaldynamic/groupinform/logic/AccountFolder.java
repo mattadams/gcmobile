@@ -4,9 +4,9 @@ import java.io.Serializable;
 
 
 /*
- * This class represents a form group result as returned from Inform Online
+ * This class represents a form folder result as returned from Inform Online
  */
-public class AccountGroup implements Serializable
+public class AccountFolder implements Serializable
 {
     /**
      * 
@@ -19,7 +19,7 @@ public class AccountGroup implements Serializable
     private String description;
     private String visibility;
 
-    public AccountGroup(String id, String ownerId, String name, String description, String visibility)
+    public AccountFolder(String id, String ownerId, String name, String description, String visibility)
     {
         this.setId(id);
         this.setOwnerId(ownerId);

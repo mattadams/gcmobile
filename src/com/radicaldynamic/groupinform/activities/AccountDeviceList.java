@@ -177,7 +177,7 @@ public class AccountDeviceList extends ListActivity
                 
                 adapter = new AccountDeviceListAdapter(
                         getApplicationContext(),
-                        R.layout.group_list_item,
+                        R.layout.folder_list_item,
                         devices);
 
                 setListAdapter(adapter);
@@ -188,7 +188,7 @@ public class AccountDeviceList extends ListActivity
     }
     
     /*
-     * Fetch a new group list from Inform Online and store it on disk 
+     * Fetch a new device list from Inform Online and store it on disk 
      * (also store a hashed copy for later)
      */
     static public void fetchDeviceList()
@@ -237,7 +237,7 @@ public class AccountDeviceList extends ListActivity
     {
         Log.d(Collect.LOGTAG , t + "loading device cache");
         
-        ArrayList<AccountDevice> groups = new ArrayList<AccountDevice>();
+        ArrayList<AccountDevice> devices = new ArrayList<AccountDevice>();
         
         try {
             FileInputStream fis = new FileInputStream(new File(FileUtils.DEVICE_CACHE_FILE_PATH));        
@@ -274,7 +274,7 @@ public class AccountDeviceList extends ListActivity
                     
                     // Show a device so long as it hasn't been marked as removed
                     if (!device.getStatus().equals("removed"))
-                        groups.add(device);
+                        devices.add(device);
                 }
             } catch (JSONException e) {
                 // Parse error (malformed result)
@@ -286,7 +286,7 @@ public class AccountDeviceList extends ListActivity
             e.printStackTrace();
         }
       
-        return groups;
+        return devices;
     }
 
     /**

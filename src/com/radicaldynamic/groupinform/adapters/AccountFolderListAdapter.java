@@ -10,14 +10,14 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.logic.AccountGroup;
+import com.radicaldynamic.groupinform.logic.AccountFolder;
 
-public class AccountGroupListAdapter extends ArrayAdapter<AccountGroup>
+public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
 {       
     private Context mContext;
-    private ArrayList<AccountGroup> mItems;
+    private ArrayList<AccountFolder> mItems;
     
-    public AccountGroupListAdapter(Context context, int textViewResourceId, ArrayList<AccountGroup> items) {
+    public AccountFolderListAdapter(Context context, int textViewResourceId, ArrayList<AccountFolder> items) {
         super(context, textViewResourceId, items);
         mContext = context;
         mItems = items;
@@ -30,10 +30,10 @@ public class AccountGroupListAdapter extends ArrayAdapter<AccountGroup>
 
         if (v == null) {            
             LayoutInflater vi = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            v = vi.inflate(R.layout.group_list_item, null);
+            v = vi.inflate(R.layout.folder_list_item, null);
         } 
 
-        AccountGroup f = mItems.get(position);
+        AccountFolder f = mItems.get(position);
 
         if (f != null) {
             TextView tt = (TextView) v.findViewById(R.id.firstLine);

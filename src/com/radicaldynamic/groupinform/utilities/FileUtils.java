@@ -51,14 +51,14 @@ public final class FileUtils {
     public static final String DATABASE_PATH = ODK_ROOT + "metadata/";
 
     public static final String DEVICE_CACHE_FILE_NAME = "devices.json";
-    public static final String GROUP_CACHE_FILE_NAME = "groups.json";
+    public static final String FOLDER_CACHE_FILE_NAME = "folders.json";
     public static final String FORM_LOGO_FILE_NAME = "form_logo.png";
     public static final String SPLASH_FILE_NAME = "splash.png";
     public static final String CONFIG_PATH = ODK_ROOT + "config/";
     public static final String DEFAULT_CONFIG_PATH = CONFIG_PATH + "default/";
     public static final String SPLASH_SCREEN_FILE_PATH = DEFAULT_CONFIG_PATH + SPLASH_FILE_NAME;
     public static final String FORM_LOGO_FILE_PATH = DEFAULT_CONFIG_PATH + FORM_LOGO_FILE_NAME;
-    public static final String GROUP_CACHE_FILE_PATH = DATABASE_PATH + GROUP_CACHE_FILE_NAME;
+    public static final String FOLDER_CACHE_FILE_PATH = DATABASE_PATH + FOLDER_CACHE_FILE_NAME;
     public static final String DEVICE_CACHE_FILE_PATH = DATABASE_PATH + DEVICE_CACHE_FILE_NAME;
     public static final String XSL_EXTENSION_PATH = ODK_ROOT + "xsl/";
     public static final String CACHE_PATH = ODK_ROOT + "cache/";

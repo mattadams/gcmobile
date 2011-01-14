@@ -143,7 +143,7 @@ public class MainBrowserActivity extends ListActivity
 
         if (Collect.getInstance().getInformOnline().isReady()) {
             // Load our custom window title
-            getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.group_selector_title);            
+            getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.folder_selector_title);            
 
             // We don't use the on-screen progress indicator here
             RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
@@ -176,13 +176,13 @@ public class MainBrowserActivity extends ListActivity
                 }
             });
             
-            // Set up listener for Group Selector button in title
-            Button b1 = (Button) findViewById(R.id.groupTitleButton);
+            // Set up listener for Folder Selector button in title
+            Button b1 = (Button) findViewById(R.id.folderTitleButton);
             b1.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v)
                 {
-                    startActivity(new Intent(MainBrowserActivity.this, AccountGroupList.class));
+                    startActivity(new Intent(MainBrowserActivity.this, AccountFolderList.class));
                 }
             });
         } else {
@@ -313,7 +313,7 @@ public class MainBrowserActivity extends ListActivity
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);
 
         switch (s1.getSelectedItemPosition()) {
-        // Show all forms (in group)
+        // Show all forms (in folder)
         case 0:
             Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
             i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, new ArrayList<String>());
@@ -341,7 +341,7 @@ public class MainBrowserActivity extends ListActivity
     {
         switch (item.getItemId()) {
         case R.id.tf_folders:
-            startActivity(new Intent(this, AccountGroupList.class));
+            startActivity(new Intent(this, AccountFolderList.class));
             break;
         case R.id.tf_refresh:
             Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
@@ -654,7 +654,7 @@ public class MainBrowserActivity extends ListActivity
         mRefreshViewTask = new RefreshViewTask();
 
         switch (position) {
-        // Show all forms (in group)
+        // Show all forms (in folder)
         case 0:
             mRefreshViewTask.execute(InstanceDocument.Status.nothing);
             break;

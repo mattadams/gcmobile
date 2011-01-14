@@ -71,7 +71,7 @@ public class MyFormsList extends ListActivity
         
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.main_menu));
 
-        // TODO: select "my forms" group/database
+        // TODO: select "my forms" folder/database
     }
 
     @Override

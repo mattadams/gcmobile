@@ -41,9 +41,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.adapters.AccountGroupListAdapter;
+import com.radicaldynamic.groupinform.adapters.AccountFolderListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.logic.AccountGroup;
+import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
@@ -51,9 +51,9 @@ import com.radicaldynamic.groupinform.utilities.HttpUtils;
 /*
  * 
  */
-public class AccountGroupList extends ListActivity
+public class AccountFolderList extends ListActivity
 {
-    private static final String t = "AccountGroupList: ";
+    private static final String t = "AccountFolderList: ";
 
     private static final int MENU_ADD = Menu.FIRST;
     
@@ -131,18 +131,18 @@ public class AccountGroupList extends ListActivity
      */
     private class RefreshViewTask extends AsyncTask<Void, Void, Void>
     {
-        private ArrayList<AccountGroup> groups = new ArrayList<AccountGroup>();
+        private ArrayList<AccountFolder> folders = new ArrayList<AccountFolder>();
 
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            File groupCache = new File(FileUtils.GROUP_CACHE_FILE_PATH);
+            File folderCache = new File(FileUtils.FOLDER_CACHE_FILE_PATH);
 
             // If cache is older than 120 seconds
-            if (groupCache.lastModified() < (Calendar.getInstance().getTimeInMillis() - 120 * 1000))                    
-                fetchGroupList();
+            if (folderCache.lastModified() < (Calendar.getInstance().getTimeInMillis() - 120 * 1000))                    
+                fetchFolderList();
 
-            groups = loadGroupList();
+            folders = loadFolderList();
             
             return null;
         }
@@ -159,16 +159,16 @@ public class AccountGroupList extends ListActivity
             RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
             onscreenProgress.setVisibility(View.GONE);
             
-            if (groups.isEmpty()) {
+            if (folders.isEmpty()) {
                 TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                 nothingToDisplay.setVisibility(View.VISIBLE);
             } else {
-                AccountGroupListAdapter adapter;
+                AccountFolderListAdapter adapter;
                 
-                adapter = new AccountGroupListAdapter(
+                adapter = new AccountFolderListAdapter(
                         getApplicationContext(),
-                        R.layout.group_list_item,
-                        groups);
+                        R.layout.folder_list_item,
+                        folders);
 
                 setListAdapter(adapter);
             }            
@@ -176,47 +176,47 @@ public class AccountGroupList extends ListActivity
     }
     
     /*
-     * Fetch a new group list from Inform Online and store it on disk
+     * Fetch a new folder list from Inform Online and store it on disk
      */
-    private void fetchGroupList()
+    private void fetchFolderList()
     {
-        Log.d(Collect.LOGTAG, t + "fetching new list of groups");
+        Log.d(Collect.LOGTAG, t + "fetching new list of folders");
         
-        ArrayList<AccountGroup> groups = new ArrayList<AccountGroup>();
+        ArrayList<AccountFolder> folders = new ArrayList<AccountFolder>();
         
         // Try to ping the service to see if it is "up"
-        String groupListUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/group/list";
-        String getResult = HttpUtils.getUrlData(groupListUrl);
-        JSONObject jsonGroupList;
+        String folderListUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/folder/list";
+        String getResult = HttpUtils.getUrlData(folderListUrl);
+        JSONObject jsonFolderList;
         
         try {
             Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
-            jsonGroupList = (JSONObject) new JSONTokener(getResult).nextValue();
+            jsonFolderList = (JSONObject) new JSONTokener(getResult).nextValue();
             
-            String result = jsonGroupList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+            String result = jsonFolderList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
             
             if (result.equals(InformOnlineState.OK)) {
-                JSONArray jsonGroups = jsonGroupList.getJSONArray("groups");
+                JSONArray jsonFolders = jsonFolderList.getJSONArray("folders");
                 
-                for (int i = 0; i < jsonGroups.length(); i++) {
-                    JSONObject jsonGroup = jsonGroups.getJSONObject(i);
+                for (int i = 0; i < jsonFolders.length(); i++) {
+                    JSONObject jsonFolder = jsonFolders.getJSONObject(i);
                     
-                    groups.add(new AccountGroup(
-                            jsonGroup.getString("id"),
-                            jsonGroup.getString("owner"),
-                            jsonGroup.getString("name"),
-                            jsonGroup.getString("description"),
-                            jsonGroup.getString("visibility")));
+                    folders.add(new AccountFolder(
+                            jsonFolder.getString("id"),
+                            jsonFolder.getString("owner"),
+                            jsonFolder.getString("name"),
+                            jsonFolder.getString("description"),
+                            jsonFolder.getString("visibility")));
                 }
                 
                 try {
-                    FileOutputStream fos = new FileOutputStream(new File(FileUtils.GROUP_CACHE_FILE_PATH));
+                    FileOutputStream fos = new FileOutputStream(new File(FileUtils.FOLDER_CACHE_FILE_PATH));
                     ObjectOutputStream out = new ObjectOutputStream(fos);
-                    out.writeObject(groups);   
+                    out.writeObject(folders);   
                     out.close();
                     fos.close();
                 } catch (Exception e) {                    
-                    Log.e(Collect.LOGTAG, t + "unable to write form group cache: " + e.toString());
+                    Log.e(Collect.LOGTAG, t + "unable to write folder cache: " + e.toString());
                     e.printStackTrace();
                 }
             } else {
@@ -234,24 +234,24 @@ public class AccountGroupList extends ListActivity
     }
     
     @SuppressWarnings("unchecked")
-    private ArrayList<AccountGroup> loadGroupList()
+    private ArrayList<AccountFolder> loadFolderList()
     {
-        Log.d(Collect.LOGTAG , t + "loading group cache");
+        Log.d(Collect.LOGTAG , t + "loading folder cache");
         
-        ArrayList<AccountGroup> groups = new ArrayList<AccountGroup>();
+        ArrayList<AccountFolder> folders = new ArrayList<AccountFolder>();
         
         try {
-            FileInputStream fis = new FileInputStream(new File(FileUtils.GROUP_CACHE_FILE_PATH));
+            FileInputStream fis = new FileInputStream(new File(FileUtils.FOLDER_CACHE_FILE_PATH));
             ObjectInputStream in = new ObjectInputStream(fis);            
-            groups = (ArrayList<AccountGroup>) in.readObject();
+            folders = (ArrayList<AccountFolder>) in.readObject();
             in.close();
             fis.close();
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "unable to read form group cache: " + e.toString());
+            Log.e(Collect.LOGTAG, t + "unable to read form folder cache: " + e.toString());
             e.printStackTrace();
         }
      
-        return groups;
+        return folders;
     }
 
     /**

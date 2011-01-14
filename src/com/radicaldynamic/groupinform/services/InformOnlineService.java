@@ -130,7 +130,7 @@ public class InformOnlineService extends Service {
                 AccountDeviceList.fetchDeviceList();
                 loadDeviceHash();
                 
-                // Update our list of account groups (aka form groups)
+                // Update our list of account databases (aka form folders)
                 // TODO
             } else if (result.equals(InformOnlineState.FAILURE)) {
                 Log.w(Collect.LOGTAG, t + "ping failed (will attempt checkin)");

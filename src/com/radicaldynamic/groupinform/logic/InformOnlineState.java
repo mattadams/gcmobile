@@ -387,7 +387,7 @@ public class InformOnlineState
         
         // Remove cached files
         FileUtils.deleteFile(FileUtils.DEVICE_CACHE_FILE_PATH);
-        FileUtils.deleteFile(FileUtils.GROUP_CACHE_FILE_PATH);
+        FileUtils.deleteFile(FileUtils.FOLDER_CACHE_FILE_PATH);
     }
 
     private void loadPreferences()
