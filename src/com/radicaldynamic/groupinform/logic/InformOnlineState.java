@@ -1,32 +1,23 @@
 package com.radicaldynamic.groupinform.logic;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-import org.apache.http.NameValuePair;
 import org.apache.http.client.CookieStore;
-import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
-import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 /*
  * Stores the state of this device as registered with Inform Online
  */
 public class InformOnlineState
 {
+    @SuppressWarnings("unused")
     private static final String t = "InformOnlineState: ";
     
     // Constants for strings commonly encountered when interacting with the Inform Online service
@@ -82,127 +73,6 @@ public class InformOnlineState
         
         // Set the device finger print
         setDeviceFingerprint(context);
-    }
-    
-    public boolean checkin()
-    {
-        // Assume we are registered unless told otherwise
-        boolean registered = true;
-        
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair("deviceId", deviceId));
-        params.add(new BasicNameValuePair("deviceKey", deviceKey));
-        params.add(new BasicNameValuePair("fingerprint", getDeviceFingerprint()));
-        
-        String postResult = HttpUtils.postUrlData(getServerUrl() + "/checkin", params);            
-        JSONObject checkin;
-        
-        try {
-            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);                
-            checkin = (JSONObject) new JSONTokener(postResult).nextValue();
-            
-            String result = checkin.optString(RESULT, FAILURE);
-            
-            if (result.equals(OK)) {
-                Log.i(Collect.LOGTAG, t + "successful checkin");
-                
-                if (checkin.has("defaultdb")) {
-                    Log.i(Collect.LOGTAG, t + "assigning default database " + checkin.getString("defaultDb"));
-                    setDefaultDatabase(checkin.getString("defaultDb"));
-                }
-            } else if (result.equals(FAILURE)) {
-                Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
-                registered = false;
-            } else {
-                // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing postResult");
-            }                
-        } catch (NullPointerException e) {
-            // Communication error
-            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");
-            e.printStackTrace();            
-        } catch (JSONException e) {
-            // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);
-            e.printStackTrace();
-        }
-        
-        Log.i(Collect.LOGTAG, t + "device registration state is " + registered);
-
-        // Clear the session for subsequent requests and reset stored state
-        if (registered == false)          
-            resetDevice();
-        
-        return registered;
-    }
-    
-    /*
-     * Try and say "goodbye" to Inform Online so that we know that 
-     * this client's session is no longer needed.
-     * 
-     * This is a "best effort" method and it is possible that the device may
-     * have already been checked out by another process (such as resetting the device).
-     */
-    public boolean checkout()
-    {
-        boolean saidGoodbye = false;
-        
-        String getResult = HttpUtils.getUrlData(getServerUrl() + "/checkout");
-        JSONObject checkout;
-        
-        try {
-            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
-            checkout = (JSONObject) new JSONTokener(getResult).nextValue();
-            
-            String result = checkout.optString(RESULT, ERROR);
-            
-            if (result.equals(OK)) {
-                Log.i(Collect.LOGTAG, t + "said goodbye to Inform Online");
-                saidGoodbye = true;
-            } else 
-                Log.i(Collect.LOGTAG, t + "device checkout unnecessary");
-        } catch (NullPointerException e) {
-            // Communication error
-            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
-            e.printStackTrace();
-        } catch (JSONException e) {
-            // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
-            e.printStackTrace();
-        }
-        
-        setSession(null);
-        
-        return saidGoodbye;
-    }
-    
-    public boolean ping()
-    {
-        boolean alive = false;
-        
-        // Try to ping the service to see if it is "up"
-        String getResult = HttpUtils.getUrlData(getServerUrl() + "/ping");
-        JSONObject ping;
-        
-        try {
-            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
-            ping = (JSONObject) new JSONTokener(getResult).nextValue();
-            
-            String result = ping.optString(RESULT, ERROR);
-            
-            if (result.equals(OK) || result.equals(FAILURE))
-                alive = true;
-        } catch (NullPointerException e) {
-            // Communication error
-            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
-            e.printStackTrace();
-        } catch (JSONException e) {
-            // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
-            e.printStackTrace();
-        }
-        
-        return alive;
     }
 
     public void setAccountKey(String accountKey)

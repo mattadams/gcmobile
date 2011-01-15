@@ -21,12 +21,16 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
+import org.apache.http.NameValuePair;
 import org.apache.http.client.CookieStore;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -137,6 +141,107 @@ public class InformOnlineService extends Service {
         return mSignedIn;
     }
     
+    /*
+     * Sign in to the Inform Online service
+     */
+    private boolean checkin()
+    {
+        // Assume we are registered unless told otherwise
+        boolean registered = true;
+        
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("deviceId", Collect.getInstance().getInformOnlineState().getDeviceId()));
+        params.add(new BasicNameValuePair("deviceKey", Collect.getInstance().getInformOnlineState().getDeviceKey()));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
+        
+        String checkinUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/checkin";
+        String postResult = HttpUtils.postUrlData(checkinUrl, params);            
+        JSONObject checkin;
+        
+        try {
+            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);                
+            checkin = (JSONObject) new JSONTokener(postResult).nextValue();
+            
+            String result = checkin.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+            
+            if (result.equals(InformOnlineState.OK)) {
+                Log.i(Collect.LOGTAG, t + "successful checkin");
+                
+                if (checkin.has("defaultdb")) {
+                    Log.i(Collect.LOGTAG, t + "assigning default database " + checkin.getString("defaultDb"));
+                    Collect.getInstance().getInformOnlineState().setDefaultDatabase(checkin.getString("defaultDb"));
+                }
+            } else if (result.equals(InformOnlineState.FAILURE)) {
+                Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
+                registered = false;
+            } else {
+                // Something bad happened
+                Log.e(Collect.LOGTAG, t + "system error while processing postResult");
+            }                
+        } catch (NullPointerException e) {
+            // Communication error
+            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");
+            e.printStackTrace();            
+        } catch (JSONException e) {
+            // Parse error (malformed result)
+            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);
+            e.printStackTrace();
+        }
+        
+        Log.i(Collect.LOGTAG, t + "device registration state is " + registered);
+
+        // Clear the session for subsequent requests and reset stored state
+        if (registered == false)          
+            Collect.getInstance().getInformOnlineState().resetDevice();
+        
+        return registered;
+    }
+    
+    /*
+     * Try and say "goodbye" to Inform Online so that we know that 
+     * this client's session is no longer needed.
+     * 
+     * This is a "best effort" method and it is possible that the device may
+     * have already been checked out by another process (such as resetting the device).
+     */
+    @SuppressWarnings("unused")
+    private boolean checkout()
+    {
+        boolean saidGoodbye = false;
+        
+        String checkoutUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/checkout";
+        String getResult = HttpUtils.getUrlData(checkoutUrl);
+        JSONObject checkout;
+        
+        try {
+            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+            checkout = (JSONObject) new JSONTokener(getResult).nextValue();
+            
+            String result = checkout.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+            
+            if (result.equals(InformOnlineState.OK)) {
+                Log.i(Collect.LOGTAG, t + "said goodbye to Inform Online");
+                saidGoodbye = true;
+            } else 
+                Log.i(Collect.LOGTAG, t + "device checkout unnecessary");
+        } catch (NullPointerException e) {
+            // Communication error
+            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
+            e.printStackTrace();
+        } catch (JSONException e) {
+            // Parse error (malformed result)
+            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
+            e.printStackTrace();
+        }
+        
+        Collect.getInstance().getInformOnlineState().setSession(null);
+        
+        return saidGoodbye;
+    }
+    
+    /*
+     * Connect to the Inform Online service and if registered, attempt to sign in
+     */
     private void connect()
     {
         mConnecting = true;
@@ -167,7 +272,7 @@ public class InformOnlineService extends Service {
                 Log.w(Collect.LOGTAG, t + "ping successful but not signed in (will attempt checkin)");
                 mServicePingSuccessful = true;
                 
-                if (Collect.getInstance().getInformOnlineState().hasRegistration() && Collect.getInstance().getInformOnlineState().checkin()) {
+                if (Collect.getInstance().getInformOnlineState().hasRegistration() && checkin()) {
                     Log.i(Collect.LOGTAG, t + "checkin successful (we are connected)");
                     mSignedIn = true;
                 } else {
@@ -261,8 +366,46 @@ public class InformOnlineService extends Service {
             Log.e(Collect.LOGTAG, t + "unable to read device cache: " + e.toString());
             e.printStackTrace();
         }
+    }    
+    
+    /*
+     * Determine if the Inform Online service is "up"
+     * Do not check for authentication
+     */
+    @SuppressWarnings("unused")
+    private boolean ping()
+    {
+        boolean alive = false;
+        
+        // Try to ping the service to see if it is "up"
+        String pingUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/ping";
+        String getResult = HttpUtils.getUrlData(pingUrl);
+        JSONObject ping;
+        
+        try {
+            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+            ping = (JSONObject) new JSONTokener(getResult).nextValue();
+            
+            String result = ping.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+            
+            if (result.equals(InformOnlineState.OK) || result.equals(InformOnlineState.FAILURE))
+                alive = true;
+        } catch (NullPointerException e) {
+            // Communication error
+            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
+            e.printStackTrace();
+        } catch (JSONException e) {
+            // Parse error (malformed result)
+            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
+            e.printStackTrace();
+        }
+        
+        return alive;
     }
     
+    /*
+     * Restore a serialized session from disk
+     */
     private void restoreSession()
     {        
         // Restore any serialized session information
@@ -307,6 +450,9 @@ public class InformOnlineService extends Service {
         }
     }
     
+    /*
+     * Serialize the current session to disk
+     */
     private void serializeSession()
     {
         // Attempt to serialize the session for later use
