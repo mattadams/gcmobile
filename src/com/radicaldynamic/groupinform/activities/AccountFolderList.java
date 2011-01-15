@@ -14,13 +14,12 @@
 
 package com.radicaldynamic.groupinform.activities;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -136,10 +135,7 @@ public class AccountFolderList extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            File folderCache = new File(FileUtils.FOLDER_CACHE_FILE_PATH);
-
-            // If cache is older than 120 seconds
-            if (folderCache.lastModified() < (Calendar.getInstance().getTimeInMillis() - 120 * 1000))                    
+            if (FileUtils.isFileOlderThan(FileUtils.FOLDER_CACHE_FILE_PATH, FileUtils.TIME_TWO_MINUTES))                    
                 fetchFolderList();
 
             folders = loadFolderList();
@@ -182,8 +178,6 @@ public class AccountFolderList extends ListActivity
     {
         Log.d(Collect.LOGTAG, t + "fetching new list of folders");
         
-        ArrayList<AccountFolder> folders = new ArrayList<AccountFolder>();
-        
         // Try to ping the service to see if it is "up"
         String folderListUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/folder/list";
         String getResult = HttpUtils.getUrlData(folderListUrl);
@@ -196,31 +190,20 @@ public class AccountFolderList extends ListActivity
             String result = jsonFolderList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
             
             if (result.equals(InformOnlineState.OK)) {
+                // Write out list of jsonFolders for later retrieval by loadFoldersList()
                 JSONArray jsonFolders = jsonFolderList.getJSONArray("folders");
-                
-                for (int i = 0; i < jsonFolders.length(); i++) {
-                    JSONObject jsonFolder = jsonFolders.getJSONObject(i);
-                    
-                    folders.add(new AccountFolder(
-                            jsonFolder.getString("id"),
-                            jsonFolder.getString("owner"),
-                            jsonFolder.getString("name"),
-                            jsonFolder.getString("description"),
-                            jsonFolder.getString("visibility")));
-                }
-                
+
                 try {
+                    // Write out a folder list cache file
                     FileOutputStream fos = new FileOutputStream(new File(FileUtils.FOLDER_CACHE_FILE_PATH));
-                    ObjectOutputStream out = new ObjectOutputStream(fos);
-                    out.writeObject(folders);   
-                    out.close();
+                    fos.write(jsonFolders.toString().getBytes());
                     fos.close();
-                } catch (Exception e) {                    
+                } catch (Exception e) {
                     Log.e(Collect.LOGTAG, t + "unable to write folder cache: " + e.toString());
                     e.printStackTrace();
                 }
             } else {
-                // There was a problem... handle it!
+                // There was a problem.. handle it!
             }
         } catch (NullPointerException e) {
             // Communication error
@@ -232,8 +215,7 @@ public class AccountFolderList extends ListActivity
             e.printStackTrace();
         }
     }
-    
-    @SuppressWarnings("unchecked")
+
     private ArrayList<AccountFolder> loadFolderList()
     {
         Log.d(Collect.LOGTAG , t + "loading folder cache");
@@ -242,12 +224,40 @@ public class AccountFolderList extends ListActivity
         
         try {
             FileInputStream fis = new FileInputStream(new File(FileUtils.FOLDER_CACHE_FILE_PATH));
-            ObjectInputStream in = new ObjectInputStream(fis);            
-            folders = (ArrayList<AccountFolder>) in.readObject();
-            in.close();
+            InputStreamReader reader = new InputStreamReader(fis);
+            BufferedReader buffer = new BufferedReader(reader, 8192);
+            StringBuilder sb = new StringBuilder();
+            
+            String cur;
+
+            while ((cur = buffer.readLine()) != null) {
+                sb.append(cur + "\n");
+            }
+            
+            buffer.close();
+            reader.close();
             fis.close();
+            
+            try {
+                JSONArray jsonFolders = (JSONArray) new JSONTokener(sb.toString()).nextValue();
+                
+                for (int i = 0; i < jsonFolders.length(); i++) {
+                    JSONObject jsonFolder = jsonFolders.getJSONObject(i);
+                    
+                    folders.add(new AccountFolder(
+                            jsonFolder.getString("id"),
+                            jsonFolder.getString("owner"),
+                            jsonFolder.getString("name"),
+                            jsonFolder.getString("description"),
+                            jsonFolder.getString("visibility")));
+                }
+            } catch (JSONException e) {
+                // Parse error (malformed result)
+                Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
+                e.printStackTrace();
+            }
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "unable to read form folder cache: " + e.toString());
+            Log.e(Collect.LOGTAG, t + "unable to read folder cache: " + e.toString());
             e.printStackTrace();
         }
      

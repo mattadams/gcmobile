@@ -173,8 +173,8 @@ public class InformOnlineState
             e.printStackTrace();
         }
         
-        ready = false;
-        session = null;
+        setReady(false);
+        setSession(null);
         
         return saidGoodbye;
     }
@@ -382,8 +382,8 @@ public class InformOnlineState
         setDeviceKey(null);
         setDevicePin(null);
         
-        ready = false;        
-        session = null;  
+        setReady(false);        
+        setSession(null); 
         
         // Remove cached files
         FileUtils.deleteFile(FileUtils.DEVICE_CACHE_FILE_PATH);

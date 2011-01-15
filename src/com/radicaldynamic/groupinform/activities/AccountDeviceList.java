@@ -20,7 +20,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -146,10 +145,7 @@ public class AccountDeviceList extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            File deviceCache = new File(FileUtils.DEVICE_CACHE_FILE_PATH);
-
-            // If cache is older than 120 seconds
-            if (deviceCache.lastModified() < (Calendar.getInstance().getTimeInMillis() - 120 * 1000))                    
+            if (FileUtils.isFileOlderThan(FileUtils.DEVICE_CACHE_FILE_PATH, FileUtils.TIME_TWO_MINUTES))
                 fetchDeviceList();
 
             devices = loadDeviceList();
@@ -207,7 +203,7 @@ public class AccountDeviceList extends ListActivity
             String result = jsonDeviceList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
             
             if (result.equals(InformOnlineState.OK)) {
-                // Write out list of jsonDevices for later retrieval by loadDevicesLisst() and InformOnlineService.loadDevicesHash()                
+                // Write out list of jsonDevices for later retrieval by loadDevicesList() and InformOnlineService.loadDevicesHash()                
                 JSONArray jsonDevices = jsonDeviceList.getJSONArray("devices");
                 
                 try {

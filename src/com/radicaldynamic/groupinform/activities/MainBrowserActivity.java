@@ -206,15 +206,7 @@ public class MainBrowserActivity extends ListActivity
     @Override
     protected void onDestroy()
     {
-        if (mDatabaseIsBound)
-            unbindService(mDatabaseConnection);
-        
-        if (mOnlineIsBound)
-            unbindService(mOnlineConnection);
-
-        // Make a best effort attempt to notify Inform Online that we are leaving prematurely
-        if (!isFinishing()) 
-            Collect.getInstance().getInformOnline().checkout();
+        cleanup(isFinishing());
         
         super.onDestroy();
     }
@@ -226,6 +218,9 @@ public class MainBrowserActivity extends ListActivity
         if (mAlertDialog != null && mAlertDialog.isShowing()) {
             mAlertDialog.dismiss();
         }
+        
+        // Cleanup but do not checkout
+        cleanup(false);
         
         super.onPause();
     }
@@ -239,13 +234,12 @@ public class MainBrowserActivity extends ListActivity
             loadScreen();
     }
 
-    /**
-     * onStop Re-enable the splash screen.
-     */
     @Override
     protected void onStop()
     {
         super.onStop();
+        
+        // Re-enable the splash screen
         mShowSplash = true;
     }
     
@@ -259,13 +253,6 @@ public class MainBrowserActivity extends ListActivity
         switch (requestCode) {
         // "Exit" if the user resets Inform
         case ABOUT_INFORM:
-            // Close down our services         
-            if (mDatabaseIsBound)
-                getApplicationContext().stopService(new Intent(this, CouchDbService.class));
-            
-            if (mOnlineIsBound)
-                getApplicationContext().stopService(new Intent(this, InformOnlineService.class));
-            
             finish();
             break; 
         }        
@@ -530,6 +517,33 @@ public class MainBrowserActivity extends ListActivity
             }
 
             setProgressVisibility(false);
+        }
+    }
+    
+    // Run any clean up needed before the application is interrupted or destroyed
+    private void cleanup(boolean checkout)
+    {
+        /*
+         * Terminate all services if the client is no longer ready for use.
+         * This will be the case if the device has been reset either remotely or manually.
+         */
+        if (!Collect.getInstance().getInformOnline().isReady()) {
+            // Close down our services         
+            if (mDatabaseIsBound) {
+                Log.i(Collect.LOGTAG, t + "issuing stop to CouchDbService");
+                unbindService(mDatabaseConnection);
+                getApplicationContext().stopService(new Intent(this, CouchDbService.class));                
+            }
+            
+            if (mOnlineIsBound) {
+                Log.i(Collect.LOGTAG, t + "issuing stop to InformOnlineService");
+                unbindService(mOnlineConnection);
+                getApplicationContext().stopService(new Intent(this, InformOnlineService.class));                
+            }
+            
+            // Make a best effort attempt to notify Inform Online that we are leaving prematurely        
+            if (checkout)
+                Collect.getInstance().getInformOnline().checkout();
         }
     }
     
