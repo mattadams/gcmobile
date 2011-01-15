@@ -267,7 +267,7 @@ public class InformOnlineService extends Service {
             // Online and registered (checked in)
             if (result.equals(InformOnlineState.OK)) {
                 Log.i(Collect.LOGTAG, t + "ping successful (we are connected and checked in)");
-                mSignedIn = true;
+                mServicePingSuccessful = mSignedIn = true;
             } else if (result.equals(InformOnlineState.FAILURE)) {
                 Log.w(Collect.LOGTAG, t + "ping successful but not signed in (will attempt checkin)");
                 mServicePingSuccessful = true;
@@ -277,11 +277,7 @@ public class InformOnlineService extends Service {
                     mSignedIn = true;
                 } else {
                     Log.w(Collect.LOGTAG, t + "checkin failed (registration invalid)");
-                    /*
-                     * We're no longer registered even though we thought we were at one point.
-                     * 
-                     * Now what?
-                     */
+                    mSignedIn = false;
                 }
             } else {
                 // Assume offline
