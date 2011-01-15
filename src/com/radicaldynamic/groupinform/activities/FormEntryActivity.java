@@ -698,7 +698,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         dismissDialog(PROGRESS_DIALOG);
 
         if (fec == null) {
-            createErrorDialog(getString(R.string.load_error, Collect.mDb
+            createErrorDialog(getString(R.string.load_error, Collect.getInstance().getDbService()
                     .getDb().get(FormDocument.class, mFormId).getName()), true);
         } else {
             Collect.getInstance().setFormEntryController(fec);
@@ -708,7 +708,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             if (mInstanceId == null) {
                 InstanceDocument instance = new InstanceDocument();
                 instance.setFormId(mFormId);
-                Collect.mDb.getDb().create(instance);
+                Collect.getInstance().getDbService().getDb().create(instance);
                 mInstanceId = instance.getId();
                 mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
             } else {
@@ -1362,10 +1362,10 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     {
         // Remove an instance if it has no status (e.g.,
         // recently created)
-        InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, mInstanceId);
+        InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);
 
         if (instance.getStatus() == InstanceDocument.Status.placeholder) {
-            Collect.mDb.getDb().delete(instance);
+            Collect.getInstance().getDbService().getDb().delete(instance);
             Log.d(Collect.LOGTAG, t + mFormId + ": removed placeholder instance " + mInstanceId);
         }
 
@@ -1575,7 +1575,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
     private boolean isInstanceComplete()
     {
-        InstanceDocument instance = Collect.mDb.getDb().get(
+        InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(
                 InstanceDocument.class, mInstanceId);
 
         if (instance.getStatus() == InstanceDocument.Status.complete)

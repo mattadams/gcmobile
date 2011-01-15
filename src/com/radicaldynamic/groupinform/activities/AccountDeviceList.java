@@ -115,7 +115,7 @@ public class AccountDeviceList extends ListActivity
         Log.d(Collect.LOGTAG, t + "selected device " + device.getId() + " from list");
         
         // Only account owners should proceed to the next screen
-        if (Collect.getInstance().getInformOnline().isAccountOwner()) {
+        if (Collect.getInstance().getInformOnlineState().isAccountOwner()) {
             Intent i = new Intent(this, AccountDeviceActivity.class);
             i.putExtra(AccountDeviceActivity.KEY_DEVICEID, device.getId());
             startActivity(i);
@@ -192,7 +192,7 @@ public class AccountDeviceList extends ListActivity
         Log.d(Collect.LOGTAG, t + "fetching new list of devices");
                 
         // Try to ping the service to see if it is "up"
-        String deviceListUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/device/list";
+        String deviceListUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/list";
         String getResult = HttpUtils.getUrlData(deviceListUrl);
         JSONObject jsonDeviceList;
         

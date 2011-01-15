@@ -61,7 +61,6 @@ import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.documents.InstanceDocument;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.repository.InstanceRepository;
 import com.radicaldynamic.groupinform.services.CouchDbService;
@@ -98,31 +97,25 @@ public class MainBrowserActivity extends ListActivity
     private ServiceConnection mDatabaseConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
-            Collect.mDb = ((CouchDbService.LocalBinder) service).getService();
-            Collect.mDb.open();
-            loadScreen();
-            
             mDatabaseIsBound = true;
+            Collect.getInstance().setDbService(((CouchDbService.LocalBinder) service).getService());
+            Collect.getInstance().getDbService().open();
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
-            Log.d(Collect.LOGTAG, t + "CouchDbService unbound");
-            mDatabaseIsBound = false;
         }
     };
     
     private ServiceConnection mOnlineConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
-            ((InformOnlineService.LocalBinder) service).getService();         
             mOnlineIsBound = true;
+            Collect.getInstance().setIoService(((InformOnlineService.LocalBinder) service).getService());                        
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
-            Log.d(Collect.LOGTAG, t + "InformOnline unbound");
-            mOnlineIsBound = false;
         }
     };
 
@@ -139,23 +132,15 @@ public class MainBrowserActivity extends ListActivity
         displaySplash();
 
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
-        setContentView(R.layout.main_browser);
-
-        if (Collect.getInstance().getInformOnline().isReady()) {
+        setContentView(R.layout.main_browser);        
+        
+        if (isInitialized()) {            
             // Load our custom window title
             getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.folder_selector_title);            
 
             // We don't use the on-screen progress indicator here
             RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
             onscreenProgress.setVisibility(View.GONE);        
-            
-            // Start the database connection
-            startService(new Intent(this, CouchDbService.class));            
-            bindService(new Intent(this, CouchDbService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE);
-            
-            // Start the persistent online connection
-            startService(new Intent(this, InformOnlineService.class));
-            bindService(new Intent(this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE);
             
             // Initiate and populate spinner to filter forms displayed by instances types
             ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
@@ -191,7 +176,13 @@ public class MainBrowserActivity extends ListActivity
             s1.setVisibility(View.GONE);
             
             new InitializeApplicationTask().execute(getApplicationContext());
-        }
+        }        
+        
+        // Start the persistent online connection
+        bindService(new Intent(this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE);
+        
+        // Start the database connection
+        bindService(new Intent(this, CouchDbService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE);
     }
 
     /*
@@ -206,8 +197,7 @@ public class MainBrowserActivity extends ListActivity
     @Override
     protected void onDestroy()
     {
-        cleanup(isFinishing());
-        
+        cleanup(isFinishing());        
         super.onDestroy();
     }
 
@@ -219,9 +209,6 @@ public class MainBrowserActivity extends ListActivity
             mAlertDialog.dismiss();
         }
         
-        // Cleanup but do not checkout
-        cleanup(false);
-        
         super.onPause();
     }
 
@@ -230,7 +217,7 @@ public class MainBrowserActivity extends ListActivity
     {
         super.onResume();
 
-        if (Collect.mDb != null)
+        if (isInitialized())
             loadScreen();
     }
 
@@ -350,8 +337,8 @@ public class MainBrowserActivity extends ListActivity
 
     public class InitializeApplicationTask extends AsyncTask<Object, Void, Void> 
     {
-        private boolean mIsRegistered = false;
-        private boolean mIsOnline = false;
+        private boolean mPinged = false;
+        private boolean mRegistered = false;        
         
         @Override
         protected Void doInBackground(Object... args)
@@ -362,13 +349,23 @@ public class MainBrowserActivity extends ListActivity
             FileUtils.createFolder(FileUtils.CACHE_PATH);
             FileUtils.createFolder(FileUtils.FORMS_PATH);
             
-            // Initialize client registration details as stored in preferences
-            Collect.getInstance().setInformOnline(new InformOnlineState(getApplicationContext()));
+            // The InformOnlineService will perform ping and check-in immediately (no need to duplicate here)
+            while (true) {
+                if (isInitialized())
+                    break;
+                
+                // Wait for a second
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
             
-            if (Collect.getInstance().getInformOnline().hasRegistration())
-                mIsRegistered = Collect.getInstance().getInformOnline().checkin();
-
-            mIsOnline = Collect.getInstance().getInformOnline().ping();
+            // If we are connected this will be "true"
+            mPinged = Collect.getInstance().getIoService().isRespondingToPings();
+            mRegistered = Collect.getInstance().getIoService().isRegistered();            
             
             return null;
         }
@@ -384,10 +381,10 @@ public class MainBrowserActivity extends ListActivity
         {
             setProgressVisibility(false);
             
-            if (mIsOnline)
-                postInitializeWorkflow(mIsRegistered);
+            if (mPinged)
+                postInitializeWorkflow(mRegistered);
             else
-                displayConnectionErrorDialog(mIsRegistered);
+                displayConnectionErrorDialog(mRegistered);
                 
         }    
     }
@@ -410,7 +407,7 @@ public class MainBrowserActivity extends ListActivity
             mFormId = (String) params[0];
             InstanceDocument.Status status = (InstanceDocument.Status) params[1];
 
-            mInstanceIds = new InstanceRepository(Collect.mDb.getDb()).findByFormAndStatus(mFormId, status);
+            mInstanceIds = new InstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);
             
             return null;
         }
@@ -447,16 +444,16 @@ public class MainBrowserActivity extends ListActivity
         {
             if (status[0] == InstanceDocument.Status.nothing) {
                 try {
-                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAll();
+                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
                     DocumentUtils.sortByName(documents);
                 } catch (ClassCastException e) {
                     // TODO: is there a better way to handle empty lists?
                 }
             } else {
-                instanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByInstanceStatus(status[0]);
+                instanceTallies = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
                 
                 if (!instanceTallies.isEmpty()) {
-                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
+                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
                     DocumentUtils.sortByName(documents);
                 }
             }
@@ -523,28 +520,24 @@ public class MainBrowserActivity extends ListActivity
     // Run any clean up needed before the application is interrupted or destroyed
     private void cleanup(boolean checkout)
     {
-        /*
-         * Terminate all services if the client is no longer ready for use.
-         * This will be the case if the device has been reset either remotely or manually.
-         */
-        if (!Collect.getInstance().getInformOnline().isReady()) {
-            // Close down our services         
-            if (mDatabaseIsBound) {
-                Log.i(Collect.LOGTAG, t + "issuing stop to CouchDbService");
-                unbindService(mDatabaseConnection);
-                getApplicationContext().stopService(new Intent(this, CouchDbService.class));                
-            }
-            
-            if (mOnlineIsBound) {
-                Log.i(Collect.LOGTAG, t + "issuing stop to InformOnlineService");
-                unbindService(mOnlineConnection);
-                getApplicationContext().stopService(new Intent(this, InformOnlineService.class));                
-            }
-            
-            // Make a best effort attempt to notify Inform Online that we are leaving prematurely        
-            if (checkout)
-                Collect.getInstance().getInformOnline().checkout();
+        // Close down our services         
+        if (mDatabaseIsBound) {
+            mDatabaseIsBound = false;
+            Log.i(Collect.LOGTAG, t + "issuing stop to CouchDbService");
+            unbindService(mDatabaseConnection);
+            getApplicationContext().stopService(new Intent(this, CouchDbService.class));                
         }
+
+        if (mOnlineIsBound) {
+            mOnlineIsBound = false;
+            Log.i(Collect.LOGTAG, t + "issuing stop to InformOnlineService");
+            unbindService(mOnlineConnection);
+            getApplicationContext().stopService(new Intent(this, InformOnlineService.class));                
+        }
+
+//        // Make a best effort attempt to notify Inform Online that we are leaving prematurely        
+//        if (checkout)
+//            Collect.getInstance().getInformOnlineState().checkout();
     }
     
     /*
@@ -611,6 +604,12 @@ public class MainBrowserActivity extends ListActivity
         mAlertDialog.setButton(getString(R.string.ok), errorListener);
         mAlertDialog.show();
     }
+    
+    // Shortcut to tell if the app is really initialized or not
+    private boolean isInitialized()
+    {
+        return Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isInitialized();
+    }
 
     /**
      * Load the various elements of the screen that must wait for other tasks to
@@ -618,10 +617,20 @@ public class MainBrowserActivity extends ListActivity
      */
     private void loadScreen()
     {
+        if (Collect.getInstance().getIoService() instanceof InformOnlineService) {
+            // Reflect the online/offline status
+            Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
+
+            if (Collect.getInstance().getIoService().isSignedIn())
+                b1.setText("Inform: Online");
+            else
+                b1.setText("Inform: Offline");
+        }
+        
         // Spinner must reflect results of refresh view below
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
         triggerRefresh(s1.getSelectedItemPosition());
-              
+           
         registerForContextMenu(getListView());
     }
     
@@ -633,9 +642,6 @@ public class MainBrowserActivity extends ListActivity
     private void postInitializeWorkflow(boolean registered)
     {
         if (registered) {
-            // Initialization is complete
-            Collect.getInstance().getInformOnline().setReady(true);
-            
             Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
             startActivity(i);
             finish();

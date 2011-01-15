@@ -391,7 +391,7 @@ public class ClientRegistrationActivity extends Activity
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("email", email));
         
-        String verifyUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/send/account/reminder";
+        String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/send/account/reminder";
         
         String postResult = HttpUtils.postUrlData(verifyUrl, params);
         JSONObject verify;
@@ -447,16 +447,16 @@ public class ClientRegistrationActivity extends Activity
      */
     private void setRegistrationInformation(JSONObject container) throws JSONException
     {        
-        Collect.getInstance().getInformOnline().setAccountKey(container.getString("accountKey"));
-        Collect.getInstance().getInformOnline().setAccountNumber(container.getString("accountNumber"));
-        Collect.getInstance().getInformOnline().setAccountOwner(container.getBoolean("accountOwner"));
-        Collect.getInstance().getInformOnline().setDeviceId(container.getString("deviceId"));
-        Collect.getInstance().getInformOnline().setDeviceKey(container.getString("deviceKey"));
-        Collect.getInstance().getInformOnline().setDevicePin(container.getString("devicePin"));
+        Collect.getInstance().getInformOnlineState().setAccountKey(container.getString("accountKey"));
+        Collect.getInstance().getInformOnlineState().setAccountNumber(container.getString("accountNumber"));
+        Collect.getInstance().getInformOnlineState().setAccountOwner(container.getBoolean("accountOwner"));
+        Collect.getInstance().getInformOnlineState().setDeviceId(container.getString("deviceId"));
+        Collect.getInstance().getInformOnlineState().setDeviceKey(container.getString("deviceKey"));
+        Collect.getInstance().getInformOnlineState().setDevicePin(container.getString("devicePin"));
         
         // Only returned for device transfers
         if (container.has("defaultDb"))
-            Collect.getInstance().getInformOnline().setDefaultDatabase(container.getString("defaultDb"));
+            Collect.getInstance().getInformOnlineState().setDefaultDatabase(container.getString("defaultDb"));
     }
 
     private void transferDeviceDialog()
@@ -542,7 +542,7 @@ public class ClientRegistrationActivity extends Activity
             params.add(new BasicNameValuePair("licenceNumber", number));
             params.add(new BasicNameValuePair("licenceKey", key));
             
-            String verifyUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/verify/licence";
+            String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/verify/licence";
             String postResult = HttpUtils.postUrlData(verifyUrl, params);
             JSONObject verify;
             
@@ -589,9 +589,9 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("licenceNumber", mAccountNumber));
         params.add(new BasicNameValuePair("licenceKey", mAccountKey));
         params.add(new BasicNameValuePair("email", email));
-        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnline().getDeviceFingerprint()));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
         
-        String transferUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/register/device";
+        String transferUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/device";
         String postResult = HttpUtils.postUrlData(transferUrl, params);
         JSONObject verify;
         
@@ -651,7 +651,7 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("licenceKey", mAccountKey));
         params.add(new BasicNameValuePair("devicePin", devicePin));
         
-        String transferUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/transfer/do";
+        String transferUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/transfer/do";
         String postResult = HttpUtils.postUrlData(transferUrl, params);
         JSONObject transfer;
         
@@ -735,9 +735,9 @@ public class ClientRegistrationActivity extends Activity
         // Data to POST
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("email", email));
-        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnline().getDeviceFingerprint()));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
         
-        String verifyUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/register/account";
+        String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/account";
         
         String postResult = HttpUtils.postUrlData(verifyUrl, params);
         JSONObject verify;

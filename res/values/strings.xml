@@ -77,7 +77,7 @@
 	<string name="fetching_file">"Getting \"%1$s\".\n\nForm %2$s of %3$s form(s)..."</string>
 	<string name="file_deleted_error">Sorry, %s item(s) failed to delete!</string>
 	<string name="file_deleted_ok">%s item(s) successfully deleted!</string>
-        <string name="file_download_error">File %1$s failed. %2$s</string>
+    <string name="file_download_error">File %1$s failed. %2$s</string>
 	<string name="file_invalid">File: %s is invalid.</string>
 	<string name="file_missing">File: %s is missing.</string>
 	<string name="form">Form</string>
@@ -272,6 +272,9 @@
 	<string name="tf_improperly_formatted_licence_key">Improperly formatted licence key</string>
     <string name="tf_inform">Inform</string>
     <string name="tf_inform_info">About Inform</string>
+    <string name="tf_inform_state_connecting">Inform: Connecting...</string>
+    <string name="tf_inform_state_offline">Inform: Offline</string>
+    <string name="tf_inform_state_online">Inform: Online</string>    
 	<string name="tf_integer_number_type">Integers only</string>
 	<string name="tf_invalid_email">Invalid email address</string>
 	<string name="tf_invalid_pin">This PIN is not registered with our system. Double check the PIN and try again.</string>

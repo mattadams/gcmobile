@@ -506,12 +506,12 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         {
             String formId = args[0];      
             
-            mForm = Collect.mDb.getDb().get(FormDocument.class, formId);
+            mForm = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);
             Collect.getInstance().setFbForm(mForm);
             Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
             
             Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
-            AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(formId, "xml");
+            AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
             mFormReader = new FormReader(ais, mNewForm);
             
             resetStates();
@@ -592,7 +592,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                                 "text/xml"));
                 
                 mForm.setStatus(FormDocument.Status.inactive);
-                Collect.mDb.getDb().update(mForm);
+                Collect.getInstance().getDbService().getDb().update(mForm);
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "failed writing XForm to XML: " + e.toString());
                 e.printStackTrace();
@@ -924,7 +924,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                         case 0:
                             // Discard any changes and exit
                             if (mForm.getStatus() == FormDocument.Status.temporary)
-                                Collect.mDb.getDb().delete(mForm);
+                                Collect.getInstance().getDbService().getDb().delete(mForm);
                             
                             finish();
                             break;

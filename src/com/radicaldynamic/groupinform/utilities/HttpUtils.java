@@ -36,10 +36,10 @@ public class HttpUtils
             DefaultHttpClient client = new DefaultHttpClient();
             
             // Load any cookies that have been stored
-            if (Collect.getInstance().getInformOnline().getSession() == null) 
+            if (Collect.getInstance().getInformOnlineState().getSession() == null) 
                 Log.w(Collect.LOGTAG, t + "connection without session");
             else
-                client.setCookieStore(Collect.getInstance().getInformOnline().getSession());
+                client.setCookieStore(Collect.getInstance().getInformOnlineState().getSession());
             
             URI uri = new URI(url);            
             HttpGet method = new HttpGet(uri);
@@ -54,7 +54,7 @@ public class HttpUtils
                 Log.d(Collect.LOGTAG, t + "GET resulted in no cookies");
             else {
                 Log.i(Collect.LOGTAG, t + "GET resulted in " + cookies.size() + " cookies");
-                Collect.getInstance().getInformOnline().setSession(client.getCookieStore());
+                Collect.getInstance().getInformOnlineState().setSession(client.getCookieStore());
                 
                 for (int i = 0; i < cookies.size(); i++)
                     Log.d(Collect.LOGTAG, t + "parsed cookie " + cookies.get(i).toString());
@@ -86,10 +86,10 @@ public class HttpUtils
             DefaultHttpClient client = new DefaultHttpClient();
             
             // Load any cookies that have been stored
-            if (Collect.getInstance().getInformOnline().getSession() == null) 
+            if (Collect.getInstance().getInformOnlineState().getSession() == null) 
                 Log.w(Collect.LOGTAG, t + "connection without session");
             else
-                client.setCookieStore(Collect.getInstance().getInformOnline().getSession());
+                client.setCookieStore(Collect.getInstance().getInformOnlineState().getSession());
             
             URI uri = new URI(url);
             HttpPost method = new HttpPost(uri);
@@ -105,7 +105,7 @@ public class HttpUtils
                 Log.d(Collect.LOGTAG, t + "GET resulted in no cookies");
             else {
                 Log.i(Collect.LOGTAG, t + "GET resulted in " + cookies.size() + " cookies");
-                Collect.getInstance().getInformOnline().setSession(client.getCookieStore());
+                Collect.getInstance().getInformOnlineState().setSession(client.getCookieStore());
                 
                 for (int i = 0; i < cookies.size(); i++)
                     Log.d(Collect.LOGTAG, t + "parsed cookie " + cookies.get(i).toString());

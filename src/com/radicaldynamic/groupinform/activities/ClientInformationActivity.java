@@ -84,8 +84,8 @@ public class ClientInformationActivity extends Activity
             TextView accountKey = (TextView) findViewById(R.id.accountKey);
 
             header.setText(getString(R.string.tf_about_inform_account_header));
-            accountNumber.setText(Collect.getInstance().getInformOnline().getAccountNumber());
-            accountKey.setText(Collect.getInstance().getInformOnline().getAccountKey());
+            accountNumber.setText(Collect.getInstance().getInformOnlineState().getAccountNumber());
+            accountKey.setText(Collect.getInstance().getInformOnlineState().getAccountKey());
 
             break;
 
@@ -100,10 +100,10 @@ public class ClientInformationActivity extends Activity
             TextView devicePin = (TextView) findViewById(R.id.devicePin);
             TextView deviceEmail = (TextView) findViewById(R.id.deviceEmail);                
 
-            devicePin.setText(Collect.getInstance().getInformOnline().getDevicePin());
+            devicePin.setText(Collect.getInstance().getInformOnlineState().getDevicePin());
             deviceEmail.setText(
                     Collect.getInstance().getAccountDevices().get(
-                            Collect.getInstance().getInformOnline().getDeviceId()
+                            Collect.getInstance().getInformOnlineState().getDeviceId()
                             ).getEmail()        
             );
 
@@ -186,7 +186,7 @@ public class ClientInformationActivity extends Activity
         @Override
         protected String doInBackground(Void... params)
         {
-            String url = Collect.getInstance().getInformOnline().getServerUrl() + "/transfer/show";
+            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/transfer/show";
             
             JSONObject result;
             String getResult = HttpUtils.getUrlData(url);
@@ -246,7 +246,7 @@ public class ClientInformationActivity extends Activity
         @Override
         protected String doInBackground(Void... params)
         {
-            String url = Collect.getInstance().getInformOnline().getServerUrl() + "/transfer/toggle";
+            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/transfer/toggle";
             
             String getResult = HttpUtils.getUrlData(url);
             JSONObject result;
@@ -356,7 +356,7 @@ public class ClientInformationActivity extends Activity
         .setPositiveButton(R.string.tf_reset, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {            
                 if (verifyReset()) {
-                    Collect.getInstance().getInformOnline().resetDevice();
+                    Collect.getInstance().getInformOnlineState().resetDevice();
                     resetCompleteDialog();
                 } else {
                     resetIncompleteDialog();
@@ -381,7 +381,7 @@ public class ClientInformationActivity extends Activity
     {
         boolean reset = false;
         
-        String url = Collect.getInstance().getInformOnline().getServerUrl() + "/reset";
+        String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/reset";
         
         String getResult = HttpUtils.getUrlData(url);
         JSONObject result;

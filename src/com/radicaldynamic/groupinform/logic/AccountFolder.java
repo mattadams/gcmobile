@@ -1,18 +1,12 @@
 package com.radicaldynamic.groupinform.logic;
 
-import java.io.Serializable;
 
 
 /*
  * This class represents a form folder result as returned from Inform Online
  */
-public class AccountFolder implements Serializable
+public class AccountFolder
 {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = -7183418287943067904L;
-    
     private String id;
     private String ownerId;
     private String name;

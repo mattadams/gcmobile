@@ -79,7 +79,7 @@ public class MyFormsList extends ListActivity
     {
         super.onResume();
 
-        if (Collect.mDb != null)
+        if (Collect.getInstance().getDbService() != null)
             loadScreen();
     }
 
@@ -147,10 +147,10 @@ public class MyFormsList extends ListActivity
         protected Void doInBackground(Void... nothing)
         {
             try {
-                documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).getAll();
+                documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
                 DocumentUtils.sortByName(documents);                             
 
-                instanceTalliesByStatus = new FormRepository(Collect.mDb.getDb()).getFormsWithInstanceCounts();                    
+                instanceTalliesByStatus = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();                    
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
             }
@@ -242,7 +242,7 @@ public class MyFormsList extends ListActivity
                     }
                     
                     form.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT), "text/xml"));
-                    Collect.mDb.getDb().create(form);
+                    Collect.getInstance().getDbService().getDb().create(form);
                     
                     is.close();
                     data.close();

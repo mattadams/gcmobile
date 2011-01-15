@@ -207,7 +207,7 @@ public class AccountDeviceActivity extends Activity
             else 
                 params.add(new BasicNameValuePair("transfer", "unlocked"));
             
-            String updateUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/device/update";
+            String updateUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/update";
             
             return HttpUtils.postUrlData(updateUrl, params);
         }
@@ -288,7 +288,7 @@ public class AccountDeviceActivity extends Activity
         @Override
         protected String doInBackground(Void... nothing)
         {            
-            String removeUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/device/remove/" + mDeviceId;            
+            String removeUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/remove/" + mDeviceId;            
             return HttpUtils.getUrlData(removeUrl);
         }
     

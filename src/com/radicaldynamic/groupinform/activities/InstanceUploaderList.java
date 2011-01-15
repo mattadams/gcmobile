@@ -210,10 +210,10 @@ public class InstanceUploaderList extends ListActivity {
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            mInstanceTallies = new FormRepository(Collect.mDb.getDb()).getFormsByAggregateReadiness();
+            mInstanceTallies = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsByAggregateReadiness();
             
             if (!mInstanceTallies.isEmpty()) {
-                documents = (ArrayList<FormDocument>) new FormRepository(Collect.mDb.getDb()).
+                documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).
                     getAllByKeys(new ArrayList<Object>(mInstanceTallies.keySet()));
             
                 DocumentUtils.sortByName(documents);

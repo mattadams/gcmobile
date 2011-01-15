@@ -84,7 +84,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             // MIME POST
             MultipartEntity entity = new MultipartEntity();
             
-            InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, values[i]);
+            InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, values[i]);
             
             if (instance.getDateAggregated() != null && instance.getDateUpdatedAsCalendar().after(instance.getDateAggregatedAsCalendar())) {
                 Log.w(Collect.LOGTAG, t + values[i] + " cannot be uploaded to ODK Aggregate: dateUpdated is newer than dateAggregated");
@@ -97,7 +97,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                 String key = entry.getKey();
                 String contentType = entry.getValue().getContentType();
 
-                AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(values[i], key);  
+                AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(values[i], key);  
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
                 byte[] buffer = new byte[8192];
                 int bytesRead = 0;
@@ -169,7 +169,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                 uploadedIntances.add(values[i]);
                 
                 instance.setDateAggregated(GenericDocument.generateTimestamp());
-                Collect.mDb.getDb().update(instance);
+                Collect.getInstance().getDbService().getDb().update(instance);
             }
             
             // Remove cache files pertaining to this upload

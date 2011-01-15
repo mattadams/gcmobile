@@ -11,7 +11,7 @@
         android:layout_marginRight="6dip"  
         android:layout_height="fill_parent"
         android:layout_width="wrap_content"
-        android:src="@drawable/ic_menu_archive" />
+        android:src="@drawable/ic_menu_archive_sync" />
         
     <TextView
         android:id="@+id/firstLine"
@@ -37,5 +37,4 @@
         android:ellipsize="marquee"
         android:text="Simple application that shows how to use RelativeLayout" 
         android:textColor="@color/solid_black" />
-               
 </RelativeLayout>

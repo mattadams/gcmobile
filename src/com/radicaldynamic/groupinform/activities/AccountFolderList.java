@@ -179,7 +179,7 @@ public class AccountFolderList extends ListActivity
         Log.d(Collect.LOGTAG, t + "fetching new list of folders");
         
         // Try to ping the service to see if it is "up"
-        String folderListUrl = Collect.getInstance().getInformOnline().getServerUrl() + "/folder/list";
+        String folderListUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/folder/list";
         String getResult = HttpUtils.getUrlData(folderListUrl);
         JSONObject jsonFolderList;
         

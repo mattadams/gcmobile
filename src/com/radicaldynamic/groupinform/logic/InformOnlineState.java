@@ -65,8 +65,6 @@ public class InformOnlineState
     
     private CookieStore session = null;
     private SharedPreferences prefs;
-    
-    private boolean ready = false;
        
     // Used by Collect
     public InformOnlineState()
@@ -173,7 +171,6 @@ public class InformOnlineState
             e.printStackTrace();
         }
         
-        setReady(false);
         setSession(null);
         
         return saidGoodbye;
@@ -293,16 +290,6 @@ public class InformOnlineState
         return devicePin;
     }
 
-    public void setReady(boolean ready)
-    {
-        this.ready = ready;
-    }
-
-    public boolean isReady()
-    {
-        return ready;
-    }
-
     public void setServerUrl(String serverUrl)
     {
         this.serverUrl = serverUrl;
@@ -340,7 +327,7 @@ public class InformOnlineState
     /*
      * See http://stackoverflow.com/questions/2785485/is-there-a-unique-android-device-id
      */
-    public void setDeviceFingerprint(Context context)
+    private void setDeviceFingerprint(Context context)
     {
         final TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 
@@ -382,12 +369,12 @@ public class InformOnlineState
         setDeviceKey(null);
         setDevicePin(null);
         
-        setReady(false);        
         setSession(null); 
         
         // Remove cached files
         FileUtils.deleteFile(FileUtils.DEVICE_CACHE_FILE_PATH);
         FileUtils.deleteFile(FileUtils.FOLDER_CACHE_FILE_PATH);
+        FileUtils.deleteFile(FileUtils.SESSION_CACHE_FILE_PATH);
     }
 
     private void loadPreferences()

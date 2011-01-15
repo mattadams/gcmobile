@@ -227,7 +227,7 @@ public class DownloadFormsTask extends
             
             // Create attachment and save form
             form.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT), "text/xml"));            
-            Collect.mDb.getDb().create(form);
+            Collect.getInstance().getDbService().getDb().create(form);
             
             data.close();            
         } catch (IOException e) {

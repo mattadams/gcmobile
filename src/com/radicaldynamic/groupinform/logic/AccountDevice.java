@@ -1,14 +1,8 @@
 package com.radicaldynamic.groupinform.logic;
 
-import java.io.Serializable;
 
-public class AccountDevice implements Serializable
+public class AccountDevice
 {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 8198183377512045250L;
-
     private String id;                  // RO access by everyone
     private String alias;               // Everyone (r/w by device owner)
     private String email;               // Everyone (r/w by device owner)

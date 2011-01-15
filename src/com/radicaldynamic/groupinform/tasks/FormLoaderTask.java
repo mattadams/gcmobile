@@ -126,7 +126,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         
         // TODO: we need to handle what happens when a form document no longer exists
         // or perhaps we don't do that here at all...
-        FormDocument form = Collect.mDb.getDb().get(FormDocument.class, formId);                
+        FormDocument form = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);                
         File formBin = new File(FileUtils.FORMS_PATH + formId + ".formdef");
         
         Log.i(Collect.LOGTAG, t + formId + ": loading form named " + form.getName());
@@ -163,7 +163,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             try {
             	Log.d(Collect.LOGTAG, t + formId + ": attempting read of " + form.getName() + " XML attachment");
             	
-            	AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(formId, "xml");
+            	AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
             	fd = XFormUtils.getFormFromInputStream(ais);
             	ais.close();            	            	
             	
@@ -246,7 +246,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         Log.d(Collect.LOGTAG, t + formId + ": importing instance " + instanceId);
         
         // Retrieve instance XML attachment from database
-        AttachmentInputStream ais = Collect.mDb.getDb().getAttachment(instanceId, "xml");
+        AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, "xml");
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
         int bytesRead;
@@ -285,7 +285,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             }
             
             // Also download any media attachments
-            InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, instanceId);            
+            InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, instanceId);            
             HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
             
             for (Entry<String, Attachment> entry : attachments.entrySet()) {
@@ -293,7 +293,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 
                 // Do not download XML attachments (these are loaded directly into the form model)
                 if (!key.equals("xml")) {
-                    ais = Collect.mDb.getDb().getAttachment(instanceId, key);                  
+                    ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, key);                  
                     
                     FileOutputStream file = new FileOutputStream(new File(FileUtils.CACHE_PATH + key));
                     buffer = new byte[8192];

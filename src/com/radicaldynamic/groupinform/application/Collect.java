@@ -27,6 +27,7 @@ import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.CouchDbService;
+import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.xform.Bind;
 import com.radicaldynamic.groupinform.xform.Field;
 import com.radicaldynamic.groupinform.xform.Instance;
@@ -42,11 +43,12 @@ public class Collect extends Application {
     private IBinder viewToken = null;    
     private boolean firstReferenceInitialization = true;
     
-    // The database connection
-    public static CouchDbService mDb = null;
+    // Service connections
+    private CouchDbService dbService = null;
+    private InformOnlineService ioService = null;
     
     // Current registration state of this device
-    private InformOnlineState informOnline = new InformOnlineState();
+    private InformOnlineState informOnlineState = new InformOnlineState();
     
     // Lookup map for account devices, indexed by device ID
     private Map<String, AccountDevice> accountDevicesMap = new HashMap<String, AccountDevice>();
@@ -216,9 +218,15 @@ public class Collect extends Application {
     public void setFbItemList(ArrayList<Field> fbItemList) { this.fbItemList = fbItemList; }
     public ArrayList<Field> getFbItemList() { return fbItemList; }
 
-    public void setInformOnline(InformOnlineState informOnline) { this.informOnline = informOnline; }
-    public InformOnlineState getInformOnline() { return informOnline; }
+    public void setInformOnlineState(InformOnlineState informOnlineState) { this.informOnlineState = informOnlineState; }
+    public InformOnlineState getInformOnlineState() { return informOnlineState; }
 
     public void setInstanceBrowseList(ArrayList<String> instanceBrowseList) { this.instanceBrowseList = instanceBrowseList; }
     public ArrayList<String> getInstanceBrowseList() { return instanceBrowseList; }
+
+    public void setDbService(CouchDbService dbService) { this.dbService = dbService; }
+    public CouchDbService getDbService() { return dbService; }
+
+    public void setIoService(InformOnlineService ioService) { this.ioService = ioService; }
+    public InformOnlineService getIoService() { return ioService; }
 }

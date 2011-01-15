@@ -152,7 +152,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
             int read = is.read(data, 0, len);
             
             if (read > 0) {
-                InstanceDocument instance = Collect.mDb.getDb().get(InstanceDocument.class, mInstanceId);   
+                InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);   
                                 
                 if (markCompleted)
                     instance.setStatus(InstanceDocument.Status.complete);
@@ -161,7 +161,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 
                 // Save form data
                 instance.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data, Base64.DEFAULT), "text/xml"));
-                Collect.mDb.getDb().update(instance);
+                Collect.getInstance().getDbService().getDb().update(instance);
                 
                 // Save media attachments one by one
                 File cacheDir = new File(FileUtils.CACHE_PATH);
@@ -174,7 +174,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                         Log.d(Collect.LOGTAG, t + mInstanceId + ": attaching " + file);
                         
                         // Make sure we have the most current revision number
-                        InstanceDocument document = Collect.mDb.getDb().get(InstanceDocument.class, mInstanceId);
+                        InstanceDocument document = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);
 
                         FileInputStream fis = new FileInputStream(new File(FileUtils.CACHE_PATH + file));
                         String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1));
@@ -182,7 +182,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                         AttachmentInputStream a = new AttachmentInputStream(file, fis, contentType);
                         
                         // Must use the revision number (why?) http://code.google.com/p/ektorp/issues/detail?id=28
-                        Collect.mDb.getDb().createAttachment(document.getId(), document.getRevision(), a);
+                        Collect.getInstance().getDbService().getDb().createAttachment(document.getId(), document.getRevision(), a);
                         
                         a.close();
                         fis.close();
