@@ -16,6 +16,7 @@ package com.radicaldynamic.groupinform.utilities;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.os.Environment;
 import android.util.Log;
 
@@ -63,6 +64,10 @@ public final class FileUtils {
     public static final String XSL_EXTENSION_PATH = ODK_ROOT + "xsl/";
     public static final String CACHE_PATH = ODK_ROOT + "cache/";
     public static final String TMPFILE_PATH = CACHE_PATH + "tmp.jpg";
+    
+    public static final int IMAGE_WIDGET_MAX_WIDTH = 1024;
+    public static final int IMAGE_WIDGET_MAX_HEIGHT = 768;
+    public static final int IMAGE_WIDGET_QUALITY = 75;
 
     public static final String getDatabasePath() {
 
@@ -328,8 +333,10 @@ public final class FileUtils {
         }
     }
     
-    public static Bitmap getBitmapScaledToDisplay(File f, int screenHeight,
-            int screenWidth)
+    /*
+     * Used by ImageWidget to scale a captured bitmap to something that will display nicely on the screen
+     */
+    public static Bitmap getBitmapScaledToDisplay(File f, int screenHeight, int screenWidth)
     {
         // Determine image size of f
         BitmapFactory.Options o = new BitmapFactory.Options();
@@ -347,10 +354,52 @@ public final class FileUtils {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = scale;
         Bitmap b = BitmapFactory.decodeFile(f.getAbsolutePath(), options);
+        
         Log.i(t, "Screen is " + screenHeight + "x" + screenWidth
                 + ".  Image has been scaled down by " + scale + " to "
                 + b.getHeight() + "x" + b.getWidth());
 
         return b;
+    }
+    
+    /*
+     * Used by ImageWidget to resize a captured bitmap to equal to or less than maxWidth x maxHeight
+     */
+    public static Bitmap getBitmapResizedToStore(File f, int maxWidth, int maxHeight)
+    {
+        // Determine image size of f
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(f.getAbsolutePath(), o);
+       
+        int newWidth;
+        int newHeight;
+       
+        float scaleWidth;
+        float scaleHeight;
+        
+        if (o.outWidth >= o.outHeight) {
+            scaleWidth = (float) maxWidth / o.outWidth;
+            scaleHeight = scaleWidth;
+        } else {
+            scaleHeight = (float) maxHeight / o.outHeight;
+            scaleWidth = scaleHeight;
+        }
+        
+        newWidth = Math.round(o.outWidth * scaleWidth);
+        newHeight = Math.round(o.outHeight * scaleHeight);
+
+        Log.i(t, "Image should be " + maxWidth + "x" + maxHeight 
+                + ".  Image has been scaled to "
+                + newWidth + "x" + newHeight);
+        
+        o = new BitmapFactory.Options();
+        o.inPreferredConfig = Bitmap.Config.ARGB_8888;
+
+        return Bitmap.createScaledBitmap(
+                BitmapFactory.decodeFile(f.getAbsolutePath(), new Options()), 
+                newWidth, 
+                newHeight, 
+                false);
     }
 }

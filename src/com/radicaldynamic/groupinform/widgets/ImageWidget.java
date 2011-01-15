@@ -15,6 +15,9 @@
 package com.radicaldynamic.groupinform.widgets;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
@@ -70,13 +73,11 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
     
 //    private FormEntryPrompt mPrompt;
 
-
     public ImageWidget(Handler handler, Context context, FormEntryPrompt prompt, String instancePath) {
         super(handler, context, prompt);
         initialize(instancePath);
 //        mPrompt = prompt;
     }
-
 
     private void initialize(String instancePath) {
         mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf("/") + 1);
@@ -88,15 +89,16 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         mReplaceText = R.string.replace_image;
     }
 
-
     private void deleteMedia() {
     	// non-existent?
-    	if ( mBinaryName == null ) return;
+    	if (mBinaryName == null) 
+    	    return;
 
     	Log.i(Collect.LOGTAG, t + "deleting current answer: " + mBinaryName);
     	
     	// release image...
     	mImageView.setImageBitmap(null);
+    	
         // get the file path and delete the file
     	//
         // There's only 1 in this case, but android 1.6 doesn't implement delete on
@@ -105,19 +107,24 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         String[] projection = {
             Images.ImageColumns._ID
         };
-        Cursor c =
-            getContext().getContentResolver().query(mExternalUri, projection,
-                "_data='" + mInstanceFolder + mBinaryName + "'", null, null);
+        
+        Cursor c = getContext().getContentResolver().query(
+                mExternalUri, 
+                projection,
+                "_data='" + mInstanceFolder + mBinaryName + "'", 
+                null, 
+                null);
+        
         int del = 0;
+        
         if (c.getCount() > 0) {
             c.moveToFirst();
             String id = c.getString(c.getColumnIndex(Images.ImageColumns._ID));
 
             Log.i(Collect.LOGTAG, t + "attempting to delete: " + Uri.withAppendedPath(mExternalUri, id));
-            del =
-                getContext().getContentResolver().delete(Uri.withAppendedPath(mExternalUri, id),
-                    null, null);
+            del = getContext().getContentResolver().delete(Uri.withAppendedPath(mExternalUri, id), null, null);
         }
+        
         c.close();
 
         // clean up variables
@@ -135,13 +142,11 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
     }
 
     @Override
-    protected void buildViewBodyImpl() {
-        
+    protected void buildViewBodyImpl() {        
         // setup capture button
         mCaptureButton = new Button(getContext());
         mCaptureButton.setText(getContext().getString(mCaptureText));
-        mCaptureButton
-                .setTextSize(TypedValue.COMPLEX_UNIT_DIP, AbstractFolioView.APPLICATION_FONTSIZE);
+        mCaptureButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, AbstractFolioView.APPLICATION_FONTSIZE);
         mCaptureButton.setPadding(20, 20, 20, 20);
         mCaptureButton.setEnabled(!prompt.isReadOnly());
 
@@ -149,7 +154,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         mCaptureButton.setOnClickListener(new View.OnClickListener() {
             @Override
 			public void onClick(View v) {
-            	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
+            	if (signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL)) {
 	                Intent i = new Intent(mCaptureIntent);
 	                // We give the camera an absolute filename/path where to put the
 	                // picture because of bug:
@@ -161,8 +166,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
 	
 	                // if this gets modified, the onActivityResult in
 	                // FormEntyActivity will also need to be updated.
-	                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(
-	                        FileUtils.TMPFILE_PATH)));
+	                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(FileUtils.TMPFILE_PATH)));
 	                ((Activity) getContext()).startActivityForResult(i, mRequestCode);
             	}
             }
@@ -181,14 +185,22 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL)) {
+                if (signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL)) {
                     // do nothing if no image
-                    if ( mBinaryName == null ) return;
+                    if (mBinaryName == null) 
+                        return;
+                    
                     Intent i = new Intent("android.intent.action.VIEW");
+                    
                     String[] projection = {"_id"};
-                    Cursor c =
-                        getContext().getContentResolver().query(mExternalUri, projection,
-                                "_data='" + mInstanceFolder + mBinaryName + "'", null, null);
+                    
+                    Cursor c = getContext().getContentResolver().query(
+                            mExternalUri, 
+                            projection,
+                            "_data='" + mInstanceFolder + mBinaryName + "'", 
+                            null, 
+                            null);
+                    
                     if (c.getCount() > 0) {
                         c.moveToFirst();
                         String id = c.getString(c.getColumnIndex("_id"));
@@ -198,6 +210,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
                         i.setDataAndType(Uri.withAppendedPath(mExternalUri, id), "image/*");
                         getContext().startActivity(i);
                     }
+                    
                     c.close();
                 }
             }
@@ -206,46 +219,50 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         addView(mImageView);
     }
 
-    protected void updateViewAfterAnswer() {
-    	
+    protected void updateViewAfterAnswer() {    	
     	String newAnswer = prompt.getAnswerText();
-    	if ( mBinaryName != null && !mBinaryName.equals(newAnswer)) {
+    	
+    	if (mBinaryName != null && !mBinaryName.equals(newAnswer)) {
     		deleteMedia();
     	}
+    	
     	mBinaryName = newAnswer;
     	
         if (mBinaryName != null) {
             mCaptureButton.setText(getContext().getString(mReplaceText));
             mDisplayText.setText(getContext().getString(R.string.one_capture));
             
-            Display display =  
-                ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE))
-                        .getDefaultDisplay();
+            Display display = ((WindowManager) getContext()
+                    .getSystemService(Context.WINDOW_SERVICE))
+                    .getDefaultDisplay();
+            
             int screenWidth = display.getWidth();
             int screenHeight = display.getHeight();
                 
             Log.d(Collect.LOGTAG, t + "attempting to decodeFile with path " + mInstanceFolder + "/" + mBinaryName);
+            
             File f = new File(mInstanceFolder + "/" + mBinaryName);
             Bitmap bmp = FileUtils.getBitmapScaledToDisplay(f, screenHeight, screenWidth);            
             mImageView.setImageBitmap(bmp);
         } else {
             mCaptureButton.setText(getContext().getString(mCaptureText));
-            mDisplayText.setText(getContext().getString(R.string.no_capture));
-            
+            mDisplayText.setText(getContext().getString(R.string.no_capture));            
             mImageView.setImageBitmap(null);
         }
     }
     
     private Uri getUriFromPath(String path) {
         // find entry in content provider
-        Cursor c =
-            getContext().getContentResolver().query(mExternalUri, null, "_data='" + path + "'",
-                null, null);
+        Cursor c = getContext()
+                .getContentResolver()
+                .query(mExternalUri, null, "_data='" + path + "'", null, null);
+        
         c.moveToFirst();
 
         // create uri from path
         String newPath = mExternalUri + "/" + c.getInt(c.getColumnIndex("_id"));
         c.close();
+        
         return Uri.parse(newPath);
     }
 
@@ -257,6 +274,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         // get data path
         String colString = c.getString(c.getColumnIndex("_data"));
         c.close();
+        
         return colString;
     }
 
@@ -269,13 +287,31 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         String binarypath = getPathFromUri((Uri) binaryuri);
         
         File f = new File(binarypath);           
+        
         String s = mInstanceFolder + "/" + mInstanceId
-        + DateUtils.now("yyyyMMdd-HHmmss") + "."
-        + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
-        if (!f.renameTo(new File(s))) {
+            + DateUtils.now("yyyyMMdd-HHmmss") + "."
+            + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
+        
+        if (f.renameTo(new File(s))) {
+            // Resize image (full sized images are too large for the system)
+            try {                                
+                Bitmap bmp = FileUtils.getBitmapResizedToStore(
+                        new File(s), FileUtils.IMAGE_WIDGET_MAX_WIDTH, FileUtils.IMAGE_WIDGET_MAX_HEIGHT);                
+                FileOutputStream out = new FileOutputStream(s);
+                bmp.compress(Bitmap.CompressFormat.JPEG, FileUtils.IMAGE_WIDGET_QUALITY, out);
+                out.close();
+                bmp.recycle();
+            } catch (FileNotFoundException e) {
+                Log.e(Collect.LOGTAG, t + "failed to find file " + e.toString());  
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.e(Collect.LOGTAG, t + "failed to close output stream " + e.toString());
+                e.printStackTrace();
+            }
+        } else {
             Log.e(Collect.LOGTAG, t + "failed to rename " + f.getAbsolutePath());
         }
-
+        
         // remove the database entry and update the name
         getContext().getContentResolver().delete(getUriFromPath(binarypath), null, null);
         mBinaryName = s.substring(s.lastIndexOf('/') + 1);
