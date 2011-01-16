@@ -266,6 +266,7 @@
     <string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_general_preferences">Preferences</string>
 	<string name="tf_go_offline">Go Offline</string>
+	<string name="tf_go_online">Go Online</string>
 	<string name="tf_help">Help</string>
 	<string name="tf_image_media_type">Photograph</string>
 	<string name="tf_improperly_formatted_licence_number">Improperly formatted licence number</string>

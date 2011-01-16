@@ -126,7 +126,7 @@ public class MainBrowserActivity extends ListActivity
 
         // If SD card error, quit
         if (!FileUtils.storageReady()) {
-            displayErrorDialog(getString(R.string.no_sd_error), true);
+            showErrorDialog(getString(R.string.no_sd_error), true);
         }
 
         displaySplash();
@@ -134,7 +134,9 @@ public class MainBrowserActivity extends ListActivity
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
         setContentView(R.layout.main_browser);        
         
-        if (isInitialized()) {            
+        if (Collect.getInstance().getIoService() instanceof InformOnlineService && 
+                Collect.getInstance().getIoService().isReady()) {         
+            
             // Load our custom window title
             getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.folder_selector_title);            
 
@@ -168,6 +170,16 @@ public class MainBrowserActivity extends ListActivity
                 public void onClick(View v)
                 {
                     startActivity(new Intent(MainBrowserActivity.this, AccountFolderList.class));
+                }
+            });
+            
+            // Set up listener for Online Status button in title
+            Button b2 = (Button) findViewById(R.id.onlineStatusTitleButton);
+            b2.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v)
+                {
+                    showToggleOnlineStateDialog();
                 }
             });
         } else {
@@ -217,7 +229,8 @@ public class MainBrowserActivity extends ListActivity
     {
         super.onResume();
 
-        if (isInitialized())
+        if (Collect.getInstance().getIoService() instanceof InformOnlineService && 
+                Collect.getInstance().getIoService().isReady())
             loadScreen();
     }
 
@@ -351,7 +364,8 @@ public class MainBrowserActivity extends ListActivity
             
             // The InformOnlineService will perform ping and check-in immediately (no need to duplicate here)
             while (true) {
-                if (isInitialized())
+                if (Collect.getInstance().getIoService() instanceof InformOnlineService && 
+                        Collect.getInstance().getIoService().isInitialized())
                     break;
                 
                 // Wait for a second
@@ -384,7 +398,7 @@ public class MainBrowserActivity extends ListActivity
             if (mPinged)
                 postInitializeWorkflow(mRegistered);
             else
-                displayConnectionErrorDialog(mRegistered);
+                showConnectionErrorDialog(mRegistered);
                 
         }    
     }
@@ -517,6 +531,39 @@ public class MainBrowserActivity extends ListActivity
         }
     }
     
+    /*
+     * TODO 
+     * 
+     * Implement progress dialog that will be updated to show the online/offline switch progress
+     * (i.e., progress of folder synchronisations)
+     */
+    private class ToggleOnlineState extends AsyncTask<Void, Void, Void>
+    {
+        @Override
+        protected Void doInBackground(Void... nothing)
+        {
+            if (Collect.getInstance().getIoService().isSignedIn()) {
+                Collect.getInstance().getIoService().goOffline();
+            } else {
+                Collect.getInstance().getIoService().goOnline();                    
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute()
+        {
+
+        }
+
+        @Override
+        protected void onPostExecute(Void nothing)
+        {
+            loadScreen();
+        }
+    }
+    
     // Run any clean up needed before the application is interrupted or destroyed
     private void cleanup(boolean checkout)
     {
@@ -539,77 +586,6 @@ public class MainBrowserActivity extends ListActivity
 //        if (checkout)
 //            Collect.getInstance().getInformOnlineState().checkout();
     }
-    
-    /*
-     * An initial connection error should be handled differently depending on
-     * a) whether this device has already been registered, and
-     * b) whether this device has a local (and properly initialized) CouchDB installation
-     */
-    private void displayConnectionErrorDialog(boolean registered)
-    {
-        mAlertDialog = new AlertDialog.Builder(this).create();
-        
-        mAlertDialog.setCancelable(false);
-        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);        
-        mAlertDialog.setTitle(R.string.tf_connection_error);
-        
-        if (registered) 
-            mAlertDialog.setMessage("");
-        else 
-            mAlertDialog.setMessage(getString(R.string.tf_connection_error_msg));
-                
-        mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                new InitializeApplicationTask().execute(getApplicationContext());
-            }
-        });
-        
-//        mAlertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
-//            public void onClick(DialogInterface dialog, int whichButton) {
-//                // Continue and work offline -- only valid for registered users with a local CouchDB installation
-//            }
-//        });     
-                        
-        mAlertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                finish();
-            }
-        });
-                
-        mAlertDialog.show();
-    }
-
-    private void displayErrorDialog(String errorMsg, final boolean shouldExit)
-    {
-        mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setCancelable(false);
-        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
-        mAlertDialog.setMessage(errorMsg);
-
-        DialogInterface.OnClickListener errorListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int i)
-            {
-                switch (i) {
-                case DialogInterface.BUTTON1:
-                    if (shouldExit) {
-                        finish();
-                    }
-                    
-                    break;
-                }
-            }
-        };
-        
-        mAlertDialog.setButton(getString(R.string.ok), errorListener);
-        mAlertDialog.show();
-    }
-    
-    // Shortcut to tell if the app is really initialized or not
-    private boolean isInitialized()
-    {
-        return Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isInitialized();
-    }
 
     /**
      * Load the various elements of the screen that must wait for other tasks to
@@ -617,15 +593,14 @@ public class MainBrowserActivity extends ListActivity
      */
     private void loadScreen()
     {
-        if (Collect.getInstance().getIoService() instanceof InformOnlineService) {
-            // Reflect the online/offline status
-            Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
+        // Reflect the online/offline status
+        Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
 
-            if (Collect.getInstance().getIoService().isSignedIn())
-                b1.setText("Inform: Online");
-            else
-                b1.setText("Inform: Offline");
-        }
+        if (Collect.getInstance().getIoService().isSignedIn())
+            b1.setText(getText(R.string.tf_inform_state_online));
+        else
+            b1.setText(getText(R.string.tf_inform_state_offline));
+
         
         // Spinner must reflect results of refresh view below
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
@@ -664,13 +639,111 @@ public class MainBrowserActivity extends ListActivity
             }
         }
     }
+
+    /*
+     * An initial connection error should be handled differently depending on
+     * a) whether this device has already been registered, and
+     * b) whether this device has a local (and properly initialized) CouchDB installation
+     */
+    private void showConnectionErrorDialog(boolean registered)
+    {
+        mAlertDialog = new AlertDialog.Builder(this).create();
+
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);        
+        mAlertDialog.setTitle(R.string.tf_connection_error);
+
+        if (registered) 
+            mAlertDialog.setMessage("");
+        else 
+            mAlertDialog.setMessage(getString(R.string.tf_connection_error_msg));
+
+        mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                new InitializeApplicationTask().execute(getApplicationContext());
+            }
+        });
+
+        //        mAlertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
+        //            public void onClick(DialogInterface dialog, int whichButton) {
+        //                // Continue and work offline -- only valid for registered users with a local CouchDB installation
+        //            }
+        //        });     
+
+        mAlertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                finish();
+            }
+        });
+
+        mAlertDialog.show();
+    }
+
+    private void showErrorDialog(String errorMsg, final boolean shouldExit)
+    {
+        mAlertDialog = new AlertDialog.Builder(this).create();
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
+        mAlertDialog.setMessage(errorMsg);
+
+        DialogInterface.OnClickListener errorListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int i)
+            {
+                switch (i) {
+                case DialogInterface.BUTTON1:
+                    if (shouldExit) {
+                        finish();
+                    }
+
+                    break;
+                }
+            }
+        };
+
+        mAlertDialog.setButton(getString(R.string.ok), errorListener);
+        mAlertDialog.show();
+    }
     
+    private void showToggleOnlineStateDialog()
+    {
+        String buttonText;
+        
+        mAlertDialog = new AlertDialog.Builder(this).create();
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_info);
+        
+        if (Collect.getInstance().getIoService().isSignedIn()) {
+            mAlertDialog.setTitle(getText(R.string.tf_go_offline) + "?");
+            mAlertDialog.setMessage("You are currently online.  Group Inform will synchronize any folders that you have selected for offline use prior to going offline.");
+            buttonText = getText(R.string.tf_go_offline).toString();
+        } else {
+            mAlertDialog.setTitle(getText(R.string.tf_go_online) + "?");
+            mAlertDialog.setMessage("You are currently offline.");
+            buttonText = getText(R.string.tf_go_online).toString();
+        }
+
+        mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, buttonText, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                new ToggleOnlineState().execute();
+            }
+        });
+
+        mAlertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.cancel), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                dialog.cancel();
+            }
+        });
+
+        mAlertDialog.show();
+    }
+
     private void triggerRefresh(int position)
     {
         // Hide "nothing to display" message
         TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
         nothingToDisplay.setVisibility(View.INVISIBLE);
-        
+
         mRefreshViewTask = new RefreshViewTask();
 
         switch (position) {

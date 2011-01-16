@@ -80,7 +80,7 @@ public class InformOnlineService extends Service {
         public void run() {            
             for (int i = 1; i > 0; ++i) {
                 if (mConnecting == false)
-                    connect();
+                    connect(false);
                 // Retry connection to Inform Online service every 10 minutes
                 if (mCondition.block(600 * 1000))
                     break;
@@ -119,9 +119,41 @@ public class InformOnlineService extends Service {
         return mBinder;
     }
     
+    public boolean goOffline()
+    {
+        if (checkout()) {
+            Log.i(Collect.LOGTAG, t + "went offline at users request");
+            Collect.getInstance().getInformOnlineState().setOfflineModeEnabled(true);
+            return true;
+        } else {
+            Log.w(Collect.LOGTAG, t + "unable to go offline at users request");
+            return false;
+        }
+    }
+    
+    public boolean goOnline()
+    {
+        connect(true);
+        
+        if (isSignedIn()) {
+            Log.i(Collect.LOGTAG, t + "went online at users request");
+            Collect.getInstance().getInformOnlineState().setOfflineModeEnabled(false);
+            return true;
+        } else {
+            Log.w(Collect.LOGTAG, t + "unable to go online at users request");
+            return false;
+        }
+    }
+    
     public boolean isInitialized()
     {
         return mInitialized;
+    }
+    
+    // Application is ready for regular operation & user interaction
+    public boolean isReady()
+    {
+        return isInitialized() && isRegistered();
     }
     
     public boolean isRegistered()
@@ -198,13 +230,11 @@ public class InformOnlineService extends Service {
     }
     
     /*
-     * Try and say "goodbye" to Inform Online so that we know that 
-     * this client's session is no longer needed.
+     * Try and say "goodbye" to Inform Online so that we know that this client's session is no longer needed.
      * 
-     * This is a "best effort" method and it is possible that the device may
-     * have already been checked out by another process (such as resetting the device).
+     * Checkouts are the result of a manual process and as such they will knock us
+     * offline until the user manually puts us back into the online state.
      */
-    @SuppressWarnings("unused")
     private boolean checkout()
     {
         boolean saidGoodbye = false;
@@ -221,9 +251,12 @@ public class InformOnlineService extends Service {
             
             if (result.equals(InformOnlineState.OK)) {
                 Log.i(Collect.LOGTAG, t + "said goodbye to Inform Online");
-                saidGoodbye = true;
-            } else 
+            } else { 
                 Log.i(Collect.LOGTAG, t + "device checkout unnecessary");
+            }      
+            
+            mSignedIn = false;
+            saidGoodbye = true;
         } catch (NullPointerException e) {
             // Communication error
             Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
@@ -242,14 +275,22 @@ public class InformOnlineService extends Service {
     /*
      * Connect to the Inform Online service and if registered, attempt to sign in
      */
-    private void connect()
+    private void connect(boolean forceOnline)
     {
-        mConnecting = true;
-        
-        if (!mInitialized) {
+        // Initialize if this hasn't been done
+        if (mInitialized == false) {
             Collect.getInstance().setInformOnlineState(new InformOnlineState(getApplicationContext()));
             restoreSession();
         }
+        
+        // Make sure that the user has not specifically requested that we be offline
+        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled() && forceOnline == false) {
+            Log.i(Collect.LOGTAG, t + "offline mode enabled; not auto-connecting");
+            mInitialized = true;
+            return;
+        }
+        
+        mConnecting = true;
         
         Log.d(Collect.LOGTAG, t + "pinging " + getString(R.string.tf_default_nodejs_server) + ":" + getText(R.string.tf_default_nodejs_port));
         
@@ -302,6 +343,8 @@ public class InformOnlineService extends Service {
                 
                 // Update our list of account databases (aka form folders)
                 // TODO
+            } else {
+                
             }
             
             // Unblock

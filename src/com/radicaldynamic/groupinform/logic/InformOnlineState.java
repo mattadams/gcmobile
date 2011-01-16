@@ -39,6 +39,9 @@ public class InformOnlineState
     
     public static final String DEFAULT_DATABASE = "informonline_defaultdb"; // Invisible
     
+    // Dictates whether or not the app was put into offline mode manually
+    public static final String OFFLINE_MODE = "informonline_offlinemode";   // Invisible
+    
     // Constants for session information stored in preferences
     public static final String SESSION     = "informonline_session";        // Invisible
     
@@ -54,6 +57,7 @@ public class InformOnlineState
     private String deviceFingerprint;
     private String defaultDatabase;
     
+    private boolean offlineModeEnabled = false;
     private CookieStore session = null;
     private SharedPreferences prefs;
        
@@ -217,6 +221,20 @@ public class InformOnlineState
         return deviceFingerprint;
     }
 
+    public void setOfflineModeEnabled(boolean offlineMode)
+    {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(OFFLINE_MODE, offlineMode);
+        editor.commit();
+        
+        this.offlineModeEnabled = offlineMode;
+    }
+
+    public boolean isOfflineModeEnabled()
+    {
+        return offlineModeEnabled;
+    }
+
     // Whether this device appears to be registered
     public boolean hasRegistration()
     {
@@ -226,6 +244,14 @@ public class InformOnlineState
             return true;
         }
     }
+    
+    private void removeFiles()
+    {
+        // Remove cached files
+        FileUtils.deleteFile(FileUtils.DEVICE_CACHE_FILE_PATH);
+        FileUtils.deleteFile(FileUtils.FOLDER_CACHE_FILE_PATH);
+        FileUtils.deleteFile(FileUtils.SESSION_CACHE_FILE_PATH);
+    }
 
     public void resetDevice()
     {
@@ -233,18 +259,15 @@ public class InformOnlineState
         setAccountNumber(null);
         setAccountOwner(false);
         
-        setDefaultDatabase(null);
-        
         setDeviceId(null);
         setDeviceKey(null);
         setDevicePin(null);
         
+        setDefaultDatabase(null);
+        setOfflineModeEnabled(false);
         setSession(null); 
         
-        // Remove cached files
-        FileUtils.deleteFile(FileUtils.DEVICE_CACHE_FILE_PATH);
-        FileUtils.deleteFile(FileUtils.FOLDER_CACHE_FILE_PATH);
-        FileUtils.deleteFile(FileUtils.SESSION_CACHE_FILE_PATH);
+        removeFiles();
     }
 
     private void loadPreferences()
@@ -253,10 +276,15 @@ public class InformOnlineState
         setAccountNumber(prefs.getString(ACCOUNT_NUM, null));
         setAccountOwner(prefs.getBoolean(ACCOUNT_OWNER, false));
         
-        setDefaultDatabase(prefs.getString(DEFAULT_DATABASE, null));
-        
         setDeviceId(prefs.getString(DEVICE_ID, null));
         setDeviceKey(prefs.getString(DEVICE_KEY, null));
         setDevicePin(prefs.getString(DEVICE_PIN, null));
+        
+        setDefaultDatabase(prefs.getString(DEFAULT_DATABASE, null));
+        setOfflineModeEnabled(prefs.getBoolean(OFFLINE_MODE, false));
+        
+        // Further post-cleanup if the user "cleared data" via the Application Info screen
+        if (getDeviceId() == null)
+            resetDevice();
     }
 }
