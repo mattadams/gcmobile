@@ -45,6 +45,7 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.AccountDeviceList;
+import com.radicaldynamic.groupinform.activities.AccountFolderList;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.InformOnlineSession;
@@ -93,12 +94,26 @@ public class InformOnlineService extends Service {
         Thread persistentConnectionThread = new Thread(null, mTask, "InformOnlineService");        
         mCondition = new ConditionVariable(false);
         persistentConnectionThread.start();
+        
+        // Do some basic initialization of this service
+        Collect.getInstance().setInformOnlineState(new InformOnlineState(getApplicationContext()));
+        restoreSession();
     }
     
+    /*
+     * (non-Javadoc)
+     * @see android.app.Service#onDestroy()
+     * 
+     * Perform cleanup here.  Note that we need to effectively reset the state of this service here
+     * because there is no guarantee that the object will be destroyed before the app resumes (and
+     * then assumes that the state being reported is accurate).
+     */
     @Override
     public void onDestroy() {
-        if (isInitialized())
+        if (isInitialized()) {
             serializeSession();
+            reinitializeService();
+        }
         
         mCondition.open();
     }
@@ -119,10 +134,11 @@ public class InformOnlineService extends Service {
         return mBinder;
     }
     
+    // Triggered by UI button when the user wants to manually switch to OFFLINE mode
     public boolean goOffline()
     {
         if (checkout()) {
-            Log.i(Collect.LOGTAG, t + "went offline at users request");
+            Log.i(Collect.LOGTAG, t + "went offline at users request");            
             Collect.getInstance().getInformOnlineState().setOfflineModeEnabled(true);
             return true;
         } else {
@@ -131,9 +147,12 @@ public class InformOnlineService extends Service {
         }
     }
     
+    // Triggered by UI button when the user wants to force online mode
     public boolean goOnline()
     {
-        connect(true);
+        // Force online (but only if a connection attempt is not already underway)
+        if (!mConnecting)
+            connect(true);
         
         if (isSignedIn()) {
             Log.i(Collect.LOGTAG, t + "went online at users request");
@@ -145,17 +164,24 @@ public class InformOnlineService extends Service {
         }
     }
     
+    // connect() has been run at least once
     public boolean isInitialized()
     {
         return mInitialized;
     }
-    
-    // Application is ready for regular operation & user interaction
+     
+    /*
+     * Application is ready for regular operation & user interaction.
+     * 
+     * This does not mean that we were able to ping the service or 
+     * that we are signed in.
+     */
     public boolean isReady()
     {
         return isInitialized() && isRegistered();
     }
     
+    // Registration info for this device is stored in the app's shared preferences
     public boolean isRegistered()
     {
         return Collect.getInstance().getInformOnlineState().hasRegistration();
@@ -171,6 +197,17 @@ public class InformOnlineService extends Service {
     public boolean isSignedIn()
     {
         return mSignedIn;
+    }    
+    
+    // Bring the service back to the defaults it would have had when originally started
+    public void reinitializeService()
+    {
+        Log.d(Collect.LOGTAG, t + "service reinitialized");
+        
+        mInitialized
+        = mServicePingSuccessful
+        = mSignedIn
+        = false;
     }
     
     /*
@@ -255,7 +292,6 @@ public class InformOnlineService extends Service {
                 Log.i(Collect.LOGTAG, t + "device checkout unnecessary");
             }      
             
-            mSignedIn = false;
             saidGoodbye = true;
         } catch (NullPointerException e) {
             // Communication error
@@ -265,6 +301,9 @@ public class InformOnlineService extends Service {
             // Parse error (malformed result)
             Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
             e.printStackTrace();
+        } finally {
+            // Running a checkout ALWAYS "signs us out"
+            mSignedIn = false;
         }
         
         Collect.getInstance().getInformOnlineState().setSession(null);
@@ -277,20 +316,21 @@ public class InformOnlineService extends Service {
      */
     private void connect(boolean forceOnline)
     {
-        // Initialize if this hasn't been done
-        if (mInitialized == false) {
-            Collect.getInstance().setInformOnlineState(new InformOnlineState(getApplicationContext()));
-            restoreSession();
-        }
+        mConnecting = true;
         
         // Make sure that the user has not specifically requested that we be offline
         if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled() && forceOnline == false) {
             Log.i(Collect.LOGTAG, t + "offline mode enabled; not auto-connecting");
+            
+            /* 
+             * This is not a complete initialization (in the sense that we attempted connection) but we need 
+             * to pretend that it is so that the UI can move forward to whatever state is most suitable.
+             */
             mInitialized = true;
+            mConnecting = false; 
+            
             return;
         }
-        
-        mConnecting = true;
         
         Log.d(Collect.LOGTAG, t + "pinging " + getString(R.string.tf_default_nodejs_server) + ":" + getText(R.string.tf_default_nodejs_port));
         
@@ -342,9 +382,7 @@ public class InformOnlineService extends Service {
                 loadDeviceHash();
                 
                 // Update our list of account databases (aka form folders)
-                // TODO
-            } else {
-                
+                AccountFolderList.loadFolderList();
             }
             
             // Unblock
@@ -441,7 +479,7 @@ public class InformOnlineService extends Service {
         
         return alive;
     }
-    
+
     /*
      * Restore a serialized session from disk
      */

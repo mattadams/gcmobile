@@ -81,6 +81,9 @@ public class MainBrowserActivity extends ListActivity
     
     // Request codes for returning data from specified intent 
     private static final int ABOUT_INFORM = 1;
+    
+    // Intent status codes
+    private static final String KEY_REINIT_IOSERVICE = "key_reinit_ioservice";
 
     private static boolean mShowSplash = true;
     private Toast mSplashToast;
@@ -132,7 +135,18 @@ public class MainBrowserActivity extends ListActivity
         displaySplash();
 
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
-        setContentView(R.layout.main_browser);        
+        setContentView(R.layout.main_browser);
+        
+        Intent intent = getIntent();
+        
+        if (intent == null) {
+            
+        } else {
+            if (intent.getBooleanExtra(KEY_REINIT_IOSERVICE, false)) {
+                if (Collect.getInstance().getIoService() instanceof InformOnlineService)
+                    Collect.getInstance().getIoService().reinitializeService();
+            }
+        }
         
         if (Collect.getInstance().getIoService() instanceof InformOnlineService && 
                 Collect.getInstance().getIoService().isReady()) {         
@@ -188,13 +202,19 @@ public class MainBrowserActivity extends ListActivity
             s1.setVisibility(View.GONE);
             
             new InitializeApplicationTask().execute(getApplicationContext());
-        }        
+        }
         
         // Start the persistent online connection
-        bindService(new Intent(this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE);
+        if (bindService(new Intent(MainBrowserActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE))
+            Log.d(Collect.LOGTAG, t + "successfully bound to InformOnlineService");
+        else 
+            Log.e(Collect.LOGTAG, t + "unable to bind to InformOnlineService");
         
         // Start the database connection
-        bindService(new Intent(this, CouchDbService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE);
+        if (bindService(new Intent(MainBrowserActivity.this, CouchDbService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
+            Log.d(Collect.LOGTAG, t + "successfully bound to CouchDbService");
+        else 
+            Log.e(Collect.LOGTAG, t + "unable to bind to CouchDbService");  
     }
 
     /*
@@ -351,7 +371,7 @@ public class MainBrowserActivity extends ListActivity
     public class InitializeApplicationTask extends AsyncTask<Object, Void, Void> 
     {
         private boolean mPinged = false;
-        private boolean mRegistered = false;        
+        private boolean mRegistered = false;
         
         @Override
         protected Void doInBackground(Object... args)
@@ -362,15 +382,27 @@ public class MainBrowserActivity extends ListActivity
             FileUtils.createFolder(FileUtils.CACHE_PATH);
             FileUtils.createFolder(FileUtils.FORMS_PATH);
             
+            int seconds = 0;
+            
             // The InformOnlineService will perform ping and check-in immediately (no need to duplicate here)
             while (true) {
-                if (Collect.getInstance().getIoService() instanceof InformOnlineService && 
-                        Collect.getInstance().getIoService().isInitialized())
+                // Either break out if we were successful in connecting or we have waited too long
+                if ((Collect.getInstance().getIoService() instanceof InformOnlineService && 
+                        Collect.getInstance().getIoService().isInitialized()) || seconds > 30) 
                     break;
                 
-                // Wait for a second
+                    /*
+                     * If we have waited longer than 10 seconds we may need to start forcing the issue.
+                     * 
+                     * This might happen because we have restarted to retry the connection but the 
+                     * services have not restarted and we are waiting on them to complete their usual
+                     * 10 minute delay.
+                     */
+                    if (Collect.getInstance().getIoService() instanceof InformOnlineService && seconds > 10)
+                        Collect.getInstance().getIoService().goOnline();
                 try {
                     Thread.sleep(1000);
+                    seconds++;
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -396,17 +428,21 @@ public class MainBrowserActivity extends ListActivity
             
             if (mPinged) { 
                 if (mRegistered) {
-                    Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
-                    startActivity(i);
-                    finish();
+                    restartActivity(false);
                 } else {
                     Intent i = new Intent(getApplicationContext(), ClientRegistrationActivity.class);
                     startActivity(i);
                     finish();
                 }
-            } else
-                showConnectionErrorDialog(mRegistered);                
-        }    
+            } else {
+                if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
+                    // Let the user know that offline mode is enabled and then proceed to (offline) interaction with the app
+                    restartActivity(false);
+                } else {
+                    showConnectionErrorDialog(mRegistered);
+                }
+            }
+        }
     }
 
     /*
@@ -549,6 +585,8 @@ public class MainBrowserActivity extends ListActivity
         protected Void doInBackground(Void... nothing)
         {
             if (Collect.getInstance().getIoService().isSignedIn()) {
+                // TODO: deal with case where user has asked to go offline but it could not be done co-operatively
+                // Inform user and prompt them to retry or to force offline
                 Collect.getInstance().getIoService().goOffline();
             } else {
                 Collect.getInstance().getIoService().goOnline();                    
@@ -571,21 +609,19 @@ public class MainBrowserActivity extends ListActivity
     }
     
     // Run any clean up needed before the application is interrupted or destroyed
-    private void cleanup(boolean checkout)
+    private void cleanup(boolean isFinishing)
     {
         // Close down our services         
         if (mDatabaseIsBound) {
             mDatabaseIsBound = false;
-            Log.i(Collect.LOGTAG, t + "issuing stop to CouchDbService");
+            Log.i(Collect.LOGTAG, t + "unbinding from CouchDbService");
             unbindService(mDatabaseConnection);
-            getApplicationContext().stopService(new Intent(this, CouchDbService.class));                
         }
 
         if (mOnlineIsBound) {
             mOnlineIsBound = false;
-            Log.i(Collect.LOGTAG, t + "issuing stop to InformOnlineService");
+            Log.i(Collect.LOGTAG, t + "unbinding from to InformOnlineService");
             unbindService(mOnlineConnection);
-            getApplicationContext().stopService(new Intent(this, InformOnlineService.class));                
         }
     }
 
@@ -602,13 +638,25 @@ public class MainBrowserActivity extends ListActivity
             b1.setText(getText(R.string.tf_inform_state_online));
         else
             b1.setText(getText(R.string.tf_inform_state_offline));
-
         
         // Spinner must reflect results of refresh view below
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
         triggerRefresh(s1.getSelectedItemPosition());
            
         registerForContextMenu(getListView());
+    }
+    
+    // Restart this activity, optionally requesting a complete restart
+    private void restartActivity(boolean fullRestart)
+    {
+        Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
+        
+        // If the user wants a full restart then request reinitialization of the IO service
+        if (fullRestart)
+            i.putExtra(KEY_REINIT_IOSERVICE, true);
+        
+        startActivity(i);
+        finish();
     }
     
     private void setProgressVisibility(boolean visible)
@@ -638,21 +686,24 @@ public class MainBrowserActivity extends ListActivity
         mAlertDialog.setTitle(R.string.tf_connection_error);
 
         if (registered) 
-            mAlertDialog.setMessage("");
+            mAlertDialog.setMessage(getString(R.string.tf_connection_error_registered_msg));
         else 
-            mAlertDialog.setMessage(getString(R.string.tf_connection_error_msg));
+            mAlertDialog.setMessage(getString(R.string.tf_connection_error_unregistered_msg));
 
         mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                new InitializeApplicationTask().execute(getApplicationContext());
+                restartActivity(true);
             }
         });
 
-        //        mAlertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
-        //            public void onClick(DialogInterface dialog, int whichButton) {
-        //                // Continue and work offline -- only valid for registered users with a local CouchDB installation
-        //            }
-        //        });     
+        if (registered) {
+            mAlertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    // Continue and work offline -- only valid for registered users with a local CouchDB installation
+                    restartActivity(false);
+                }
+            });    
+        }
 
         mAlertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {

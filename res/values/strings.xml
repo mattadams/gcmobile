@@ -190,8 +190,10 @@
 	<string name="tf_communication_error_try_again">Communication error - please try later</string>
 	<string name="tf_confirm_removal">Confirm Removal</string>
 	<string name="tf_confirm_removal_msg">Are you sure you want to remove %s?</string>
+	<string name="tf_connecting">Connecting</string>
 	<string name="tf_connection_error">Connection Error</string>
-	<string name="tf_connection_error_msg">Unable to connect to the Group Inform service to register this installation.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
+	<string name="tf_connection_error_registered_msg">Unable to connect to the Group Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
+	<string name="tf_connection_error_unregistered_msg">Unable to connect to the Group Inform service to register this installation.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
 	<string name="tf_connection_interrupted_status">Connection interrupted</string>
 	<string name="tf_connection_interrupted_msg">Automatically retrying connection...</string>
 	<string name="tf_connection_status_notification">CONNECTION STATUS NOTIFICATION</string>	
@@ -274,7 +276,7 @@
     <string name="tf_inform">Inform</string>
     <string name="tf_inform_info">About Inform</string>
     <string name="tf_inform_state_connecting">Inform: Connecting...</string>
-    <string name="tf_inform_state_offline">Inform: Offline</string>
+    <string name="tf_inform_state_offline">Inform: OFFLINE</string>
     <string name="tf_inform_state_online">Inform: Online</string>    
 	<string name="tf_integer_number_type">Integers only</string>
 	<string name="tf_invalid_email">Invalid email address</string>
