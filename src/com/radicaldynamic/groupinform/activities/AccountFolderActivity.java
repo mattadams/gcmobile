@@ -22,92 +22,97 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.RadioButton;
 import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.logic.AccountDevice;
+import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
-public class AccountDeviceActivity extends Activity
+public class AccountFolderActivity extends Activity
 {
-    private static final String t = "AccountDeviceActivity: ";
+    private static final String t = "AccountFolderActivity: ";
     
-    public static final String KEY_DEVICEID = "deviceid";    
+    public static final String KEY_NEW_FOLDER = "new_folder";
     
-    private static final int MENU_RESET_DEVICE = 0;
-    private static final int MENU_REMOVE_DEVICE = 1;
+    public static final String KEY_FOLDER_ID = "folder_id"; 
+    public static final String KEY_FOLDER_REV = "folder_rev";
+    public static final String KEY_FOLDER_OWNER = "folder_owner";
+    public static final String KEY_FOLDER_NAME = "folder_name";
+    public static final String KEY_FOLDER_DESC = "folder_description";
+    public static final String KEY_FOLDER_VISIBILITY = "folder_visibility";
+    
+    private static final int MENU_REMOVE_FOLDER = 0;
     
     public static final int SAVING_DIALOG = 0;
     public static final int REMOVING_DIALOG = 1;
     public static final int CONFIRM_REMOVAL_DIALOG = 2;
+    
+    // Status strings used by Inform Online
+    private static final String PRIVATE_FOLDER = "private";
+//    private static final String PUBLIC_FOLDER = "public";
         
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
     
-    private String mDeviceId;
-    private AccountDevice mDevice;
+    private AccountFolder mFolder;
     
-    private EditText mDeviceAlias;
-    private EditText mDeviceEmail;
-    private TextView mDevicePin;
-    private TextView mDeviceCheckin;
-    private CheckBox mDeviceTransferStatus;
-    private TextView mDeviceTransferStatusTitle;
+    private EditText mFolderName;
+    private EditText mFolderDescription;    
+    private RadioButton mFolderVisibilityPrivate;
+    private RadioButton mFolderVisibilityPublic;
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         
-        setContentView(R.layout.device);
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_account_device));
+        setContentView(R.layout.folder);
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_account_folder));
         
         if (savedInstanceState == null) {
             Intent i = getIntent();
-            mDeviceId = i.getStringExtra(KEY_DEVICEID);
-            mDevice = Collect.getInstance().getAccountDevices().get(mDeviceId);
+            
+            if (i == null) {
+                 // New folder
+                
+            } else {
+                if (i.getBooleanExtra(KEY_NEW_FOLDER, false))
+                    mFolder = new AccountFolder(null, null, null, "", "", "private", false);
+                else {
+                    // Because we don't have a better way of shuffling these values around
+                    mFolder = new AccountFolder(
+                            i.getStringExtra(KEY_FOLDER_ID),
+                            i.getStringExtra(KEY_FOLDER_REV),
+                            i.getStringExtra(KEY_FOLDER_OWNER),
+                            i.getStringExtra(KEY_FOLDER_NAME),
+                            i.getStringExtra(KEY_FOLDER_DESC),
+                            i.getStringExtra(KEY_FOLDER_VISIBILITY),
+                            false);
+                }
+            }
         } else {
             // TODO            
-        }
+        }        
+
+        mFolderName = (EditText) findViewById(R.id.folderName);
+        mFolderDescription = (EditText) findViewById(R.id.folderDescription);
+        mFolderVisibilityPrivate = (RadioButton) findViewById(R.id.folderVisibilityPrivate);
+        mFolderVisibilityPublic = (RadioButton) findViewById(R.id.folderVisibilityPublic);
         
-        mDeviceAlias = (EditText) findViewById(R.id.alias);
-        mDeviceEmail = (EditText) findViewById(R.id.email);
-        mDevicePin = (TextView) findViewById(R.id.pin);
-        mDeviceCheckin = (TextView) findViewById(R.id.checkin);
-        mDeviceTransferStatus = (CheckBox) findViewById(R.id.transferStatus);
-        mDeviceTransferStatusTitle = (TextView) findViewById(R.id.transferStatusTitle);
+        mFolderName.setText(mFolder.getName());
+        mFolderDescription.setText(mFolder.getDescription());
         
-        mDeviceAlias.setText(mDevice.getAlias());
-        mDeviceEmail.setText(mDevice.getEmail());
-        mDevicePin.setText(mDevice.getPin());
-        mDeviceCheckin.setText(mDevice.getLastCheckin());
-        
-        // Initialize fields based on whether the device is locked
-        if (mDevice.getTransferStatus().equals(ClientInformationActivity.LOCKED)) {
-            mDeviceTransferStatus.setChecked(true);
-            mDeviceTransferStatusTitle.setText(getString(R.string.tf_device_admin_transfer_status_locked));            
+        // Initialize fields based on whether the folder is private
+        if (mFolder.getVisibility().equals(PRIVATE_FOLDER)) {
+            mFolderVisibilityPrivate.setChecked(true);
         } else {
-            mDeviceTransferStatus.setChecked(false);
-            mDeviceTransferStatusTitle.setText(getString(R.string.tf_device_admin_transfer_status_unlocked));
+            mFolderVisibilityPublic.setChecked(true);
         }
-        
-        // Set up listener to detect changes to transfer status input element
-        mDeviceTransferStatus.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {                
-                if (((CheckBox) v).isChecked())
-                    mDeviceTransferStatusTitle.setText(getString(R.string.tf_device_admin_transfer_status_locked)); 
-                else
-                    mDeviceTransferStatusTitle.setText(getString(R.string.tf_device_admin_transfer_status_unlocked));                                   
-            }
-        });
     }
     
     /*
@@ -123,22 +128,26 @@ public class AccountDeviceActivity extends Activity
             mProgressDialog = new ProgressDialog(this);   
             mProgressDialog.setMessage(getText(R.string.tf_saving_please_wait));
             mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);            
+            mProgressDialog.setCancelable(false);
+            
             return mProgressDialog;
+            
         case REMOVING_DIALOG:
             mProgressDialog = new ProgressDialog(this);   
             mProgressDialog.setMessage(getText(R.string.tf_removing_please_wait));
             mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);            
+            mProgressDialog.setCancelable(false);        
+            
             return mProgressDialog;
+            
         case CONFIRM_REMOVAL_DIALOG:
             mAlertDialog = new AlertDialog.Builder(this)
                 .setIcon(R.drawable.ic_dialog_alert)
-                .setTitle(R.string.tf_remove_device_dialog_title)
-                .setMessage(R.string.tf_remove_device_dialog_msg)
+                .setTitle(getString(R.string.tf_remove_folder) + "?")
+                .setMessage(R.string.tf_remove_folder_dialog_msg)
                 .setPositiveButton(R.string.tf_remove, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        new RemoveDevice().execute();
+                        new RemoveFolder().execute();
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -149,6 +158,8 @@ public class AccountDeviceActivity extends Activity
                 .create();
             
             mAlertDialog.show();
+            
+            break;
         }
 
         return null;
@@ -158,8 +169,7 @@ public class AccountDeviceActivity extends Activity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_RESET_DEVICE, 0, getString(R.string.tf_reset_device)).setIcon(R.drawable.ic_menu_close_clear_cancel);
-        menu.add(0, MENU_REMOVE_DEVICE, 0, getString(R.string.tf_remove_device)).setIcon(R.drawable.ic_menu_delete);        
+        menu.add(0, MENU_REMOVE_FOLDER, 0, getString(R.string.tf_remove_folder)).setIcon(R.drawable.ic_menu_delete);        
         return true;
     }    
     
@@ -177,12 +187,9 @@ public class AccountDeviceActivity extends Activity
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
-    {
-        switch (item.getItemId()) {        
-        case MENU_RESET_DEVICE:
-            return true;
-        
-        case MENU_REMOVE_DEVICE:
+    {       
+        switch (item.getItemId()) {              
+        case MENU_REMOVE_FOLDER:
             showDialog(CONFIRM_REMOVAL_DIALOG);
             return true;
         }
@@ -190,24 +197,35 @@ public class AccountDeviceActivity extends Activity
         return super.onOptionsItemSelected(item);
     }
     
-    private class UpdateDeviceInfo extends AsyncTask<Void, Void, String>
+    private class CommitChanges extends AsyncTask<Void, Void, String>
     {        
         @Override
         protected String doInBackground(Void... nothing)
         {
             List<NameValuePair> params = new ArrayList<NameValuePair>();
-            params.add(new BasicNameValuePair("deviceId", mDevice.getId()));
-            params.add(new BasicNameValuePair("alias", mDeviceAlias.getText().toString().trim()));
-            params.add(new BasicNameValuePair("email", mDeviceEmail.getText().toString().trim()));
             
-            if (mDeviceTransferStatus.isChecked())
-                params.add(new BasicNameValuePair("transfer", "locked"));
+            // New folder getId() values are null
+            if (mFolder.getId() != null) {
+                params.add(new BasicNameValuePair("folderId", mFolder.getId()));
+                params.add(new BasicNameValuePair("folderRev", mFolder.getRev()));
+            }
+            
+            params.add(new BasicNameValuePair("name", mFolderName.getText().toString().trim()));
+            params.add(new BasicNameValuePair("description", mFolderDescription.getText().toString().trim()));
+            
+            if (mFolderVisibilityPrivate.isChecked())
+                params.add(new BasicNameValuePair("visibility", "private"));
             else 
-                params.add(new BasicNameValuePair("transfer", "unlocked"));
+                params.add(new BasicNameValuePair("visibility", "public"));
             
-            String updateUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/update";
+            String processUrl;
             
-            return HttpUtils.postUrlData(updateUrl, params);
+            if (mFolder.getId() == null)
+                processUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/folder/add";
+            else 
+                processUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/folder/update";
+            
+            return HttpUtils.postUrlData(processUrl, params);
         }
 
         @Override
@@ -234,35 +252,11 @@ public class AccountDeviceActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(FileUtils.DEVICE_CACHE_FILE_PATH).setLastModified(0);
-                    
-                    // Commit changes to the cache-in-memory to avoid running InformOnlineService.loadDeviceHash()
-                    Collect.getInstance().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());
-                    Collect.getInstance().getAccountDevices().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());
-                    
-                    if (mDeviceTransferStatus.isChecked())
-                        Collect.getInstance().getAccountDevices().get(mDeviceId).setTransferStatus("locked");
-                    else 
-                        Collect.getInstance().getAccountDevices().get(mDeviceId).setTransferStatus("unlocked");                    
+                    new File(FileUtils.FOLDER_CACHE_FILE_PATH).setLastModified(0);
                     
                     // Get out of here
                     finish();
-                } else if (result.equals(InformOnlineState.FAILURE)) {
-                    // Update failed because of something the user did                    
-                    String reason = update.optString(InformOnlineState.REASON, ClientRegistrationActivity.REASON_UNKNOWN);
-                    
-                    if (reason.equals(ClientRegistrationActivity.REASON_INVALID_EMAIL)) {
-                        Log.w(Collect.LOGTAG, t + "invalid email address \"" + mDeviceEmail.getText().toString().trim() + "\"");                    
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();
-                    } else if (reason.equals(ClientRegistrationActivity.REASON_EMAIL_ASSIGNED)) {
-                        Log.i(Collect.LOGTAG, t + "email address \"" + mDeviceEmail.getText().toString().trim() + "\" already assigned to an account");                    
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_registration_error_email_in_use), Toast.LENGTH_LONG).show();
-                    } else {
-                        // Unhandled response
-                        Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
-                    }                    
-                } else {
+                } else { 
                     // Something bad happened
                     Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
@@ -281,12 +275,14 @@ public class AccountDeviceActivity extends Activity
         }
     }
     
-    private class RemoveDevice extends AsyncTask<Void, Void, String>
+    private class RemoveFolder extends AsyncTask<Void, Void, String>
     {        
         @Override
         protected String doInBackground(Void... nothing)
         {            
-            String removeUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/remove/" + mDeviceId;            
+            String removeUrl = Collect.getInstance().getInformOnlineState().getServerUrl() 
+                + "/folder/remove/" + mFolder.getId() + "/" + mFolder.getRev(); 
+            
             return HttpUtils.getUrlData(removeUrl);
         }
     
@@ -311,16 +307,15 @@ public class AccountDeviceActivity extends Activity
                 
                 // Update successful
                 if (result.equals(InformOnlineState.OK)) {  
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_removed, mDevice.getDisplayName()), Toast.LENGTH_SHORT).show();                    
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_removed, mFolder.getName()), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(FileUtils.DEVICE_CACHE_FILE_PATH).setLastModified(0);
+                    new File(FileUtils.FOLDER_CACHE_FILE_PATH).setLastModified(0);
                     
                     // Get out of here
                     finish();
                 } else if (result.equals(InformOnlineState.FAILURE)) {
-                    // TODO: user tried to remove self is the only possible failure (implement at some point)
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_self), Toast.LENGTH_LONG).show();
+                    // TODO?
                 } else {
                     // Something bad happened
                     Log.e(Collect.LOGTAG, t + "system error while processing getResult");                   
@@ -367,8 +362,15 @@ public class AccountDeviceActivity extends Activity
                             break;
     
                         case 1:
-                            // Save and exit                            
-                            new UpdateDeviceInfo().execute();
+                            // Save and exit
+                            if (mFolderName.getText().toString().trim().length() > 0)
+                                new CommitChanges().execute();
+                            else
+                                Toast.makeText(
+                                        getApplicationContext(), 
+                                        getString(R.string.tf_folder_name_required), 
+                                        Toast.LENGTH_LONG).show();
+                            
                             break;
     
                         case 2:

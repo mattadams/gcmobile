@@ -45,7 +45,6 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.AccountDeviceList;
-import com.radicaldynamic.groupinform.activities.AccountFolderList;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.InformOnlineSession;
@@ -91,13 +90,13 @@ public class InformOnlineService extends Service {
       
     @Override
     public void onCreate() {        
-        Thread persistentConnectionThread = new Thread(null, mTask, "InformOnlineService");        
-        mCondition = new ConditionVariable(false);
-        persistentConnectionThread.start();
-        
         // Do some basic initialization of this service
         Collect.getInstance().setInformOnlineState(new InformOnlineState(getApplicationContext()));
         restoreSession();
+        
+        Thread persistentConnectionThread = new Thread(null, mTask, "InformOnlineService");        
+        mCondition = new ConditionVariable(false);
+        persistentConnectionThread.start();
     }
     
     /*
@@ -380,9 +379,6 @@ public class InformOnlineService extends Service {
                 // Update our list of account devices
                 AccountDeviceList.fetchDeviceList();
                 loadDeviceHash();
-                
-                // Update our list of account databases (aka form folders)
-                AccountFolderList.loadFolderList();
             }
             
             // Unblock
@@ -423,6 +419,7 @@ public class InformOnlineService extends Service {
     
                     AccountDevice device = new AccountDevice(
                             jsonDevice.getString("id"),
+                            jsonDevice.getString("rev"),
                             jsonDevice.getString("alias"),
                             jsonDevice.getString("email"),
                             jsonDevice.getString("status"));

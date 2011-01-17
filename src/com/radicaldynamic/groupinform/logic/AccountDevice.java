@@ -4,6 +4,7 @@ package com.radicaldynamic.groupinform.logic;
 public class AccountDevice
 {
     private String id;                  // RO access by everyone
+    private String rev;
     private String alias;               // Everyone (r/w by device owner)
     private String email;               // Everyone (r/w by device owner)
     private String lastCheckin;         // ?
@@ -12,16 +13,20 @@ public class AccountDevice
     private String transferStatus;      // R/W by account owner, device owner
     
     
-    public AccountDevice(String id, String alias, String email, String status)
+    public AccountDevice(String id, String rev, String alias, String email, String status)
     {
         setId(id);
+        setRev(rev);
         setAlias(alias);
         setEmail(email);
         setStatus(status);
     }
     
     public void setId(String id) { this.id = id; }
-    public String getId() { return id; }
+    public String getId() { return id; }    
+
+    public void setRev(String rev) { this.rev = rev; }
+    public String getRev() { return rev; }
     
     public void setAlias(String alias) { this.alias = alias; }
     public String getAlias() { if (alias == null || alias.equals("null")) return null; else return alias; }

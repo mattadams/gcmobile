@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dip">
+      
+    <!-- Name -->
+    <TextView
+        android:id="@android:id/empty"
+        android:textSize="20sp"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:paddingTop="10dp"
+        android:text="@string/tf_folder_admin_name_label" />
+    
+    <EditText
+        android:id="@+id/folderName"
+        android:inputType="textCapWords"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_folder_admin_name_hint" />
+    
+    <!-- Description -->
+    <TextView
+        android:id="@android:id/empty"
+        android:textSize="20sp"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:paddingTop="10dp"
+        android:text="@string/tf_folder_admin_description_label" />
+ 
+    <EditText
+        android:id="@+id/folderDescription"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_folder_admin_description_hint" />
+        
+    <!-- Visibility -->
+    <TextView
+        android:id="@android:id/empty"
+        android:textSize="20sp"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:paddingTop="10dp"
+        android:text="@string/tf_folder_admin_visibility_label" />
+        
+    <RadioGroup
+        android:id="@android:id/empty"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+            
+        <RadioButton 
+            android:id="@+id/folderVisibilityPrivate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tf_private" />
+                
+        <RadioButton 
+            android:id="@+id/folderVisibilityPublic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tf_public" />            
+    </RadioGroup>
+        
+    <TextView
+        android:id="@android:id/empty"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_folder_admin_visibility_hint" />
+
+</LinearLayout>    
+</ScrollView>

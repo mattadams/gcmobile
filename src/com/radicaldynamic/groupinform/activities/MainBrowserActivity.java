@@ -835,7 +835,7 @@ public class MainBrowserActivity extends ListActivity
             if (FileUtils.storageReady() && !((new File(FileUtils.DEFAULT_CONFIG_PATH)).exists())) {
                 // Show the built-in splash image if the config directory 
                 // does not exist. Otherwise, suppress the icon.
-                image = getResources().getDrawable(R.drawable.gc_color);
+                image = getResources().getDrawable(R.drawable.gc_color_preview);
             }
             
             if (image == null) 

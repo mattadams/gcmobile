@@ -26,7 +26,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -39,6 +42,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.AccountFolderListAdapter;
@@ -58,6 +62,12 @@ public class AccountFolderList extends ListActivity
     private static final int MENU_ADD = Menu.FIRST;
     private static final int MENU_SYNC_LIST = Menu.FIRST + 1;
     
+    private static final int CONTEXT_MENU_EDIT = Menu.FIRST;
+    
+    public static final int DENIED_OWNER_ONLY_DIALOG = 0;
+    
+    private AlertDialog mAlertDialog;
+    
     private RefreshViewTask mRefreshViewTask;
 
     @Override
@@ -75,12 +85,42 @@ public class AccountFolderList extends ListActivity
         super.onResume();
         loadScreen();
     }
-
+    
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
     {
         super.onCreateContextMenu(menu, v, menuInfo);
+        menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder));
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see android.app.Activity#onCreateDialog(int)
+     */
+    @Override
+    protected Dialog onCreateDialog(int id)
+    {
+        switch (id) {
+        case DENIED_OWNER_ONLY_DIALOG:
+            mAlertDialog = new AlertDialog.Builder(this)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_unable_to_edit_folder_not_owner_title)
+            .setMessage(R.string.tf_unable_to_edit_folder_not_owner_msg)
+            .setPositiveButton(R.string.tf_remove, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    finish();
+                }
+            })
+            .create();
+
+            mAlertDialog.show();
+
+            break;
+        }
+
+        return null;        
+    }    
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -94,12 +134,32 @@ public class AccountFolderList extends ListActivity
     @Override
     public boolean onContextItemSelected(MenuItem item)
     {
-        // AdapterContextMenuInfo info = (AdapterContextMenuInfo)
-        // item.getMenuInfo();
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+        
         switch (item.getItemId()) {
+        case CONTEXT_MENU_EDIT:
+            AccountFolder folder = (AccountFolder) getListView().getItemAtPosition(info.position);
+            
+            if (Collect.getInstance().getInformOnlineState().getDeviceId().equals(folder.getOwnerId())) {
+                Intent i = new Intent(this, AccountFolderActivity.class);
+                i.putExtra(AccountFolderActivity.KEY_FOLDER_ID, folder.getId());
+                i.putExtra(AccountFolderActivity.KEY_FOLDER_REV, folder.getRev());            
+                i.putExtra(AccountFolderActivity.KEY_FOLDER_OWNER, folder.getOwnerId());
+                i.putExtra(AccountFolderActivity.KEY_FOLDER_NAME, folder.getName());
+                i.putExtra(AccountFolderActivity.KEY_FOLDER_DESC, folder.getDescription());
+                i.putExtra(AccountFolderActivity.KEY_FOLDER_VISIBILITY, folder.getVisibility());
+                startActivity(i);
+            } else {
+                showDialog(DENIED_OWNER_ONLY_DIALOG);
+            }           
+            
+            break;
+            
         default:
             return super.onContextItemSelected(item);
         }
+        
+        return true;
     }
 
     /**
@@ -122,8 +182,11 @@ public class AccountFolderList extends ListActivity
     {
         switch (item.getItemId()) {
         case MENU_ADD:
-            
+            startActivity(
+                    new Intent(this, AccountFolderActivity.class)
+                        .putExtra(AccountFolderActivity.KEY_NEW_FOLDER, true));
             break;
+            
         case MENU_SYNC_LIST:
             startActivity(new Intent(this, AccountFolderReplicationList.class));
             break;
@@ -253,6 +316,7 @@ public class AccountFolderList extends ListActivity
                     
                     folders.add(new AccountFolder(
                             jsonFolder.getString("id"),
+                            jsonFolder.getString("rev"),
                             jsonFolder.getString("owner"),
                             jsonFolder.getString("name"),
                             jsonFolder.getString("description"),

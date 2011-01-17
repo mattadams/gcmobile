@@ -259,6 +259,7 @@ public class AccountDeviceList extends ListActivity
 
                     AccountDevice device = new AccountDevice(
                             jsonDevice.getString("id"),
+                            jsonDevice.getString("rev"),
                             jsonDevice.getString("alias"),
                             jsonDevice.getString("email"),
                             jsonDevice.getString("status"));
