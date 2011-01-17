@@ -377,7 +377,6 @@ public class MainBrowserActivity extends ListActivity
                 }
             }
             
-            // If we are connected this will be "true"
             mPinged = Collect.getInstance().getIoService().isRespondingToPings();
             mRegistered = Collect.getInstance().getIoService().isRegistered();            
             
@@ -395,11 +394,18 @@ public class MainBrowserActivity extends ListActivity
         {
             setProgressVisibility(false);
             
-            if (mPinged)
-                postInitializeWorkflow(mRegistered);
-            else
-                showConnectionErrorDialog(mRegistered);
-                
+            if (mPinged) { 
+                if (mRegistered) {
+                    Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
+                    startActivity(i);
+                    finish();
+                } else {
+                    Intent i = new Intent(getApplicationContext(), ClientRegistrationActivity.class);
+                    startActivity(i);
+                    finish();
+                }
+            } else
+                showConnectionErrorDialog(mRegistered);                
         }    
     }
 
@@ -581,10 +587,6 @@ public class MainBrowserActivity extends ListActivity
             unbindService(mOnlineConnection);
             getApplicationContext().stopService(new Intent(this, InformOnlineService.class));                
         }
-
-//        // Make a best effort attempt to notify Inform Online that we are leaving prematurely        
-//        if (checkout)
-//            Collect.getInstance().getInformOnlineState().checkout();
     }
 
     /**
@@ -607,24 +609,6 @@ public class MainBrowserActivity extends ListActivity
         triggerRefresh(s1.getSelectedItemPosition());
            
         registerForContextMenu(getListView());
-    }
-    
-    /*
-     * After InitializeApplicationTask() has completed this (may) be run to 
-     * determine where to send the user according to whether the device was 
-     * determined to be registered.
-     */
-    private void postInitializeWorkflow(boolean registered)
-    {
-        if (registered) {
-            Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
-            startActivity(i);
-            finish();
-        } else {
-            Intent i = new Intent(getApplicationContext(), ClientRegistrationActivity.class);
-            startActivity(i);
-            finish();
-        }
     }
     
     private void setProgressVisibility(boolean visible)
@@ -827,7 +811,7 @@ public class MainBrowserActivity extends ListActivity
         layout.addView(view);        
 
         // Create the toast and set the view to be that of the FrameLayout
-        mSplashToast = Toast.makeText(getApplicationContext(), "splash screen", Toast.LENGTH_LONG);
+        mSplashToast = Toast.makeText(getApplicationContext(), "splash screen", Toast.LENGTH_SHORT);
         mSplashToast.setView(layout);
         mSplashToast.setGravity(Gravity.CENTER, 0, 0);
         mSplashToast.show();

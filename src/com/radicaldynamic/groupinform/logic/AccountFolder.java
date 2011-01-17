@@ -12,14 +12,16 @@ public class AccountFolder
     private String name;
     private String description;
     private String visibility;
+    private boolean replicated;
 
-    public AccountFolder(String id, String ownerId, String name, String description, String visibility)
+    public AccountFolder(String id, String ownerId, String name, String description, String visibility, boolean replicated)
     {
         this.setId(id);
         this.setOwnerId(ownerId);
         this.setName(name);
         this.setDescription(description);
         this.setVisibility(visibility);
+        this.setReplicated(replicated);
     }
 
     public void setId(String id) { this.id = id; }
@@ -36,4 +38,9 @@ public class AccountFolder
 
     public void setVisibility(String visibility) { this.visibility = visibility; }
     public String getVisibility() { return visibility; }
+
+    public void setReplicated(boolean replicated) { this.replicated = replicated; }
+    public boolean isReplicated() { return replicated; }
+    
+    public String toString() { return getName(); }   
 }

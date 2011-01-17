@@ -301,9 +301,9 @@ public class AccountDeviceActivity extends Activity
         @Override
         protected void onPostExecute(String getResult)
         {
-            JSONObject update;
-            
             mProgressDialog.cancel();
+            
+            JSONObject update;
             
             try {
                 Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
@@ -330,7 +330,7 @@ public class AccountDeviceActivity extends Activity
                 }                
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
+                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             } catch (JSONException e) {

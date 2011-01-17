@@ -6,19 +6,19 @@
     android:padding="6dip">
     
     <ImageView
-        android:id="@+id/icon"
+        android:id="@+id/folderIcon"
         android:layout_alignParentTop="true"          
         android:layout_marginRight="6dip"  
         android:layout_height="fill_parent"
         android:layout_width="wrap_content"
-        android:src="@drawable/ic_menu_archive_sync" />
+        android:src="@drawable/ic_menu_archive" />
         
     <TextView
         android:id="@+id/firstLine"
         android:gravity="center_vertical"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"        
-        android:layout_toRightOf="@id/icon"
+        android:layout_toRightOf="@id/folderIcon"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"        
         android:layout_alignWithParentIfMissing="true"                
@@ -30,7 +30,7 @@
         android:id="@+id/secondLine"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"         
-        android:layout_toRightOf="@id/icon"
+        android:layout_toRightOf="@id/folderIcon"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_below="@id/firstLine"        

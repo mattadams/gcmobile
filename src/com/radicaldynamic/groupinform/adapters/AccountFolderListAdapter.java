@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
@@ -36,8 +37,16 @@ public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
         AccountFolder f = mItems.get(position);
 
         if (f != null) {
+            ImageView fi = (ImageView) v.findViewById(R.id.folderIcon);
             TextView tt = (TextView) v.findViewById(R.id.firstLine);
             TextView bt = (TextView) v.findViewById(R.id.secondLine);
+            
+            if (fi != null) {
+                if (f.isReplicated())
+                    fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_archive_sync));
+                else 
+                    fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_archive));
+            }
 
             if (tt != null) {
                 tt.setText("[" + f.getVisibility().toUpperCase() + "] " + f.getName());

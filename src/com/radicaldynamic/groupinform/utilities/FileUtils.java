@@ -74,7 +74,7 @@ public final class FileUtils {
     public static final int IMAGE_WIDGET_MAX_HEIGHT = 768;
     public static final int IMAGE_WIDGET_QUALITY = 75;
 
-    public static final int TIME_TWO_MINUTES = 120 * 1000;
+    public static final int TIME_TWO_MINUTES = 120;
     
     public static final boolean createFolder(String path) {
         if (storageReady()) {

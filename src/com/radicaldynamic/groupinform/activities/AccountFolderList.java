@@ -27,6 +27,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -55,6 +56,7 @@ public class AccountFolderList extends ListActivity
     private static final String t = "AccountFolderList: ";
 
     private static final int MENU_ADD = Menu.FIRST;
+    private static final int MENU_SYNC_LIST = Menu.FIRST + 1;
     
     private RefreshViewTask mRefreshViewTask;
 
@@ -85,6 +87,7 @@ public class AccountFolderList extends ListActivity
     {
         super.onCreateOptionsMenu(menu);
         menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_folder)).setIcon(R.drawable.ic_menu_add);
+        menu.add(0, MENU_SYNC_LIST, 0, getString(R.string.tf_replication_list)).setIcon(R.drawable.ic_menu_sync_list);
         return true;
     }
 
@@ -119,7 +122,11 @@ public class AccountFolderList extends ListActivity
     {
         switch (item.getItemId()) {
         case MENU_ADD:
-            return true;
+            
+            break;
+        case MENU_SYNC_LIST:
+            startActivity(new Intent(this, AccountFolderReplicationList.class));
+            break;
         }
         
         return super.onOptionsItemSelected(item);
@@ -216,7 +223,7 @@ public class AccountFolderList extends ListActivity
         }
     }
 
-    private ArrayList<AccountFolder> loadFolderList()
+    static public ArrayList<AccountFolder> loadFolderList()
     {
         Log.d(Collect.LOGTAG , t + "loading folder cache");
         
@@ -249,7 +256,8 @@ public class AccountFolderList extends ListActivity
                             jsonFolder.getString("owner"),
                             jsonFolder.getString("name"),
                             jsonFolder.getString("description"),
-                            jsonFolder.getString("visibility")));
+                            jsonFolder.getString("visibility"),
+                            jsonFolder.getBoolean("replication")));
                 }
             } catch (JSONException e) {
                 // Parse error (malformed result)

@@ -320,6 +320,7 @@
 	<string name="tf_removed_item">Removed item %s</string>
 	<string name="tf_repeated_group">repeated group</string>
 	<string name="tf_repeated_group_type">Repeated group of fields</string>
+	<string name="tf_replication_list">Synchronization</string>
 	<string name="tf_request_account_reminder">Request Reminder</string>
 	<string name="tf_request_account_reminder_hint">Hint: this is probably the email address of the person in your team that told you to use Group Inform.</string>
 	<string name="tf_request_account_reminder_msg">Enter the email address of the account owner.  A reminder email containing the licence info will be sent to this person.</string>
@@ -342,6 +343,7 @@
 	<string name="tf_server_url_error">Invalid server URL</string>   
 	<string name="tf_supply_account_details">Supply Account Details</string>
 	<string name="tf_synchronize">Synchronize</string>
+	<string name="tf_synchronized_folders">Synchronized Folders</string>
 	<string name="tf_synchronization_settings">Synchronization settings</string>
 	<string name="tf_system_error_dialog">An Error Occurred</string>
 	<string name="tf_system_error_dialog_msg">We encountered a system error.  A team of trained monkeys has been dispatched to fix the problem.  Please try again later!</string>
