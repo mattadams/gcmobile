@@ -651,7 +651,7 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("licenceKey", mAccountKey));
         params.add(new BasicNameValuePair("devicePin", devicePin));
         
-        String transferUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/transfer/do";
+        String transferUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/transfer";
         String postResult = HttpUtils.postUrlData(transferUrl, params);
         JSONObject transfer;
         

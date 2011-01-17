@@ -186,7 +186,7 @@ public class ClientInformationActivity extends Activity
         @Override
         protected String doInBackground(Void... params)
         {
-            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/transfer/show";
+            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/transfer/show";
             
             JSONObject result;
             String getResult = HttpUtils.getUrlData(url);
@@ -246,7 +246,7 @@ public class ClientInformationActivity extends Activity
         @Override
         protected String doInBackground(Void... params)
         {
-            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/transfer/toggle";
+            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/transfer/toggle";
             
             String getResult = HttpUtils.getUrlData(url);
             JSONObject result;
@@ -381,7 +381,7 @@ public class ClientInformationActivity extends Activity
     {
         boolean reset = false;
         
-        String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/reset";
+        String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/reset";
         
         String getResult = HttpUtils.getUrlData(url);
         JSONObject result;
