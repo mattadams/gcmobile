@@ -234,11 +234,6 @@ public class InformOnlineService extends Service {
             
             if (result.equals(InformOnlineState.OK)) {
                 Log.i(Collect.LOGTAG, t + "successful checkin");
-                
-                if (checkin.has("defaultdb")) {
-                    Log.i(Collect.LOGTAG, t + "assigning default database " + checkin.getString("defaultDb"));
-                    Collect.getInstance().getInformOnlineState().setDefaultDatabase(checkin.getString("defaultDb"));
-                }
             } else if (result.equals(InformOnlineState.FAILURE)) {
                 Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
                 registered = false;

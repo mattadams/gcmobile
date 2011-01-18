@@ -450,13 +450,10 @@ public class ClientRegistrationActivity extends Activity
         Collect.getInstance().getInformOnlineState().setAccountKey(container.getString("accountKey"));
         Collect.getInstance().getInformOnlineState().setAccountNumber(container.getString("accountNumber"));
         Collect.getInstance().getInformOnlineState().setAccountOwner(container.getBoolean("accountOwner"));
+        Collect.getInstance().getInformOnlineState().setDefaultDatabase(container.getString("defaultDb"));
         Collect.getInstance().getInformOnlineState().setDeviceId(container.getString("deviceId"));
         Collect.getInstance().getInformOnlineState().setDeviceKey(container.getString("deviceKey"));
         Collect.getInstance().getInformOnlineState().setDevicePin(container.getString("devicePin"));
-        
-        // Only returned for device transfers
-        if (container.has("defaultDb"))
-            Collect.getInstance().getInformOnlineState().setDefaultDatabase(container.getString("defaultDb"));
     }
 
     private void transferDeviceDialog()
