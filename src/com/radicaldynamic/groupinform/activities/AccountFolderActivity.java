@@ -147,7 +147,7 @@ public class AccountFolderActivity extends Activity
                 .setMessage(R.string.tf_remove_folder_dialog_msg)
                 .setPositiveButton(R.string.tf_remove, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        new RemoveFolder().execute();
+                        new RemoveFolderTask().execute();
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -197,7 +197,7 @@ public class AccountFolderActivity extends Activity
         return super.onOptionsItemSelected(item);
     }
     
-    private class CommitChanges extends AsyncTask<Void, Void, String>
+    private class CommitChangesTask extends AsyncTask<Void, Void, String>
     {        
         @Override
         protected String doInBackground(Void... nothing)
@@ -275,7 +275,7 @@ public class AccountFolderActivity extends Activity
         }
     }
     
-    private class RemoveFolder extends AsyncTask<Void, Void, String>
+    private class RemoveFolderTask extends AsyncTask<Void, Void, String>
     {        
         @Override
         protected String doInBackground(Void... nothing)
@@ -307,7 +307,7 @@ public class AccountFolderActivity extends Activity
                 
                 // Update successful
                 if (result.equals(InformOnlineState.OK)) {  
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_removed, mFolder.getName()), Toast.LENGTH_SHORT).show();                    
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mFolder.getName()), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
                     new File(FileUtils.FOLDER_CACHE_FILE_PATH).setLastModified(0);
@@ -315,7 +315,9 @@ public class AccountFolderActivity extends Activity
                     // Get out of here
                     finish();
                 } else if (result.equals(InformOnlineState.FAILURE)) {
-                    // TODO?
+                    // There is only one possible failure right now (the user tried to remove their default DB)
+                    Log.w(Collect.LOGTAG, t + "removal of default database denied");
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_defaultdb), Toast.LENGTH_LONG).show();
                 } else {
                     // Something bad happened
                     Log.e(Collect.LOGTAG, t + "system error while processing getResult");                   
@@ -364,7 +366,7 @@ public class AccountFolderActivity extends Activity
                         case 1:
                             // Save and exit
                             if (mFolderName.getText().toString().trim().length() > 0)
-                                new CommitChanges().execute();
+                                new CommitChangesTask().execute();
                             else
                                 Toast.makeText(
                                         getApplicationContext(), 

@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
@@ -36,8 +37,16 @@ public class AccountDeviceListAdapter extends ArrayAdapter<AccountDevice>
         AccountDevice f = mItems.get(position);
 
         if (f != null) {
-            TextView tt = (TextView) v.findViewById(R.id.toptext);
-            TextView bt = (TextView) v.findViewById(R.id.bottomtext);
+            ImageView icon = (ImageView) v.findViewById(R.id.deviceIcon);
+            TextView tt = (TextView) v.findViewById(R.id.deviceAlias);
+            TextView bt = (TextView) v.findViewById(R.id.deviceEmail);
+            
+            if (icon != null) {
+                if (f.getStatus().equals("active"))
+                    icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_user));
+                else 
+                    icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_blocked_user));
+            }
 
             if (tt != null) {
                 if (f.getAlias() == null || f.getAlias().equals("null") || f.getAlias().length() == 0)

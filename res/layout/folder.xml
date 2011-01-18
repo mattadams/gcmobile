@@ -17,7 +17,6 @@
         android:textSize="20sp"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:paddingTop="10dp"
         android:text="@string/tf_folder_admin_name_label" />
     
     <EditText

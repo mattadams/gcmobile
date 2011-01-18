@@ -6,6 +6,8 @@ import org.json.JSONTokener;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -53,10 +55,18 @@ public class ClientInformationActivity extends Activity
     public static final String LOCKED = "locked";
     public static final String UNLOCKED = "unlocked";  
     
+    // Dialog constants
+    private static final int CONFIRM_RESET_DIALOG = 0;
+    private static final int RESET_SUCCESSFUL_DIALOG = 1;
+    private static final int RESET_FAILED_DIALOG = 2;
+    private static final int RESET_PROGRESS_DIALOG = 3;
+    
     // Intent constant for determining which "screen" to display
     private static final String SCREEN = "screen";
     private static final int SCREEN_DEFAULT = 0;
     private static final int SCREEN_DEVICE_INFO = 1;    
+    
+    private ProgressDialog mProgressDialog;
     
     private int mScreen;
     
@@ -94,7 +104,7 @@ public class ClientInformationActivity extends Activity
 
             setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_device_info));
 
-            new RetrieveTransferState().execute();
+            new RetrieveTransferStateTask().execute();
 
             header.setText(getString(R.string.tf_about_inform_device_header));
             TextView devicePin = (TextView) findViewById(R.id.devicePin);
@@ -115,13 +125,77 @@ public class ClientInformationActivity extends Activity
                 public void onClick(View v)
                 {
                     transferState.setEnabled(false);
-                    new ToggleTransferState().execute();   
+                    new ToggleTransferStateTask().execute();   
                 }            
             });
 
             break;
         }
 
+    }
+    
+    protected Dialog onCreateDialog(int id)
+    {   
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        
+        switch (id) {
+        case CONFIRM_RESET_DIALOG:            
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setMessage(R.string.tf_reset_warning_msg)
+            .setTitle(getString(R.string.tf_reset_inform) + "?")         
+            .setPositiveButton(R.string.tf_reset, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    new ResetDeviceTask().execute();
+                }
+            })            
+            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    dialog.cancel();
+                }
+            })            
+            .show();    
+            break;
+            
+        case RESET_SUCCESSFUL_DIALOG:            
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setMessage(R.string.tf_reset_complete_msg)
+            .setTitle(R.string.tf_reset_complete)            
+            .setPositiveButton(R.string.tf_exit_inform, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    setResult(RESULT_OK);
+                    finish();
+                }
+            })           
+            .show();            
+            break;
+            
+        case RESET_FAILED_DIALOG:            
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setMessage(R.string.tf_reset_incomplete_msg)
+            .setTitle(R.string.tf_reset_incomplete)            
+            .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    dialog.cancel();
+                }
+            })            
+            .show();
+            break;        
+            
+        case RESET_PROGRESS_DIALOG:
+            mProgressDialog = new ProgressDialog(this);   
+            mProgressDialog.setMessage(getText(R.string.tf_resetting_please_wait));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);            
+            return mProgressDialog;
+        }
+        
+        return null;
     }
     
     @Override
@@ -174,14 +248,62 @@ public class ClientInformationActivity extends Activity
             startActivityForResult(i, SCREEN_DEVICE_INFO);
             return true;
         case MENU_RESET_INFORM:
-            resetInformDialog();
+            showDialog(CONFIRM_RESET_DIALOG);
             return true;
         }
         
         return super.onOptionsItemSelected(item);
     }
     
-    public class RetrieveTransferState extends AsyncTask<Void, Void, String> 
+    public class ResetDeviceTask extends AsyncTask<Void, Void, String> 
+    {
+        @Override
+        protected String doInBackground(Void... params)
+        {            
+            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/reset";            
+            return HttpUtils.getUrlData(url);
+        }
+        
+        @Override
+        protected void onPreExecute()
+        {
+            showDialog(RESET_PROGRESS_DIALOG);
+        }
+
+        @Override
+        protected void onPostExecute(String getResult)
+        {
+            mProgressDialog.cancel();
+            
+            JSONObject result;
+            
+            boolean success = false;
+            
+            try {
+                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
+                result = (JSONObject) new JSONTokener(getResult).nextValue();
+                
+                if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK))
+                    success = true;
+            } catch (NullPointerException e) {
+                // Communication error
+                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
+                e.printStackTrace();
+            } catch (JSONException e) {
+                // Parse error (malformed result)
+                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
+                e.printStackTrace();
+            }
+            
+            if (success) {
+                Collect.getInstance().getInformOnlineState().resetDevice();
+                showDialog(RESET_SUCCESSFUL_DIALOG);
+            } else
+                showDialog(RESET_FAILED_DIALOG);
+        }
+    }
+    
+    public class RetrieveTransferStateTask extends AsyncTask<Void, Void, String> 
     {
         @Override
         protected String doInBackground(Void... params)
@@ -241,7 +363,7 @@ public class ClientInformationActivity extends Activity
         }
     }
     
-    public class ToggleTransferState extends AsyncTask<Void, Void, String> 
+    public class ToggleTransferStateTask extends AsyncTask<Void, Void, String> 
     {
         @Override
         protected String doInBackground(Void... params)
@@ -303,105 +425,5 @@ public class ClientInformationActivity extends Activity
     {
         ViewGroup component = (ViewGroup) findViewById(componentResource);
         component.setVisibility(View.GONE);
-    }
-    
-    private void resetCompleteDialog()
-    {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        
-        builder
-        .setCancelable(false)
-        .setIcon(R.drawable.ic_dialog_info)
-        .setMessage(R.string.tf_reset_complete_msg)
-        .setTitle(R.string.tf_reset_complete)
-        
-        .setPositiveButton(R.string.tf_exit_inform, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                setResult(RESULT_OK);
-                finish();
-            }
-        }) 
-        
-        .show();
-    }
-    
-    private void resetIncompleteDialog()
-    {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        
-        builder
-        .setCancelable(false)
-        .setIcon(R.drawable.ic_dialog_alert)
-        .setMessage(R.string.tf_reset_incomplete_msg)
-        .setTitle(R.string.tf_reset_incomplete)
-        
-        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-            }
-        }) 
-        
-        .show();
-    }
-    
-    private void resetInformDialog()
-    {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-       
-        builder
-        .setCancelable(false)
-        .setIcon(R.drawable.ic_dialog_alert)
-        .setMessage(R.string.tf_reset_warning_msg)
-        .setTitle(R.string.tf_reset_warning)
-        
-        .setPositiveButton(R.string.tf_reset, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {            
-                if (verifyReset()) {
-                    Collect.getInstance().getInformOnlineState().resetDevice();
-                    resetCompleteDialog();
-                } else {
-                    resetIncompleteDialog();
-                }
-            }
-        })
-        
-        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                // Do something?
-            }
-        })
-        
-        .show();       
-    }
-    
-    /*
-     * Verify a request to reset the device with Inform Online.  A successful result
-     * is required from the service before we will reset this device.
-     */
-    private boolean verifyReset()
-    {
-        boolean reset = false;
-        
-        String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/reset";
-        
-        String getResult = HttpUtils.getUrlData(url);
-        JSONObject result;
-        
-        try {
-            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
-            result = (JSONObject) new JSONTokener(getResult).nextValue();
-            
-            if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK))
-                reset = true;
-        } catch (NullPointerException e) {
-            // Communication error
-            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
-            e.printStackTrace();
-        } catch (JSONException e) {
-            // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
-            e.printStackTrace();
-        }
-        
-        return reset;
     }
 }
