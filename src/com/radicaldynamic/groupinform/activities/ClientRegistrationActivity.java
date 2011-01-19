@@ -42,10 +42,16 @@ public class ClientRegistrationActivity extends Activity
     private static final int DIALOG_DEVICE_REGISTERED = 4;
     private static final int DIALOG_SYSTEM_ERROR = 10;
     
+    // verifyDeviceRegistration exit codes
+    private static final int DEVICE_REGISTRATION_VERIFIED = 0;                              // Generic "registration ok"
+    private static final int DEVICE_REGISTRATION_FAILED = 1;                                // Generic "registration failed"
+    private static final int DEVICE_REGISTRATION_LIMITED = 2;                               // Licence seat limit
+    
     // Constants used to match server responses
-    public static final String REASON_INVALID_EMAIL = "invalid email address";             // New account failure
-    public static final String REASON_EMAIL_ASSIGNED = "email address assigned";           // New account failure
-    public static final String REASON_UNKNOWN = "unknown reason";                          // Unknown failure (default only)
+    public static final String REASON_INVALID_EMAIL = "invalid email address";              // New account/device failure
+    public static final String REASON_EMAIL_ASSIGNED = "email address assigned";            // New account/device failure
+    public static final String REASON_UNKNOWN = "unknown reason";                           // Unknown failure (default only)
+    private static final String REASON_LICENCE_LIMIT = "seat licence limit reached";        // New device failure
     private static final String REASON_INVALID_PIN = "invalid pin";                         // Transfer failure
     private static final String REASON_DEVICE_LOCKED = "device locked";                     // Transfer failure
     private static final String REASON_TRANSFER_DELAYED = "transfer delayed";               // Transfer failure
@@ -54,7 +60,7 @@ public class ClientRegistrationActivity extends Activity
     private String mAccountNumber = "";      // Licence number
     private String mAccountKey = "";         // Licence key    
     private String mDevicePin = "";    
-    private String mContactEmailAddress = "";
+    private String mContactEmailAddress = "";  
     
     private TextWatcher mAutoFormat = new TextWatcher() {
         @Override
@@ -217,10 +223,17 @@ public class ClientRegistrationActivity extends Activity
 
                     registerDeviceDialog();
                 } else {
-                    if (verifyDeviceRegistration(email)) {
+                    switch (verifyDeviceRegistration(email)) {
+                    case DEVICE_REGISTRATION_VERIFIED:
                         showDialog(DIALOG_DEVICE_REGISTERED);
-                    } else {
+                        break;
+                    case DEVICE_REGISTRATION_FAILED:
+                        // Error message communicated via Toast
                         registerDeviceDialog();
+                        break;
+                    case DEVICE_REGISTRATION_LIMITED:
+                        // New dialog displayed by verifyDeviceRegistration()
+                        dialog.cancel();                    
                     }
                 }
             }
@@ -455,6 +468,24 @@ public class ClientRegistrationActivity extends Activity
         Collect.getInstance().getInformOnlineState().setDeviceKey(container.getString("deviceKey"));
         Collect.getInstance().getInformOnlineState().setDevicePin(container.getString("devicePin"));
     }
+    
+    // The special dialog that is shown when someone hits the seat licence limit for the account
+    private void showLicenceLimitDialog(String seatLicenceLimit, String planType)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        
+        builder
+        .setCancelable(false)
+        .setIcon(R.drawable.ic_dialog_info)
+        .setTitle(R.string.tf_licence_limit_reached_dialog_title)
+        .setMessage(getString(R.string.tf_licence_limit_reached_dialog_msg, seatLicenceLimit, planType))
+        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                registerExistingAccountDialog();
+            }
+        })
+        .show();
+    }
 
     private void transferDeviceDialog()
     {
@@ -579,7 +610,7 @@ public class ClientRegistrationActivity extends Activity
         }
     } // End verifyAccountLicence()
     
-    private boolean verifyDeviceRegistration(String email)
+    private int verifyDeviceRegistration(String email)
     {
         // Data to POST
         List<NameValuePair> params = new ArrayList<NameValuePair>();
@@ -602,7 +633,7 @@ public class ClientRegistrationActivity extends Activity
                 // Store account information to preferences
                 mContactEmailAddress = email;
                 setRegistrationInformation(verify);
-                return true;
+                return DEVICE_REGISTRATION_VERIFIED;
             } else if (result.equals(InformOnlineState.FAILURE)) {
                 String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
                 
@@ -612,32 +643,34 @@ public class ClientRegistrationActivity extends Activity
                 } else if (reason.equals(REASON_EMAIL_ASSIGNED)) {
                     Log.i(Collect.LOGTAG, t + "email address \"" + email + "\" already assigned to an account");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_registration_error_email_in_use), Toast.LENGTH_LONG).show();
+                } else if (reason.equals(REASON_LICENCE_LIMIT)) {
+                    Log.i(Collect.LOGTAG, t + "account seat licence limit reached");
+                    showLicenceLimitDialog(verify.optString("licencedSeats", "?"), verify.optString("planType", "?"));
+                    return DEVICE_REGISTRATION_LIMITED;
                 } else {
                     // Unhandled response
                     Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }   
-                
-                return false;
             } else {
                 // Something bad happened
                 Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
-                return false;
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             }
         } catch (NullPointerException e) {
             // Communication error
             Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
-            return false;
         } catch (JSONException e) {
             // Parse error (malformed result)
             Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
-            return false;
         }      
+        
+        // Generic "something went wrong" (announced via a toast)
+        return DEVICE_REGISTRATION_FAILED;
     } // End verifyDeviceRegistration()
     
     private boolean verifyDeviceTransfer(String devicePin)

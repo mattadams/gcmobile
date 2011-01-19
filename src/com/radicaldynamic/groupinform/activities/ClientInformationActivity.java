@@ -111,11 +111,19 @@ public class ClientInformationActivity extends Activity
             TextView deviceEmail = (TextView) findViewById(R.id.deviceEmail);                
 
             devicePin.setText(Collect.getInstance().getInformOnlineState().getDevicePin());
-            deviceEmail.setText(
-                    Collect.getInstance().getAccountDevices().get(
-                            Collect.getInstance().getInformOnlineState().getDeviceId()
-                            ).getEmail()        
-            );
+            
+            try {
+                deviceEmail.setText(
+                        Collect
+                        .getInstance()
+                        .getAccountDevices()
+                        .get(Collect.getInstance().getInformOnlineState().getDeviceId())
+                        .getEmail()
+                );
+            } catch (NullPointerException e) {
+                // In the event that the device does not have access to this information yet
+                deviceEmail.setText(getString(R.string.tf_unavailable));
+            }
 
             // Set up transfer state button to lock/unlock when clicked
             final ToggleButton transferState = (ToggleButton) findViewById(R.id.deviceTransferStatus);

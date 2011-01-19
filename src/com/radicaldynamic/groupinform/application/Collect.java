@@ -25,6 +25,7 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
+import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.CouchDbService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
@@ -49,6 +50,9 @@ public class Collect extends Application {
     
     // Current registration state of this device
     private InformOnlineState informOnlineState = new InformOnlineState();
+    
+    // Installed dependency state
+    private InformDependencies informDependencies = new InformDependencies();
     
     // Lookup map for account devices, indexed by device ID
     private Map<String, AccountDevice> accountDevicesMap = new HashMap<String, AccountDevice>();
@@ -229,4 +233,7 @@ public class Collect extends Application {
 
     public void setIoService(InformOnlineService ioService) { this.ioService = ioService; }
     public InformOnlineService getIoService() { return ioService; }
+
+    public void setInformDependencies(InformDependencies informDependencies) { this.informDependencies = informDependencies; }
+    public InformDependencies getInformDependencies() { return informDependencies; }
 }

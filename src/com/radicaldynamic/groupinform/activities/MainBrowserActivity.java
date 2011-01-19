@@ -61,6 +61,7 @@ import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.documents.InstanceDocument;
+import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.repository.InstanceRepository;
 import com.radicaldynamic.groupinform.services.CouchDbService;
@@ -84,6 +85,7 @@ public class MainBrowserActivity extends ListActivity
     
     // Intent status codes
     private static final String KEY_REINIT_IOSERVICE = "key_reinit_ioservice";
+    private static final String KEY_SIGNIN_RESTART = "key_signin_restart";
 
     private static boolean mShowSplash = true;
     private Toast mSplashToast;
@@ -132,11 +134,6 @@ public class MainBrowserActivity extends ListActivity
             showErrorDialog(getString(R.string.no_sd_error), true);
         }
 
-        displaySplash();
-
-        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
-        setContentView(R.layout.main_browser);
-        
         Intent intent = getIntent();
         
         if (intent == null) {
@@ -146,8 +143,17 @@ public class MainBrowserActivity extends ListActivity
                 if (Collect.getInstance().getIoService() instanceof InformOnlineService)
                     Collect.getInstance().getIoService().reinitializeService();
             }
+            
+            // Try not to show the splash screen
+            if (intent.getBooleanExtra(KEY_SIGNIN_RESTART, false))
+                mShowSplash = false;
         }
         
+        displaySplash();
+
+        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
+        setContentView(R.layout.main_browser);
+                
         if (Collect.getInstance().getIoService() instanceof InformOnlineService && 
                 Collect.getInstance().getIoService().isReady()) {         
             
@@ -410,8 +416,12 @@ public class MainBrowserActivity extends ListActivity
             }
             
             mPinged = Collect.getInstance().getIoService().isRespondingToPings();
-            mRegistered = Collect.getInstance().getIoService().isRegistered();            
+            mRegistered = Collect.getInstance().getIoService().isRegistered();
             
+            // Initialize list of dependencies
+            if (!Collect.getInstance().getInformDependencies().isInitialized())
+                Collect.getInstance().setInformDependencies(new InformDependencies(getApplicationContext()));
+               
             return null;
         }
     
@@ -654,11 +664,13 @@ public class MainBrowserActivity extends ListActivity
         // If the user wants a full restart then request reinitialization of the IO service
         if (fullRestart)
             i.putExtra(KEY_REINIT_IOSERVICE, true);
+        else 
+            i.putExtra(KEY_SIGNIN_RESTART, true);
         
         startActivity(i);
         finish();
-    }
     
+    }
     private void setProgressVisibility(boolean visible)
     {
         ProgressBar pb = (ProgressBar) getWindow().findViewById(R.id.titleProgressBar);

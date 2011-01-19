@@ -296,6 +296,8 @@
 	<string name="tf_item_value_hint">Value stored in the output record when this item is selected.</string>
 	<string name="tf_item_value_not_unique">Cannot save: item must have a unique value</string>
 	<string name="tf_list_items">List Items</string>
+	<string name="tf_licence_limit_reached_dialog_title">All Licences In Use</string>
+	<string name="tf_licence_limit_reached_dialog_msg">All of the %1$s licences available to your %2$s account are in use.\n\nPlease contact the account owner to remove any unneeded device registrations or to add more licences to the account.\n\nAccount owners: please visit\nhttp://groupcomplete.com for more information on Simple Sharing plans and pricing.</string>
 	<string name="tf_licence_validation_failed">Unable to validate this licence. Double check both values and try again!</string>
 	<string name="tf_licence_validation_succeeded">Licence successfully validated!</string>
 	<string name="tf_loading">Loading</string>

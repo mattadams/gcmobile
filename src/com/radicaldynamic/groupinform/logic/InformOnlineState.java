@@ -60,13 +60,13 @@ public class InformOnlineState
     private boolean offlineModeEnabled = false;
     private CookieStore session = null;
     private SharedPreferences prefs;
-       
+    
     // Used by Collect
     public InformOnlineState()
-    {        
+    {
+        
     }
     
-    // Used by MainBrowserActivity.onCreate()
     public InformOnlineState(Context context)
     {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
