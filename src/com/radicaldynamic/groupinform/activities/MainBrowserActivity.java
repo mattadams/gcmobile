@@ -29,6 +29,7 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -256,8 +257,17 @@ public class MainBrowserActivity extends ListActivity
         super.onResume();
 
         if (Collect.getInstance().getIoService() instanceof InformOnlineService && 
-                Collect.getInstance().getIoService().isReady())
+                Collect.getInstance().getIoService().isReady()) {
+            
+            // Inform user about dependencies
+            if (!Collect.getInstance().getInformDependencies().allSatisfied()) {
+                if (Collect.getInstance().getInformDependencies().isReminderEnabled()) {
+                    showDependencyDialog();
+                }                
+            }
+            
             loadScreen();
+        }
     }
 
     @Override
@@ -564,7 +574,8 @@ public class MainBrowserActivity extends ListActivity
 //                    Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
 //                    openOptionsMenu();
                 } else {
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
+                    if (mAlertDialog != null && !mAlertDialog.isShowing())
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Spinner s1 = (Spinner) findViewById(R.id.form_filter);
@@ -723,6 +734,56 @@ public class MainBrowserActivity extends ListActivity
             }
         });
 
+        mAlertDialog.show();
+    }
+    
+    private void showDependencyDialog()
+    {
+        /*
+         * Since showDependencyDialog essentially enters a loop once unsatisfied dependencies
+         * are found we need a way to get out once all dependencies have been satisfied or
+         * after the user has skipped installation.  This is our out.  
+         */        
+        if (Collect.getInstance().getInformDependencies().getNextDependency() == null)
+            return;
+        
+        String copy = getString(R.string.tf_unavailable);
+        
+        if (Collect.getInstance().getInformDependencies().getNextDependency().equals(InformDependencies.BARCODE))
+            copy = getString(R.string.com_google_zxing_client_android);
+        else if (Collect.getInstance().getInformDependencies().getNextDependency().equals(InformDependencies.COUCHDB))
+            copy = getString(R.string.org_couchdb_android);
+        
+        mAlertDialog = new AlertDialog.Builder(this).create();
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.setIcon(R.drawable.ic_dialog_info);
+        mAlertDialog.setTitle(R.string.tf_dependency_missing_dialog_title);
+        mAlertDialog.setMessage(getString(R.string.tf_dependency_missing_dialog_msg) + copy);
+        
+        mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.tf_install), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // The install may not be successful but at this point we just pretend that it was
+                Collect.getInstance().getInformDependencies().getDependencies().put(
+                        Collect.getInstance().getInformDependencies().getNextDependency(), 1);
+                
+                String uri = "market://details?id=" + Collect.getInstance().getInformDependencies().getNextDependency();
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                startActivity(i);
+            }
+        });
+        
+        mAlertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getText(R.string.tf_remind_later), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {          
+                // This doesn't permanently mark the dependency as installed but it allows us to skip to the next one
+                Collect.getInstance().getInformDependencies().getDependencies().put(
+                        Collect.getInstance().getInformDependencies().getNextDependency(), 1);
+                
+                showDependencyDialog();
+                dialog.cancel();
+            }
+        });
+        
         mAlertDialog.show();
     }
 

@@ -210,6 +210,8 @@
 	<string name="tf_default_couchdb_port">5984</string>
 	<string name="tf_default_nodejs_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_nodejs_port">5100</string>
+	<string name="tf_dependency_missing_dialog_title">Install Helper Software?</string>
+	<string name="tf_dependency_missing_dialog_msg">The following free app will help to maximize the potential of Group Inform:\n\n</string>
 	<string name="tf_device_admin_alias_label">Alias</string>
 	<string name="tf_device_admin_alias_hint">If set this alias will be displayed in various places instead of using the email address to identify this user. Examples: Joe Smith, North Warehouse or Survey Team.</string>
 	<string name="tf_device_admin_checkin_label">Last Checkin</string>
@@ -284,6 +286,7 @@
         <string name="tf_inform_state_connecting">Inform: Connecting...</string>
         <string name="tf_inform_state_offline">Inform: OFFLINE</string>
         <string name="tf_inform_state_online">Inform: Online</string>    
+    <string name="tf_install">Install</string>
 	<string name="tf_integer_number_type">Integers only</string>
 	<string name="tf_invalid_email">Invalid email address</string>
 	<string name="tf_invalid_pin">This PIN is not registered with our system. Double check the PIN and try again.</string>
@@ -320,6 +323,7 @@
 	<string name="tf_registration_msg">Welcome to Group Inform: mobile data collection made easy! This installation must be registered before it can be used.\n\nIf you are using Inform for team-based collaborative data collection then all devices must be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you during this registration process.\n\nCollaborative data collection with Group Inform is made possible by our Simple Sharing services. New accounts receive a Free Simple Sharing subscription as per our website.\n\nPlease visit http://groupcomplete.com for more information on Group Complete and Simple Sharing plans &amp; pricing.</string>
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_remind">Remind</string>
+	<string name="tf_remind_later">Remind Later</string>
 	<string name="tf_reminder_sent">Reminder sent to the account owner</string>	   
         <string name="tf_removal_failed">Could not remove %s: group contains fields.\n\nRemove the inner fields first.</string>
 	<string name="tf_remove">Remove</string>	
@@ -380,4 +384,7 @@
 	<string name="tf_view_instance">View Output</string>
 	<string name="tf_viewing_instance">Output Fields for</string>
 	<string name="tf_yes">Yes</string>
+	<!-- Dependency explanations below -->
+	<string name="com.google.zxing.client.android">The Barcode Scanner app allows Inform to scan, decode and store all major forms of barcodes.\n\nBarcode scanning technology is very useful for inventory or warehouse operations.</string>
+	<string name="org.couchdb.android">CouchDB allows Inform to store forms and data locally on your device.\n\nThis technology enables you to access your data while offline and keeps your information synchronized with the rest of your team.\n\nInstall CouchDB to get the most out of Inform.</string>
 </resources>

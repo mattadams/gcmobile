@@ -57,7 +57,7 @@ public class InformDependencies
     }
     
     // Returns true if all dependencies are installed and false if otherwise
-    public boolean allDependanciesInstalled()
+    public boolean allSatisfied()
     {
         Set<String> deps = getDependencies().keySet();
         Iterator<String> it = deps.iterator();
@@ -72,6 +72,22 @@ public class InformDependencies
         }
         
         return allInstalled;
+    }
+    
+    // Returns the next unavailable dependency
+    public String getNextDependency()
+    {
+        Set<String> deps = getDependencies().keySet();
+        Iterator<String> it = deps.iterator();
+               
+        while (it.hasNext()) {
+            String depKey = it.next();
+            
+            if (getDependencies().get(depKey) == 0)
+                return depKey;
+        }
+        
+        return null;
     }
     
     public boolean isInstalled(String packageName)

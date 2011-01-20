@@ -10,6 +10,7 @@ import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 /*
@@ -268,6 +269,10 @@ public class InformOnlineState
         setSession(null); 
         
         removeFiles();
+        
+        // Reset dependency preferences back to defaults
+        if (Collect.getInstance().getInformDependencies().isInitialized())
+            Collect.getInstance().getInformDependencies().setReminderEnabled(true);
     }
 
     private void loadPreferences()
