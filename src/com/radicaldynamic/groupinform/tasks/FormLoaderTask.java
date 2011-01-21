@@ -120,10 +120,6 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         String formId = ids[0];
         String instanceId = ids[1];
         
-        // we need to prepare this thread for message queue handling should a
-        // toast be needed...
-        //Looper.prepare();
-        
         // TODO: we need to handle what happens when a form document no longer exists
         // or perhaps we don't do that here at all...
         FormDocument form = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);                
