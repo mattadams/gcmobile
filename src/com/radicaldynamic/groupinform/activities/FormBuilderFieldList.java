@@ -63,7 +63,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
     
-    private FormBuilderFieldListAdapter adapter = null;  
+    private FormBuilderFieldListAdapter mAdapter = null;  
     private Button jumpPreviousButton;
     private TextView mPathText;
    
@@ -86,10 +86,10 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         @Override
         public void drop(int from, int to)
         {
-            Field item = adapter.getItem(from);
+            Field item = mAdapter.getItem(from);
 
-            adapter.remove(item);
-            adapter.insert(item, to);
+            mAdapter.remove(item);
+            mAdapter.insert(item, to);
         }
     };
 
@@ -97,7 +97,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         @Override
         public void remove(int which)
         {
-            final Field item = adapter.getItem(which);
+            final Field item = mAdapter.getItem(which);
             
             mAlertDialog = new AlertDialog.Builder(FormBuilderFieldList.this)
                 .setCancelable(false)
@@ -109,7 +109,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                         removeItem(item);
                         
                         // Trigger a refresh of the view (and display any pertenent messages)
-                        if (adapter.isEmpty())
+                        if (mAdapter.isEmpty())
                             refreshView();
                     }
                 })
@@ -170,7 +170,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             }
             
             // This removes the (control) field from mFieldState
-            adapter.remove(item);
+            mAdapter.remove(item);
             
             displayRemovedMsg(getString(R.string.tf_removed_field, item.getLabel().toString()));       
         }
@@ -479,6 +479,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     protected void onResume()
     {
         super.onResume();
+        
+        if (mAdapter != null)
+            mAdapter.notifyDataSetChanged();
     }
     
     @Override
@@ -996,10 +999,10 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         
         mPathText.setText(pathText);
         
-        adapter = new FormBuilderFieldListAdapter(getApplicationContext(), fieldsToDisplay);
+        mAdapter = new FormBuilderFieldListAdapter(getApplicationContext(), fieldsToDisplay);
         
         // Provide a hint to users if the list is empty
-        if (adapter.isEmpty()) {
+        if (mAdapter.isEmpty()) {
             TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
             nothingToDisplay.setVisibility(View.VISIBLE);
             
@@ -1010,7 +1013,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             nothingToDisplay.setVisibility(View.INVISIBLE);
         }
         
-        setListAdapter(adapter);
+        setListAdapter(mAdapter);
 
         TouchListView tlv = (TouchListView) getListView();
 
