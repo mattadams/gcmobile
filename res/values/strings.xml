@@ -271,6 +271,8 @@
         <string name="tf_folder_admin_visibility_label">Visibility</string>
         <string name="tf_folder_admin_visibility_hint">Private folders are for your use only. Public folders may be used by any of your account team members.</string>
         <string name="tf_folder_name_required">Folder name required</string>
+        <string name="tf_form_builder_itext_exception_msg">The form editor is currently unable to process forms with translated text.\n\nLocalization capabilities will be added in a future release.</string>
+        <string name="tf_form_builder_load_error">Problem Loading Form</string>
         <string name="tf_form_folders">Folders</string>
         <string name="tf_form_name">Form Name</string>
         <string name="tf_forms_ready_to_upload">form(s) ready to upload</string>

@@ -34,6 +34,15 @@ public class FormReader
         Collections.addAll(mFieldList, "group", "input", "item", "repeat", "select", "select1", "trigger", "upload");
     }
     
+    @SuppressWarnings("serial")
+    public class LocalizationNotSupportedException extends Exception
+    {
+        LocalizationNotSupportedException()
+        {
+            super();
+        }
+    }
+    
     /*
      * Used to read in a form definition for manipulation by the Form Builder.
      * 
@@ -122,13 +131,19 @@ public class FormReader
     /*
      * Trigger method for doing all of the actual work
      */
-    public void parseForm()
+    public void parseForm() throws LocalizationNotSupportedException
     {
         if (mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix)) {
             Log.d(Collect.LOGTAG, t + "parsing itext form translations...");
             parseFormTranslations(mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:itext", mDefaultPrefix));
         } else
-            Log.d(Collect.LOGTAG, t + "no form translations to parse");        
+            Log.d(Collect.LOGTAG, t + "no form translations to parse");
+        
+        // Temporary exception until the editor can handle localization
+        if (!getTranslationState().isEmpty()) {
+            Log.w(Collect.LOGTAG, t + "itext unsupported, aborting parseForm()");
+            throw new LocalizationNotSupportedException();
+        }
         
         Log.d(Collect.LOGTAG, t + "parsing form binds...");
         parseFormBinds(mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix));

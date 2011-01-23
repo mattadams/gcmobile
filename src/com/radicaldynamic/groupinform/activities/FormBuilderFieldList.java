@@ -501,25 +501,25 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private class LoadFormDefinitionTask extends AsyncTask<String, Void, Void> 
     {
         FormLoaderListener mStateListener;
+        
         String mError = null;
-        String mErrorMsg = "Unexpected error: ";
         
         @Override
         protected Void doInBackground(String... args) 
         {
-            String formId = args[0];      
-            
-            mForm = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);
-            Collect.getInstance().setFbForm(mForm);
-            Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
-            
-            Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
-            AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
-            mFormReader = new FormReader(ais, mNewForm);
+            String formId = args[0];
             
             resetStates();
             
             try {
+                mForm = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);
+                Collect.getInstance().setFbForm(mForm);
+                Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
+                
+                Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
+                AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
+                mFormReader = new FormReader(ais, mNewForm);
+                
                 ais.close();
                 
                 mFormReader.parseForm();
@@ -532,6 +532,12 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 Collect.getInstance().setFbInstanceState(mFormReader.getInstanceState());
                 Collect.getInstance().setFbTranslationState(mFormReader.getTranslationState());
             } catch (IOException e) {
+                e.printStackTrace();
+                mError = e.toString();
+            } catch (FormReader.LocalizationNotSupportedException e) {
+                mError = getString(R.string.tf_form_builder_itext_exception_msg).toString();
+            } catch (Exception e) {
+                e.printStackTrace();
                 mError = e.toString();
             }
             
@@ -545,7 +551,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                     if (mError == null) {
                         mStateListener.loadingComplete(null);                        
                     } else {
-                        mStateListener.loadingError(mErrorMsg + mError); 
+                        mStateListener.loadingError(mError); 
                     }
                 }                    
             }
@@ -743,7 +749,21 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     @Override
     public void loadingError(String errorMsg)
     {
-        
+        dismissDialog(LOADING_DIALOG);
+
+        mAlertDialog = new AlertDialog.Builder(FormBuilderFieldList.this)
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle(R.string.tf_form_builder_load_error)
+            .setMessage(errorMsg)
+            .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    finish();                    
+                }
+            })
+            .create();
+
+        mAlertDialog.show();
     }
 
     @Override
