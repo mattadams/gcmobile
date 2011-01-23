@@ -227,13 +227,20 @@ public class ClientInformationActivity extends Activity
     {
         super.onCreateOptionsMenu(menu);
         
+        boolean available = false;
+        
+        if (Collect.getInstance().getIoService().isSignedIn())
+            available = true;
+        
         switch (mScreen) {
         case SCREEN_DEFAULT:
             menu.add(0, MENU_ACCOUNT_MEMBERS, 0, getString(R.string.tf_account_devices)).setIcon(R.drawable.ic_menu_allfriends);
             menu.add(0, MENU_THIS_DEVICE, 0, getString(R.string.tf_this_device)).setIcon(R.drawable.ic_menu_myinfo);
             break;
         case SCREEN_DEVICE_INFO:
-            menu.add(0, MENU_RESET_INFORM, 0, getString(R.string.tf_reset_inform)).setIcon(R.drawable.ic_menu_close_clear_cancel);
+            menu.add(0, MENU_RESET_INFORM, 0, getString(R.string.tf_reset_inform))
+                .setIcon(R.drawable.ic_menu_close_clear_cancel)
+                .setEnabled(available);
             break;
         }
         

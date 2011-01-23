@@ -110,6 +110,10 @@ public class AccountDeviceActivity extends Activity
                     mDeviceTransferStatusTitle.setText(getString(R.string.tf_device_admin_transfer_status_unlocked));                                   
             }
         });
+        
+        // Warn user that changes cannot be saved while offline
+        if (!Collect.getInstance().getIoService().isSignedIn())
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_while_offline), Toast.LENGTH_LONG).show();
     }
     
     /*
@@ -187,8 +191,20 @@ public class AccountDeviceActivity extends Activity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_RESET_DEVICE, 0, getString(R.string.tf_reset_device)).setIcon(R.drawable.ic_menu_close_clear_cancel);
-        menu.add(0, MENU_REMOVE_DEVICE, 0, getString(R.string.tf_remove_device)).setIcon(R.drawable.ic_menu_delete);        
+        
+        boolean enabled = false;
+        
+        if (Collect.getInstance().getIoService().isSignedIn())
+            enabled = true;
+        
+        menu.add(0, MENU_RESET_DEVICE, 0, getString(R.string.tf_reset_device))
+            .setIcon(R.drawable.ic_menu_close_clear_cancel)
+            .setEnabled(enabled);
+        
+        menu.add(0, MENU_REMOVE_DEVICE, 0, getString(R.string.tf_remove_device))
+            .setIcon(R.drawable.ic_menu_delete)
+            .setEnabled(enabled);        
+        
         return true;
     }    
     
@@ -197,7 +213,11 @@ public class AccountDeviceActivity extends Activity
     {
         switch (keyCode) {
         case KeyEvent.KEYCODE_BACK:
-            showQuitDialog();
+            if (Collect.getInstance().getIoService().isSignedIn())
+                showQuitDialog();
+            else 
+                finish();
+            
             return true;
         }
 

@@ -385,6 +385,7 @@
         <string name="tf_video_media_type">Video recording</string>
 	<string name="tf_view_instance">View Output</string>
 	<string name="tf_viewing_instance">Output Fields for</string>
+	<string name="tf_while_offline">Changes cannot be saved while offline</string>
 	<string name="tf_yes">Yes</string>
 	<!-- Dependency explanations below -->
 	<string name="com.google.zxing.client.android">The Barcode Scanner app allows Inform to scan, decode and store all major forms of barcodes.\n\nBarcode scanning technology is very useful for inventory or warehouse operations.</string>

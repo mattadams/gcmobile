@@ -90,7 +90,14 @@ public class AccountFolderList extends ListActivity
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
     {
         super.onCreateContextMenu(menu, v, menuInfo);
-        menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder));
+        
+        boolean enabled = false;
+        
+        if (Collect.getInstance().getIoService().isSignedIn())
+            enabled = true;
+        
+        menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder))
+            .setEnabled(enabled);
     }
 
     /*
@@ -126,8 +133,20 @@ public class AccountFolderList extends ListActivity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_folder)).setIcon(R.drawable.ic_menu_add);
-        menu.add(0, MENU_SYNC_LIST, 0, getString(R.string.tf_replication_list)).setIcon(R.drawable.ic_menu_sync_list);
+        
+        boolean enabled = false;
+        
+        if (Collect.getInstance().getIoService().isSignedIn())
+            enabled = true;
+        
+        menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_folder))
+            .setIcon(R.drawable.ic_menu_add)
+            .setEnabled(enabled);
+        
+        menu.add(0, MENU_SYNC_LIST, 0, getString(R.string.tf_replication_list))
+            .setIcon(R.drawable.ic_menu_sync_list)
+            .setEnabled(enabled);
+        
         return true;
     }
 
