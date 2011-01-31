@@ -15,5 +15,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="lib" path="lib/joda-time-1.6.2.jar"/>
+	<classpathentry kind="lib" path="lib/commons-compress-1.0.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/LibCouch"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-Copyright (C) 2009 University of Washington
+    Copyright (C) 2009 University of Washington
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not
-use this file except in compliance with the License. You may obtain a copy of
-the License at http://www.apache.org/licenses/LICENSE-2.0
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not
+    use this file except in compliance with the License. You may obtain a copy of
+    the License at http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-License for the specific language governing permissions and limitations under
-the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+    License for the specific language governing permissions and limitations under 
+    the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="10" android:versionName="1.1.6-tip-0.9.1" package="com.radicaldynamic.groupinform">
     <application android:theme="@style/GroupInformTheme" android:icon="@drawable/ic_group_complete" android:name=".application.Collect" android:debuggable="true" android:label="@string/app_name">
@@ -21,23 +21,25 @@ the License.
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
         <activity android:name=".activities.FormEntryActivity" android:label="@string/app_name" android:windowSoftInputMode="adjustResize" android:configChanges="orientation"> 
-            <!-- the intent filter below is a bit of a hack until we create a content provider for forms -->
+            <!-- The intent filter below is a bit of a hack until we create a content provider for forms -->
             <intent-filter>
                 <action android:name="com.radicaldynamic.groupinform.action.FormEntry" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- this is what we should be doing once we have the content provider working -->
+            
+            <!-- This is what we should be doing once we have the content provider working -->
             <intent-filter>
     	       <action android:name="android.intent.action.VIEW" />
     	       <action android:name="android.intent.action.EDIT" />
     	       <category android:name="android.intent.category.DEFAULT" />
-    	       <!-- need to add something like:
-    	       <data android:mimeType="vnd.android.cursor.item/vnd.google.note" />
-    	       here once we make a contentProvider for forms.
-    	       -->
+    	       <!-- Need to add something like... -->
+    	       <!-- <data android:mimeType="vnd.android.cursor.item/vnd.google.note" /> -->
+    	       <!-- ...here once we make a contentProvider for forms -->
             </intent-filter>   
-        </activity>      
+        </activity>
+        
         <activity android:name=".activities.AccountDeviceActivity" android:label="@string/app_name" android:screenOrientation="portrait" android:windowSoftInputMode="stateHidden" />
         <activity android:name=".activities.AccountDeviceList" android:label="@string/app_name" />
         <activity android:name=".activities.AccountFolderActivity" android:label="@string/app_name" android:screenOrientation="portrait" android:windowSoftInputMode="stateHidden" />
@@ -59,13 +61,34 @@ the License.
         <activity android:name=".preferences.ServerPreferences" android:label="@string/app_name" />
         <!-- <activity android:name=".preferences.GeneralPreferences" android:label="@string/app_name" /> -->        
         <service android:name=".services.CouchDbService" android:label="@string/app_name" />
-        <service android:name=".services.InformOnlineService" android:label="@string/app_name" />       
+        <service android:name=".services.InformOnlineService" android:label="@string/app_name" />
+        
+        <!-- CouchDB -->
+        <activity android:name="com.couchone.couchdb.CouchFutonActivity"
+                  android:configChanges="keyboardHidden|orientation"
+                  android:label="@string/app_name"
+                  android:launchMode="singleTask">
+        </activity>
+
+        <activity android:name="com.couchone.couchdb.CouchInstallActivity"
+                  android:configChanges="keyboardHidden|orientation">
+        </activity>
+    
+        <service android:name="com.couchone.couchdb.CouchService" android:exported="true" android:enabled="true" android:process=":remote">
+            <intent-filter>
+                <action android:name="com.couchone.libcouch.ICouchService"></action>
+            </intent-filter>
+        </service>        
     </application>
-    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.INTERNET" />
-    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.ACCESS_SURFACE_FLINGER" />
+        
     <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.ACCESS_SURFACE_FLINGER" />
+    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.INTERNET" />
+    <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-sdk android:minSdkVersion="3" />
+    
     <supports-screens android:largeScreens="true" android:normalScreens="true" android:anyDensity="true" />
+    
+    <uses-sdk android:minSdkVersion="8" />
 </manifest>

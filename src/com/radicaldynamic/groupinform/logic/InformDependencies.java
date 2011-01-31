@@ -44,7 +44,7 @@ public class InformDependencies
     public InformDependencies(Context context)
     {
         getDependencies().put(BARCODE, 0);
-        getDependencies().put(COUCHDB, 0);
+        //getDependencies().put(COUCHDB, 0);
         
         setContext(context);
         scan();
