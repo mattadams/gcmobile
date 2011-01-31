@@ -50,7 +50,7 @@ public class CouchService extends Service {
 	public void onCreate() {
 		notifyStarting();
 		couch.service = this;
-		couch.start("/system/bin/sh", "/sdcard/couch/bin/couchdb", "");
+		couch.start("/system/bin/sh", "/sdcard/groupinform/couch/bin/couchdb", "");
 	}
 
 	@Override

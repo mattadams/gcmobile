@@ -26,8 +26,11 @@ import android.util.Log;
 
 public class CouchInstaller {
 	
-	final static String baseUrl = "http://couchone-android.s3.amazonaws.com/";
-	final static String dataPath = "/data/data/com.couchone.couchdb";
+//	final static String baseUrl = "http://couchone-android.s3.amazonaws.com/";
+//	final static String dataPath = "/data/data/com.couchone.couchdb";
+    
+    final static String baseUrl = "http://arthur.902northland.adams.home/~matt/rdinc/projects/groupcomplete/couch/android-build/";
+    final static String dataPath = "/data/data/com.radicaldynamic.groupinform";
 
 	final static String TAG = "CouchDB";
 
@@ -38,7 +41,7 @@ public class CouchInstaller {
 		// android app behaviour. However there doesnt look to be a way to protect
 		// ourselves from wiping the entire sdcard with a typo, so just be 
 		// careful
-		File couchDir = new File(Environment.getExternalStorageDirectory(), "couch");
+		File couchDir = new File(Environment.getExternalStorageDirectory(), "groupinform/couch");
 		if (couchDir.exists()) {
 			deleteDirectory(couchDir);
 		}
@@ -137,7 +140,7 @@ public class CouchInstaller {
 			}
 		}
 		
-		return new File(Environment.getExternalStorageDirectory(), "couch").exists();
+		return new File(Environment.getExternalStorageDirectory(), "groupinform/couch").exists();
 	}
 
 
@@ -147,20 +150,23 @@ public class CouchInstaller {
 	public static List<String> packageSet() {
 		ArrayList<String> packages = new ArrayList<String>();
 	
-		// TODO: Different CPU arch support.
-		// TODO: Some kind of sane remote manifest for this (remote updater)
-		packages.add("couch-erl-1.0"); // CouchDB, Erlang, CouchJS
-		packages.add("fixup-1.0"); //Cleanup old mochi, retrigger DNS fix install.
-		packages.add("dns-fix"); //Add inet config to fallback on erlang resolver
-		if (android.os.Build.VERSION.SDK_INT == 7)
-			packages.add("couch-icu-driver-eclair");
-		else if (android.os.Build.VERSION.SDK_INT == 8)
-			packages.add("couch-icu-driver-froyo");
-		else {
-			// TODO: Probably should throw some exception here.
-			Log.e(TAG, "Unsupported OS/arch combo");
-			return null;
-		}
+//		// TODO: Different CPU arch support.
+//		// TODO: Some kind of sane remote manifest for this (remote updater)
+//		packages.add("couch-erl-1.0"); // CouchDB, Erlang, CouchJS
+//		packages.add("fixup-1.0"); //Cleanup old mochi, retrigger DNS fix install.
+//		packages.add("dns-fix"); //Add inet config to fallback on erlang resolver
+//		if (android.os.Build.VERSION.SDK_INT == 7)
+//			packages.add("couch-icu-driver-eclair");
+//		else if (android.os.Build.VERSION.SDK_INT == 8)
+//			packages.add("couch-icu-driver-froyo");
+//		else {
+//			// TODO: Probably should throw some exception here.
+//			Log.e(TAG, "Unsupported OS/arch combo");
+//			return null;
+//		}
+		
+		packages.add("release-1.0");
+		
 		return packages;
 	}
 	

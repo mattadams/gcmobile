@@ -57,6 +57,7 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ImageView.ScaleType;
 
+import com.couchone.couchdb.CouchFutonActivity;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -378,6 +379,9 @@ public class MainBrowserActivity extends ListActivity
             return true;
         case R.id.tf_info:
             startActivityForResult(new Intent(this, ClientInformationActivity.class), ABOUT_INFORM);
+            return true;
+        case R.id.tf_couch:
+            startActivity(new Intent(this, CouchFutonActivity.class));
             return true;
         }
 
