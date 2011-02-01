@@ -18,9 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.View.OnClickListener;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -48,12 +46,7 @@ public class ClientInformationActivity extends Activity
     
     private static final int MENU_ACCOUNT_MEMBERS = 0;
     private static final int MENU_THIS_DEVICE = 1;
-    private static final int MENU_RESET_INFORM = 2;    
-    
-    // Strings returned by the Group Inform Server
-    private static final String TRANSFER_STATE = "transfer";
-    public static final String LOCKED = "locked";
-    public static final String UNLOCKED = "unlocked";  
+    private static final int MENU_RESET_INFORM = 2;
     
     // Dialog constants
     private static final int CONFIRM_RESET_DIALOG = 0;
@@ -104,8 +97,6 @@ public class ClientInformationActivity extends Activity
 
             setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_device_info));
 
-            new RetrieveTransferStateTask().execute();
-
             header.setText(getString(R.string.tf_about_inform_device_header));
             TextView devicePin = (TextView) findViewById(R.id.devicePin);
             TextView deviceEmail = (TextView) findViewById(R.id.deviceEmail);                
@@ -124,18 +115,6 @@ public class ClientInformationActivity extends Activity
                 // In the event that the device does not have access to this information yet
                 deviceEmail.setText(getString(R.string.tf_unavailable));
             }
-
-            // Set up transfer state button to lock/unlock when clicked
-            final ToggleButton transferState = (ToggleButton) findViewById(R.id.deviceTransferStatus);
-
-            transferState.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v)
-                {
-                    transferState.setEnabled(false);
-                    new ToggleTransferStateTask().execute();   
-                }            
-            });
 
             break;
         }
@@ -315,124 +294,6 @@ public class ClientInformationActivity extends Activity
                 showDialog(RESET_SUCCESSFUL_DIALOG);
             } else
                 showDialog(RESET_FAILED_DIALOG);
-        }
-    }
-    
-    public class RetrieveTransferStateTask extends AsyncTask<Void, Void, String> 
-    {
-        @Override
-        protected String doInBackground(Void... params)
-        {
-            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/transfer/show";
-            
-            JSONObject result;
-            String getResult = HttpUtils.getUrlData(url);
-            
-            try {
-                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
-                result = (JSONObject) new JSONTokener(getResult).nextValue();
-                
-                if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK)) {
-                    return result.getString(TRANSFER_STATE);
-                } else {
-                    return null;
-                }
-            } catch (NullPointerException e) {
-                // Communication error
-                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");  
-                e.printStackTrace();
-                return null;
-            } catch (JSONException e) {
-                // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
-                e.printStackTrace();
-                return null;
-            }
-        }
-        
-        @Override
-        protected void onPreExecute()
-        {
-            setProgressBarIndeterminateVisibility(true);
-        }
-
-        @Override
-        protected void onPostExecute(String state)
-        {
-            ToggleButton transferState = (ToggleButton) findViewById(R.id.deviceTransferStatus);
-            
-            if (state == null) {
-                transferState.setText(getText(R.string.tf_unavailable));
-                transferState.setEnabled(false);
-            } else {
-                transferState.setEnabled(true);
-                
-                if (state.equals(LOCKED)) {
-                    transferState.setChecked(true);
-                } else {
-                    transferState.setChecked(false);
-                }
-            }
-            
-            setProgressBarIndeterminateVisibility(false);
-        }
-    }
-    
-    public class ToggleTransferStateTask extends AsyncTask<Void, Void, String> 
-    {
-        @Override
-        protected String doInBackground(Void... params)
-        {
-            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/transfer/toggle";
-            
-            String getResult = HttpUtils.getUrlData(url);
-            JSONObject result;
-            
-            try {
-                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
-                result = (JSONObject) new JSONTokener(getResult).nextValue();
-                
-                if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK)) {
-                    return result.optString(TRANSFER_STATE, null);
-                } else {
-                    return null;
-                }
-            } catch (NullPointerException e) {
-                // Communication error
-                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
-                e.printStackTrace();
-                return null;
-            } catch (JSONException e) {
-                // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
-                e.printStackTrace();
-                return null;
-            }
-        }    
-        
-        @Override
-        protected void onPreExecute()
-        {
-            setProgressBarIndeterminateVisibility(true);
-        }
-
-        @Override
-        protected void onPostExecute(String state)
-        {
-            ToggleButton transferState = (ToggleButton) findViewById(R.id.deviceTransferStatus);
-            
-            if (state == null) {
-                transferState.setText(getText(R.string.tf_unavailable));
-                transferState.setEnabled(false);
-            } else if (state.equals(LOCKED)) {
-                transferState.setEnabled(true);
-                transferState.setChecked(true);
-            } else if (state.equals(UNLOCKED)) {
-                transferState.setEnabled(true);
-                transferState.setChecked(false);
-            }
-            
-            setProgressBarIndeterminateVisibility(false);
         }
     }
     

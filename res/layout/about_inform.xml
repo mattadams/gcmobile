@@ -91,24 +91,5 @@
             android:layout_width="wrap_content" 
             android:layout_height="wrap_content"
             android:layout_marginBottom="15dp" />
-        
-        <!-- Device transfer status -->
-        <TextView
-            android:id="@android:id/empty" 
-            android:text="Device Transfer Status"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:textSize="20sp" />
-        
-        <ToggleButton
-            android:id="@+id/deviceTransferStatus"
-            android:enabled="false"
-            android:checked="false"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_marginBottom="15dp"
-            android:textOff="@string/tf_transfer_unlocked"
-            android:textOn="@string/tf_transfer_locked" />
     </LinearLayout>        
 </LinearLayout>

@@ -22,9 +22,6 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,7 +47,7 @@ public class AccountDeviceActivity extends Activity
     public static final int CONFIRM_REMOVAL_DIALOG = 2;
     public static final int RESET_PROGRESS_DIALOG = 3;
     public static final int CONFIRM_RESET_DIALOG = 4;
-        
+
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
     
@@ -61,8 +58,7 @@ public class AccountDeviceActivity extends Activity
     private EditText mDeviceEmail;
     private TextView mDevicePin;
     private TextView mDeviceCheckin;
-    private CheckBox mDeviceTransferStatus;
-    private TextView mDeviceTransferStatusTitle;
+    private TextView mDeviceStatus;
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -83,9 +79,8 @@ public class AccountDeviceActivity extends Activity
         mDeviceAlias = (EditText) findViewById(R.id.alias);
         mDeviceEmail = (EditText) findViewById(R.id.email);
         mDevicePin = (TextView) findViewById(R.id.pin);
-        mDeviceCheckin = (TextView) findViewById(R.id.checkin);
-        mDeviceTransferStatus = (CheckBox) findViewById(R.id.transferStatus);
-        mDeviceTransferStatusTitle = (TextView) findViewById(R.id.transferStatusTitle);
+        mDeviceCheckin = (TextView) findViewById(R.id.checkin);        
+        mDeviceStatus = (TextView) findViewById(R.id.status);
         
         mDeviceAlias.setText(mDevice.getAlias());
         mDeviceEmail.setText(mDevice.getEmail());
@@ -93,23 +88,10 @@ public class AccountDeviceActivity extends Activity
         mDeviceCheckin.setText(mDevice.getLastCheckin());
         
         // Initialize fields based on whether the device is locked
-        if (mDevice.getTransferStatus().equals(ClientInformationActivity.LOCKED)) {
-            mDeviceTransferStatus.setChecked(true);
-            mDeviceTransferStatusTitle.setText(getString(R.string.tf_device_admin_transfer_status_locked));            
-        } else {
-            mDeviceTransferStatus.setChecked(false);
-            mDeviceTransferStatusTitle.setText(getString(R.string.tf_device_admin_transfer_status_unlocked));
-        }
-        
-        // Set up listener to detect changes to transfer status input element
-        mDeviceTransferStatus.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {                
-                if (((CheckBox) v).isChecked())
-                    mDeviceTransferStatusTitle.setText(getString(R.string.tf_device_admin_transfer_status_locked)); 
-                else
-                    mDeviceTransferStatusTitle.setText(getString(R.string.tf_device_admin_transfer_status_unlocked));                                   
-            }
-        });
+        if (mDevice.getStatus().equals(AccountDevice.STATUS_ACTIVE))
+            mDeviceStatus.setText(getString(R.string.tf_device_admin_status_inuse));                        
+        else
+            mDeviceStatus.setText(getString(R.string.tf_device_admin_status_unused));            
         
         // Warn user that changes cannot be saved while offline
         if (!Collect.getInstance().getIoService().isSignedIn())
@@ -365,11 +347,6 @@ public class AccountDeviceActivity extends Activity
             params.add(new BasicNameValuePair("alias", mDeviceAlias.getText().toString().trim()));
             params.add(new BasicNameValuePair("email", mDeviceEmail.getText().toString().trim()));
             
-            if (mDeviceTransferStatus.isChecked())
-                params.add(new BasicNameValuePair("transfer", "locked"));
-            else 
-                params.add(new BasicNameValuePair("transfer", "unlocked"));
-            
             String updateUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/update";
             
             return HttpUtils.postUrlData(updateUrl, params);
@@ -403,12 +380,7 @@ public class AccountDeviceActivity extends Activity
                     
                     // Commit changes to the cache-in-memory to avoid running InformOnlineService.loadDeviceHash()
                     Collect.getInstance().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());
-                    Collect.getInstance().getAccountDevices().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());
-                    
-                    if (mDeviceTransferStatus.isChecked())
-                        Collect.getInstance().getAccountDevices().get(mDeviceId).setTransferStatus("locked");
-                    else 
-                        Collect.getInstance().getAccountDevices().get(mDeviceId).setTransferStatus("unlocked");                    
+                    Collect.getInstance().getAccountDevices().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());                
                     
                     // Get out of here
                     finish();

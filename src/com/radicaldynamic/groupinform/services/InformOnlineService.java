@@ -422,7 +422,6 @@ public class InformOnlineService extends Service {
                     // Optional information that will only be present if the user is also an account owner
                     device.setLastCheckin(jsonDevice.optString("lastCheckin"));
                     device.setPin(jsonDevice.optString("pin"));
-                    device.setTransferStatus(jsonDevice.optString("transfer"));
     
                     Collect.getInstance().getAccountDevices().put(device.getId(), device);
                 }

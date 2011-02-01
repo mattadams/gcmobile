@@ -3,15 +3,16 @@ package com.radicaldynamic.groupinform.logic;
 
 public class AccountDevice
 {
+    public final static String STATUS_ACTIVE = "active";
+    public final static String STATUS_UNUSED = "unused";
+    
     private String id;                  // RO access by everyone
     private String rev;
     private String alias;               // Everyone (r/w by device owner)
     private String email;               // Everyone (r/w by device owner)
     private String lastCheckin;         // ?
     private String pin;                 // RO by account owner, device owner
-    private String status;              // R/W by account owner
-    private String transferStatus;      // R/W by account owner, device owner
-    
+    private String status;              // R/W by account owner    
     
     public AccountDevice(String id, String rev, String alias, String email, String status)
     {
@@ -55,7 +56,4 @@ public class AccountDevice
 
     public void setStatus(String status) { this.status = status; }
     public String getStatus() { return status; }
-    
-    public void setTransferStatus(String transferStatus) { this.transferStatus = transferStatus; }
-    public String getTransferStatus() { return transferStatus; }
 }

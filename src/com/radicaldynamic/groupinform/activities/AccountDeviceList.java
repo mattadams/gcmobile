@@ -267,7 +267,6 @@ public class AccountDeviceList extends ListActivity
                     // Optional information that will only be present if the user is also an account owner
                     device.setLastCheckin(jsonDevice.optString("lastCheckin"));
                     device.setPin(jsonDevice.optString("pin"));
-                    device.setTransferStatus(jsonDevice.optString("transferStatus"));
                     
                     // Show a device so long as it hasn't been marked as removed
                     if (!device.getStatus().equals("removed"))

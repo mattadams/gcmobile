@@ -37,7 +37,7 @@ public class ClientRegistrationActivity extends Activity
     private static final String t = "ClientRegistrationActivity: ";
     
     private static final int DIALOG_BEGIN_REGISTRATION = 1;
-    private static final int DIALOG_TRANSFER_DEVICE = 2;
+    private static final int DIALOG_DEVICE_REGISTRATION_METHOD = 2;
     private static final int DIALOG_ACCOUNT_CREATED = 3;
     private static final int DIALOG_DEVICE_REGISTERED = 4;
     private static final int DIALOG_SYSTEM_ERROR = 10;
@@ -52,9 +52,9 @@ public class ClientRegistrationActivity extends Activity
     public static final String REASON_EMAIL_ASSIGNED = "email address assigned";            // New account/device failure
     public static final String REASON_UNKNOWN = "unknown reason";                           // Unknown failure (default only)
     private static final String REASON_LICENCE_LIMIT = "seat licence limit reached";        // New device failure
-    private static final String REASON_INVALID_PIN = "invalid pin";                         // Transfer failure
-    private static final String REASON_DEVICE_LOCKED = "device locked";                     // Transfer failure
-    private static final String REASON_TRANSFER_DELAYED = "transfer delayed";               // Transfer failure
+    private static final String REASON_INVALID_PIN = "invalid pin";                         // Reactivation failure
+    private static final String REASON_DEVICE_ACTIVE = "device active";                     // Reactivation failure
+    private static final String REASON_REACTIVATION_DELAYED = "activation delayed";         // Reactivation failure
     private static final String REASON_UNKNOWN_ACCOUNT_CONTACT = "unknown account contact"; // Remind failure
     
     private String mAccountNumber = "";      // Licence number
@@ -129,19 +129,18 @@ public class ClientRegistrationActivity extends Activity
                 });
                 break;
                 
-            case DIALOG_TRANSFER_DEVICE:
+            case DIALOG_DEVICE_REGISTRATION_METHOD:
                 builder
                 .setCancelable(false)
-                .setTitle(R.string.tf_are_you_transferring_devices)
-                .setMessage(R.string.tf_are_you_transferring_devices_msg)
-                .setPositiveButton(R.string.tf_yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        transferDeviceDialog();
-                    }
-                })
-                .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                .setMessage(R.string.tf_device_registration_method_msg)
+                .setPositiveButton(R.string.tf_device_registration_method_register_new, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         registerDeviceDialog();
+                    }
+                })
+                .setNegativeButton(R.string.tf_device_registration_method_reactivate, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        reactivateDeviceDialog();                        
                     }
                 });
                 break;
@@ -195,6 +194,52 @@ public class ClientRegistrationActivity extends Activity
         return builder.create();
     }
     
+    private void reactivateDeviceDialog()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        
+        // Attach the layout to this dialog    
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.reactivate_device, null);        
+        
+        final EditText devicePin = (EditText) view.findViewById(R.id.devicePin);
+        devicePin.addTextChangedListener(mAutoFormat);
+        devicePin.setText(mDevicePin);
+        
+        builder
+        .setCancelable(false)
+        .setInverseBackgroundForced(true)
+        .setView(view)
+        
+        .setPositiveButton(R.string.tf_continue, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String pin = devicePin.getText().toString().trim(); 
+                
+                // Save for later
+                mDevicePin = pin;
+                
+                if (pin.length() == 0 || !pin.matches("^[0-9]{4,4}-[0-9]{4,4}$")) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_device_pin_required), Toast.LENGTH_LONG).show();
+                    reactivateDeviceDialog();
+                } else {
+                    if (verifyDeviceReactivation(pin)) {
+                        showDialog(DIALOG_DEVICE_REGISTERED);
+                    } else {
+                        reactivateDeviceDialog();
+                    }
+                }
+            }
+        })
+        
+        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                registerExistingAccountDialog();
+            }
+        })
+        
+        .show(); 
+    }
+
     private void registerDeviceDialog()
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -277,7 +322,7 @@ public class ClientRegistrationActivity extends Activity
                 String key = licenceKey.getText().toString().trim();
                 
                 if (verifyAccountLicence(number, key)) {
-                    showDialog(DIALOG_TRANSFER_DEVICE);
+                    showDialog(DIALOG_DEVICE_REGISTRATION_METHOD);
                 } else {
                     registerExistingAccountDialog();
                 }
@@ -313,7 +358,7 @@ public class ClientRegistrationActivity extends Activity
         builder
         .setCancelable(false)
         .setInverseBackgroundForced(true)
-        .setTitle("New account")
+        .setTitle(R.string.tf_new_account)
         .setView(view)
         
         .setPositiveButton(R.string.tf_continue, new DialogInterface.OnClickListener() {
@@ -487,52 +532,6 @@ public class ClientRegistrationActivity extends Activity
         .show();
     }
 
-    private void transferDeviceDialog()
-    {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        
-        // Attach the layout to this dialog    
-        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.transfer_device, null);        
-        
-        final EditText devicePin = (EditText) view.findViewById(R.id.devicePin);
-        devicePin.addTextChangedListener(mAutoFormat);
-        devicePin.setText(mDevicePin);
-        
-        builder
-        .setCancelable(false)
-        .setInverseBackgroundForced(true)
-        .setView(view)
-        
-        .setPositiveButton(R.string.tf_continue, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                String pin = devicePin.getText().toString().trim(); 
-                
-                // Save for later
-                mDevicePin = pin;
-                
-                if (pin.length() == 0 || !pin.matches("^[0-9]{4,4}-[0-9]{4,4}$")) {
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_device_pin_required), Toast.LENGTH_LONG).show();
-                    transferDeviceDialog();
-                } else {
-                    if (verifyDeviceTransfer(pin)) {
-                        showDialog(DIALOG_DEVICE_REGISTERED);
-                    } else {
-                        transferDeviceDialog();
-                    }
-                }
-            }
-        })
-        
-        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                registerExistingAccountDialog();
-            }
-        })
-        
-        .show(); 
-    }    
-
     private boolean verifyAccountLicence(String number, String key)
     {
         // Make sure abcd-ef12-3456 gets translated to ABCD-EF12-3456
@@ -619,8 +618,8 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("email", email));
         params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
         
-        String transferUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/device";
-        String postResult = HttpUtils.postUrlData(transferUrl, params);
+        String registerDeviceUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/device";
+        String postResult = HttpUtils.postUrlData(registerDeviceUrl, params);
         JSONObject verify;
         
         try {            
@@ -673,7 +672,7 @@ public class ClientRegistrationActivity extends Activity
         return DEVICE_REGISTRATION_FAILED;
     } // End verifyDeviceRegistration()
     
-    private boolean verifyDeviceTransfer(String devicePin)
+    private boolean verifyDeviceReactivation(String devicePin)
     {
         // Data to POST
         List<NameValuePair> params = new ArrayList<NameValuePair>();
@@ -682,37 +681,37 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("devicePin", devicePin));
         params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
         
-        String transferUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/transfer";
-        String postResult = HttpUtils.postUrlData(transferUrl, params);
-        JSONObject transfer;
+        String registerReactivateUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/reactivate";
+        String postResult = HttpUtils.postUrlData(registerReactivateUrl, params);
+        JSONObject reactivation;
         
         try {
             Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);
-            transfer = (JSONObject) new JSONTokener(postResult).nextValue();
+            reactivation = (JSONObject) new JSONTokener(postResult).nextValue();
             
-            String result = transfer.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+            String result = reactivation.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
             
             if (result.equals(InformOnlineState.OK)) {
-                setRegistrationInformation(transfer);
+                setRegistrationInformation(reactivation);
                 return true;
             } else if (result.equals(InformOnlineState.FAILURE)) {
-                String reason = transfer.optString(InformOnlineState.REASON, REASON_UNKNOWN);
+                String reason = reactivation.optString(InformOnlineState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_PIN)) {
-                    Log.i(Collect.LOGTAG, t + "transfer failed (invalid PIN)");
+                    Log.i(Collect.LOGTAG, t + "reactivation failed (invalid PIN)");
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_pin), Toast.LENGTH_LONG).show();
-                } else if (reason.equals(REASON_DEVICE_LOCKED)) {
-                    Log.i(Collect.LOGTAG, t + "transfer failed (device locked)");
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_device_locked), Toast.LENGTH_LONG).show();
-                } else if (reason.equals(REASON_TRANSFER_DELAYED)) {
-                    Log.i(Collect.LOGTAG, t + "transfer delayed for " + transfer.getString("delay") + "ms");
+                } else if (reason.equals(REASON_DEVICE_ACTIVE)) {
+                    Log.i(Collect.LOGTAG, t + "reactivation failed (device active)");
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_reactivate_while_in_use), Toast.LENGTH_LONG).show();
+                } else if (reason.equals(REASON_REACTIVATION_DELAYED)) {
+                    Log.i(Collect.LOGTAG, t + "reactivation delayed for " + reactivation.getString("delay") + "ms");
                     
                     String approximation = " ";
                     String period = "";
                     String unit = "";
 
                     // The delay time is returned in milliseconds
-                    Integer delayMilliseconds = transfer.getInt("delay");
+                    Integer delayMilliseconds = reactivation.getInt("delay");
                     
                     if (delayMilliseconds / 1000 / 60 > 0) {
                         approximation = " about ";
@@ -731,8 +730,8 @@ public class ClientRegistrationActivity extends Activity
                         unit = unit.substring(0, unit.length() - 1);
                     }
                     
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_transfer_delayed_reason), Toast.LENGTH_LONG).show();                    
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_transfer_delayed_wait, approximation, period, unit), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_reactivation_delayed_reason), Toast.LENGTH_LONG).show();                    
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_reactivation_delayed_wait, approximation, period, unit), Toast.LENGTH_LONG).show();
                 } else {
                     // Unhandled response
                     Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
@@ -759,7 +758,7 @@ public class ClientRegistrationActivity extends Activity
             e.printStackTrace();
             return false;
         }
-    } // End verifyDeviceTransfer()
+    } // End verifyDeviceReactivation()
     
     private boolean verifyNewAccount(String email)
     {

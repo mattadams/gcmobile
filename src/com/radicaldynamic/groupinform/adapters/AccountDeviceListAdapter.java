@@ -42,7 +42,7 @@ public class AccountDeviceListAdapter extends ArrayAdapter<AccountDevice>
             TextView bt = (TextView) v.findViewById(R.id.deviceEmail);
             
             if (icon != null) {
-                if (f.getStatus().equals("active"))
+                if (f.getStatus().equals(AccountDevice.STATUS_ACTIVE))
                     icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_user));
                 else 
                     icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_blocked_user));
