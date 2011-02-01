@@ -221,7 +221,7 @@
 	<string name="tf_device_admin_status_hint"></string>
 	<string name="tf_device_admin_status_inuse">In Use</string>	
 	<string name="tf_device_admin_status_unused">Unused (available for activation)</string>
-	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device. This may be you or someone else. This email address must be unique to this Group Inform account.</string>
+	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device. The address must be unique to this Group Inform account.</string>
 	<string name="tf_device_info">Device Info</string>
 	<string name="tf_device_pin_label">Device PIN</string>
 	<string name="tf_device_pin_hint">Enter the PIN of the unused registration to have it activated and assigned to this device.</string>

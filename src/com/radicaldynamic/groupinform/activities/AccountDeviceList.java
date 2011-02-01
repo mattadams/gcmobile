@@ -206,6 +206,17 @@ public class AccountDeviceList extends ListActivity
                 // Write out list of jsonDevices for later retrieval by loadDevicesList() and InformOnlineService.loadDevicesHash()                
                 JSONArray jsonDevices = jsonDeviceList.getJSONArray("devices");
                 
+                // Record the number of seats that this account is licenced for
+                Collect
+                    .getInstance()
+                    .getInformOnlineState()
+                    .setAccountLicencedSeats(jsonDeviceList.getInt("licencedSeats"));       
+                
+                // Record the plan type for this account (this is a weird place to do it in but it makes sense to piggyback)
+                Collect
+                    .getInstance()
+                    .getInformOnlineState()
+                    .setAccountPlan(jsonDeviceList.getString("planType"));
                 try {
                     // Write out a device list cache file
                     FileOutputStream fos = new FileOutputStream(new File(FileUtils.DEVICE_CACHE_FILE_PATH));

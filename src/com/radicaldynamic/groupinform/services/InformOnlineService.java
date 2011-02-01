@@ -407,6 +407,8 @@ public class InformOnlineService extends Service {
             fis.close();
             
             try {
+                int assignedSeats = 0;
+                
                 JSONArray jsonDevices = (JSONArray) new JSONTokener(sb.toString()).nextValue();
                 
                 for (int i = 0; i < jsonDevices.length(); i++) {
@@ -424,7 +426,14 @@ public class InformOnlineService extends Service {
                     device.setPin(jsonDevice.optString("pin"));
     
                     Collect.getInstance().getAccountDevices().put(device.getId(), device);
+                    
+                    // A device counts towards the list of "assigned" devices so long as it hasn't been removed
+                    if (!device.getStatus().equals("removed"))
+                        assignedSeats++;
                 }
+                
+                // Record the number of seats in this account that are assigned & allocated (not necessarily "active")
+                Collect.getInstance().getInformOnlineState().setAccountAssignedSeats(assignedSeats);
             } catch (JSONException e) {
                 // Parse error (malformed result)
                 Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
