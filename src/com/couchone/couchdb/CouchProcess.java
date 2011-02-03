@@ -55,7 +55,7 @@ public class CouchProcess {
 						Log.v(TAG, line);
 						if (line.contains("has started on")) {
 							started = true;
-							ensureAdmin();
+//							ensureAdmin();
 							service.couchStarted();
 						}
 					}

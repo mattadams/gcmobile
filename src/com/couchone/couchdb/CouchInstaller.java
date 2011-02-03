@@ -81,7 +81,10 @@ public class CouchInstaller {
 			int files = 0;
 			while ((e = tarstream.getNextTarEntry()) != null) {
 				if (e.isDirectory()) {
-					new File(e.getName()).mkdir();
+					File f = new File(e.getName());
+					if (!f.exists() && !new File(e.getName()).mkdir()) { 
+						throw new IOException("Unable to create directory: " + e.getName());
+					}
 					Log.v(TAG, "MKDIR: " + e.getName());
 				} else if (!"".equals(e.getLinkName())) {
 					Log.v(TAG, "LINK: " + e.getName() + " -> " + e.getLinkName());
@@ -150,19 +153,19 @@ public class CouchInstaller {
 	public static List<String> packageSet() {
 		ArrayList<String> packages = new ArrayList<String>();
 	
-//		// TODO: Different CPU arch support.
-//		// TODO: Some kind of sane remote manifest for this (remote updater)
+		// TODO: Different CPU arch support.
+		// TODO: Some kind of sane remote manifest for this (remote updater)
 //		packages.add("couch-erl-1.0"); // CouchDB, Erlang, CouchJS
 //		packages.add("fixup-1.0"); //Cleanup old mochi, retrigger DNS fix install.
 //		packages.add("dns-fix"); //Add inet config to fallback on erlang resolver
-//		if (android.os.Build.VERSION.SDK_INT == 7)
+//		if (android.os.Build.VERSION.SDK_INT == 7) {
 //			packages.add("couch-icu-driver-eclair");
-//		else if (android.os.Build.VERSION.SDK_INT == 8)
+//		} else if (android.os.Build.VERSION.SDK_INT == 8) {
 //			packages.add("couch-icu-driver-froyo");
-//		else {
-//			// TODO: Probably should throw some exception here.
-//			Log.e(TAG, "Unsupported OS/arch combo");
-//			return null;
+//		} else if (android.os.Build.VERSION.SDK_INT == 9) {	
+//			packages.add("couch-icu-driver-gingerbread");
+//		} else {
+//			throw new RuntimeException("Unsupported Platform");
 //		}
 		
 		packages.add("release-1.0");

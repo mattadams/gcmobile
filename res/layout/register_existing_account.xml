@@ -7,18 +7,10 @@
     android:padding="10dip">
     
     <TextView
-        android:id="@android:id/empty"
-        android:inputType="textMultiLine"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"                    
-        android:text="@string/tf_account_details" />   
-    
-    <TextView
         android:id="@android:id/empty"  
         android:text="@string/tf_account_number_label"        
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
-        android:paddingTop="10dp" 
         android:textSize="20sp" />
 
     <EditText
@@ -28,16 +20,7 @@
         android:layout_height="wrap_content" 
         android:maxLength="14" 
         android:text="" />        
-    
-    <!-- 
-    <TextView
-        android:id="@android:id/empty"
-        android:inputType="textMultiLine"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"                    
-        android:text="@string/tf_account_number_hint" />
-    -->        
-
+       
     <TextView
         android:id="@android:id/empty"  
         android:text="@string/tf_account_key_label"        
@@ -53,14 +36,12 @@
         android:layout_height="wrap_content"
         android:maxLength="14"
         android:text="" />        
-    
-    <!-- 
+        
     <TextView
         android:id="@android:id/empty"
-        android:singleLine="true"
         android:inputType="textMultiLine"
         android:layout_height="wrap_content"
-        android:layout_width="fill_parent"                    
-        android:text="@string/tf_account_key_hint" />
-    -->        
+        android:layout_width="fill_parent"      
+        android:paddingTop="10dp"               
+        android:text="@string/tf_account_details" />       
 </LinearLayout>
