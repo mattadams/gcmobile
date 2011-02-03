@@ -137,7 +137,7 @@ public final class FileUtils {
     /*
      * Used by ImageWidget to scale a captured bitmap to something that will display nicely on the screen
      */
-    public static Bitmap getBitmapScaledToDisplay(File f, int screenHeight, int screenWidth)
+    public static final Bitmap getBitmapScaledToDisplay(File f, int screenHeight, int screenWidth)
     {
         // Determine image size of f
         BitmapFactory.Options o = new BitmapFactory.Options();
@@ -387,6 +387,9 @@ public final class FileUtils {
                 if (dirs[i].isDirectory() || dirs[i].getName().startsWith("."))
                     continue;
         	
+                String formName = dirs[i].getName();
+                Log.i(t, "Found formname: " + formName);
+                
                 formPaths.add(dirs[i].getAbsolutePath());
             }
         }

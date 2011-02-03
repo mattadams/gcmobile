@@ -69,7 +69,8 @@ public class CouchProcess {
 		}).start();
 	}
 	
-	private void ensureAdmin() throws JSONException {
+	@SuppressWarnings("unused")
+    private void ensureAdmin() throws JSONException {
 		adminPass = readOrGeneratePass(adminUser);
 		// TODO: only works because I cant overwrite, check if exists in future
 		String url = url() + "_config/admins/" + adminUser;

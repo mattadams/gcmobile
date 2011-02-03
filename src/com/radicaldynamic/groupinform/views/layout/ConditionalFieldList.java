@@ -27,10 +27,12 @@ import com.radicaldynamic.groupinform.widgets.IMultipartSelectWidget;
 import com.radicaldynamic.groupinform.widgets.WidgetFactory;
 
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class ConditionalFieldList  implements IGroupLayout {
 	
@@ -150,7 +152,17 @@ public class ConditionalFieldList  implements IGroupLayout {
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
         mLayout.setMargins(10, 0, 10, 0);
-		
+        
+        // put crumb trail on top...
+        String crumbTrail = GroupView.getGroupText(groups);
+        if (crumbTrail.length() > 0) {
+            TextView tv = new TextView(view.getContext());
+            tv.setText(crumbTrail.substring(0, crumbTrail.length() - 3));
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, AbstractQuestionWidget.TEXTSIZE - 7);
+            tv.setPadding(0, 0, 0, 5);
+            mView.addView(tv, AbstractQuestionWidget.COMMON_LAYOUT);
+        }
+
         FormIndex fiFirst = indices.get(0);
         FormEntryPrompt selectPrompt = model.getQuestionPrompt(fiFirst);
         Vector<SelectChoice> values = selectPrompt.getSelectChoices();
@@ -198,7 +210,7 @@ public class ConditionalFieldList  implements IGroupLayout {
         if ( values != null && qvSelect instanceof IMultipartSelectWidget ) {
         	IMultipartSelectWidget qvMultiPart = ((IMultipartSelectWidget) qvSelect);
 
-        	qvSelect.buildViewStart(groups);
+        	qvSelect.buildViewStart();
 
 	        for ( int i = 0 ; i < values.size(); ++i ) {
 	        	SelectChoice c = values.get(i);
@@ -213,7 +225,7 @@ public class ConditionalFieldList  implements IGroupLayout {
 		        		AbstractQuestionWidget nestedWidget =
 		        			WidgetFactory.createWidgetFromPrompt(view.getHandler(), formEntryPrompt, view.getContext(), instancePath);
 
-		        		nestedWidget.buildView(view, groups);
+		        		nestedWidget.buildView(view);
 		                
 		        		vg.addView(nestedWidget, mLayout);
 		                viewList.add(nestedWidget);
@@ -224,7 +236,7 @@ public class ConditionalFieldList  implements IGroupLayout {
 
         } else {
         	Log.e(getClass().getName(), "Partial view construction attempted on non-multipart-build widget or one with no dependencies");
-        	qvSelect.buildView(view, groups);
+        	qvSelect.buildView(view);
         }
 
         mView.addView(qvSelect);
@@ -233,12 +245,20 @@ public class ConditionalFieldList  implements IGroupLayout {
         for ( ++iResidual ; iResidual < residual.size() ; ++iResidual ) {
 
         	fi = residual.get(iResidual);
-        	
+
+        	// Add a dividing line before each element
+            View divider = new View(view.getContext());
+            
+            divider.setId(AbstractQuestionWidget.newUniqueId());
+            divider.setBackgroundResource(android.R.drawable.divider_horizontal_bright);
+            divider.setMinimumHeight(3);
+            mView.addView(divider);
+
     		formEntryPrompt = Collect.getInstance().getFormEntryController().getModel().getQuestionPrompt(fi);
             // if question or answer type is not supported, use text widget
     		AbstractQuestionWidget mQuestionWidget = WidgetFactory.createWidgetFromPrompt(view.getHandler(), formEntryPrompt, view.getContext(), instancePath);
 
-    		mQuestionWidget.buildView(view, groups);
+    		mQuestionWidget.buildView(view);
             
             mView.addView((View) mQuestionWidget, mLayout);
             viewList.add(mQuestionWidget);
