@@ -28,7 +28,7 @@ public class FileReference implements Reference {
 
 
     private String getInternalURI() {
-        return "/" + localPart + referencePart;
+        return File.separator + localPart + referencePart;
     }
 
 

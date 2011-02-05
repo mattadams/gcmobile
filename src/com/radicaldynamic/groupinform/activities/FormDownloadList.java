@@ -46,7 +46,6 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.listeners.FormDownloaderListener;
 import com.radicaldynamic.groupinform.preferences.ServerPreferences;
 import com.radicaldynamic.groupinform.tasks.DownloadFormsTask;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 /**
  * Responsible for displaying, adding and deleting all the valid forms in the forms directory.
@@ -415,7 +414,6 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
         }
         showDialog(PROGRESS_DIALOG);
     
-        FileUtils.createFolder(FileUtils.CACHE_PATH);
         mDownloadFormsTask = new DownloadFormsTask();
         mDownloadFormsTask.setDownloaderListener(this);
     
@@ -452,7 +450,6 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
             // show dialog box
             showDialog(PROGRESS_DIALOG);
     
-            FileUtils.createFolder(FileUtils.FORMS_PATH);
             mDownloadFormsTask = new DownloadFormsTask();
             mDownloadFormsTask.setDownloaderListener(this);
             mDownloadFormsTask.execute(filesToDownload);

@@ -183,7 +183,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
             if (savedInstanceState.containsKey(KEY_INSTANCEID)) {
                 mInstanceId = savedInstanceState.getString(KEY_INSTANCEID);    
-                mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
+                mInstancePath = FileUtils.EXTERNAL_CACHE + File.separator + mInstanceId + ".";
             }
             
             if (savedInstanceState.containsKey(KEY_INSTANCES))             
@@ -280,7 +280,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
         // Purge cache files that we no longer need
         Log.d(Collect.LOGTAG, t + "removing instance cache files for instance " + mInstanceId);
-        FileUtils.deleteInstanceCacheFiles(mInstanceId);
+        FileUtils.purgeExternalInstanceCacheFiles(mInstanceId);
     
         super.onDestroy();
     }
@@ -363,7 +363,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
              * be in INSTANCES_PATH + [current instance]/something.jpg so we
              * move it there before inserting it into the content provider.
              */
-            File fi = new File(FileUtils.TMPFILE_PATH);            
+            File fi = new File(FileUtils.EXTERNAL_CACHE, FileUtils.CAPTURED_IMAGE_FILE);            
     
             // Add the new image to the Media content provider so that the viewing is fast in Android 2.0+
             ContentValues values = new ContentValues(6);
@@ -710,9 +710,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 instance.setFormId(mFormId);
                 Collect.getInstance().getDbService().getDb().create(instance);
                 mInstanceId = instance.getId();
-                mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
+                mInstancePath = FileUtils.EXTERNAL_CACHE + File.separator + mInstanceId + ".";
             } else {
-                mInstancePath = FileUtils.CACHE_PATH + mInstanceId + ".";
+                mInstancePath = FileUtils.EXTERNAL_CACHE + File.separator + mInstanceId + ".";
                 
                 // We've just loaded a saved form, so start in the hierarchy view
                 Intent i = new Intent(this, FormHierarchyList.class);
@@ -853,7 +853,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             
             // Set current position relative to the number of instances in the index
             Integer currentPosition = Collect.getInstance().getInstanceBrowseList().indexOf(mInstanceId) + 1;            
-            positionText.setText(currentPosition + "/" + Collect.getInstance().getInstanceBrowseList().size());
+            positionText.setText(currentPosition + File.separator + Collect.getInstance().getInstanceBrowseList().size());
             
             // Finalise the display
             mRelativeLayout.addView(mBrowserButtons);
@@ -1249,10 +1249,11 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 // TODO: implement per-form logos as per Item11
                 //String formLogoPath = FileUtils.getFormMediaPath(mFormPath) + FileUtils.FORM_LOGO_FILE_NAME;
                 BitmapDrawable bitImage = null;
+                
                 // attempt to load the form-specific logo...
                 // The following code only works in 1.6+
                 // bitImage = new BitmapDrawable(getResources(), FileUtils.FORM_LOGO_FILE_PATH);
-                bitImage = new BitmapDrawable(FileUtils.FORM_LOGO_FILE_PATH);
+                bitImage = new BitmapDrawable(FileUtils.EXTERNAL_ROOT + File.separator + FileUtils.FORM_LOGO_FILE);
                 
                 if (bitImage == null ||
                         bitImage.getBitmap() == null ||
@@ -1261,7 +1262,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                         // attempt to load the shared form logo...
                         // The following code only works in 1.6+
                         // bitImage = new BitmapDrawable(getResources(), FileUtils.FORM_LOGO_FILE_PATH);
-                        bitImage = new BitmapDrawable(FileUtils.FORM_LOGO_FILE_PATH);
+                        bitImage = new BitmapDrawable(FileUtils.EXTERNAL_ROOT + File.separator + FileUtils.FORM_LOGO_FILE);
                 }
                                
                 if (bitImage != null &&

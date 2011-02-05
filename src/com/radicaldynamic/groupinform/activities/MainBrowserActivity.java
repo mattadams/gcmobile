@@ -397,10 +397,8 @@ public class MainBrowserActivity extends ListActivity
         protected Void doInBackground(Object... args)
         {  
             // Create necessary directories
-            FileUtils.createFolder(FileUtils.ODK_ROOT);
-            FileUtils.createFolder(FileUtils.DATABASE_PATH);
-            FileUtils.createFolder(FileUtils.CACHE_PATH);
-            FileUtils.createFolder(FileUtils.FORMS_PATH);
+            FileUtils.createFolder(FileUtils.EXTERNAL_ROOT);
+            FileUtils.createFolder(FileUtils.EXTERNAL_CACHE);
             
             int seconds = 0;
             
@@ -896,7 +894,7 @@ public class MainBrowserActivity extends ListActivity
             // Attempt to load the configured default splash screen
             // The following code only works in 1.6+
             // BitmapDrawable bitImage = new BitmapDrawable(getResources(), FileUtils.SPLASH_SCREEN_FILE_PATH);
-            BitmapDrawable bitImage = new BitmapDrawable(FileUtils.SPLASH_SCREEN_FILE_PATH);
+            BitmapDrawable bitImage = new BitmapDrawable(FileUtils.EXTERNAL_ROOT + File.separator + FileUtils.SPLASH_SCREEN_FILE);
     
             if (bitImage.getBitmap() != null
                     && bitImage.getIntrinsicHeight() > 0
@@ -907,13 +905,14 @@ public class MainBrowserActivity extends ListActivity
             // TODO: log exception for debugging?
         }
     
+        // TODO: rework
         if (image == null) {
             // no splash provided...
-            if (FileUtils.storageReady() && !((new File(FileUtils.DEFAULT_CONFIG_PATH)).exists())) {
+//            if (FileUtils.storageReady() && !((new File(FileUtils.DEFAULT_CONFIG_PATH)).exists())) {
                 // Show the built-in splash image if the config directory 
                 // does not exist. Otherwise, suppress the icon.
                 image = getResources().getDrawable(R.drawable.gc_color_preview);
-            }
+//            }
             
             if (image == null) 
                 return;

@@ -1,5 +1,6 @@
 package com.radicaldynamic.groupinform.logic;
 
+import java.io.File;
 import java.util.UUID;
 
 import org.apache.http.client.CookieStore;
@@ -67,9 +68,12 @@ public class InformOnlineState
     private String deviceFingerprint;
     private String defaultDatabase;
     
-    private boolean offlineModeEnabled = false;
     private CookieStore session = null;
-    private SharedPreferences prefs;
+    
+    private boolean offlineModeEnabled = false;
+    
+    private Context mContext = null;    
+    private SharedPreferences mPrefs = null;
     
     // Used by Collect
     public InformOnlineState()
@@ -79,19 +83,22 @@ public class InformOnlineState
     
     public InformOnlineState(Context context)
     {
-        prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        mContext = context;
+        
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
         loadPreferences();
         
         // Initialize server URL
-        setServerUrl("http://" + context.getText(R.string.tf_default_nodejs_server) + ":" + context.getText(R.string.tf_default_nodejs_port));
+        setServerUrl("http://" + mContext.getText(R.string.tf_default_nodejs_server) + ":" + mContext.getText(R.string.tf_default_nodejs_port));
         
         // Set the device finger print
-        setDeviceFingerprint(context);
+        setDeviceFingerprint(mContext);       
+        
     }
 
     public void setAccountKey(String accountKey)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(ACCOUNT_KEY, accountKey);
         editor.commit();
                 
@@ -105,7 +112,7 @@ public class InformOnlineState
     
     public void setAccountAssignedSeats(int accountAssignedSeats)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putInt(ACCOUNT_ASSIGNED_SEATS, accountAssignedSeats);
         editor.commit();  
         
@@ -119,7 +126,7 @@ public class InformOnlineState
     
     public void setAccountLicencedSeats(int accountLicencedSeats)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putInt(ACCOUNT_LICENCED_SEATS, accountLicencedSeats);
         editor.commit();  
         
@@ -133,7 +140,7 @@ public class InformOnlineState
     
     public void setAccountNumber(String accountNumber)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(ACCOUNT_NUM, accountNumber);
         editor.commit();                
         
@@ -147,7 +154,7 @@ public class InformOnlineState
 
     public void setAccountOwner(boolean accountOwner)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putBoolean(ACCOUNT_OWNER, accountOwner);
         editor.commit();  
         
@@ -162,7 +169,7 @@ public class InformOnlineState
 
     public void setAccountPlan(String accountPlan)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(ACCOUNT_PLAN, accountPlan);
         editor.commit();  
         
@@ -176,7 +183,7 @@ public class InformOnlineState
 
     public void setDeviceId(String deviceId)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEVICE_ID, deviceId);
         editor.commit(); 
         
@@ -190,7 +197,7 @@ public class InformOnlineState
 
     public void setDeviceKey(String deviceKey)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEVICE_KEY, deviceKey);
         editor.commit();
         
@@ -204,7 +211,7 @@ public class InformOnlineState
 
     public void setDevicePin(String devicePin)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEVICE_PIN, devicePin);
         editor.commit(); 
         
@@ -238,7 +245,7 @@ public class InformOnlineState
 
     public void setDefaultDatabase(String defaultDatabase)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEFAULT_DATABASE, defaultDatabase);
         editor.commit(); 
         
@@ -275,7 +282,7 @@ public class InformOnlineState
 
     public void setOfflineModeEnabled(boolean offlineMode)
     {
-        SharedPreferences.Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = mPrefs.edit();
         editor.putBoolean(OFFLINE_MODE, offlineMode);
         editor.commit();
         
@@ -300,9 +307,9 @@ public class InformOnlineState
     private void removeFiles()
     {
         // Remove cached files
-        FileUtils.deleteFile(FileUtils.DEVICE_CACHE_FILE_PATH);
-        FileUtils.deleteFile(FileUtils.FOLDER_CACHE_FILE_PATH);
-        FileUtils.deleteFile(FileUtils.SESSION_CACHE_FILE_PATH);
+        new File(mContext.getCacheDir(), FileUtils.DEVICE_CACHE_FILE).delete();
+        new File(mContext.getCacheDir(), FileUtils.FOLDER_CACHE_FILE).delete();
+        new File(mContext.getCacheDir(), FileUtils.SESSION_CACHE_FILE).delete();
     }
 
     public void resetDevice()
@@ -331,19 +338,19 @@ public class InformOnlineState
 
     private void loadPreferences()
     {
-        setAccountKey(prefs.getString(ACCOUNT_KEY, null));
-        setAccountAssignedSeats(prefs.getInt(ACCOUNT_ASSIGNED_SEATS, 0));
-        setAccountLicencedSeats(prefs.getInt(ACCOUNT_LICENCED_SEATS, 0));
-        setAccountNumber(prefs.getString(ACCOUNT_NUM, null));
-        setAccountOwner(prefs.getBoolean(ACCOUNT_OWNER, false));
-        setAccountPlan(prefs.getString(ACCOUNT_PLAN, null));
+        setAccountKey(mPrefs.getString(ACCOUNT_KEY, null));
+        setAccountAssignedSeats(mPrefs.getInt(ACCOUNT_ASSIGNED_SEATS, 0));
+        setAccountLicencedSeats(mPrefs.getInt(ACCOUNT_LICENCED_SEATS, 0));
+        setAccountNumber(mPrefs.getString(ACCOUNT_NUM, null));
+        setAccountOwner(mPrefs.getBoolean(ACCOUNT_OWNER, false));
+        setAccountPlan(mPrefs.getString(ACCOUNT_PLAN, null));
         
-        setDeviceId(prefs.getString(DEVICE_ID, null));
-        setDeviceKey(prefs.getString(DEVICE_KEY, null));
-        setDevicePin(prefs.getString(DEVICE_PIN, null));
+        setDeviceId(mPrefs.getString(DEVICE_ID, null));
+        setDeviceKey(mPrefs.getString(DEVICE_KEY, null));
+        setDevicePin(mPrefs.getString(DEVICE_PIN, null));
         
-        setDefaultDatabase(prefs.getString(DEFAULT_DATABASE, null));
-        setOfflineModeEnabled(prefs.getBoolean(OFFLINE_MODE, false));
+        setDefaultDatabase(mPrefs.getString(DEFAULT_DATABASE, null));
+        setOfflineModeEnabled(mPrefs.getBoolean(OFFLINE_MODE, false));
         
         // Further post-cleanup if the user "cleared data" via the Application Info screen
         if (getDeviceId() == null)

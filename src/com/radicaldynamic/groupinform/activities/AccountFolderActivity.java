@@ -252,7 +252,7 @@ public class AccountFolderActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(FileUtils.FOLDER_CACHE_FILE_PATH).setLastModified(0);
+                    new File(getCacheDir(), FileUtils.FOLDER_CACHE_FILE).setLastModified(0);
                     
                     // Get out of here
                     finish();
@@ -281,7 +281,7 @@ public class AccountFolderActivity extends Activity
         protected String doInBackground(Void... nothing)
         {            
             String removeUrl = Collect.getInstance().getInformOnlineState().getServerUrl() 
-                + "/folder/remove/" + mFolder.getId() + "/" + mFolder.getRev(); 
+                + "/folder/remove/" + mFolder.getId() + File.separator + mFolder.getRev(); 
             
             return HttpUtils.getUrlData(removeUrl);
         }
@@ -310,7 +310,7 @@ public class AccountFolderActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mFolder.getName()), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(FileUtils.FOLDER_CACHE_FILE_PATH).setLastModified(0);
+                    new File(getCacheDir(), FileUtils.FOLDER_CACHE_FILE).setLastModified(0);
                     
                     // Get out of here
                     finish();

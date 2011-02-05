@@ -202,7 +202,7 @@ public class AccountFolderReplicationList extends ListActivity
                     Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(FileUtils.FOLDER_CACHE_FILE_PATH).setLastModified(0);
+                    new File(getCacheDir(), FileUtils.FOLDER_CACHE_FILE).setLastModified(0);
                     
                     // Get out of here
                     finish();

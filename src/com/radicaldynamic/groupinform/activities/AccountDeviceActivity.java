@@ -255,7 +255,7 @@ public class AccountDeviceActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mDevice.getDisplayName()), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(FileUtils.DEVICE_CACHE_FILE_PATH).setLastModified(0);
+                    new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE).setLastModified(0);
                     
                     // Get out of here
                     finish();
@@ -313,7 +313,7 @@ public class AccountDeviceActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_reset_with_param, mDevice.getDisplayName()), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(FileUtils.DEVICE_CACHE_FILE_PATH).setLastModified(0);
+                    new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE).setLastModified(0);
                     
                     // Get out of here
                     finish();                    
@@ -376,7 +376,7 @@ public class AccountDeviceActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(FileUtils.DEVICE_CACHE_FILE_PATH).setLastModified(0);
+                    new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE).setLastModified(0);
                     
                     // Commit changes to the cache-in-memory to avoid running InformOnlineService.loadDeviceHash()
                     Collect.getInstance().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());

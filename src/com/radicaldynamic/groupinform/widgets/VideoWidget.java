@@ -73,8 +73,8 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
     }
 
     private void initialize(String instancePath) {
-        mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf("/") + 1);
-        mInstanceId = instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.length());
+        mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf(File.separator) + 1);
+        mInstanceId = instancePath.substring(instancePath.lastIndexOf(File.separator) + 1, instancePath.length());
         mExternalUri = Video.Media.EXTERNAL_CONTENT_URI;
         mCaptureIntent = android.provider.MediaStore.ACTION_VIDEO_CAPTURE;
         mRequestCode = FormEntryActivity.VIDEO_CAPTURE;
@@ -128,7 +128,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
 			public void onClick(View v) {
             	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
 	                Intent i = new Intent("android.intent.action.VIEW");
-	                File f = new File(mInstanceFolder + "/" + mBinaryName);
+	                File f = new File(mInstanceFolder + File.separator + mBinaryName);
 	                i.setDataAndType(Uri.fromFile(f), "video/*");
 	                ((Activity) getContext()).startActivity(i);
             	}
@@ -147,7 +147,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
 
     private void deleteMedia() {
         // get the file path and delete the file
-        File f = new File(mInstanceFolder + "/" + mBinaryName);
+        File f = new File(mInstanceFolder + File.separator + mBinaryName);
         if (!f.delete()) {
             Log.e(t, "Failed to delete " + f);
         }
@@ -183,7 +183,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
         c.moveToFirst();
 
         // create uri from path
-        String newPath = mExternalUri + "/" + c.getInt(c.getColumnIndex("_id"));
+        String newPath = mExternalUri + File.separator + c.getInt(c.getColumnIndex("_id"));
         c.close();
         return Uri.parse(newPath);
     }
@@ -212,7 +212,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
         String binarypath = getPathFromUri((Uri) binaryuri);
 
         File f = new File(binarypath);
-        String s = mInstanceFolder + "/" + mInstanceId
+        String s = mInstanceFolder + File.separator + mInstanceId
         + DateUtils.now("yyyyMMdd-HHmmss") + "."
         + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
         if (!f.renameTo(new File(s))) {
@@ -221,7 +221,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
 
         // remove the database entry and update the name
         getContext().getContentResolver().delete(getUriFromPath(binarypath), null, null);
-        mBinaryName = s.substring(s.lastIndexOf('/') + 1);
+        mBinaryName = s.substring(s.lastIndexOf(File.separator) + 1);
         saveAnswer(true); // and evaluate constraints and trigger UI update...
     }
 

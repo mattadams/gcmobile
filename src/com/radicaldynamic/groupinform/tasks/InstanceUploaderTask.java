@@ -108,7 +108,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                     if (key.equals("xml")) 
                         key = values[i] + ".xml";
                     
-                    file = new FileOutputStream(new File(FileUtils.CACHE_PATH + key));
+                    file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
                     
                     while ((bytesRead = ais.read(buffer)) != -1) {
                         file.write(buffer, 0, bytesRead);
@@ -120,7 +120,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                     e.printStackTrace();
                 }
 
-                File f = new File(FileUtils.CACHE_PATH + key);
+                File f = new File(FileUtils.EXTERNAL_CACHE, key);
                 FileBody fb = new FileBody(f, contentType);
                 
                 if (contentType.equals("text/xml"))
@@ -174,7 +174,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             
             // Remove cache files pertaining to this upload
             Log.d(Collect.LOGTAG, t + "purging uploaded files");
-            FileUtils.deleteInstanceCacheFiles(values[i]);
+            FileUtils.purgeExternalInstanceCacheFiles(values[i]);
         }
 
         return uploadedIntances;

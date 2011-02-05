@@ -145,7 +145,7 @@ public class AccountDeviceList extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            if (FileUtils.isFileOlderThan(FileUtils.DEVICE_CACHE_FILE_PATH, FileUtils.TIME_TWO_MINUTES))
+            if (FileUtils.isFileOlderThan(getCacheDir() + File.separator + FileUtils.DEVICE_CACHE_FILE, FileUtils.TIME_TWO_MINUTES))
                 fetchDeviceList();
 
             devices = loadDeviceList();
@@ -219,7 +219,7 @@ public class AccountDeviceList extends ListActivity
                     .setAccountPlan(jsonDeviceList.getString("planType"));
                 try {
                     // Write out a device list cache file
-                    FileOutputStream fos = new FileOutputStream(new File(FileUtils.DEVICE_CACHE_FILE_PATH));
+                    FileOutputStream fos = new FileOutputStream(new File(Collect.getInstance().getCacheDir(), FileUtils.DEVICE_CACHE_FILE));
                     fos.write(jsonDevices.toString().getBytes());
                     fos.close();
                 } catch (Exception e) {                    
@@ -247,7 +247,7 @@ public class AccountDeviceList extends ListActivity
         ArrayList<AccountDevice> devices = new ArrayList<AccountDevice>();
         
         try {
-            FileInputStream fis = new FileInputStream(new File(FileUtils.DEVICE_CACHE_FILE_PATH));        
+            FileInputStream fis = new FileInputStream(new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE));        
             InputStreamReader reader = new InputStreamReader(fis);
             BufferedReader buffer = new BufferedReader(reader, 8192);
             StringBuilder sb = new StringBuilder();

@@ -14,6 +14,7 @@
 
 package com.radicaldynamic.groupinform.activities;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,7 +98,7 @@ public class FormHierarchyList extends ListActivity {
             
             // Set current position relative to the number of instances in the index
             Integer currentPosition = Collect.getInstance().getInstanceBrowseList().indexOf(mInstanceId) + 1;            
-            positionText.setText(currentPosition + "/" + Collect.getInstance().getInstanceBrowseList().size());
+            positionText.setText(currentPosition + File.separator + Collect.getInstance().getInstanceBrowseList().size());
             
             mRelativeLayout.addView(mBrowserButtons);
             mRelativeLayout.invalidate();            

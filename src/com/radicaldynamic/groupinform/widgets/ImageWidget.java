@@ -80,8 +80,8 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
     }
 
     private void initialize(String instancePath) {
-        mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf("/") + 1);
-        mInstanceId = instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.length());        
+        mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf(File.separator) + 1);
+        mInstanceId = instancePath.substring(instancePath.lastIndexOf(File.separator) + 1, instancePath.length());        
         mExternalUri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         mCaptureIntent = android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
         mRequestCode = FormEntryActivity.IMAGE_CAPTURE;
@@ -156,6 +156,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
 			public void onClick(View v) {
             	if (signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL)) {
 	                Intent i = new Intent(mCaptureIntent);
+	                
 	                // We give the camera an absolute filename/path where to put the
 	                // picture because of bug:
 	                // http://code.google.com/p/android/issues/detail?id=1480
@@ -166,7 +167,10 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
 	
 	                // if this gets modified, the onActivityResult in
 	                // FormEntyActivity will also need to be updated.
-	                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(FileUtils.TMPFILE_PATH)));
+	                i.putExtra(
+	                        android.provider.MediaStore.EXTRA_OUTPUT, 
+	                        Uri.fromFile(new File(FileUtils.EXTERNAL_CACHE, FileUtils.CAPTURED_IMAGE_FILE)));
+	                
 	                ((Activity) getContext()).startActivityForResult(i, mRequestCode);
             	}
             }
@@ -239,9 +243,9 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
             int screenWidth = display.getWidth();
             int screenHeight = display.getHeight();
                 
-            Log.d(Collect.LOGTAG, t + "attempting to decodeFile with path " + mInstanceFolder + "/" + mBinaryName);
+            Log.d(Collect.LOGTAG, t + "attempting to decodeFile with path " + mInstanceFolder + File.separator + mBinaryName);
             
-            File f = new File(mInstanceFolder + "/" + mBinaryName);
+            File f = new File(mInstanceFolder + File.separator + mBinaryName);
             Bitmap bmp = FileUtils.getBitmapScaledToDisplay(f, screenHeight, screenWidth);            
             mImageView.setImageBitmap(bmp);
         } else {
@@ -260,7 +264,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         c.moveToFirst();
 
         // create uri from path
-        String newPath = mExternalUri + "/" + c.getInt(c.getColumnIndex("_id"));
+        String newPath = mExternalUri + File.separator + c.getInt(c.getColumnIndex("_id"));
         c.close();
         
         return Uri.parse(newPath);
@@ -288,7 +292,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         
         File f = new File(binarypath);           
         
-        String s = mInstanceFolder + "/" + mInstanceId
+        String s = mInstanceFolder + File.separator + mInstanceId
             + DateUtils.now("yyyyMMdd-HHmmss") + "."
             + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
         
@@ -314,7 +318,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         
         // remove the database entry and update the name
         getContext().getContentResolver().delete(getUriFromPath(binarypath), null, null);
-        mBinaryName = s.substring(s.lastIndexOf('/') + 1);
+        mBinaryName = s.substring(s.lastIndexOf(File.separator) + 1);
         saveAnswer(true); // and evaluate constraints and trigger UI update...
     }
 

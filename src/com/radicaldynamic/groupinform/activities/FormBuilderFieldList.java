@@ -1,5 +1,6 @@
 package com.radicaldynamic.groupinform.activities;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -839,9 +840,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         // Determine proper XPath for our new repeated group
         if (Field.isRepeatedGroup(parent)) {
             // If the parent of this repeated group is itself a repeated group then use that group's repeat XPath as a basis
-            xpath = parent.getRepeat().getXPath() + "/" + Field.makeFieldName(f.getLabel());
+            xpath = parent.getRepeat().getXPath() + File.separator + Field.makeFieldName(f.getLabel());
         } else {
-            xpath = "/" + mInstanceRoot + "/" + Field.makeFieldName(f.getLabel());            
+            xpath = File.separator + mInstanceRoot + File.separator + Field.makeFieldName(f.getLabel());            
         }
         
         // Set xpath of repeat
@@ -889,10 +890,10 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         // Associated parent to field and set proper XPath
         if (Field.isRepeatedGroup(parent)) {
             f.setParent(parent.getRepeat());
-            xpath = parent.getRepeat().getXPath() + "/" + Field.makeFieldName(f.getLabel());
+            xpath = parent.getRepeat().getXPath() + File.separator + Field.makeFieldName(f.getLabel());
         } else {
             f.setParent(parent);    
-            xpath = "/" + mInstanceRoot + "/" + Field.makeFieldName(f.getLabel());
+            xpath = File.separator + mInstanceRoot + File.separator + Field.makeFieldName(f.getLabel());
         }
         
         // Use XPath for associated instance and bind as well as this field

@@ -123,7 +123,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         // TODO: we need to handle what happens when a form document no longer exists
         // or perhaps we don't do that here at all...
         FormDocument form = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);                
-        File formBin = new File(FileUtils.FORMS_PATH + formId + ".formdef");
+        File formBin = new File(Collect.getInstance().getCacheDir(), formId + ".formdef");
         
         Log.i(Collect.LOGTAG, t + formId + ": loading form named " + form.getName());
 
@@ -211,7 +211,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         	return null;
         }
 
-        Collect.getInstance().registerMediaPath(FileUtils.CACHE_PATH + formId + ".");
+        Collect.getInstance().registerMediaPath(FileUtils.EXTERNAL_CACHE + File.separator + formId + ".");
 
         fd = null;
         formBin = null;
@@ -291,7 +291,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 if (!key.equals("xml")) {
                     ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, key);                  
                     
-                    FileOutputStream file = new FileOutputStream(new File(FileUtils.CACHE_PATH + key));
+                    FileOutputStream file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
                     buffer = new byte[8192];
                     bytesRead = 0;
                     
@@ -363,7 +363,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         Log.i(Collect.LOGTAG, t + id + ": serializing form as binary");
 
         // Calculate unique md5 identifier            
-        File formDef = new File(FileUtils.FORMS_PATH + id + ".formdef");
+        File formDef = new File(Collect.getInstance().getCacheDir(), id + ".formdef");
 
         // If formDef does not exist, create one
         if (!formDef.exists()) {

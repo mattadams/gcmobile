@@ -45,30 +45,17 @@ public final class FileUtils {
     // Used to validate and display valid form names.
     public static final String VALID_FILENAME = "[ _\\-A-Za-z0-9]*.x[ht]*ml";
 
-    // Storage paths
-    public static final String ODK_ROOT = Environment.getExternalStorageDirectory() + "/groupinform/";
+    // Storage paths with support for API level 7
+    private static final String EXTERNAL_PATH = Environment.getExternalStorageDirectory() + "/Android/data/com.radicaldynamic.groupinform";
+    public static final String EXTERNAL_ROOT = EXTERNAL_PATH + "/files";    // API level 8 can use getExternalFilesDir()
+    public static final String EXTERNAL_CACHE = EXTERNAL_PATH + "/cache";   // API level 8 can use getExternalCacheDir()
     
-    public static final String CACHE_PATH = ODK_ROOT + "cache/";
-    public static final String CONFIG_PATH = ODK_ROOT + "config/";
-    public static final String DATABASE_PATH = ODK_ROOT + "metadata/";
-    public static final String DEFAULT_CONFIG_PATH = CONFIG_PATH + "default/";
-    public static final String FORMS_PATH = ODK_ROOT + "forms/";
-    public static final String INSTANCES_PATH = ODK_ROOT + "instances/";
-    public static final String XSL_EXTENSION_PATH = ODK_ROOT + "xsl/";
-    public static final String FORMS_X_MEDIA_DIRECTORY_SUFFIX = "-media/";    
-
-    public static final String DEVICE_CACHE_FILE_NAME = "devices.json";
-    public static final String FOLDER_CACHE_FILE_NAME = "folders.json";
-    public static final String FORM_LOGO_FILE_NAME = "form_logo.png";
-    public static final String SESSION_CACHE_FILE_NAME = "session.bin";
-    public static final String SPLASH_FILE_NAME = "splash.png";    
-    
-    public static final String DEVICE_CACHE_FILE_PATH = DATABASE_PATH + DEVICE_CACHE_FILE_NAME;
-    public static final String FOLDER_CACHE_FILE_PATH = DATABASE_PATH + FOLDER_CACHE_FILE_NAME;
-    public static final String FORM_LOGO_FILE_PATH = DEFAULT_CONFIG_PATH + FORM_LOGO_FILE_NAME;
-    public static final String SESSION_CACHE_FILE_PATH = DATABASE_PATH + SESSION_CACHE_FILE_NAME;
-    public static final String SPLASH_SCREEN_FILE_PATH = DEFAULT_CONFIG_PATH + SPLASH_FILE_NAME;
-    public static final String TMPFILE_PATH = CACHE_PATH + "tmp.jpg";
+    public static final String CAPTURED_IMAGE_FILE = "tmp.jpg";
+    public static final String DEVICE_CACHE_FILE = "devices.json";
+    public static final String FOLDER_CACHE_FILE = "folders.json";
+    public static final String FORM_LOGO_FILE = "form_logo.png";
+    public static final String SESSION_CACHE_FILE = "session.bin";
+    public static final String SPLASH_SCREEN_FILE = "splash.png";
     
     public static final int IMAGE_WIDGET_MAX_WIDTH = 1024;
     public static final int IMAGE_WIDGET_MAX_HEIGHT = 768;
@@ -106,34 +93,7 @@ public final class FileUtils {
             return false;
         }
     }
-
-    public static final boolean deleteFile(String path) {
-        if (storageReady()) {
-            File f = new File(path);
-            return f.delete();
-        } else {
-            return false;
-        }
-    }
-
-    public static void deleteInstanceCacheFiles(String instanceId) 
-    {
-        File cacheDir = new File(FileUtils.CACHE_PATH);
-        String[] fileNames = cacheDir.list();
     
-        for (String file : fileNames) {
-            Log.v(Collect.LOGTAG, t + "evaluating " + file + " for removal");
-    
-            if (Pattern.matches("^" + instanceId + "[.].*", file)) {
-                if (FileUtils.deleteFile(FileUtils.CACHE_PATH + file)) {
-                    Log.d(Collect.LOGTAG, t + "removed file " + file);
-                } else {
-                    Log.e(Collect.LOGTAG, t + "unable to remove file " + file);
-                }
-            }
-        }
-    }
-
     /*
      * Used by ImageWidget to scale a captured bitmap to something that will display nicely on the screen
      */
@@ -204,21 +164,6 @@ public final class FileUtils {
                 false);
     }
 
-    public static final String getDatabasePath() {
-
-    	File dir = new File(DATABASE_PATH);
-        if (!storageReady()) {
-            return null;
-        }
-        
-        if (!dir.exists()) {
-            if (!createFolder(DATABASE_PATH)) {
-                return null;
-            }
-        }
-        return DATABASE_PATH;
-    }
-    
     public static final byte[] getFileAsBytes(File file) {
         byte[] bytes = null;
         InputStream is = null;
@@ -300,17 +245,6 @@ public final class FileUtils {
             }
         }
         return mFolderList;
-    }
-
-
-    public static final String getFormMediaPath(String formXml) {
-    	int startIdx = formXml.lastIndexOf("/") + 1;
-    	String mediaPath = FileUtils.FORMS_PATH +
-         		formXml.substring(startIdx, formXml.lastIndexOf(".")) +
-         		FileUtils.FORMS_X_MEDIA_DIRECTORY_SUFFIX;
-    
-    	 Log.i(t, "formXml: " + formXml + " mediaPath: " + mediaPath);
-    	 return mediaPath;
     }
 
     public static final String getMd5Hash(File file) {
@@ -409,8 +343,27 @@ public final class FileUtils {
             return false;            
     }
 
+    public static void purgeExternalInstanceCacheFiles(String instanceId) 
+    {
+        File cacheDir = new File(FileUtils.EXTERNAL_CACHE);
+        String[] fileNames = cacheDir.list();
+    
+        for (String file : fileNames) {
+            Log.v(Collect.LOGTAG, t + "evaluating " + file + " for removal");
+    
+            if (Pattern.matches("^" + instanceId + "[.].*", file)) {
+                if (new File(FileUtils.EXTERNAL_CACHE, file).delete()) {
+                    Log.d(Collect.LOGTAG, t + "removed file " + file);
+                } else {
+                    Log.e(Collect.LOGTAG, t + "unable to remove file " + file);
+                }
+            }
+        }
+    }
+
     public static final boolean storageReady() {
         String cardstatus = Environment.getExternalStorageState();
+        
         if (cardstatus.equals(Environment.MEDIA_REMOVED)
                 || cardstatus.equals(Environment.MEDIA_UNMOUNTABLE)
                 || cardstatus.equals(Environment.MEDIA_UNMOUNTED)

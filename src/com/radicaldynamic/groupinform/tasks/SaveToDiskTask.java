@@ -164,7 +164,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 Collect.getInstance().getDbService().getDb().update(instance);
                 
                 // Save media attachments one by one
-                File cacheDir = new File(FileUtils.CACHE_PATH);
+                File cacheDir = new File(FileUtils.EXTERNAL_CACHE);
                 String[] fileNames = cacheDir.list();                           
                                             
                 for (String file : fileNames) {
@@ -176,7 +176,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                         // Make sure we have the most current revision number
                         InstanceDocument document = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);
 
-                        FileInputStream fis = new FileInputStream(new File(FileUtils.CACHE_PATH + file));
+                        FileInputStream fis = new FileInputStream(new File(FileUtils.EXTERNAL_CACHE, file));
                         String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1));
                         
                         AttachmentInputStream a = new AttachmentInputStream(file, fis, contentType);
