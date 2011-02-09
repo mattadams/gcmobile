@@ -154,7 +154,7 @@ public class ClientRegistrationActivity extends Activity
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         // Return user to the main screen (application will be reinitialized with this information)
-                        Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
+                        Intent i = new Intent(getApplicationContext(), LauncherActivity.class);
                         startActivity(i);
                         finish();
                     }
@@ -170,7 +170,7 @@ public class ClientRegistrationActivity extends Activity
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         // Return user to the main screen (application will be reinitialized with this information)
-                        Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
+                        Intent i = new Intent(getApplicationContext(), LauncherActivity.class);
                         startActivity(i);
                         finish();
                     }

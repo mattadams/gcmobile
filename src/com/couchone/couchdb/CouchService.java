@@ -14,6 +14,7 @@ import com.couchone.libcouch.HTTPRequest;
 import com.couchone.libcouch.ICouchClient;
 import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 
 import android.app.Notification;
@@ -50,7 +51,7 @@ public class CouchService extends Service {
 	public void onCreate() {
 		notifyStarting();
 		couch.service = this;
-		couch.start("/system/bin/sh", "/sdcard/groupinform/couch/bin/couchdb", "");
+		couch.start("/system/bin/sh", FileUtils.EXTERNAL_COUCH + "/bin/couchdb", "");
 	}
 
 	@Override

@@ -10,7 +10,6 @@
 	<classpathentry kind="lib" path="lib/slf4j-simple-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-core-asl-1.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-mapper-asl-1.6.0.jar"/>
-	<classpathentry kind="lib" path="lib/org.ektorp-1.0.2-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/xmltool-3.4-SNAPSHOT.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="LibCouch_src"/>
@@ -18,5 +17,7 @@
 	<classpathentry kind="lib" path="lib/joda-time-1.6.2.jar"/>
 	<classpathentry kind="lib" path="lib/commons-compress-1.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/LibCouch"/>
+	<classpathentry kind="lib" path="lib/org.ektorp-1.0.2-javadoc.jar"/>
+	<classpathentry kind="lib" path="lib/org.ektorp-1.0.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

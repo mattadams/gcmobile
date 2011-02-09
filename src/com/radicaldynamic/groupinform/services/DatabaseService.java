@@ -22,9 +22,7 @@ import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbConnector;
 import org.ektorp.impl.StdCouchDbInstance;
 
-import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
@@ -33,17 +31,19 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.activities.MainBrowserActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 
 /**
- *
+ * Database abstraction layer for CouchDB, based on Ektorp.
+ * 
+ * This does not control the stop/start of the actual DB.
+ * See com.couchone.couchdb.CouchService for that.
  */
-public class CouchDbService extends Service {    
-    private static final String t = "CouchDbService: ";
+public class DatabaseService extends Service {
+    private static final String t = "DatabaseService: ";
 
-    private String mHost;
-    private int mPort;
+    private String mHost = "127.0.0.1";
+    private int mPort = 5985;
            
     private HttpClient mHttpClient = null;
     private StdCouchDbInstance mDbInstance = null;
@@ -51,7 +51,6 @@ public class CouchDbService extends Service {
     
     private boolean mInit = false;
     private boolean mConnected = false;
-    private boolean mFirstConnection = true;
     
     // This is the object that receives interactions from clients.  
     // See RemoteService for a more complete example.
@@ -64,7 +63,7 @@ public class CouchDbService extends Service {
         public void run() {            
             for (int i = 1; i > 0; ++i) {
                 if (mInit == false)
-                    connect(true);
+                    connect();
                 // Retry connection to CouchDB every 120 seconds
                 if (mCondition.block(120 * 1000))
                     break;
@@ -76,7 +75,7 @@ public class CouchDbService extends Service {
     public void onCreate() {
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         
-        Thread persistentConnectionThread = new Thread(null, mTask, "CouchDbService");        
+        Thread persistentConnectionThread = new Thread(null, mTask, "DatabaseService");        
         mCondition = new ConditionVariable(false);
         persistentConnectionThread.start();
     }
@@ -93,8 +92,8 @@ public class CouchDbService extends Service {
      * IPC.
      */
     public class LocalBinder extends Binder {
-        public CouchDbService getService() {
-            return CouchDbService.this;
+        public DatabaseService getService() {
+            return DatabaseService.this;
         }
     }    
 
@@ -108,10 +107,8 @@ public class CouchDbService extends Service {
      * 
      * @return TFCouchDbAdapter
      */
-    public CouchDbService open() {
-        // TODO: replace this with something more sensible
-        String database = "myforms";
-        
+    public DatabaseService open() {
+        String database = Collect.getInstance().getInformOnlineState().getDefaultDatabase();        
         return open(database);
     }
     
@@ -121,14 +118,12 @@ public class CouchDbService extends Service {
      * @param database  Name of database to open
      * @return
      */
-    public CouchDbService open(String database) {
-        connect(false);
-        mDb = new StdCouchDbConnector(database, mDbInstance);        
-        
+    public DatabaseService open(String database) {
         try {
+            mDb = new StdCouchDbConnector("db_" + database, mDbInstance);
             mDb.createDatabaseIfNotExists();
-        } catch (Exception e) {          
-            Log.e(Collect.LOGTAG, t + "while opening DB " + database + ": " + e.toString());
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, t + "while opening DB db_" + database + ": " + e.toString());
         }    
 
         return this;
@@ -147,7 +142,9 @@ public class CouchDbService extends Service {
     }
     
     public StdCouchDbConnector getDb() {
-        connect(false);
+        // Last ditch attempt
+        if (!mConnected)
+            connect();
         
         for (int i = 1; i > 0; ++i) {
             if (mConnected == true) 
@@ -164,15 +161,10 @@ public class CouchDbService extends Service {
         return mDb;        
     }   
         
-    private void connect(boolean persistent) {
-        mInit = true;
-        mHost = getString(R.string.tf_default_couchdb_server);
-        mPort = 5984;
-        
-        if (persistent) 
-            Log.d(Collect.LOGTAG, t + "establishing persistent connection to " + mHost + ":" + mPort);
-        else
-            Log.d(Collect.LOGTAG, t + "connecting to " + mHost + ":" + mPort);
+    private void connect() {
+        mInit = true;        
+
+        Log.d(Collect.LOGTAG, t + "establishing connection to " + mHost + ":" + mPort);
         
         try {                        
             mHttpClient = new StdHttpClient.Builder().host(mHost).port(mPort).build();     
@@ -182,36 +174,14 @@ public class CouchDbService extends Service {
             
             if (mConnected == false) {
                 mConnected = true;
-                
-                if (mFirstConnection == true) {
-                    mFirstConnection = false;                    
-                } else {
-                    notifyOfConnectionAttempt(R.string.tf_connection_reestablished_status, R.string.tf_connection_reestablished_msg);    
-                }                
             }
             
             Log.d(Collect.LOGTAG, t + "connection to " + mHost + " successful");
         } catch (Exception e) {
-            mConnected = false;
-            Log.e(Collect.LOGTAG, t + "while connecting to server " + mHost + ": " + e.toString());          
-            notifyOfConnectionAttempt(R.string.tf_connection_interrupted_status, R.string.tf_connection_interrupted_msg);                        
+            Log.e(Collect.LOGTAG, t + "while connecting to server " + mHost + ": " + e.toString());
+            mConnected = false;                        
         } finally { 
             mInit = false;
         }
-    } 
-    
-    private void notifyOfConnectionAttempt(int status, int message) {        
-        Notification notification = new Notification(
-                R.drawable.ic_stat_group_complete, 
-                getText(status), 
-                System.currentTimeMillis());
-    
-        notification.setLatestEventInfo(
-                this, 
-                getText(status), 
-                getText(message), 
-                PendingIntent.getActivity(this, 0, new Intent(this, MainBrowserActivity.class), 0));
-    
-        mNM.notify(R.string.tf_connection_status_notification, notification);
     }
 }

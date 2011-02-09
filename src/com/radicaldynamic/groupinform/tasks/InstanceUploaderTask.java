@@ -174,7 +174,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             
             // Remove cache files pertaining to this upload
             Log.d(Collect.LOGTAG, t + "purging uploaded files");
-            FileUtils.purgeExternalInstanceCacheFiles(values[i]);
+            FileUtils.deleteExternalInstanceCacheFiles(values[i]);
         }
 
         return uploadedIntances;

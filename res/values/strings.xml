@@ -188,7 +188,8 @@
 	<string name="tf_confirm_removal">Confirm Removal</string>
 	<string name="tf_confirm_removal_msg">Are you sure you want to remove %s?</string>
 	<string name="tf_connection_error">Connection Error</string>
-	<string name="tf_connection_error_registered_msg">Unable to connect to the Group Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
+	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the Group Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
+	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the Group Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
 	<string name="tf_connection_error_unregistered_msg">Unable to connect to the Group Inform service to register this installation.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
 	<string name="tf_connection_interrupted_status">Connection interrupted</string>
 	<string name="tf_connection_interrupted_msg">Automatically retrying connection...</string>
@@ -201,12 +202,12 @@
 	<string name="tf_create_form">Create Form</string>
 	<string name="tf_create_form_dialog">Create Form</string>
 	<string name="tf_create_folder">Create Folder</string>
+	<string name="tf_database_being_initialized">Initializing Database</string>
+	<string name="tf_database_being_installed">Installing Database</string>	
+	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
+    <string name="tf_default_ionline_port">5100</string>
 	<string name="tf_create_list_item">Add List Item</string>
 	<string name="tf_decimal_number_type">Integers and decimals</string>
-	<string name="tf_default_couchdb_server">arthur.902northland.adams.home</string>
-	<string name="tf_default_couchdb_port">5984</string>
-	<string name="tf_default_nodejs_server">arthur.902northland.adams.home</string>
-	<string name="tf_default_nodejs_port">5100</string>
 	<string name="tf_dependency_missing_dialog_title">Install Helper Software?</string>
 	<string name="tf_dependency_missing_dialog_msg">The following free app will help to maximize the potential of Group Inform:\n\n</string>
 	<string name="tf_device_admin_alias_label">Alias</string>
@@ -325,7 +326,7 @@
 	<string name="tf_register_this_device">Register this Device</string>
 	<string name="tf_registration_error_email_in_use">This email address is already in use</string>
 	<string name="tf_registration">Register Device</string>
-	<string name="tf_registration_msg">Welcome to Group Inform: mobile data collection made easy! This installation must be registered before it can be used.\n\nIf you are using Inform for team-based collaborative data collection then all devices must be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you during this registration process.\n\nCollaborative data collection with Group Inform is made possible by our Simple Sharing services. New accounts receive a Free Simple Sharing subscription as per our website.\n\nPlease visit http://groupcomplete.com for more information on Group Complete and Simple Sharing plans &amp; pricing.</string>
+	<string name="tf_registration_msg">Welcome to Group Inform: mobile data collection made easy! This installation must be registered before it can be used.\n\nIf you are using Inform for team-based collaborative data collection then all devices must be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you during this registration process.\n\nCollaborative data collection with Group Inform is made possible by our Simple Sharing services. New accounts receive a Free Simple Sharing subscription as per our website.\n\nPlease visit http://groupcomplete.com for more information on Simple Sharing plans &amp; pricing.</string>
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_remind">Remind</string>
 	<string name="tf_remind_later">Remind Later</string>

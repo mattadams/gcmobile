@@ -46,9 +46,11 @@ public final class FileUtils {
     public static final String VALID_FILENAME = "[ _\\-A-Za-z0-9]*.x[ht]*ml";
 
     // Storage paths with support for API level 7
-    private static final String EXTERNAL_PATH = Environment.getExternalStorageDirectory() + "/Android/data/com.radicaldynamic.groupinform";
-    public static final String EXTERNAL_ROOT = EXTERNAL_PATH + "/files";    // API level 8 can use getExternalFilesDir()
+    public static final String EXTERNAL_PATH = Environment.getExternalStorageDirectory() + "/Android/data/com.radicaldynamic.groupinform";
+    public static final String EXTERNAL_FILES = EXTERNAL_PATH + "/files";    // API level 8 can use getExternalFilesDir()
     public static final String EXTERNAL_CACHE = EXTERNAL_PATH + "/cache";   // API level 8 can use getExternalCacheDir()
+    public static final String EXTERNAL_COUCH = EXTERNAL_PATH + "/couchdb";
+    public static final String EXTERNAL_ERLANG = EXTERNAL_PATH + "/erlang";
     
     public static final String CAPTURED_IMAGE_FILE = "tmp.jpg";
     public static final String DEVICE_CACHE_FILE = "devices.json";
@@ -73,6 +75,24 @@ public final class FileUtils {
             return made;
         } else {
             return false;
+        }
+    }
+
+    public static void deleteExternalInstanceCacheFiles(String instanceId) 
+    {
+        File cacheDir = new File(FileUtils.EXTERNAL_CACHE);
+        String[] fileNames = cacheDir.list();
+    
+        for (String file : fileNames) {
+            Log.v(Collect.LOGTAG, t + "evaluating " + file + " for removal");
+    
+            if (Pattern.matches("^" + instanceId + "[.].*", file)) {
+                if (new File(FileUtils.EXTERNAL_CACHE, file).delete()) {
+                    Log.d(Collect.LOGTAG, t + "removed file " + file);
+                } else {
+                    Log.e(Collect.LOGTAG, t + "unable to remove file " + file);
+                }
+            }
         }
     }
 
@@ -341,24 +361,6 @@ public final class FileUtils {
             return true;
         else 
             return false;            
-    }
-
-    public static void purgeExternalInstanceCacheFiles(String instanceId) 
-    {
-        File cacheDir = new File(FileUtils.EXTERNAL_CACHE);
-        String[] fileNames = cacheDir.list();
-    
-        for (String file : fileNames) {
-            Log.v(Collect.LOGTAG, t + "evaluating " + file + " for removal");
-    
-            if (Pattern.matches("^" + instanceId + "[.].*", file)) {
-                if (new File(FileUtils.EXTERNAL_CACHE, file).delete()) {
-                    Log.d(Collect.LOGTAG, t + "removed file " + file);
-                } else {
-                    Log.e(Collect.LOGTAG, t + "unable to remove file " + file);
-                }
-            }
-        }
     }
 
     public static final boolean storageReady() {

@@ -21,13 +21,14 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
-import com.radicaldynamic.groupinform.services.CouchDbService;
+import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.xform.Bind;
 import com.radicaldynamic.groupinform.xform.Field;
@@ -45,7 +46,8 @@ public class Collect extends Application {
     private boolean firstReferenceInitialization = true;
     
     // Service connections
-    private CouchDbService dbService = null;
+    private ICouchService couchService = null; 
+    private DatabaseService dbService = null;
     private InformOnlineService ioService = null;
     
     // Current registration state of this device
@@ -227,9 +229,12 @@ public class Collect extends Application {
 
     public void setInstanceBrowseList(ArrayList<String> instanceBrowseList) { this.instanceBrowseList = instanceBrowseList; }
     public ArrayList<String> getInstanceBrowseList() { return instanceBrowseList; }
+    
+    public void setCouchService(ICouchService couchService) { this.couchService = couchService; }
+    public ICouchService getCouchService() { return couchService; }
 
-    public void setDbService(CouchDbService dbService) { this.dbService = dbService; }
-    public CouchDbService getDbService() { return dbService; }
+    public void setDbService(DatabaseService dbService) { this.dbService = dbService; }
+    public DatabaseService getDbService() { return dbService; }
 
     public void setIoService(InformOnlineService ioService) { this.ioService = ioService; }
     public InformOnlineService getIoService() { return ioService; }

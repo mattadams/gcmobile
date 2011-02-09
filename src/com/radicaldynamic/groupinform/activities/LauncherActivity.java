@@ -21,6 +21,7 @@ import java.util.Map;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -32,7 +33,10 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Gravity;
@@ -57,7 +61,10 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ImageView.ScaleType;
 
-import com.couchone.couchdb.CouchFutonActivity;
+import com.couchone.couchdb.CouchInstallActivity;
+import com.couchone.couchdb.CouchInstaller;
+import com.couchone.libcouch.ICouchClient;
+import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -66,8 +73,9 @@ import com.radicaldynamic.groupinform.documents.InstanceDocument;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.repository.InstanceRepository;
-import com.radicaldynamic.groupinform.services.CouchDbService;
+import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
+import com.radicaldynamic.groupinform.utilities.CouchDbUtils;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
@@ -78,9 +86,9 @@ import com.radicaldynamic.groupinform.utilities.FileUtils;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class MainBrowserActivity extends ListActivity
+public class LauncherActivity extends ListActivity
 {
-    private static final String t = "MainBrowserActivity: ";
+    private static final String t = "LauncherActivity: ";
     
     // Request codes for returning data from specified intent 
     private static final int ABOUT_INFORM = 1;
@@ -91,38 +99,100 @@ public class MainBrowserActivity extends ListActivity
 
     private static boolean mShowSplash = true;
     private Toast mSplashToast;
-    
-    // Used to determine whether the CouchDB service has been bound; see onDestroy()
-    private boolean mDatabaseIsBound = false;
-    
-    // Used to determine whether the Inform Online service has been bound; see Destroy()
-    private boolean mOnlineIsBound = false;
 
     private AlertDialog mAlertDialog;
+    private ProgressDialog mProgressDialog;
+    
     private RefreshViewTask mRefreshViewTask;
+    
+    /*
+     * Implement the callbacks that allow CouchDB to talk to this app
+     * (not really necessary)
+     */
+    private ICouchClient mCallback = new ICouchClient.Stub() {
+        @Override
+        public void couchStarted(String host, int port) throws RemoteException {
+        }
 
+        @Override
+        public void databaseCreated(String name, String user, String pass, String tag) throws RemoteException {
+        }
+    };
+    
+    // Service handling for the CouchDB process
+    private ServiceConnection mCouchConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            try {
+                Collect.getInstance().setCouchService(ICouchService.Stub.asInterface(service));
+                Collect.getInstance().getCouchService().initCouchDB(mCallback);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            Collect.getInstance().setCouchService(null);
+        }
+    };
+
+    // Service handling for our connection to databases provided by Couch
     private ServiceConnection mDatabaseConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
-            mDatabaseIsBound = true;
-            Collect.getInstance().setDbService(((CouchDbService.LocalBinder) service).getService());
+            Collect.getInstance().setDbService(((DatabaseService.LocalBinder) service).getService());
             Collect.getInstance().getDbService().open();
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
+            Collect.getInstance().setDbService(null);
         }
-    };
+    };    
     
+    // Service handling for our connection to Inform Online
     private ServiceConnection mOnlineConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
-            mOnlineIsBound = true;
             Collect.getInstance().setIoService(((InformOnlineService.LocalBinder) service).getService());                        
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
+            Collect.getInstance().setIoService(null);
+        }
+    };
+    
+    private Handler mProgressHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+            
+            case CouchInstallActivity.ERROR:
+                AlertDialog.Builder builder = new AlertDialog.Builder(LauncherActivity.this);
+                
+                builder.setMessage(LauncherActivity.this.getString(R.string.couch_install_error))
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() { 
+                        public void onClick(DialogInterface dialog, int id) { }
+                    });
+                
+                AlertDialog alert = builder.create();
+                alert.show();                
+                break;
+
+            case CouchInstallActivity.PROGRESS:
+                if (msg.arg1 > 0)
+                    mProgressDialog.setProgress(msg.arg1);                
+                break;
+
+            case CouchInstallActivity.COMPLETE:
+                mProgressDialog.dismiss();
+                
+                if (msg.arg1 == 0)
+                    restartActivity(true);
+                
+                break;
+            }
         }
     };
 
@@ -144,9 +214,11 @@ public class MainBrowserActivity extends ListActivity
             if (intent.getBooleanExtra(KEY_REINIT_IOSERVICE, false)) {
                 if (Collect.getInstance().getIoService() instanceof InformOnlineService)
                     Collect.getInstance().getIoService().reinitializeService();
+                
+                mShowSplash = false;
             }
             
-            // Try not to show the splash screen
+            // Hide splash screen
             if (intent.getBooleanExtra(KEY_SIGNIN_RESTART, false))
                 mShowSplash = false;
         }
@@ -156,73 +228,87 @@ public class MainBrowserActivity extends ListActivity
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
         setContentView(R.layout.main_browser);
                 
-        if (Collect.getInstance().getIoService() instanceof InformOnlineService && 
-                Collect.getInstance().getIoService().isReady()) {         
-            
-            // Load our custom window title
-            getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.folder_selector_title);            
+        if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {
+            if (CouchInstaller.checkInstalled()) {                
+                // Load our custom window title
+                getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.folder_selector_title);            
 
-            // We don't use the on-screen progress indicator here
-            RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
-            onscreenProgress.setVisibility(View.GONE);        
-            
-            // Initiate and populate spinner to filter forms displayed by instances types
-            ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
-                .createFromResource(this, R.array.tf_main_menu_form_filters, android.R.layout.simple_spinner_item);        
-            instanceStatus.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            
-            Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-            s1.setAdapter(instanceStatus);
-            s1.setOnItemSelectedListener(new OnItemSelectedListener() {
-                public void onItemSelected(AdapterView<?> parent, View view,
-                        int position, long id)
-                {
-                    triggerRefresh(position);
-                }
+                // We don't use the on-screen progress indicator no longer needed
+                RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
+                onscreenProgress.setVisibility(View.GONE);        
+                
+                // Initiate and populate spinner to filter forms displayed by instances types
+                ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
+                    .createFromResource(this, R.array.tf_main_menu_form_filters, android.R.layout.simple_spinner_item);        
+                instanceStatus.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                
+                s1.setVisibility(View.VISIBLE);
+                s1.setAdapter(instanceStatus);
+                s1.setOnItemSelectedListener(new OnItemSelectedListener() {
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+                    {
+                        triggerRefresh(position);
+                    }
 
-                public void onNothingSelected(AdapterView<?> parent)
-                {
-                }
-            });
-            
-            // Set up listener for Folder Selector button in title
-            Button b1 = (Button) findViewById(R.id.folderTitleButton);
-            b1.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v)
-                {
-                    startActivity(new Intent(MainBrowserActivity.this, AccountFolderList.class));
-                }
-            });
-            
-            // Set up listener for Online Status button in title
-            Button b2 = (Button) findViewById(R.id.onlineStatusTitleButton);
-            b2.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v)
-                {
-                    showToggleOnlineStateDialog();
-                }
-            });
+                    public void onNothingSelected(AdapterView<?> parent) { }
+                });
+                
+                // Set up listener for Folder Selector button in title
+                Button b1 = (Button) findViewById(R.id.folderTitleButton);
+                b1.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v)
+                    {
+                        startActivity(new Intent(LauncherActivity.this, AccountFolderList.class));
+                    }
+                });
+                
+                // Set up listener for Online Status button in title
+                Button b2 = (Button) findViewById(R.id.onlineStatusTitleButton);
+                b2.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v)
+                    {
+                        showToggleOnlineStateDialog();
+                    }
+                });      
+            } else {                
+                /*
+                 * Install database engine
+                 */
+                mProgressDialog = new ProgressDialog(LauncherActivity.this);
+                mProgressDialog.setCancelable(false);                
+                mProgressDialog.setTitle(R.string.tf_database_being_installed);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                mProgressDialog.show();
+
+                new Thread() {
+                    public void run() {
+                        try {
+                            CouchInstaller.doInstall(mProgressHandler);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            mProgressDialog.dismiss();
+                            mProgressHandler.sendMessage(mProgressHandler.obtainMessage(CouchInstallActivity.ERROR));
+                        }
+                    }
+                }.start();
+            }
         } else {
-            // Disable this if this device isn't yet registered
-            Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-            s1.setVisibility(View.GONE);
-            
             new InitializeApplicationTask().execute(getApplicationContext());
         }
         
         // Start the persistent online connection
-        if (bindService(new Intent(MainBrowserActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE))
+        if (bindService(new Intent(LauncherActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE))
             Log.d(Collect.LOGTAG, t + "successfully bound to InformOnlineService");
         else 
             Log.e(Collect.LOGTAG, t + "unable to bind to InformOnlineService");
         
         // Start the database connection
-        if (bindService(new Intent(MainBrowserActivity.this, CouchDbService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
-            Log.d(Collect.LOGTAG, t + "successfully bound to CouchDbService");
+        if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
+            Log.d(Collect.LOGTAG, t + "successfully bound to DatabaseService");
         else 
-            Log.e(Collect.LOGTAG, t + "unable to bind to CouchDbService");  
+            Log.e(Collect.LOGTAG, t + "unable to bind to DatabaseService");
     }
 
     /*
@@ -237,7 +323,27 @@ public class MainBrowserActivity extends ListActivity
     @Override
     protected void onDestroy()
     {
-        cleanup(isFinishing());        
+        // Close down our services
+        if (Collect.getInstance().getCouchService() instanceof ICouchService) {
+            try {
+                Log.i(Collect.LOGTAG, t + "unbinding from CouchService");
+                unbindService(mCouchConnection);                
+                Log.d(Collect.LOGTAG, t + "unbound from CouchService");
+            } catch (IllegalArgumentException e) {
+                Log.w(Collect.LOGTAG, t + "CouchService not registered (was device reset?): " + e.toString());
+            }
+        }
+        
+        if (Collect.getInstance().getDbService() instanceof DatabaseService) {
+            Log.i(Collect.LOGTAG, t + "unbinding from DatabaseService");
+            unbindService(mDatabaseConnection);
+        }
+        
+        if (Collect.getInstance().getIoService() instanceof InformOnlineService) {
+            Log.i(Collect.LOGTAG, t + "unbinding from to InformOnlineService");
+            unbindService(mOnlineConnection);
+        }
+        
         super.onDestroy();
     }
 
@@ -257,17 +363,20 @@ public class MainBrowserActivity extends ListActivity
     {
         super.onResume();
 
-        if (Collect.getInstance().getIoService() instanceof InformOnlineService && 
-                Collect.getInstance().getIoService().isReady()) {
-            
-            // Inform user about dependencies
-            if (!Collect.getInstance().getInformDependencies().allSatisfied()) {
-                if (Collect.getInstance().getInformDependencies().isReminderEnabled()) {
-                    showDependencyDialog();
-                }                
+        if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) { 
+                 
+                // Inform user about dependencies
+                if (!Collect.getInstance().getInformDependencies().allSatisfied()) {
+                    if (Collect.getInstance().getInformDependencies().isReminderEnabled()) {
+                        showDependencyDialog();
+                    }
+                }
+                
+                // Load screen (but only if we're connected to Couch)
+                if (Collect.getInstance().getCouchService() != null)
+                    loadScreen();
             }
-            
-            loadScreen();
         }
     }
 
@@ -380,9 +489,6 @@ public class MainBrowserActivity extends ListActivity
         case R.id.tf_info:
             startActivityForResult(new Intent(this, ClientInformationActivity.class), ABOUT_INFORM);
             return true;
-        case R.id.tf_couch:
-            startActivity(new Intent(this, CouchFutonActivity.class));
-            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -396,11 +502,36 @@ public class MainBrowserActivity extends ListActivity
         @Override
         protected Void doInBackground(Object... args)
         {  
+            // Timer
+            int seconds = 0;
+            
             // Create necessary directories
-            FileUtils.createFolder(FileUtils.EXTERNAL_ROOT);
+            FileUtils.createFolder(FileUtils.EXTERNAL_FILES);
             FileUtils.createFolder(FileUtils.EXTERNAL_CACHE);
             
-            int seconds = 0;
+            // Initialize CouchDB & Erlang in internal storage if this has not already been done
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized() == false)
+                CouchDbUtils.initializeEnvironment(mProgressHandler);
+            
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) { 
+                startService(new Intent(ICouchService.class.getName()));
+                bindService(new Intent(ICouchService.class.getName()), mCouchConnection, Context.BIND_AUTO_CREATE);
+                
+                // Wait a reasonable period of time for the DB to start up
+                while (Collect.getInstance().getCouchService() == null) {
+                    if (seconds > 30)
+                        break;
+                    
+                    try {
+                        Thread.sleep(1000);
+                        seconds++;                        
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            
+            seconds = 0;
             
             // The InformOnlineService will perform ping and check-in immediately (no need to duplicate here)
             while (true) {
@@ -416,13 +547,13 @@ public class MainBrowserActivity extends ListActivity
                      * services have not restarted and we are waiting on them to complete their usual
                      * 10 minute delay.
                      */
-                    if (Collect.getInstance().getIoService() instanceof InformOnlineService && seconds > 10)
-                        Collect.getInstance().getIoService().goOnline();
+                if (Collect.getInstance().getIoService() instanceof InformOnlineService && seconds > 10)
+                    Collect.getInstance().getIoService().goOnline();
+                
                 try {
                     Thread.sleep(1000);
                     seconds++;
                 } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -440,15 +571,23 @@ public class MainBrowserActivity extends ListActivity
         @Override
         protected void onPreExecute()
         {
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized() == false) {
+                mProgressDialog = new ProgressDialog(LauncherActivity.this);
+                mProgressDialog.setCancelable(false);                
+                mProgressDialog.setTitle(R.string.tf_database_being_initialized);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                mProgressDialog.show();
+            }
+          
             setProgressVisibility(true);
         }
     
         @Override
         protected void onPostExecute(Void nothing) 
-        {
+        {                        
             setProgressVisibility(false);
             
-            if (mPinged) { 
+            if (mPinged) {
                 if (mRegistered) {
                     restartActivity(false);
                 } else {
@@ -458,7 +597,7 @@ public class MainBrowserActivity extends ListActivity
                 }
             } else {
                 if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
-                    // Let the user know that offline mode is enabled and then proceed to (offline) interaction with the app
+                    // TODO: Let the user know that offline mode is enabled and then proceed to (offline) interaction with the app
                     restartActivity(false);
                 } else {
                     showConnectionErrorDialog(mRegistered);
@@ -573,8 +712,9 @@ public class MainBrowserActivity extends ListActivity
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
                     
-//                    Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
-//                    openOptionsMenu();
+                    // TODO: try and reintegrate this
+//                  Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
+//                  openOptionsMenu();
                 } else {
                     if (mAlertDialog != null && !mAlertDialog.isShowing())
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
@@ -630,23 +770,6 @@ public class MainBrowserActivity extends ListActivity
             loadScreen();
         }
     }
-    
-    // Run any clean up needed before the application is interrupted or destroyed
-    private void cleanup(boolean isFinishing)
-    {
-        // Close down our services         
-        if (mDatabaseIsBound) {
-            mDatabaseIsBound = false;
-            Log.i(Collect.LOGTAG, t + "unbinding from CouchDbService");
-            unbindService(mDatabaseConnection);
-        }
-
-        if (mOnlineIsBound) {
-            mOnlineIsBound = false;
-            Log.i(Collect.LOGTAG, t + "unbinding from to InformOnlineService");
-            unbindService(mOnlineConnection);
-        }
-    }
 
     /**
      * Load the various elements of the screen that must wait for other tasks to
@@ -672,7 +795,7 @@ public class MainBrowserActivity extends ListActivity
     // Restart this activity, optionally requesting a complete restart
     private void restartActivity(boolean fullRestart)
     {
-        Intent i = new Intent(getApplicationContext(), MainBrowserActivity.class);
+        Intent i = new Intent(getApplicationContext(), LauncherActivity.class);
         
         // If the user wants a full restart then request reinitialization of the IO service
         if (fullRestart)
@@ -682,8 +805,8 @@ public class MainBrowserActivity extends ListActivity
         
         startActivity(i);
         finish();
-    
     }
+    
     private void setProgressVisibility(boolean visible)
     {
         ProgressBar pb = (ProgressBar) getWindow().findViewById(R.id.titleProgressBar);
@@ -711,7 +834,10 @@ public class MainBrowserActivity extends ListActivity
         mAlertDialog.setTitle(R.string.tf_connection_error);
 
         if (registered) 
-            mAlertDialog.setMessage(getString(R.string.tf_connection_error_registered_msg));
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized())
+                mAlertDialog.setMessage(getString(R.string.tf_connection_error_registered_with_db_msg));
+            else    
+                mAlertDialog.setMessage(getString(R.string.tf_connection_error_registered_without_db_msg));
         else 
             mAlertDialog.setMessage(getString(R.string.tf_connection_error_unregistered_msg));
 
@@ -721,10 +847,9 @@ public class MainBrowserActivity extends ListActivity
             }
         });
 
-        if (registered) {
+        if (registered && CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
             mAlertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    // Continue and work offline -- only valid for registered users with a local CouchDB installation
                     restartActivity(false);
                 }
             });    
@@ -894,7 +1019,7 @@ public class MainBrowserActivity extends ListActivity
             // Attempt to load the configured default splash screen
             // The following code only works in 1.6+
             // BitmapDrawable bitImage = new BitmapDrawable(getResources(), FileUtils.SPLASH_SCREEN_FILE_PATH);
-            BitmapDrawable bitImage = new BitmapDrawable(FileUtils.EXTERNAL_ROOT + File.separator + FileUtils.SPLASH_SCREEN_FILE);
+            BitmapDrawable bitImage = new BitmapDrawable(FileUtils.EXTERNAL_FILES + File.separator + FileUtils.SPLASH_SCREEN_FILE);
     
             if (bitImage.getBitmap() != null
                     && bitImage.getIntrinsicHeight() > 0
@@ -938,7 +1063,7 @@ public class MainBrowserActivity extends ListActivity
         layout.addView(view);        
 
         // Create the toast and set the view to be that of the FrameLayout
-        mSplashToast = Toast.makeText(getApplicationContext(), "splash screen", Toast.LENGTH_SHORT);
+        mSplashToast = Toast.makeText(getApplicationContext(), "splash screen", Toast.LENGTH_LONG);
         mSplashToast.setView(layout);
         mSplashToast.setGravity(Gravity.CENTER, 0, 0);
         mSplashToast.show();

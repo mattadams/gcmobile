@@ -8,6 +8,9 @@ import com.radicaldynamic.groupinform.documents.FormDocument;
 
 public class DocumentUtils
 {
+    /*
+     * Sort a list of documents alphabetically by name
+     */
     public static <T> void sortByName(ArrayList<T> documents) {        
         Collections.sort(documents, new Comparator<T>() {
             @Override

@@ -280,7 +280,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
         // Purge cache files that we no longer need
         Log.d(Collect.LOGTAG, t + "removing instance cache files for instance " + mInstanceId);
-        FileUtils.purgeExternalInstanceCacheFiles(mInstanceId);
+        FileUtils.deleteExternalInstanceCacheFiles(mInstanceId);
     
         super.onDestroy();
     }
@@ -1253,7 +1253,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 // attempt to load the form-specific logo...
                 // The following code only works in 1.6+
                 // bitImage = new BitmapDrawable(getResources(), FileUtils.FORM_LOGO_FILE_PATH);
-                bitImage = new BitmapDrawable(FileUtils.EXTERNAL_ROOT + File.separator + FileUtils.FORM_LOGO_FILE);
+                bitImage = new BitmapDrawable(FileUtils.EXTERNAL_FILES + File.separator + FileUtils.FORM_LOGO_FILE);
                 
                 if (bitImage == null ||
                         bitImage.getBitmap() == null ||
@@ -1262,7 +1262,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                         // attempt to load the shared form logo...
                         // The following code only works in 1.6+
                         // bitImage = new BitmapDrawable(getResources(), FileUtils.FORM_LOGO_FILE_PATH);
-                        bitImage = new BitmapDrawable(FileUtils.EXTERNAL_ROOT + File.separator + FileUtils.FORM_LOGO_FILE);
+                        bitImage = new BitmapDrawable(FileUtils.EXTERNAL_FILES + File.separator + FileUtils.FORM_LOGO_FILE);
                 }
                                
                 if (bitImage != null &&

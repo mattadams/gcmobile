@@ -6,10 +6,14 @@ import java.util.UUID;
 import org.apache.http.client.CookieStore;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
+import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
@@ -19,7 +23,6 @@ import com.radicaldynamic.groupinform.utilities.FileUtils;
  */
 public class InformOnlineState
 {
-    @SuppressWarnings("unused")
     private static final String t = "InformOnlineState: ";
     
     // Constants for strings commonly encountered when interacting with the Inform Online service
@@ -89,7 +92,7 @@ public class InformOnlineState
         loadPreferences();
         
         // Initialize server URL
-        setServerUrl("http://" + mContext.getText(R.string.tf_default_nodejs_server) + ":" + mContext.getText(R.string.tf_default_nodejs_port));
+        setServerUrl("http://" + mContext.getText(R.string.tf_default_ionline_server) + ":" + mContext.getText(R.string.tf_default_ionline_port));
         
         // Set the device finger print
         setDeviceFingerprint(mContext);       
@@ -304,14 +307,6 @@ public class InformOnlineState
         }
     }
     
-    private void removeFiles()
-    {
-        // Remove cached files
-        new File(mContext.getCacheDir(), FileUtils.DEVICE_CACHE_FILE).delete();
-        new File(mContext.getCacheDir(), FileUtils.FOLDER_CACHE_FILE).delete();
-        new File(mContext.getCacheDir(), FileUtils.SESSION_CACHE_FILE).delete();
-    }
-
     public void resetDevice()
     {
         setAccountKey(null);
@@ -327,13 +322,34 @@ public class InformOnlineState
         
         setDefaultDatabase(null);
         setOfflineModeEnabled(false);
-        setSession(null); 
-        
-        removeFiles();
+        setSession(null);        
         
         // Reset dependency preferences back to defaults
         if (Collect.getInstance().getInformDependencies().isInitialized())
             Collect.getInstance().getInformDependencies().setReminderEnabled(true);
+                
+        // Remove cache files
+        new File(mContext.getCacheDir(), FileUtils.DEVICE_CACHE_FILE).delete();
+        new File(mContext.getCacheDir(), FileUtils.FOLDER_CACHE_FILE).delete();
+        new File(mContext.getCacheDir(), FileUtils.SESSION_CACHE_FILE).delete();
+
+        try {
+            if (Collect.getInstance().getCouchService() instanceof ICouchService) {
+                // Stop CouchDB
+                Collect.getInstance().getCouchService().quitCouchDB();              
+                Collect.getInstance().stopService(new Intent(ICouchService.class.getName()));
+
+                // Remove DB files & log files
+                if (FileUtils.deleteFolder(FileUtils.EXTERNAL_COUCH + "/var/lib/couchdb"))
+                    FileUtils.createFolder(FileUtils.EXTERNAL_COUCH + "/var/lib/couchdb");    
+
+                if (FileUtils.deleteFolder(FileUtils.EXTERNAL_COUCH + "/var/log/couchdb"))
+                    FileUtils.createFolder(FileUtils.EXTERNAL_COUCH + "/var/log/couchdb");
+            }
+        } catch (RemoteException e) {
+            Log.e(Collect.LOGTAG, t + "unable to quit CouchDB: " + e.toString());
+            e.printStackTrace();
+        }
     }
 
     private void loadPreferences()
