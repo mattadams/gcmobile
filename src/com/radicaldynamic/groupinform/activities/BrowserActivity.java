@@ -383,9 +383,8 @@ public class BrowserActivity extends ListActivity
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
                     
-                    // TODO: try and reintegrate this
-//                  Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
-//                  openOptionsMenu();
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
+                    openOptionsMenu();
                 } else {
                     if (mAlertDialog != null && !mAlertDialog.isShowing())
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
