@@ -35,7 +35,7 @@ public class MyFormsListAdapter extends ArrayAdapter<FormDocument>
 
         if (v == null) {            
             LayoutInflater vi = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            v = vi.inflate(R.layout.main_browser_list_item, null);
+            v = vi.inflate(R.layout.browser_list_item, null);
         } 
 
         FormDocument f = mItems.get(position);

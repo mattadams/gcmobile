@@ -43,7 +43,7 @@
  
     <EditText
         android:id="@+id/folderDescription"
-        android:inputType="textCapSentences"
+        android:inputType="textCapSentences|textMultiLine"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" />
     

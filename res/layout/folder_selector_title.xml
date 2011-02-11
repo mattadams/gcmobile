@@ -75,7 +75,7 @@
             android:paddingTop="0.0dip" 
             android:paddingRight="5.0dip" 
             android:paddingBottom="0.0dip" 
-            android:text="My Forms"
+            android:text="..."
             android:layout_width="wrap_content" 
             android:layout_height="wrap_content" />
     </LinearLayout>

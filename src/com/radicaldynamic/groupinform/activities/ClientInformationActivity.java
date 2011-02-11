@@ -119,6 +119,7 @@ public class ClientInformationActivity extends Activity
                 deviceEmail.setText(
                         Collect
                         .getInstance()
+                        .getInformOnlineState()
                         .getAccountDevices()
                         .get(Collect.getInstance().getInformOnlineState().getDeviceId())
                         .getEmail()

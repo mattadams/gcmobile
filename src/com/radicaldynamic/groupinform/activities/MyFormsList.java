@@ -180,7 +180,7 @@ public class MyFormsList extends ListActivity
                 
                 adapter = new MyFormsListAdapter(
                         getApplicationContext(),
-                        R.layout.main_browser_list_item, 
+                        R.layout.browser_list_item, 
                         documents,
                         instanceTalliesByStatus, 
                         (Spinner) findViewById(R.id.form_filter));

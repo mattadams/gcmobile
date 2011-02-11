@@ -263,7 +263,7 @@ public class AccountFolderList extends ListActivity
     /*
      * Fetch a new folder list from Inform Online and store it on disk
      */
-    private void fetchFolderList()
+    public static void fetchFolderList()
     {
         Log.d(Collect.LOGTAG, t + "fetching new list of folders");
         
@@ -284,7 +284,7 @@ public class AccountFolderList extends ListActivity
 
                 try {
                     // Write out a folder list cache file
-                    FileOutputStream fos = new FileOutputStream(new File(getCacheDir(), FileUtils.FOLDER_CACHE_FILE));
+                    FileOutputStream fos = new FileOutputStream(new File(Collect.getInstance().getCacheDir(), FileUtils.FOLDER_CACHE_FILE));
                     fos.write(jsonFolders.toString().getBytes());
                     fos.close();
                 } catch (Exception e) {
@@ -305,7 +305,7 @@ public class AccountFolderList extends ListActivity
         }
     }
 
-    static public ArrayList<AccountFolder> loadFolderList()
+    public static ArrayList<AccountFolder> loadFolderList()
     {
         Log.d(Collect.LOGTAG , t + "loading folder cache");
         

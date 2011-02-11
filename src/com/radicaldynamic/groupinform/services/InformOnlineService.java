@@ -45,8 +45,10 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.AccountDeviceList;
+import com.radicaldynamic.groupinform.activities.AccountFolderList;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
+import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineSession;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
@@ -371,9 +373,12 @@ public class InformOnlineService extends Service {
             mServicePingSuccessful = mSignedIn = false;
         } finally {
             if (mSignedIn) {
-                // Update our list of account devices
+                // Update our list of account devices & folders
                 AccountDeviceList.fetchDeviceList();
                 loadDeviceHash();
+                
+                AccountFolderList.fetchFolderList();
+                loadFolderHash();
             }
             
             // Unblock
@@ -425,7 +430,7 @@ public class InformOnlineService extends Service {
                     device.setLastCheckin(jsonDevice.optString("lastCheckin"));
                     device.setPin(jsonDevice.optString("pin"));
     
-                    Collect.getInstance().getAccountDevices().put(device.getId(), device);
+                    Collect.getInstance().getInformOnlineState().getAccountDevices().put(device.getId(), device);
                     
                     // A device counts towards the list of "assigned" devices so long as it hasn't been removed
                     if (!device.getStatus().equals("removed"))
@@ -443,7 +448,55 @@ public class InformOnlineService extends Service {
             Log.e(Collect.LOGTAG, t + "unable to read device cache: " + e.toString());
             e.printStackTrace();
         }
-    }    
+    }
+    
+    private void loadFolderHash()
+    {
+        Log.d(Collect.LOGTAG , t + "loading folder cache");
+        
+        try {
+            FileInputStream fis = new FileInputStream(new File(Collect.getInstance().getCacheDir(), FileUtils.FOLDER_CACHE_FILE));
+            InputStreamReader reader = new InputStreamReader(fis);
+            BufferedReader buffer = new BufferedReader(reader, 8192);
+            StringBuilder sb = new StringBuilder();
+            
+            String cur;
+
+            while ((cur = buffer.readLine()) != null) {
+                sb.append(cur + "\n");
+            }
+            
+            buffer.close();
+            reader.close();
+            fis.close();
+            
+            try {
+                JSONArray jsonFolders = (JSONArray) new JSONTokener(sb.toString()).nextValue();
+                
+                for (int i = 0; i < jsonFolders.length(); i++) {
+                    JSONObject jsonFolder = jsonFolders.getJSONObject(i);
+                    
+                    AccountFolder folder = new AccountFolder(
+                            jsonFolder.getString("id"),
+                            jsonFolder.getString("rev"),
+                            jsonFolder.getString("owner"),
+                            jsonFolder.getString("name"),
+                            jsonFolder.getString("description"),
+                            jsonFolder.getString("visibility"),
+                            jsonFolder.getBoolean("replication"));
+                    
+                    Collect.getInstance().getInformOnlineState().getAccountFolders().put(folder.getId(), folder);
+                }
+            } catch (JSONException e) {
+                // Parse error (malformed result)
+                Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, t + "unable to read folder cache: " + e.toString());
+            e.printStackTrace();
+        }
+    }
     
     /*
      * Determine if the Inform Online service is "up"

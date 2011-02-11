@@ -15,12 +15,9 @@
 package com.radicaldynamic.groupinform.activities;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
+import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -38,27 +35,11 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
 import android.view.Window;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ImageView.ScaleType;
 
 import com.couchone.couchdb.CouchInstallActivity;
@@ -66,44 +47,31 @@ import com.couchone.couchdb.CouchInstaller;
 import com.couchone.libcouch.ICouchClient;
 import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
-import com.radicaldynamic.groupinform.documents.InstanceDocument;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
-import com.radicaldynamic.groupinform.repository.FormRepository;
-import com.radicaldynamic.groupinform.repository.InstanceRepository;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.CouchDbUtils;
-import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 /**
- * Responsible for displaying buttons to launch the major activities. Launches
- * some activities based on returns of others.
- * 
- * @author Carl Hartung (carlhartung@gmail.com)
- * @author Yaw Anokwa (yanokwa@gmail.com)
+ * Application initialization: registration, login, database installation & init 
  */
-public class LauncherActivity extends ListActivity
+public class LauncherActivity extends Activity
 {
     private static final String t = "LauncherActivity: ";
-    
-    // Request codes for returning data from specified intent 
-    private static final int ABOUT_INFORM = 1;
     
     // Intent status codes
     private static final String KEY_REINIT_IOSERVICE = "key_reinit_ioservice";
     private static final String KEY_SIGNIN_RESTART = "key_signin_restart";
+    
+    private static final int BROWSER_ACTIVITY = 1;
 
     private static boolean mShowSplash = true;
     private Toast mSplashToast;
 
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
-    
-    private RefreshViewTask mRefreshViewTask;
     
     /*
      * Implement the callbacks that allow CouchDB to talk to this app
@@ -140,7 +108,9 @@ public class LauncherActivity extends ListActivity
         public void onServiceConnected(ComponentName className, IBinder service)
         {
             Collect.getInstance().setDbService(((DatabaseService.LocalBinder) service).getService());
-            Collect.getInstance().getDbService().open();
+            
+            if (Collect.getInstance().getInformOnlineState().getDefaultDatabase() instanceof String)
+                Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getDefaultDatabase());
         }
 
         public void onServiceDisconnected(ComponentName className)
@@ -153,7 +123,7 @@ public class LauncherActivity extends ListActivity
     private ServiceConnection mOnlineConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
-            Collect.getInstance().setIoService(((InformOnlineService.LocalBinder) service).getService());                        
+            Collect.getInstance().setIoService(((InformOnlineService.LocalBinder) service).getService());
         }
 
         public void onServiceDisconnected(ComponentName className)
@@ -226,52 +196,11 @@ public class LauncherActivity extends ListActivity
         displaySplash();
 
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
-        setContentView(R.layout.main_browser);
+        setContentView(R.layout.launcher);
                 
         if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {
-            if (CouchInstaller.checkInstalled()) {                
-                // Load our custom window title
-                getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.folder_selector_title);            
-
-                // We don't use the on-screen progress indicator no longer needed
-                RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
-                onscreenProgress.setVisibility(View.GONE);        
-                
-                // Initiate and populate spinner to filter forms displayed by instances types
-                ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
-                    .createFromResource(this, R.array.tf_main_menu_form_filters, android.R.layout.simple_spinner_item);        
-                instanceStatus.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                
-                s1.setVisibility(View.VISIBLE);
-                s1.setAdapter(instanceStatus);
-                s1.setOnItemSelectedListener(new OnItemSelectedListener() {
-                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-                    {
-                        triggerRefresh(position);
-                    }
-
-                    public void onNothingSelected(AdapterView<?> parent) { }
-                });
-                
-                // Set up listener for Folder Selector button in title
-                Button b1 = (Button) findViewById(R.id.folderTitleButton);
-                b1.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v)
-                    {
-                        startActivity(new Intent(LauncherActivity.this, AccountFolderList.class));
-                    }
-                });
-                
-                // Set up listener for Online Status button in title
-                Button b2 = (Button) findViewById(R.id.onlineStatusTitleButton);
-                b2.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v)
-                    {
-                        showToggleOnlineStateDialog();
-                    }
-                });      
+            if (CouchInstaller.checkInstalled()) {
+                startActivityForResult(new Intent(LauncherActivity.this, BrowserActivity.class), BROWSER_ACTIVITY);
             } else {                
                 /*
                  * Install database engine
@@ -303,12 +232,6 @@ public class LauncherActivity extends ListActivity
             Log.d(Collect.LOGTAG, t + "successfully bound to InformOnlineService");
         else 
             Log.e(Collect.LOGTAG, t + "unable to bind to InformOnlineService");
-        
-        // Start the database connection
-        if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
-            Log.d(Collect.LOGTAG, t + "successfully bound to DatabaseService");
-        else 
-            Log.e(Collect.LOGTAG, t + "unable to bind to DatabaseService");
     }
 
     /*
@@ -335,8 +258,13 @@ public class LauncherActivity extends ListActivity
         }
         
         if (Collect.getInstance().getDbService() instanceof DatabaseService) {
-            Log.i(Collect.LOGTAG, t + "unbinding from DatabaseService");
-            unbindService(mDatabaseConnection);
+            try {
+                Log.i(Collect.LOGTAG, t + "unbinding from DatabaseService");
+                unbindService(mDatabaseConnection);
+                Log.d(Collect.LOGTAG, t + "unbound from DatabaseService");
+            } catch (IllegalArgumentException e) { 
+                Log.w(Collect.LOGTAG, t + "DatabaseService not registered: " + e.toString());    
+            }
         }
         
         if (Collect.getInstance().getIoService() instanceof InformOnlineService) {
@@ -364,18 +292,13 @@ public class LauncherActivity extends ListActivity
         super.onResume();
 
         if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) { 
-                 
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {                 
                 // Inform user about dependencies
                 if (!Collect.getInstance().getInformDependencies().allSatisfied()) {
                     if (Collect.getInstance().getInformDependencies().isReminderEnabled()) {
                         showDependencyDialog();
                     }
                 }
-                
-                // Load screen (but only if we're connected to Couch)
-                if (Collect.getInstance().getCouchService() != null)
-                    loadScreen();
             }
         }
     }
@@ -397,103 +320,13 @@ public class LauncherActivity extends ListActivity
             return;
         
         switch (requestCode) {
-        // "Exit" if the user resets Inform
-        case ABOUT_INFORM:
+        // "Exit" if the user returns from BrowserActivity
+        case BROWSER_ACTIVITY:
             finish();
             break; 
         }        
     }
-
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
-    {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_browser_context, menu);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-        super.onCreateOptionsMenu(menu);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_browser_options, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item)
-    {
-        // AdapterContextMenuInfo info = (AdapterContextMenuInfo)
-        // item.getMenuInfo();
-        switch (item.getItemId()) {
-        default:
-            return super.onContextItemSelected(item);
-        }
-    }
-
-    /**
-     * Stores the path of selected form and finishes.
-     */
-    @Override
-    protected void onListItemClick(ListView listView, View view, int position, long id)
-    {
-        FormDocument form = (FormDocument) getListAdapter().getItem(position);
-        InstanceLoadPathTask ilp;
-
-        Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
-
-        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-
-        switch (s1.getSelectedItemPosition()) {
-        // Show all forms (in folder)
-        case 0:
-            Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
-            i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, new ArrayList<String>());
-            i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
-            startActivity(i);
-            break;
-        // Show all draft forms
-        case 1:
-            ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), InstanceDocument.Status.draft);
-            break;
-        // Show all completed forms
-        case 2:
-            ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), InstanceDocument.Status.complete);
-            break;
-        // Show all unread forms (e.g., those added or updated by others)
-        case 3:
-            break;
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
-        switch (item.getItemId()) {
-        case R.id.tf_folders:
-            startActivity(new Intent(this, AccountFolderList.class));
-            break;
-        case R.id.tf_refresh:
-            Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
-            triggerRefresh(s1.getSelectedItemPosition());
-            break;
-        case R.id.tf_aggregate:
-            startActivity(new Intent(this, InstanceUploaderList.class));
-            return true;
-        case R.id.tf_manage:
-            startActivity(new Intent(this, ManageFormsTabs.class));
-            return true;
-        case R.id.tf_info:
-            startActivityForResult(new Intent(this, ClientInformationActivity.class), ABOUT_INFORM);
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
+    
     public class InitializeApplicationTask extends AsyncTask<Object, Void, Void> 
     {
         private boolean mPinged = false;
@@ -556,7 +389,13 @@ public class LauncherActivity extends ListActivity
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }
+            }            
+            
+            // Start the database connection
+            if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
+                Log.d(Collect.LOGTAG, t + "successfully bound to DatabaseService");
+            else 
+                Log.e(Collect.LOGTAG, t + "unable to bind to DatabaseService");
             
             mPinged = Collect.getInstance().getIoService().isRespondingToPings();
             mRegistered = Collect.getInstance().getIoService().isRegistered();
@@ -578,15 +417,11 @@ public class LauncherActivity extends ListActivity
                 mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                 mProgressDialog.show();
             }
-          
-            setProgressVisibility(true);
         }
     
         @Override
         protected void onPostExecute(Void nothing) 
-        {                        
-            setProgressVisibility(false);
-            
+        {            
             if (mPinged) {
                 if (mRegistered) {
                     restartActivity(false);
@@ -605,192 +440,6 @@ public class LauncherActivity extends ListActivity
             }
         }
     }
-
-    /*
-     * Determine how to load a form instance
-     * 
-     * If there is only one instance for the form in question then load that
-     * instance directly. If there is more than one instance then load the
-     * instance browser.
-     */
-    private class InstanceLoadPathTask extends AsyncTask<Object, Integer, Void>
-    {
-        String mFormId;
-        ArrayList<String> mInstanceIds = new ArrayList<String>();
-
-        @Override
-        protected Void doInBackground(Object... params)
-        {
-            mFormId = (String) params[0];
-            InstanceDocument.Status status = (InstanceDocument.Status) params[1];
-
-            mInstanceIds = new InstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);
-            
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute()
-        {
-            setProgressVisibility(true);
-        }
-
-        @Override
-        protected void onPostExecute(Void nothing)
-        {
-            Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
-            i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstanceIds);
-            i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstanceIds.get(0));
-            i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);            
-            startActivity(i);
-
-            setProgressVisibility(false);
-        }
-    }
-    
-    /*
-     * Refresh the main form browser view as requested by the user
-     */
-    private class RefreshViewTask extends AsyncTask<InstanceDocument.Status, Integer, InstanceDocument.Status>
-    {
-        private ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
-        private Map<String, String> instanceTallies = new HashMap<String, String>();
-
-        @Override
-        protected InstanceDocument.Status doInBackground(InstanceDocument.Status... status)
-        {
-            if (status[0] == InstanceDocument.Status.nothing) {
-                try {
-                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
-                    DocumentUtils.sortByName(documents);
-                } catch (ClassCastException e) {
-                    // TODO: is there a better way to handle empty lists?
-                }
-            } else {
-                instanceTallies = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
-                
-                if (!instanceTallies.isEmpty()) {
-                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
-                    DocumentUtils.sortByName(documents);
-                }
-            }
-
-            return status[0];
-        }
-
-        @Override
-        protected void onPreExecute()
-        {
-            setProgressVisibility(true);
-        }
-
-        @Override
-        protected void onPostExecute(InstanceDocument.Status status)
-        {
-            /*
-             * Special hack to ensure that our application doesn't crash if we terminate it
-             * before the AsyncTask has finished running.  This is stupid and I don't know
-             * another way around it.
-             * 
-             * See http://dimitar.me/android-displaying-dialogs-from-background-threads/
-             */
-            if (isFinishing())
-                return;
-            
-            BrowserListAdapter adapter = new BrowserListAdapter(
-                    getApplicationContext(),
-                    R.layout.main_browser_list_item, 
-                    documents,
-                    instanceTallies, 
-                    (Spinner) findViewById(R.id.form_filter));
-            
-            setListAdapter(adapter);
-
-            if (status == InstanceDocument.Status.nothing) {
-                // Provide hints to user
-                if (documents.isEmpty()) {
-                    TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-                    nothingToDisplay.setVisibility(View.VISIBLE);
-                    
-                    // TODO: try and reintegrate this
-//                  Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
-//                  openOptionsMenu();
-                } else {
-                    if (mAlertDialog != null && !mAlertDialog.isShowing())
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-                String descriptor = s1.getSelectedItem().toString().toLowerCase();
-
-                // Provide hints to user
-                if (documents.isEmpty()) {
-                    TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-                    nothingToDisplay.setVisibility(View.VISIBLE);
-                } else {
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            setProgressVisibility(false);
-        }
-    }
-    
-    /*
-     * TODO 
-     * 
-     * Implement progress dialog that will be updated to show the online/offline switch progress
-     * (i.e., progress of folder synchronisations)
-     */
-    private class ToggleOnlineState extends AsyncTask<Void, Void, Void>
-    {
-        @Override
-        protected Void doInBackground(Void... nothing)
-        {
-            if (Collect.getInstance().getIoService().isSignedIn()) {
-                // TODO: deal with case where user has asked to go offline but it could not be done co-operatively
-                // Inform user and prompt them to retry or to force offline
-                Collect.getInstance().getIoService().goOffline();
-            } else {
-                Collect.getInstance().getIoService().goOnline();                    
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute()
-        {
-
-        }
-
-        @Override
-        protected void onPostExecute(Void nothing)
-        {
-            loadScreen();
-        }
-    }
-
-    /**
-     * Load the various elements of the screen that must wait for other tasks to
-     * complete
-     */
-    private void loadScreen()
-    {
-        // Reflect the online/offline status
-        Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
-
-        if (Collect.getInstance().getIoService().isSignedIn())
-            b1.setText(getText(R.string.tf_inform_state_online));
-        else
-            b1.setText(getText(R.string.tf_inform_state_offline));
-        
-        // Spinner must reflect results of refresh view below
-        Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
-        triggerRefresh(s1.getSelectedItemPosition());
-           
-        registerForContextMenu(getListView());
-    }
     
     // Restart this activity, optionally requesting a complete restart
     private void restartActivity(boolean fullRestart)
@@ -807,19 +456,6 @@ public class LauncherActivity extends ListActivity
         finish();
     }
     
-    private void setProgressVisibility(boolean visible)
-    {
-        ProgressBar pb = (ProgressBar) getWindow().findViewById(R.id.titleProgressBar);
-        
-        if (pb != null) {
-            if (visible) {
-                pb.setVisibility(View.VISIBLE);
-            } else {
-                pb.setVisibility(View.GONE);
-            }
-        }
-    }
-
     /*
      * An initial connection error should be handled differently depending on
      * a) whether this device has already been registered, and
@@ -940,67 +576,6 @@ public class LauncherActivity extends ListActivity
         mAlertDialog.show();
     }
     
-    private void showToggleOnlineStateDialog()
-    {
-        String buttonText;
-        
-        mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setCancelable(false);
-        mAlertDialog.setIcon(R.drawable.ic_dialog_info);
-        
-        if (Collect.getInstance().getIoService().isSignedIn()) {
-            mAlertDialog.setTitle(getText(R.string.tf_go_offline) + "?");
-            mAlertDialog.setMessage("You are currently online.  Group Inform will synchronize any folders that you have selected for offline use prior to going offline.");
-            buttonText = getText(R.string.tf_go_offline).toString();
-        } else {
-            mAlertDialog.setTitle(getText(R.string.tf_go_online) + "?");
-            mAlertDialog.setMessage("You are currently offline.");
-            buttonText = getText(R.string.tf_go_online).toString();
-        }
-
-        mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, buttonText, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                new ToggleOnlineState().execute();
-            }
-        });
-
-        mAlertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.cancel), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                dialog.cancel();
-            }
-        });
-
-        mAlertDialog.show();
-    }
-
-    private void triggerRefresh(int position)
-    {
-        // Hide "nothing to display" message
-        TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-        nothingToDisplay.setVisibility(View.INVISIBLE);
-
-        mRefreshViewTask = new RefreshViewTask();
-
-        switch (position) {
-        // Show all forms (in folder)
-        case 0:
-            mRefreshViewTask.execute(InstanceDocument.Status.nothing);
-            break;
-        // Show all draft forms
-        case 1:
-            mRefreshViewTask.execute(InstanceDocument.Status.draft);
-            break;
-        // Show all completed forms
-        case 2:
-            mRefreshViewTask.execute(InstanceDocument.Status.complete);
-            break;
-        // Show all unread forms (e.g., those added or updated by others)
-        case 3:
-            mRefreshViewTask.execute(InstanceDocument.Status.updated);
-            break;
-        }   
-    }
-
     /**
      * displaySplash
      * 

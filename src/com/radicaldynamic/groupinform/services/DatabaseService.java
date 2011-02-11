@@ -41,9 +41,6 @@ import com.radicaldynamic.groupinform.application.Collect;
  */
 public class DatabaseService extends Service {
     private static final String t = "DatabaseService: ";
-
-    private String mHost = "127.0.0.1";
-    private int mPort = 5985;
            
     private HttpClient mHttpClient = null;
     private StdCouchDbInstance mDbInstance = null;
@@ -59,20 +56,23 @@ public class DatabaseService extends Service {
     private ConditionVariable mCondition;   
     private NotificationManager mNM;
     
-    private Runnable mTask = new Runnable() {
+    private Runnable mTask = new Runnable() 
+    {
         public void run() {            
             for (int i = 1; i > 0; ++i) {
                 if (mInit == false)
-                    connect();
-                // Retry connection to CouchDB every 120 seconds
-                if (mCondition.block(120 * 1000))
-                    break;
+                    connect(isActiveDatabaseLocal());
+                
+                // Retry connection to CouchDB every 30 seconds
+                if (mCondition.block(30 * 1000))
+                        break;
             }
         }
     };
       
     @Override
-    public void onCreate() {
+    public void onCreate() 
+    {
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         
         Thread persistentConnectionThread = new Thread(null, mTask, "DatabaseService");        
@@ -81,55 +81,33 @@ public class DatabaseService extends Service {
     }
     
     @Override
-    public void onDestroy() {   
+    public void onDestroy() 
+    {   
         mNM.cancel(R.string.tf_connection_status_notification);
         mCondition.open();
     }
 
+    @Override
+    public IBinder onBind(Intent intent) 
+    {
+        return mBinder;
+    }
+    
     /**
      * Class for clients to access.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with
      * IPC.
      */
-    public class LocalBinder extends Binder {
-        public DatabaseService getService() {
+    public class LocalBinder extends Binder 
+    {
+        public DatabaseService getService() 
+        {
             return DatabaseService.this;
         }
-    }    
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
     }
 
-    /**
-     * Open the default device database
-     * 
-     * @return TFCouchDbAdapter
-     */
-    public DatabaseService open() {
-        String database = Collect.getInstance().getInformOnlineState().getDefaultDatabase();        
-        return open(database);
-    }
-    
-    /**
-     * Open a specific database
-     * 
-     * @param database  Name of database to open
-     * @return
-     */
-    public DatabaseService open(String database) {
-        try {
-            mDb = new StdCouchDbConnector("db_" + database, mDbInstance);
-            mDb.createDatabaseIfNotExists();
-        } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "while opening DB db_" + database + ": " + e.toString());
-        }    
-
-        return this;
-    }
-    
-    public List<String> getAllDatabases() {
+    public List<String> getAllDatabases() 
+    {
         List<String> dbs = new ArrayList<String>();
         
         try {
@@ -141,10 +119,11 @@ public class DatabaseService extends Service {
         return dbs;
     }
     
-    public StdCouchDbConnector getDb() {
+    public StdCouchDbConnector getDb() 
+    {
         // Last ditch attempt
-        if (!mConnected)
-            connect();
+        if (!mConnected && isDbInfoAvailable(Collect.getInstance().getInformOnlineState().getSelectedDatabase()))
+            connect(isActiveDatabaseLocal());
         
         for (int i = 1; i > 0; ++i) {
             if (mConnected == true) 
@@ -161,13 +140,84 @@ public class DatabaseService extends Service {
         return mDb;        
     }   
         
-    private void connect() {
-        mInit = true;        
+    /**
+     * Open a specific database
+     * 
+     * @param database  Name of database to open
+     * @return
+     */
+    public boolean open(String db) 
+    {
+        if (!isDbInfoAvailable(db))
+            return false;
+        
+        // Last ditch attempt to connect
+        if (!mConnected) {
+            connect(Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated());
+            
+            for (int i = 1; i > 0; ++i) {
+                if (mConnected == true) 
+                    break;              
+                
+                // Ensure that we do not run out of int space too soon
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
-        Log.d(Collect.LOGTAG, t + "establishing connection to " + mHost + ":" + mPort);
+        // Switch connections from local to remote and vice versa as required
+        if (Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated()) {
+            if (!isActiveDatabaseLocal() || !mConnected) {
+                Log.i(Collect.LOGTAG, t + "switching from remote to local database (or connecting for the first time: " + mConnected + ")");
+                connect(true);
+            }                
+        } else {
+            if (isActiveDatabaseLocal() || !mConnected) {
+                Log.i(Collect.LOGTAG, t + "switching from local to remote database (or connecting for the first time: " + mConnected + ")");
+                connect(false);
+            }
+        }
+        
+        try {
+            mDb = new StdCouchDbConnector("db_" + db, mDbInstance);
+            mDb.createDatabaseIfNotExists();
+            Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
+            return true;
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, t + "while opening DB db_" + db + ": " + e.toString());
+            return false;
+        }
+    }
+
+    synchronized private void connect(boolean local) 
+    {
+        mInit = true;
+        
+        if (Collect.getInstance().getInformOnlineState().getDefaultDatabase() == null || 
+                Collect.getInstance().getInformOnlineState().getSelectedDatabase() == null ||
+                Collect.getInstance().getInformOnlineState().getAccountFolders().isEmpty()) {
+            Log.w(Collect.LOGTAG, t + "database information not available, unable to connect");
+            return;
+        }
+        
+        String host;
+        int port;
+        
+        if (local) {
+            host = "127.0.0.1";
+            port = 5985;
+        } else {
+            host = "arthur.902northland.adams.home";
+            port = 5984;
+        }
+        
+        Log.d(Collect.LOGTAG, t + "establishing connection to " + host + ":" + port);
         
         try {                        
-            mHttpClient = new StdHttpClient.Builder().host(mHost).port(mPort).build();     
+            mHttpClient = new StdHttpClient.Builder().host(host).port(port).build();     
             mDbInstance = new StdCouchDbInstance(mHttpClient);            
             
             mDbInstance.getAllDatabases();
@@ -176,12 +226,36 @@ public class DatabaseService extends Service {
                 mConnected = true;
             }
             
-            Log.d(Collect.LOGTAG, t + "connection to " + mHost + " successful");
+            Log.d(Collect.LOGTAG, t + "connection to " + host + " successful");
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "while connecting to server " + mHost + ": " + e.toString());
-            mConnected = false;                        
+            Log.e(Collect.LOGTAG, t + "while connecting to server " + port + ": " + e.toString());
+            mConnected = false;                
         } finally { 
             mInit = false;
+        }
+    }
+    
+    private boolean isActiveDatabaseLocal()
+    {   
+        try {
+            return Collect
+            .getInstance()
+            .getInformOnlineState()
+            .getAccountFolders()
+            .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
+            .isReplicated();
+        } catch (NullPointerException e) {
+            return true;
+        }
+    }
+    
+    private boolean isDbInfoAvailable(String db)
+    {
+        if (db == null || Collect.getInstance().getInformOnlineState().getAccountFolders().get(db) == null) {
+            Log.w(Collect.LOGTAG, t + "no information about database " + db);
+            return false;
+        } else {
+            return true;
         }
     }
 }

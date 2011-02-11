@@ -1,6 +1,9 @@
 package com.radicaldynamic.groupinform.logic;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.client.CookieStore;
@@ -54,8 +57,14 @@ public class InformOnlineState
     // Constants for session information stored in preferences
     public static final String SESSION     = "informonline_session";        // Invisible
     
-    private String serverUrl;
+    // Lookup map for account devices, indexed by device ID
+    private Map<String, AccountDevice> accountDevicesMap = new HashMap<String, AccountDevice>();
+    private Map<String, AccountDevice> accountDevicesSyncMap = Collections.synchronizedMap(accountDevicesMap);
     
+    // Lookup map for account folders, indexed by folder ID
+    private Map<String, AccountFolder> accountFoldersMap = new HashMap<String, AccountFolder>();
+    private Map<String, AccountFolder> accountFoldersSyncMap = Collections.synchronizedMap(accountFoldersMap);
+
     private String accountNumber;           // The licence number
     private String accountKey;              // The licence key
     private boolean accountOwner;
@@ -66,11 +75,14 @@ public class InformOnlineState
     
     private String deviceId;
     private String deviceKey;
-    private String devicePin;
-    
+    private String devicePin;    
     private String deviceFingerprint;
-    private String defaultDatabase;
     
+    private String defaultDatabase;
+    private String selectedDatabase;        // The database the user has selected to work with at any given time
+    
+    private String serverUrl;
+        
     private CookieStore session = null;
     
     private boolean offlineModeEnabled = false;
@@ -95,8 +107,25 @@ public class InformOnlineState
         setServerUrl("http://" + mContext.getText(R.string.tf_default_ionline_server) + ":" + mContext.getText(R.string.tf_default_ionline_port));
         
         // Set the device finger print
-        setDeviceFingerprint(mContext);       
-        
+        setDeviceFingerprint(mContext);
+    }    
+    
+    public void setAccountDevices(Map<String, AccountDevice> accountDevices) 
+    { 
+        this.accountDevicesSyncMap = accountDevices; 
+    }
+    
+    public Map<String, AccountDevice> getAccountDevices() { 
+        return accountDevicesSyncMap; 
+    }
+    
+    public void setAccountFolders(Map<String, AccountFolder> accountFolders) 
+    { 
+        this.accountFoldersSyncMap = accountFolders; 
+    }
+    
+    public Map<String, AccountFolder> getAccountFolders() { 
+        return accountFoldersSyncMap; 
     }
 
     public void setAccountKey(String accountKey)
@@ -260,6 +289,16 @@ public class InformOnlineState
         return defaultDatabase;
     }
 
+    public void setSelectedDatabase(String selectedDatabase)
+    {
+        this.selectedDatabase = selectedDatabase;
+    }
+
+    public String getSelectedDatabase()
+    {
+        return selectedDatabase;
+    }
+
     /*
      * See http://stackoverflow.com/questions/2785485/is-there-a-unique-android-device-id
      */
@@ -322,7 +361,7 @@ public class InformOnlineState
         
         setDefaultDatabase(null);
         setOfflineModeEnabled(false);
-        setSession(null);        
+        setSession(null);   
         
         // Reset dependency preferences back to defaults
         if (Collect.getInstance().getInformDependencies().isInitialized())
@@ -366,6 +405,7 @@ public class InformOnlineState
         setDevicePin(mPrefs.getString(DEVICE_PIN, null));
         
         setDefaultDatabase(mPrefs.getString(DEFAULT_DATABASE, null));
+        setSelectedDatabase(getDefaultDatabase());
         setOfflineModeEnabled(mPrefs.getBoolean(OFFLINE_MODE, false));
         
         // Further post-cleanup if the user "cleared data" via the Application Info screen

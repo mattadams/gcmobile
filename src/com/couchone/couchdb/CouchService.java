@@ -8,15 +8,7 @@ import java.util.Map.Entry;
 
 import org.json.JSONException;
 
-import com.couchone.libcouch.AeSimpleSHA1;
-import com.couchone.libcouch.Base64Coder;
-import com.couchone.libcouch.HTTPRequest;
-import com.couchone.libcouch.ICouchClient;
-import com.couchone.libcouch.ICouchService;
-import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
-
-
+import android.app.LauncherActivity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -26,6 +18,14 @@ import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.RemoteException;
+
+import com.couchone.libcouch.AeSimpleSHA1;
+import com.couchone.libcouch.Base64Coder;
+import com.couchone.libcouch.HTTPRequest;
+import com.couchone.libcouch.ICouchClient;
+import com.couchone.libcouch.ICouchService;
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 public class CouchService extends Service {
 
@@ -225,30 +225,31 @@ public class CouchService extends Service {
 
 	private void notifyStarting() {
 		mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		int icon = R.drawable.couch_icon;
-		CharSequence tickerText = "CouchDB Starting";
+		int icon = R.drawable.ic_stat_group_complete;
+		CharSequence tickerText = "Inform Database Starting";
 		long when = System.currentTimeMillis();
 		Notification notification = new Notification(icon, tickerText, when);
 		Intent notificationIntent = new Intent(this, CouchFutonActivity.class);
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-		notification.setLatestEventInfo(getApplicationContext(),
-				"CouchDB Starting", "Please Wait...", contentIntent);
+		notification.setLatestEventInfo(
+		        getApplicationContext(),
+				"Group Inform Database Starting", "Please Wait...", 
+				contentIntent);
 		mNM.notify(1, notification);		
 	}
 	
 	private void notifyStarted() { 
-		int icon = R.drawable.couch_icon;
-		CharSequence tickerText = "CouchDB Running";
+		int icon = R.drawable.ic_stat_group_complete;
+		CharSequence tickerText = "Inform Database Running";
 		long when = System.currentTimeMillis();
 
 		Notification notification = new Notification(icon, tickerText, when);
 		notification.flags = Notification.FLAG_ONGOING_EVENT;
-		Intent i = new Intent(CouchService.this,
-				CouchFutonActivity.class);
+		Intent i = new Intent(CouchService.this, LauncherActivity.class);
 		notification.setLatestEventInfo(
 				getApplicationContext(),
-				"CouchDB Running",
-				"Press to open Futon", 
+				"Inform Database Running",
+				"Press to open Group Inform", 
 				PendingIntent.getActivity(CouchService.this, 0, i, 0));
 		mNM.cancel(1);
 		mNM.notify(2, notification);

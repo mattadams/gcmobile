@@ -1,9 +1,6 @@
 package com.radicaldynamic.groupinform.application;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.javarosa.core.reference.ReferenceManager;
 import org.javarosa.core.reference.RootTranslator;
@@ -24,7 +21,6 @@ import android.widget.Toast;
 import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.documents.FormDocument;
-import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
@@ -55,14 +51,10 @@ public class Collect extends Application {
     
     // Installed dependency state
     private InformDependencies informDependencies = new InformDependencies();
-    
-    // Lookup map for account devices, indexed by device ID
-    private Map<String, AccountDevice> accountDevicesMap = new HashMap<String, AccountDevice>();
-    private Map<String, AccountDevice> accountDevicesSyncMap = Collections.synchronizedMap(accountDevicesMap);
-    
+
     // Instance browse list, used for switching between instances of a given form
     private ArrayList<String> instanceBrowseList = new ArrayList<String>();
-    
+
     /*
      * State variables for the form builder
      * TODO: it would be nice to refactor the form builder so we don't need these here
@@ -196,9 +188,12 @@ public class Collect extends Application {
 		t.setGravity(Gravity.CENTER, 0, 0);
 		t.show();
 	}
-	
-    public void setAccountDevices(Map<String, AccountDevice> accountDevices) { this.accountDevicesSyncMap = accountDevices; }
-    public Map<String, AccountDevice> getAccountDevices() { return accountDevicesSyncMap; }
+
+    public void setCouchService(ICouchService couchService) { this.couchService = couchService; }
+    public ICouchService getCouchService() { return couchService; }    
+
+    public void setDbService(DatabaseService dbService) { this.dbService = dbService; }
+    public DatabaseService getDbService() { return dbService; }
 
     public void setFbTranslationState(ArrayList<Translation> fbTranslationState) { this.fbTranslationState = fbTranslationState; }
     public ArrayList<Translation> getFbTranslationState() { return fbTranslationState; }
@@ -224,21 +219,15 @@ public class Collect extends Application {
     public void setFbItemList(ArrayList<Field> fbItemList) { this.fbItemList = fbItemList; }
     public ArrayList<Field> getFbItemList() { return fbItemList; }
 
+    public void setInformDependencies(InformDependencies informDependencies) { this.informDependencies = informDependencies; }
+    public InformDependencies getInformDependencies() { return informDependencies; }
+
     public void setInformOnlineState(InformOnlineState informOnlineState) { this.informOnlineState = informOnlineState; }
     public InformOnlineState getInformOnlineState() { return informOnlineState; }
 
     public void setInstanceBrowseList(ArrayList<String> instanceBrowseList) { this.instanceBrowseList = instanceBrowseList; }
     public ArrayList<String> getInstanceBrowseList() { return instanceBrowseList; }
-    
-    public void setCouchService(ICouchService couchService) { this.couchService = couchService; }
-    public ICouchService getCouchService() { return couchService; }
-
-    public void setDbService(DatabaseService dbService) { this.dbService = dbService; }
-    public DatabaseService getDbService() { return dbService; }
 
     public void setIoService(InformOnlineService ioService) { this.ioService = ioService; }
     public InformOnlineService getIoService() { return ioService; }
-
-    public void setInformDependencies(InformDependencies informDependencies) { this.informDependencies = informDependencies; }
-    public InformDependencies getInformDependencies() { return informDependencies; }
 }

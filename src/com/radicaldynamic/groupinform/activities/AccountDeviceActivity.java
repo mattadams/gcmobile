@@ -71,7 +71,7 @@ public class AccountDeviceActivity extends Activity
         if (savedInstanceState == null) {
             Intent i = getIntent();
             mDeviceId = i.getStringExtra(KEY_DEVICEID);
-            mDevice = Collect.getInstance().getAccountDevices().get(mDeviceId);
+            mDevice = Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId);
         } else {
             // TODO            
         }
@@ -379,8 +379,8 @@ public class AccountDeviceActivity extends Activity
                     new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE).setLastModified(0);
                     
                     // Commit changes to the cache-in-memory to avoid running InformOnlineService.loadDeviceHash()
-                    Collect.getInstance().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());
-                    Collect.getInstance().getAccountDevices().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());                
+                    Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());
+                    Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());                
                     
                     // Get out of here
                     finish();
