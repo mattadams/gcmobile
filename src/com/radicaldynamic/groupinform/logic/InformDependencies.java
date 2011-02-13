@@ -23,7 +23,7 @@ public class InformDependencies
     
     // Package names
     public static final String BARCODE = "com.google.zxing.client.android";
-    public static final String COUCHDB = "org.couchdb.android";
+    public static final String COUCHDB = "com.couchone.couchdb";
     
     // Preference 
     public static final String DEPENDENCY_REMINDERS = "dependency_remiders";
@@ -44,7 +44,7 @@ public class InformDependencies
     public InformDependencies(Context context)
     {
         getDependencies().put(BARCODE, 0);
-        //getDependencies().put(COUCHDB, 0);
+//        getDependencies().put(COUCHDB, 0);
         
         setContext(context);
         scan();
@@ -83,8 +83,10 @@ public class InformDependencies
         while (it.hasNext()) {
             String depKey = it.next();
             
-            if (getDependencies().get(depKey) == 0)
+            if (getDependencies().get(depKey) == 0) {
+                Log.v(Collect.LOGTAG, t + "next dependency is " + depKey);
                 return depKey;
+            }
         }
         
         return null;

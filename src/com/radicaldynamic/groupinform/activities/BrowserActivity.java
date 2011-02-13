@@ -19,7 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -43,6 +45,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 
+import com.couchone.couchdb.CouchInstaller;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -50,6 +53,8 @@ import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.documents.InstanceDocument;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.repository.InstanceRepository;
+import com.radicaldynamic.groupinform.services.DatabaseService;
+import com.radicaldynamic.groupinform.utilities.CouchDbUtils;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 
 /**
@@ -63,13 +68,21 @@ public class BrowserActivity extends ListActivity
 {
     private static final String t = "BrowserActivity: ";
     
+    // Dialog status codes
+    private static final int DIALOG_DATABASE_UNAVAILABLE = 1;
+    private static final int DIALOG_NO_SYNCHRONIZED_DBS = 2;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE = 3;
+    private static final int DIALOG_ONLINE_STATE_CHANGING = 4;
+    private static final int DIALOG_TOGGLE_ONLINE_STATE = 5;
+        
     // Request codes for returning data from specified intent 
-    private static final int ABOUT_INFORM = 1;
+    private static final int RESULT_ABOUT_INFORM = 1;
     
     // See s1...OnItemSelectedListener() where this is used in a horrid workaround
     private boolean mSpinnerInit = false;
     
-    private AlertDialog mAlertDialog;
+    // Custom message consumed by onCreateDialog()
+    private String mDialogMessage = null;
     
     private RefreshViewTask mRefreshViewTask;
 
@@ -99,7 +112,7 @@ public class BrowserActivity extends ListActivity
                  * Since this listener in effect triggers an Ektorp repository and this repository
                  * in turn creates Couch views and having the repository initiated twice within the same
                  * thread will cause a segfault we had to implement this little workaround to ensure
-                 * that triggerRefresh() is not called twice.
+                 * that loadScreen() is not called twice.
                  * 
                  * See https://groups.google.com/group/android-developers/browse_thread/thread/d93ce1ef583a2a29
                  * and http://stackoverflow.com/questions/2562248/android-how-to-keep-onitemselected-from-firing-off-on-a-newly-instantiated-spinn
@@ -108,7 +121,7 @@ public class BrowserActivity extends ListActivity
                 if (mSpinnerInit == false)
                     mSpinnerInit = true;
                 else
-                    triggerRefresh(position);
+                    loadScreen();
             }
 
             public void onNothingSelected(AdapterView<?> parent) { }
@@ -130,30 +143,9 @@ public class BrowserActivity extends ListActivity
             @Override
             public void onClick(View v)
             {
-                showToggleOnlineStateDialog();
+                showDialog(DIALOG_TOGGLE_ONLINE_STATE);
             }
         });
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see android.app.ListActivity#onDestroy()
-     * 
-     * Recall:
-     * Because onPause() is the first of the three [killable methods], it's the only one that's guaranteed to be called 
-     * before the process is killed — onStop() and onDestroy() may not be. Therefore, you should use onPause() to write 
-     * any persistent data (such as user edits) to storage. 
-     */
-    @Override
-    protected void onDestroy()
-    {
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onPause()
-    {
-        super.onPause();
     }
 
     @Override
@@ -164,12 +156,6 @@ public class BrowserActivity extends ListActivity
     }
 
     @Override
-    protected void onStop()
-    {
-        super.onStop();
-    }
-    
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
         
@@ -178,11 +164,129 @@ public class BrowserActivity extends ListActivity
         
         switch (requestCode) {
         // "Exit" if the user resets Inform
-        case ABOUT_INFORM:
+        case RESULT_ABOUT_INFORM:
             setResult(RESULT_OK);
             finish();
             break; 
         }        
+    }
+    
+    public Dialog onCreateDialog(int id)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        Dialog dialog = null;
+        
+        switch (id) {   
+        case DIALOG_DATABASE_UNAVAILABLE:
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_info)
+                .setTitle("Folder Unavailable")
+                .setMessage(mDialogMessage);
+            
+            builder.setPositiveButton(getString(R.string.tf_form_folders), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    startActivity(new Intent(BrowserActivity.this, AccountFolderList.class));
+                    removeDialog(DIALOG_DATABASE_UNAVAILABLE);
+                }
+            });
+            
+            if (!Collect.getInstance().getIoService().isSignedIn()) {
+                builder.setNeutralButton(getString(R.string.tf_go_online), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        new ToggleOnlineState().execute();
+                        removeDialog(DIALOG_DATABASE_UNAVAILABLE);
+                    }
+                });
+            }
+            
+            dialog = builder.create();
+            break;
+            
+        case DIALOG_NO_SYNCHRONIZED_DBS:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle("Cannot Go Offline")
+            .setMessage("Select at least one folder to be synchronized for offline use prior to going offline.");
+
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    dialog.cancel();
+                }
+            });
+
+            dialog = builder.create();
+            
+            break;
+        
+        case DIALOG_OFFLINE_MODE_UNAVAILABLE:
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_alert)
+                .setTitle("Cannot Go Offline")
+                .setMessage("The Group Inform database is required to work offline.  If you are receiving this message it means that the database is unavailable for one or more reasons.\n\nPlease let us know that you are receiving this message by visiting us at http://groupinform.com/support - thank you!");
+
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    startActivity(new Intent(BrowserActivity.this, AccountFolderList.class));
+                    dialog.cancel();
+                }
+            });
+            
+            dialog = builder.create();
+            break;
+            
+        case DIALOG_ONLINE_STATE_CHANGING:
+            if (Collect.getInstance().getIoService().isSignedIn())
+                dialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_disconnecting));
+            else
+                dialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_connecting));
+            
+            break;
+                    
+        case DIALOG_TOGGLE_ONLINE_STATE:
+            String buttonText;
+            
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_info);
+            
+            if (Collect.getInstance().getIoService().isSignedIn()) {
+                builder
+                    .setTitle(getText(R.string.tf_go_offline) + "?")
+                    .setMessage("You are currently online. Group Inform will synchronize any folders that you have selected for offline use prior to going offline.");
+                
+                buttonText = getText(R.string.tf_go_offline).toString();
+            } else {
+                builder
+                    .setTitle(getText(R.string.tf_go_online) + "?")
+                    .setMessage("You are currently offline. Group Inform will synchronize any folders that you have selected for offline use after going online.");
+
+                buttonText = getText(R.string.tf_go_online).toString();
+            }
+
+            builder.setPositiveButton(buttonText, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    new ToggleOnlineState().execute();
+                    removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
+                }
+            });
+
+            builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
+                }
+            });
+            
+            dialog = builder.create();
+            break;
+            
+        default:
+            Log.e(Collect.LOGTAG, t + "showDialog() unimplemented for " + id);
+        }
+        
+        return dialog;        
     }
 
     @Override
@@ -255,8 +359,7 @@ public class BrowserActivity extends ListActivity
             startActivity(new Intent(this, AccountFolderList.class));
             break;
         case R.id.tf_refresh:
-            Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
-            triggerRefresh(s1.getSelectedItemPosition());
+            loadScreen();
             break;
         case R.id.tf_aggregate:
             startActivity(new Intent(this, InstanceUploaderList.class));
@@ -265,7 +368,7 @@ public class BrowserActivity extends ListActivity
             startActivity(new Intent(this, ManageFormsTabs.class));
             return true;
         case R.id.tf_info:
-            startActivityForResult(new Intent(this, ClientInformationActivity.class), ABOUT_INFORM);
+            startActivityForResult(new Intent(this, ClientInformationActivity.class), RESULT_ABOUT_INFORM);
             return true;
         }
 
@@ -325,8 +428,6 @@ public class BrowserActivity extends ListActivity
         @Override
         protected InstanceDocument.Status doInBackground(InstanceDocument.Status... status)
         {            
-            Log.w(Collect.LOGTAG, t + "running RefreshViewTask.doInBackground()");
-            
             if (status[0] == InstanceDocument.Status.nothing) {
                 try {
                     documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
@@ -386,8 +487,8 @@ public class BrowserActivity extends ListActivity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
                     openOptionsMenu();
                 } else {
-                    if (mAlertDialog != null && !mAlertDialog.isShowing())
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
+//                  if (mAlertDialog instanceof Dialog && !mAlertDialog.isShowing())
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Spinner s1 = (Spinner) findViewById(R.id.form_filter);
@@ -411,16 +512,28 @@ public class BrowserActivity extends ListActivity
      * 
      * Implement progress dialog that will be updated to show the online/offline switch progress
      * (i.e., progress of folder synchronisations)
+     * 
+     * TODO
+     * 
+     * Deal with case where user has asked to go offline/online but it could not be done co-operatively
      */
     private class ToggleOnlineState extends AsyncTask<Void, Void, Void>
     {
+        Boolean hasCouch = true;
+        Boolean hasSynchronizedFolders = true;
+        
         @Override
         protected Void doInBackground(Void... nothing)
         {
             if (Collect.getInstance().getIoService().isSignedIn()) {
-                // TODO: deal with case where user has asked to go offline but it could not be done co-operatively
-                // Inform user and prompt them to retry or to force offline
-                Collect.getInstance().getIoService().goOffline();
+                if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
+                    hasSynchronizedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
+
+                    if (hasSynchronizedFolders)
+                        Collect.getInstance().getIoService().goOffline();
+                } else {
+                    hasCouch = false;
+                }
             } else {
                 Collect.getInstance().getIoService().goOnline();                    
             }
@@ -430,20 +543,42 @@ public class BrowserActivity extends ListActivity
 
         @Override
         protected void onPreExecute()
-        {
-
+        {          
+            showDialog(DIALOG_ONLINE_STATE_CHANGING);
+            
+            // Not available while toggling
+            Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
+            b1.setEnabled(false);
+            b1.setText(R.string.tf_inform_state_transition);
+            
+            Button b2 = (Button) findViewById(R.id.folderTitleButton);
+            b2.setEnabled(false);
+            b2.setText("...");
         }
 
         @Override
         protected void onPostExecute(Void nothing)
-        {
+        {   
+            removeDialog(DIALOG_ONLINE_STATE_CHANGING);
+            
+            if (!hasCouch)
+                showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE);
+            else if (!hasSynchronizedFolders)
+                showDialog(DIALOG_NO_SYNCHRONIZED_DBS);
+
             loadScreen();
+            
+            // Re-enable
+            Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
+            b1.setEnabled(true);
+            
+            Button b2 = (Button) findViewById(R.id.folderTitleButton);
+            b2.setEnabled(true);
         }
     }
 
     /**
-     * Load the various elements of the screen that must wait for other tasks to
-     * complete
+     * Load the various elements of the screen that must wait for other tasks to complete
      */
     private void loadScreen()
     {
@@ -454,17 +589,7 @@ public class BrowserActivity extends ListActivity
             b1.setText(getText(R.string.tf_inform_state_online));
         else
             b1.setText(getText(R.string.tf_inform_state_offline));
-        
-        // Reflect the currently selected folder
-        Button b2 = (Button) findViewById(R.id.folderTitleButton);
-        
-        b2.setText(Collect
-                .getInstance()
-                .getInformOnlineState()
-                .getAccountFolders()
-                .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
-                .getName());
-        
+
         // Spinner must reflect results of refresh view below
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
         triggerRefresh(s1.getSelectedItemPosition());
@@ -483,64 +608,64 @@ public class BrowserActivity extends ListActivity
         }
     }
 
-    private void showToggleOnlineStateDialog()
-    {
-        String buttonText;
-        
-        mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setCancelable(false);
-        mAlertDialog.setIcon(R.drawable.ic_dialog_info);
-        
-        if (Collect.getInstance().getIoService().isSignedIn()) {
-            mAlertDialog.setTitle(getText(R.string.tf_go_offline) + "?");
-            mAlertDialog.setMessage("You are currently online.  Group Inform will synchronize any folders that you have selected for offline use prior to going offline.");
-            buttonText = getText(R.string.tf_go_offline).toString();
-        } else {
-            mAlertDialog.setTitle(getText(R.string.tf_go_online) + "?");
-            mAlertDialog.setMessage("You are currently offline.");
-            buttonText = getText(R.string.tf_go_online).toString();
-        }
-
-        mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, buttonText, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                new ToggleOnlineState().execute();
-            }
-        });
-
-        mAlertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.cancel), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                dialog.cancel();
-            }
-        });
-
-        mAlertDialog.show();
-    }
-
     private void triggerRefresh(int position)
     {
         // Hide "nothing to display" message
         TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
         nothingToDisplay.setVisibility(View.INVISIBLE);
+        
+        String folderName = "...";
+        
+        // Open selected database
+        try {            
+            // Reflect the currently selected folder
+            Button b2 = (Button) findViewById(R.id.folderTitleButton);
+            
+            try {
+                folderName = Collect
+                        .getInstance()
+                        .getInformOnlineState()
+                        .getAccountFolders()
+                        .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
+                        .getName();
+            } catch (NullPointerException e) {
+                // Database metadata is not available at this time
+                Log.w(Collect.LOGTAG, t + "folder metadata not available at this time");
+            } finally {
+                b2.setText(folderName);
+            }
+            
+            Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
+        
+            mRefreshViewTask = new RefreshViewTask();
 
-        mRefreshViewTask = new RefreshViewTask();
-
-        switch (position) {
-        // Show all forms (in folder)
-        case 0:
-            mRefreshViewTask.execute(InstanceDocument.Status.nothing);
-            break;
-        // Show all draft forms
-        case 1:
-            mRefreshViewTask.execute(InstanceDocument.Status.draft);
-            break;
-        // Show all completed forms
-        case 2:
-            mRefreshViewTask.execute(InstanceDocument.Status.complete);
-            break;
-        // Show all unread forms (e.g., those added or updated by others)
-        case 3:
-            mRefreshViewTask.execute(InstanceDocument.Status.updated);
-            break;
-        }   
+            switch (position) {
+            // Show all forms (in folder)
+            case 0:
+                mRefreshViewTask.execute(InstanceDocument.Status.nothing);
+                break;
+                // Show all draft forms
+            case 1:
+                mRefreshViewTask.execute(InstanceDocument.Status.draft);
+                break;
+                // Show all completed forms
+            case 2:
+                mRefreshViewTask.execute(InstanceDocument.Status.complete);
+                break;
+                // Show all unread forms (e.g., those added or updated by others)
+            case 3:
+                mRefreshViewTask.execute(InstanceDocument.Status.updated);
+                break;
+            }
+        } catch (DatabaseService.DbUnavailableDueToMetadataException e) {            
+            mDialogMessage = "The selected folder is currently unavailable.\n\nThis might be because the owner of the folder has removed it or made it private.\n\nPlease select another folder.";
+            showDialog(DIALOG_DATABASE_UNAVAILABLE);
+        } catch (DatabaseService.DbUnavailableWhileOfflineException e) {
+            mDialogMessage = "The folder \"" + folderName + "\" is unavailable while offline.\n\nPlease go online to access this folder or select a folder that is synchronized for offline use.";
+            showDialog(DIALOG_DATABASE_UNAVAILABLE);
+        } catch (DatabaseService.DbUnavailableException e) {
+            mDialogMessage = "The folder \"" + folderName + "\" currently unavailable.\n\nPlease select another folder or try again.";
+            showDialog(DIALOG_DATABASE_UNAVAILABLE);
+        }
     }
 }

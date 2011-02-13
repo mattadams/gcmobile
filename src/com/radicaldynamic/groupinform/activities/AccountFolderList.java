@@ -42,6 +42,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.radicaldynamic.groupinform.R;
@@ -187,13 +188,10 @@ public class AccountFolderList extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-//        FormDocument form = (FormDocument) getListAdapter().getItem(position);
-//
-//        Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
-//
-//        Intent i = new Intent(this, FormBuilderFieldList.class);
-//        i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
-//        startActivity(i);
+        AccountFolder folder = (AccountFolder) getListAdapter().getItem(position);        
+        Collect.getInstance().getInformOnlineState().setSelectedDatabase(folder.getId());
+        Toast.makeText(getApplicationContext(), getString(R.string.tf_opening_folder, folder.getName()), Toast.LENGTH_SHORT).show();  
+        finish();
     }
 
     @Override
@@ -201,9 +199,7 @@ public class AccountFolderList extends ListActivity
     {
         switch (item.getItemId()) {
         case MENU_ADD:
-            startActivity(
-                    new Intent(this, AccountFolderActivity.class)
-                        .putExtra(AccountFolderActivity.KEY_NEW_FOLDER, true));
+            startActivity(new Intent(this, AccountFolderActivity.class).putExtra(AccountFolderActivity.KEY_NEW_FOLDER, true));
             break;
             
         case MENU_SYNC_LIST:
@@ -333,14 +329,19 @@ public class AccountFolderList extends ListActivity
                 for (int i = 0; i < jsonFolders.length(); i++) {
                     JSONObject jsonFolder = jsonFolders.getJSONObject(i);
                     
-                    folders.add(new AccountFolder(
+                    AccountFolder folder = new AccountFolder(
                             jsonFolder.getString("id"),
                             jsonFolder.getString("rev"),
                             jsonFolder.getString("owner"),
                             jsonFolder.getString("name"),
                             jsonFolder.getString("description"),
                             jsonFolder.getString("visibility"),
-                            jsonFolder.getBoolean("replication")));
+                            jsonFolder.getBoolean("replication"));
+                    
+                    folders.add(folder);
+                    
+                    // Also update the account folder hash since this will be needed by BrowserActivity, among other things
+                    Collect.getInstance().getInformOnlineState().getAccountFolders().put(folder.getId(), folder);
                 }
             } catch (JSONException e) {
                 // Parse error (malformed result)

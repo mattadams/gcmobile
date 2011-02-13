@@ -3,6 +3,7 @@ package com.radicaldynamic.groupinform.logic;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -112,6 +113,8 @@ public class InformOnlineState
     
     public void setAccountDevices(Map<String, AccountDevice> accountDevices) 
     { 
+        Log.d(Collect.LOGTAG, t + "setAccountDevices()");
+        
         this.accountDevicesSyncMap = accountDevices; 
     }
     
@@ -121,6 +124,8 @@ public class InformOnlineState
     
     public void setAccountFolders(Map<String, AccountFolder> accountFolders) 
     { 
+        Log.d(Collect.LOGTAG, t + "setAccountFolders()");
+        
         this.accountFoldersSyncMap = accountFolders; 
     }
     
@@ -130,6 +135,8 @@ public class InformOnlineState
 
     public void setAccountKey(String accountKey)
     {
+        Log.d(Collect.LOGTAG, t + "setAccountKey() " + accountKey);
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(ACCOUNT_KEY, accountKey);
         editor.commit();
@@ -144,6 +151,8 @@ public class InformOnlineState
     
     public void setAccountAssignedSeats(int accountAssignedSeats)
     {
+        Log.d(Collect.LOGTAG, t + "setAccountAssignedSeats() " + accountAssignedSeats);
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putInt(ACCOUNT_ASSIGNED_SEATS, accountAssignedSeats);
         editor.commit();  
@@ -158,6 +167,8 @@ public class InformOnlineState
     
     public void setAccountLicencedSeats(int accountLicencedSeats)
     {
+        Log.d(Collect.LOGTAG, t + "setAccountLicencedSeats() " + accountLicencedSeats);
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putInt(ACCOUNT_LICENCED_SEATS, accountLicencedSeats);
         editor.commit();  
@@ -172,6 +183,8 @@ public class InformOnlineState
     
     public void setAccountNumber(String accountNumber)
     {
+        Log.d(Collect.LOGTAG, t + "setAccountNumber() " + accountNumber);
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(ACCOUNT_NUM, accountNumber);
         editor.commit();                
@@ -186,6 +199,8 @@ public class InformOnlineState
 
     public void setAccountOwner(boolean accountOwner)
     {
+        Log.d(Collect.LOGTAG, t + "setAccountOwner() " + accountOwner);
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putBoolean(ACCOUNT_OWNER, accountOwner);
         editor.commit();  
@@ -201,6 +216,8 @@ public class InformOnlineState
 
     public void setAccountPlan(String accountPlan)
     {
+        Log.d(Collect.LOGTAG, t + "setAccountPlan() " + accountPlan);
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(ACCOUNT_PLAN, accountPlan);
         editor.commit();  
@@ -215,6 +232,8 @@ public class InformOnlineState
 
     public void setDeviceId(String deviceId)
     {
+        Log.d(Collect.LOGTAG, t + "setDeviceId() " + deviceId);
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEVICE_ID, deviceId);
         editor.commit(); 
@@ -229,6 +248,8 @@ public class InformOnlineState
 
     public void setDeviceKey(String deviceKey)
     {
+        Log.d(Collect.LOGTAG, t + "setDeviceKey() HIDDEN");
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEVICE_KEY, deviceKey);
         editor.commit();
@@ -243,6 +264,8 @@ public class InformOnlineState
 
     public void setDevicePin(String devicePin)
     {
+        Log.d(Collect.LOGTAG, t + "setDevicePin() HIDDEN");
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEVICE_PIN, devicePin);
         editor.commit(); 
@@ -277,6 +300,8 @@ public class InformOnlineState
 
     public void setDefaultDatabase(String defaultDatabase)
     {
+        Log.d(Collect.LOGTAG, t + "setDefaultDatabase() " + defaultDatabase);
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEFAULT_DATABASE, defaultDatabase);
         editor.commit(); 
@@ -291,6 +316,8 @@ public class InformOnlineState
 
     public void setSelectedDatabase(String selectedDatabase)
     {
+        Log.d(Collect.LOGTAG, t + "setSelectedDatabase() " + selectedDatabase);
+        
         this.selectedDatabase = selectedDatabase;
     }
 
@@ -314,6 +341,8 @@ public class InformOnlineState
 
         UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
         
+        Log.d(Collect.LOGTAG, t + "setDeviceFingerprint() " + deviceUuid.toString());
+        
         this.deviceFingerprint = deviceUuid.toString();
     }
 
@@ -324,6 +353,8 @@ public class InformOnlineState
 
     public void setOfflineModeEnabled(boolean offlineMode)
     {
+        Log.d(Collect.LOGTAG, t + "setOfflineModeEnabled() " + offlineMode);
+        
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putBoolean(OFFLINE_MODE, offlineMode);
         editor.commit();
@@ -344,6 +375,27 @@ public class InformOnlineState
         else {
             return true;
         }
+    }
+    
+    // Whether this device has folders that are marked for offline use (aka synchronized or replicated)
+    public boolean hasReplicatedFolders()
+    {
+        // Does the user have at least one database selected for offline use?
+        Iterator<String> folderIds = accountFoldersSyncMap.keySet().iterator();
+        
+        int replicatedFolders = 0;
+        
+        while (folderIds.hasNext()) {
+            String id = folderIds.next();
+            
+            if (Collect.getInstance().getInformOnlineState().getAccountFolders().get(id).isReplicated())
+                replicatedFolders++;                        
+        }
+        
+        if (replicatedFolders == 0) 
+            return false;
+        else 
+            return true;
     }
     
     public void resetDevice()

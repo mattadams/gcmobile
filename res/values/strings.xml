@@ -187,7 +187,6 @@
 	<string name="tf_communication_error_try_again">Communication error - please try later</string>
 	<string name="tf_confirm_removal">Confirm Removal</string>
 	<string name="tf_confirm_removal_msg">Are you sure you want to remove %s?</string>
-	<string name="tf_connection_error">Connection Error</string>
 	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the Group Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
 	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the Group Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
 	<string name="tf_connection_error_unregistered_msg">Unable to connect to the Group Inform service to register this installation.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
@@ -217,7 +216,7 @@
 	<string name="tf_device_admin_email_label">Email</string>
 	<string name="tf_device_admin_email_hint">This email address should usually be set to whatever address the user of this device regularly receives email at. This email address must be unique to your account.</string>
 	<string name="tf_device_admin_pin_label">Device PIN</string>
-	<string name="tf_device_admin_pin_hint">If this device registration is \"unused\" this PIN may be supplied during the registration process to activate this device identity.</string>
+	<string name="tf_device_admin_pin_hint">If the device status is \"unused\" this PIN may be supplied during the registration process to reactivate this device registration.</string>
 	<string name="tf_device_admin_status_label">Status</string>	
 	<string name="tf_device_admin_status_hint"></string>
 	<string name="tf_device_admin_status_inuse">In Use</string>	
@@ -286,9 +285,11 @@
 	<string name="tf_improperly_formatted_licence_key">Improperly formatted licence key</string>
         <string name="tf_inform">Inform</string>
         <string name="tf_inform_info">About Inform</string>
-        <string name="tf_inform_state_connecting">Inform: Connecting...</string>
+        <string name="tf_inform_state_connecting">Going online...</string>
+        <string name="tf_inform_state_disconnecting">Going offline...</string>
         <string name="tf_inform_state_offline">Inform: OFFLINE</string>
-        <string name="tf_inform_state_online">Inform: Online</string>    
+        <string name="tf_inform_state_online">Inform: Online</string>
+        <string name="tf_inform_state_transition">Inform: ...</string>
     <string name="tf_install">Install</string>
 	<string name="tf_integer_number_type">Integers only</string>
 	<string name="tf_invalid_email">Invalid email address</string>
@@ -317,6 +318,9 @@
 	<string name="tf_notification_settings">Notification settings</string>
 	<string name="tf_odk_aggregate">ODK Aggregate</string>
 	<string name="tf_odk_library">ODK Library</string>
+	<string name="tf_offline_mode_enabled">Working Offline</string>
+	<string name="tf_offline_mode_enabled_msg">You are currently working offline.  Only those folders that have been synchronized for offline use are available at this time.\n\nPlease note that some parts of this app will be unavailable while offline.</string>
+	<string name="tf_opening_folder">Opening %s</string>
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
 	<string name="tf_private">Private</string>
@@ -373,6 +377,7 @@
 	<string name="tf_system_error_dialog">An Error Occurred</string>
 	<string name="tf_system_error_dialog_msg">We encountered a system error. A team of trained monkeys has been dispatched to fix the problem. Please try again later!</string>
 	<string name="tf_this_device">This Device</string>
+	<string name="tf_unable_to_connect">Unable To Connect</string>
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
 	<string name="tf_unable_to_proceed_without_licence_number_and_key">A licence number and key are required</string>
@@ -390,7 +395,7 @@
 	<string name="tf_yes">Yes</string>
 	<!-- Dependency explanations below -->
 	<string name="com.google.zxing.client.android">The Barcode Scanner app allows Inform to scan, decode and store all major forms of barcodes.\n\nBarcode scanning technology is very useful for inventory or warehouse operations.</string>
-	<string name="org.couchdb.android">CouchDB allows Inform to store forms and data locally on your device.\n\nThis technology enables you to access your data while offline and keeps your information synchronized with the rest of your team.\n\nInstall CouchDB to get the most out of Inform.</string>
+	<string name="com.couchone.couchdb">CouchDB allows Inform to store forms and data locally on your device.\n\nThis technology enables you to access your data while offline and keeps your information synchronized with the rest of your team.\n\nInstall CouchDB to get the most out of Inform.</string>
 	<!-- CouchDB -->
     <string name="couch_stop">Stop CouchDB</string>
     <string name="couch_delete">Delete Databases</string>

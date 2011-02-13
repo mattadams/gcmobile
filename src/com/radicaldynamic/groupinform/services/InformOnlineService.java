@@ -94,7 +94,13 @@ public class InformOnlineService extends Service {
     public void onCreate() {        
         // Do some basic initialization of this service
         Collect.getInstance().setInformOnlineState(new InformOnlineState(getApplicationContext()));
-        restoreSession();
+        restoreSession();        
+        
+        // connect() will not be run while offline mode is enabled but metadata should still be loaded if available
+        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
+            loadDeviceHash();
+            loadFolderHash();
+        }
         
         Thread persistentConnectionThread = new Thread(null, mTask, "InformOnlineService");        
         mCondition = new ConditionVariable(false);
@@ -253,7 +259,7 @@ public class InformOnlineService extends Service {
             e.printStackTrace();
         }
         
-        Log.i(Collect.LOGTAG, t + "device registration state is " + registered);
+        Log.d(Collect.LOGTAG, t + "device registration state is " + registered);
 
         // Clear the session for subsequent requests and reset stored state
         if (registered == false)          
@@ -373,13 +379,12 @@ public class InformOnlineService extends Service {
             mServicePingSuccessful = mSignedIn = false;
         } finally {
             if (mSignedIn) {
-                // Update our list of account devices & folders
                 AccountDeviceList.fetchDeviceList();
                 loadDeviceHash();
                 
-                AccountFolderList.fetchFolderList();
+                AccountFolderList.fetchFolderList();               
                 loadFolderHash();
-            }
+            }             
             
             // Unblock
             mInitialized = true;
@@ -497,41 +502,6 @@ public class InformOnlineService extends Service {
             e.printStackTrace();
         }
     }
-    
-    /*
-     * Determine if the Inform Online service is "up"
-     * Do not check for authentication
-     */
-    @SuppressWarnings("unused")
-    private boolean ping()
-    {
-        boolean alive = false;
-        
-        // Try to ping the service to see if it is "up"
-        String pingUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/ping";
-        String getResult = HttpUtils.getUrlData(pingUrl);
-        JSONObject ping;
-        
-        try {
-            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
-            ping = (JSONObject) new JSONTokener(getResult).nextValue();
-            
-            String result = ping.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
-            
-            if (result.equals(InformOnlineState.OK) || result.equals(InformOnlineState.FAILURE))
-                alive = true;
-        } catch (NullPointerException e) {
-            // Communication error
-            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
-            e.printStackTrace();
-        } catch (JSONException e) {
-            // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
-            e.printStackTrace();
-        }
-        
-        return alive;
-    }
 
     /*
      * Restore a serialized session from disk
@@ -542,7 +512,7 @@ public class InformOnlineService extends Service {
         File sessionCache = new File(getCacheDir(), FileUtils.SESSION_CACHE_FILE);
         
         if (sessionCache.exists()) {
-            Log.i(Collect.LOGTAG, t + "restoring cached session");
+            Log.d(Collect.LOGTAG, t + "restoring cached session");
             
             try {
                 InformOnlineSession session = new InformOnlineSession();
@@ -578,7 +548,7 @@ public class InformOnlineService extends Service {
                 Collect.getInstance().getInformOnlineState().setSession(null);
             }
         } else {
-            Log.i(Collect.LOGTAG, t + "no session to restore");
+            Log.d(Collect.LOGTAG, t + "no session to restore");
         }
     }
     
@@ -589,7 +559,7 @@ public class InformOnlineService extends Service {
     {
         // Attempt to serialize the session for later use
         if (Collect.getInstance().getInformOnlineState().getSession() instanceof CookieStore) {
-            Log.i(Collect.LOGTAG, t + "serializing session");
+            Log.d(Collect.LOGTAG, t + "serializing session");
             
             try {
                 InformOnlineSession session = new InformOnlineSession();
@@ -621,7 +591,7 @@ public class InformOnlineService extends Service {
                 new File(getCacheDir(), FileUtils.SESSION_CACHE_FILE).delete();
             }
         } else {
-            Log.i(Collect.LOGTAG, t + "no session to serialize");
+            Log.d(Collect.LOGTAG, t + "no session to serialize");
         }
     }
 }

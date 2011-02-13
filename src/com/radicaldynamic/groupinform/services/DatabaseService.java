@@ -48,6 +48,7 @@ public class DatabaseService extends Service {
     
     private boolean mInit = false;
     private boolean mConnected = false;
+    private boolean mConnectedToLocal = false;
     
     // This is the object that receives interactions from clients.  
     // See RemoteService for a more complete example.
@@ -61,14 +62,52 @@ public class DatabaseService extends Service {
         public void run() {            
             for (int i = 1; i > 0; ++i) {
                 if (mInit == false)
-                    connect(isActiveDatabaseLocal());
+                    try {
+                        connect(Collect
+                                .getInstance()
+                                .getInformOnlineState()
+                                .getAccountFolders()
+                                .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
+                                .isReplicated());
+                    } catch (Exception e) {
+                        Log.w(Collect.LOGTAG, t + "error automatically connecting to DB: " + e.toString()); 
+                        mInit = false;
+                    }
                 
-                // Retry connection to CouchDB every 30 seconds
-                if (mCondition.block(30 * 1000))
-                        break;
+                // Retry connection to CouchDB every 5 minutes
+                if (mCondition.block(300 * 1000))
+                    break;
             }
         }
     };
+    
+    @SuppressWarnings("serial")
+    public class DbUnavailableException extends Exception
+    {
+        DbUnavailableException()
+        {
+            super();
+        }
+    }
+    
+    @SuppressWarnings("serial")
+    public class DbUnavailableWhileOfflineException extends DbUnavailableException
+    {
+        DbUnavailableWhileOfflineException()
+        {
+            super();
+        }
+    }
+    
+    @SuppressWarnings("serial")
+    public class DbUnavailableDueToMetadataException extends DbUnavailableException
+    {
+        DbUnavailableDueToMetadataException(String db)
+        {
+            super();
+            Log.w(Collect.LOGTAG, t + "metadata missing for DB " + db);
+        }
+    }
       
     @Override
     public void onCreate() 
@@ -122,9 +161,16 @@ public class DatabaseService extends Service {
     public StdCouchDbConnector getDb() 
     {
         // Last ditch attempt
-        if (!mConnected && isDbInfoAvailable(Collect.getInstance().getInformOnlineState().getSelectedDatabase()))
-            connect(isActiveDatabaseLocal());
+        if (!mConnected) {
+            try {
+                open(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
+            } catch (DbUnavailableException e) {
+                Log.w(Collect.LOGTAG, t + "unable to connect to database server for getDb(): " + e.toString());
+                e.printStackTrace();
+            }
+        }
         
+        // Wait for a connection to a database server
         for (int i = 1; i > 0; ++i) {
             if (mConnected == true) 
                 break;              
@@ -145,16 +191,51 @@ public class DatabaseService extends Service {
      * 
      * @param database  Name of database to open
      * @return
+     * @throws DbMetadataUnavailableException 
+     * @throws DbUnavailableException 
      */
-    public boolean open(String db) 
+    public void open(String db) throws DbUnavailableException 
     {
-        if (!isDbInfoAvailable(db))
-            return false;
+        mInit = true;
         
-        // Last ditch attempt to connect
-        if (!mConnected) {
-            connect(Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated());
+        // If database metadata is not yet available then abort here
+        if (db == null || Collect.getInstance().getInformOnlineState().getAccountFolders().get(db) == null) {
+            throw new DbUnavailableDueToMetadataException(db);
+        }
+        
+        if (!Collect.getInstance().getIoService().isSignedIn() && 
+                !Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated())
+            throw new DbUnavailableWhileOfflineException();
+        
+        boolean dbToOpenIsReplicated = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated();        
+        
+        if (mConnected) {
+            // Return quickly if the database is already opened and we are connected to the right host
+            if (mDb instanceof StdCouchDbConnector && mDb.getDatabaseName().equals("db_" + db)) {
+                if ((dbToOpenIsReplicated && mConnectedToLocal) || (!dbToOpenIsReplicated && !mConnectedToLocal)) {
+                    Log.d(Collect.LOGTAG, t + "database " + db + " already opened");
+                    mInit = false;
+                    return;                
+                }
+            }            
+
+            // Switch connections from local to remote and vice versa as required
+            if (dbToOpenIsReplicated) {
+                if (!mConnectedToLocal) {
+                    Log.i(Collect.LOGTAG, t + "switching from remote to local database");
+                    connect(true);
+                }                
+            } else {
+                if (mConnectedToLocal) {
+                    Log.i(Collect.LOGTAG, t + "switching from local to remote database");
+                    connect(false);
+                }
+            }
+        } else {
+            // Last ditch attempt to connect
+            connect(dbToOpenIsReplicated);
             
+            // Wait for a connection to become available
             for (int i = 1; i > 0; ++i) {
                 if (mConnected == true) 
                     break;              
@@ -167,42 +248,25 @@ public class DatabaseService extends Service {
                 }
             }
         }
-
-        // Switch connections from local to remote and vice versa as required
-        if (Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated()) {
-            if (!isActiveDatabaseLocal() || !mConnected) {
-                Log.i(Collect.LOGTAG, t + "switching from remote to local database (or connecting for the first time: " + mConnected + ")");
-                connect(true);
-            }                
-        } else {
-            if (isActiveDatabaseLocal() || !mConnected) {
-                Log.i(Collect.LOGTAG, t + "switching from local to remote database (or connecting for the first time: " + mConnected + ")");
-                connect(false);
-            }
-        }
         
         try {
             mDb = new StdCouchDbConnector("db_" + db, mDbInstance);
-            mDb.createDatabaseIfNotExists();
+            
+            // Only attempt to create the database if it is marked as being locally replicated
+            if (mConnectedToLocal && dbToOpenIsReplicated)
+                mDb.createDatabaseIfNotExists();
+            
             Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
-            return true;
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + "while opening DB db_" + db + ": " + e.toString());
-            return false;
+            throw new DbUnavailableException();
+        } finally {
+            mInit = false;
         }
     }
 
-    synchronized private void connect(boolean local) 
-    {
-        mInit = true;
-        
-        if (Collect.getInstance().getInformOnlineState().getDefaultDatabase() == null || 
-                Collect.getInstance().getInformOnlineState().getSelectedDatabase() == null ||
-                Collect.getInstance().getInformOnlineState().getAccountFolders().isEmpty()) {
-            Log.w(Collect.LOGTAG, t + "database information not available, unable to connect");
-            return;
-        }
-        
+    synchronized private void connect(boolean local) throws DbUnavailableException 
+    {        
         String host;
         int port;
         
@@ -222,40 +286,19 @@ public class DatabaseService extends Service {
             
             mDbInstance.getAllDatabases();
             
-            if (mConnected == false) {
+            if (mConnected == false)
                 mConnected = true;
-            }
+            
+            if (local)
+                mConnectedToLocal = true;
+            else
+                mConnectedToLocal = false;                
             
             Log.d(Collect.LOGTAG, t + "connection to " + host + " successful");
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "while connecting to server " + port + ": " + e.toString());
-            mConnected = false;                
-        } finally { 
-            mInit = false;
-        }
-    }
-    
-    private boolean isActiveDatabaseLocal()
-    {   
-        try {
-            return Collect
-            .getInstance()
-            .getInformOnlineState()
-            .getAccountFolders()
-            .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
-            .isReplicated();
-        } catch (NullPointerException e) {
-            return true;
-        }
-    }
-    
-    private boolean isDbInfoAvailable(String db)
-    {
-        if (db == null || Collect.getInstance().getInformOnlineState().getAccountFolders().get(db) == null) {
-            Log.w(Collect.LOGTAG, t + "no information about database " + db);
-            return false;
-        } else {
-            return true;
+            Log.e(Collect.LOGTAG, t + "while connecting to server " + port + ": " + e.toString());            
+            mConnected = false;            
+            throw new DbUnavailableException();
         }
     }
 }

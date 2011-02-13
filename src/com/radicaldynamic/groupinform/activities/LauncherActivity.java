@@ -18,6 +18,7 @@ import java.io.File;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -61,6 +62,13 @@ public class LauncherActivity extends Activity
 {
     private static final String t = "LauncherActivity: ";
     
+    // Dialog constants
+    private static final int DIALOG_DEPENDENCY_UNMET = 1;
+    private static final int DIALOG_EXTERNAL_STORAGE_UNAVAILABLE = 2;
+    private static final int DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED = 3;
+    private static final int DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED = 4;
+    private static final int DIALOG_UNABLE_TO_REGISTER = 5;    
+    
     // Intent status codes
     private static final String KEY_REINIT_IOSERVICE = "key_reinit_ioservice";
     private static final String KEY_SIGNIN_RESTART = "key_signin_restart";
@@ -70,7 +78,6 @@ public class LauncherActivity extends Activity
     private static boolean mShowSplash = true;
     private Toast mSplashToast;
 
-    private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
     
     /*
@@ -108,9 +115,6 @@ public class LauncherActivity extends Activity
         public void onServiceConnected(ComponentName className, IBinder service)
         {
             Collect.getInstance().setDbService(((DatabaseService.LocalBinder) service).getService());
-            
-            if (Collect.getInstance().getInformOnlineState().getDefaultDatabase() instanceof String)
-                Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getDefaultDatabase());
         }
 
         public void onServiceDisconnected(ComponentName className)
@@ -172,9 +176,8 @@ public class LauncherActivity extends Activity
         super.onCreate(savedInstanceState);
 
         // If SD card error, quit
-        if (!FileUtils.storageReady()) {
-            showErrorDialog(getString(R.string.no_sd_error), true);
-        }
+        if (!FileUtils.storageReady())
+            showDialog(DIALOG_EXTERNAL_STORAGE_UNAVAILABLE);
 
         Intent intent = getIntent();
         
@@ -199,8 +202,13 @@ public class LauncherActivity extends Activity
         setContentView(R.layout.launcher);
                 
         if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {
-            if (CouchInstaller.checkInstalled()) {
-                startActivityForResult(new Intent(LauncherActivity.this, BrowserActivity.class), BROWSER_ACTIVITY);
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {                
+                if (Collect.getInstance().getInformDependencies().isInitialized()) {
+                    if (Collect.getInstance().getInformDependencies().allSatisfied())
+                        startActivityForResult(new Intent(LauncherActivity.this, BrowserActivity.class), BROWSER_ACTIVITY);                        
+                    else
+                        showDialog(DIALOG_DEPENDENCY_UNMET);                
+                }
             } else {                
                 /*
                  * Install database engine
@@ -246,30 +254,32 @@ public class LauncherActivity extends Activity
     @Override
     protected void onDestroy()
     {
-        // Close down our services
+        // Close down our services (not all can be expected to be running)
         if (Collect.getInstance().getCouchService() instanceof ICouchService) {
             try {
-                Log.i(Collect.LOGTAG, t + "unbinding from CouchService");
+                Log.d(Collect.LOGTAG, t + "unbinding from CouchService");
                 unbindService(mCouchConnection);                
-                Log.d(Collect.LOGTAG, t + "unbound from CouchService");
             } catch (IllegalArgumentException e) {
-                Log.w(Collect.LOGTAG, t + "CouchService not registered (was device reset?): " + e.toString());
+                Log.w(Collect.LOGTAG, t + "CouchService not registered: " + e.toString());
             }
         }
         
         if (Collect.getInstance().getDbService() instanceof DatabaseService) {
             try {
-                Log.i(Collect.LOGTAG, t + "unbinding from DatabaseService");
+                Log.d(Collect.LOGTAG, t + "unbinding from DatabaseService");
                 unbindService(mDatabaseConnection);
-                Log.d(Collect.LOGTAG, t + "unbound from DatabaseService");
             } catch (IllegalArgumentException e) { 
                 Log.w(Collect.LOGTAG, t + "DatabaseService not registered: " + e.toString());    
             }
         }
         
         if (Collect.getInstance().getIoService() instanceof InformOnlineService) {
-            Log.i(Collect.LOGTAG, t + "unbinding from to InformOnlineService");
-            unbindService(mOnlineConnection);
+            try {
+                Log.d(Collect.LOGTAG, t + "unbinding from InformOnlineService");
+                unbindService(mOnlineConnection);
+            } catch (IllegalArgumentException e) {
+                Log.w(Collect.LOGTAG, t + "InformOnlineService not registered: " + e.toString());
+            }
         }
         
         super.onDestroy();
@@ -278,29 +288,18 @@ public class LauncherActivity extends Activity
     @Override
     protected void onPause()
     {
-        // Dismiss any dialogs that might be showing
-        if (mAlertDialog != null && mAlertDialog.isShowing()) {
-            mAlertDialog.dismiss();
-        }
-        
         super.onPause();
     }
 
     @Override
     protected void onResume()
     {
-        super.onResume();
-
-        if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {                 
-                // Inform user about dependencies
-                if (!Collect.getInstance().getInformDependencies().allSatisfied()) {
-                    if (Collect.getInstance().getInformDependencies().isReminderEnabled()) {
-                        showDependencyDialog();
-                    }
-                }
-            }
-        }
+        super.onResume();        
+        
+        if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized())
+            if (Collect.getInstance().getInformDependencies().isInitialized())
+                if (!Collect.getInstance().getInformDependencies().allSatisfied())
+                    showDialog(DIALOG_DEPENDENCY_UNMET);
     }
 
     @Override
@@ -327,6 +326,169 @@ public class LauncherActivity extends Activity
         }        
     }
     
+    public Dialog onCreateDialog(int id)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        Dialog dialog = null;
+        
+        switch (id) {
+        case DIALOG_DEPENDENCY_UNMET:            
+            /*
+             * Since showDependencyDialog essentially enters a loop once unsatisfied dependencies
+             * are found we need a way to get out once all dependencies have been satisfied or
+             * after the user has skipped installation.  This is our out.  
+             */        
+            if (Collect.getInstance().getInformDependencies().getNextDependency() == null) {
+                restartActivity(false);
+                return null;
+            }
+            
+            String copy = getString(R.string.tf_unavailable);
+            String dependency = Collect.getInstance().getInformDependencies().getNextDependency();
+            
+            if (dependency.equals(InformDependencies.BARCODE))
+                copy = getString(R.string.com_google_zxing_client_android);
+            else if (dependency.equals(InformDependencies.COUCHDB))
+                copy = getString(R.string.com_couchone_couchdb);            
+            
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_info)
+                .setTitle(R.string.tf_dependency_missing_dialog_title)
+                .setMessage(getString(R.string.tf_dependency_missing_dialog_msg) + copy);
+            
+            builder.setPositiveButton(getText(R.string.tf_install), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    // The install may not be successful but at this point we just pretend that it was
+                    String dependency = Collect.getInstance().getInformDependencies().getNextDependency();                    
+                    Collect.getInstance().getInformDependencies().getDependencies().put(dependency, 1);
+                    
+                    removeDialog(DIALOG_DEPENDENCY_UNMET);
+                    showDialog(DIALOG_DEPENDENCY_UNMET);
+                    
+                    String uri = "market://details?id=" + dependency;
+                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                    startActivity(i);
+                }
+            });
+            
+            builder.setNeutralButton(getText(R.string.tf_remind_later), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {          
+                    // This doesn't permanently mark the dependency as installed but it allows us to skip to the next one
+                    Collect.getInstance().getInformDependencies().getDependencies().put(
+                            Collect.getInstance().getInformDependencies().getNextDependency(), 1);
+
+                    removeDialog(DIALOG_DEPENDENCY_UNMET);
+                    showDialog(DIALOG_DEPENDENCY_UNMET);
+                }
+            });
+            
+            dialog = builder.create();            
+            break;
+        
+        case DIALOG_EXTERNAL_STORAGE_UNAVAILABLE:
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_alert)
+                .setMessage(getString(R.string.no_sd_error));
+            
+            builder.setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    finish();
+                }
+            });
+            
+            dialog = builder.create();
+            break;
+            
+        // Registered    
+        case DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED:
+            String msg;            
+
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized())
+                msg = getString(R.string.tf_connection_error_registered_with_db_msg);
+            else    
+                msg = getString(R.string.tf_connection_error_registered_without_db_msg);
+            
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_alert)        
+                .setTitle(R.string.tf_unable_to_connect)
+                .setMessage(msg);
+
+            builder.setPositiveButton(getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    restartActivity(true);
+                }
+            });
+            
+            if (CouchInstaller.checkInstalled() 
+                    && CouchDbUtils.isEnvironmentInitialized()
+                    && Collect.getInstance().getInformOnlineState().hasReplicatedFolders()) {
+                
+                builder.setNeutralButton(getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        restartActivity(false);
+                    }
+                });    
+            }
+
+            builder.setNegativeButton(getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    finish();
+                }
+            });
+
+            dialog = builder.create();            
+            break;
+           
+        // Registered
+        case DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED:
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_info)        
+                .setTitle(R.string.tf_offline_mode_enabled)
+                .setMessage(getString(R.string.tf_offline_mode_enabled_msg));
+
+            builder.setPositiveButton(getText(R.string.tf_continue), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    restartActivity(false);        
+                }
+            });
+
+            dialog = builder.create();       
+            break;
+            
+        case DIALOG_UNABLE_TO_REGISTER:
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_alert)        
+                .setTitle(R.string.tf_unable_to_connect)
+                .setMessage(getString(R.string.tf_connection_error_unregistered_msg));
+
+            builder.setPositiveButton(getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    restartActivity(true);
+                }
+            });
+
+            builder.setNegativeButton(getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    finish();
+                }
+            });
+
+            dialog = builder.create();            
+            break;       
+        
+        default:
+            Log.e(Collect.LOGTAG, t + "showDialog() unimplemented for " + id);
+        }
+        
+        return dialog;
+    }
+    
     public class InitializeApplicationTask extends AsyncTask<Object, Void, Void> 
     {
         private boolean mPinged = false;
@@ -342,11 +504,14 @@ public class LauncherActivity extends Activity
             FileUtils.createFolder(FileUtils.EXTERNAL_FILES);
             FileUtils.createFolder(FileUtils.EXTERNAL_CACHE);
             
-            // Initialize CouchDB & Erlang in internal storage if this has not already been done
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized() == false)
+            if (!Collect.getInstance().getInformDependencies().isInitialized())
+                Collect.getInstance().setInformDependencies(new InformDependencies(getApplicationContext()));               
+            
+            if (CouchInstaller.checkInstalled() && !CouchDbUtils.isEnvironmentInitialized())
                 CouchDbUtils.initializeEnvironment(mProgressHandler);
             
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) { 
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
+                // Start the database process
                 startService(new Intent(ICouchService.class.getName()));
                 bindService(new Intent(ICouchService.class.getName()), mCouchConnection, Context.BIND_AUTO_CREATE);
                 
@@ -379,6 +544,8 @@ public class LauncherActivity extends Activity
                      * This might happen because we have restarted to retry the connection but the 
                      * services have not restarted and we are waiting on them to complete their usual
                      * 10 minute delay.
+                     * 
+                     * FIXME: this should check every 10 seconds at the 10 seconds mark and after...
                      */
                 if (Collect.getInstance().getIoService() instanceof InformOnlineService && seconds > 10)
                     Collect.getInstance().getIoService().goOnline();
@@ -389,7 +556,7 @@ public class LauncherActivity extends Activity
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }            
+            }
             
             // Start the database connection
             if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
@@ -399,11 +566,7 @@ public class LauncherActivity extends Activity
             
             mPinged = Collect.getInstance().getIoService().isRespondingToPings();
             mRegistered = Collect.getInstance().getIoService().isRegistered();
-            
-            // Initialize list of dependencies
-            if (!Collect.getInstance().getInformDependencies().isInitialized())
-                Collect.getInstance().setInformDependencies(new InformDependencies(getApplicationContext()));
-               
+
             return null;
         }
     
@@ -431,11 +594,13 @@ public class LauncherActivity extends Activity
                     finish();
                 }
             } else {
-                if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
-                    // TODO: Let the user know that offline mode is enabled and then proceed to (offline) interaction with the app
-                    restartActivity(false);
+                if (mRegistered) {
+                    if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
+                        showDialog(DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED);
+                    else
+                        showDialog(DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED);
                 } else {
-                    showConnectionErrorDialog(mRegistered);
+                    showDialog(DIALOG_UNABLE_TO_REGISTER);
                 }
             }
         }
@@ -455,134 +620,14 @@ public class LauncherActivity extends Activity
         startActivity(i);
         finish();
     }
-    
-    /*
-     * An initial connection error should be handled differently depending on
-     * a) whether this device has already been registered, and
-     * b) whether this device has a local (and properly initialized) CouchDB installation
-     */
-    private void showConnectionErrorDialog(boolean registered)
-    {
-        mAlertDialog = new AlertDialog.Builder(this).create();
 
-        mAlertDialog.setCancelable(false);
-        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);        
-        mAlertDialog.setTitle(R.string.tf_connection_error);
-
-        if (registered) 
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized())
-                mAlertDialog.setMessage(getString(R.string.tf_connection_error_registered_with_db_msg));
-            else    
-                mAlertDialog.setMessage(getString(R.string.tf_connection_error_registered_without_db_msg));
-        else 
-            mAlertDialog.setMessage(getString(R.string.tf_connection_error_unregistered_msg));
-
-        mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                restartActivity(true);
-            }
-        });
-
-        if (registered && CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
-            mAlertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    restartActivity(false);
-                }
-            });    
-        }
-
-        mAlertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                finish();
-            }
-        });
-
-        mAlertDialog.show();
-    }
-    
-    private void showDependencyDialog()
-    {
-        /*
-         * Since showDependencyDialog essentially enters a loop once unsatisfied dependencies
-         * are found we need a way to get out once all dependencies have been satisfied or
-         * after the user has skipped installation.  This is our out.  
-         */        
-        if (Collect.getInstance().getInformDependencies().getNextDependency() == null)
-            return;
-        
-        String copy = getString(R.string.tf_unavailable);
-        
-        if (Collect.getInstance().getInformDependencies().getNextDependency().equals(InformDependencies.BARCODE))
-            copy = getString(R.string.com_google_zxing_client_android);
-        else if (Collect.getInstance().getInformDependencies().getNextDependency().equals(InformDependencies.COUCHDB))
-            copy = getString(R.string.org_couchdb_android);
-        
-        mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setCancelable(false);
-        mAlertDialog.setIcon(R.drawable.ic_dialog_info);
-        mAlertDialog.setTitle(R.string.tf_dependency_missing_dialog_title);
-        mAlertDialog.setMessage(getString(R.string.tf_dependency_missing_dialog_msg) + copy);
-        
-        mAlertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.tf_install), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                // The install may not be successful but at this point we just pretend that it was
-                Collect.getInstance().getInformDependencies().getDependencies().put(
-                        Collect.getInstance().getInformDependencies().getNextDependency(), 1);
-                
-                String uri = "market://details?id=" + Collect.getInstance().getInformDependencies().getNextDependency();
-                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-                startActivity(i);
-            }
-        });
-        
-        mAlertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getText(R.string.tf_remind_later), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {          
-                // This doesn't permanently mark the dependency as installed but it allows us to skip to the next one
-                Collect.getInstance().getInformDependencies().getDependencies().put(
-                        Collect.getInstance().getInformDependencies().getNextDependency(), 1);
-                
-                showDependencyDialog();
-                dialog.cancel();
-            }
-        });
-        
-        mAlertDialog.show();
-    }
-
-    private void showErrorDialog(String errorMsg, final boolean shouldExit)
-    {
-        mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setCancelable(false);
-        mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
-        mAlertDialog.setMessage(errorMsg);
-
-        DialogInterface.OnClickListener errorListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int i)
-            {
-                switch (i) {
-                case DialogInterface.BUTTON1:
-                    if (shouldExit) {
-                        finish();
-                    }
-
-                    break;
-                }
-            }
-        };
-
-        mAlertDialog.setButton(getString(R.string.ok), errorListener);
-        mAlertDialog.show();
-    }
-    
     /**
      * displaySplash
      * 
      * Shows the splash screen if the mShowSplash member variable is true.
      * Otherwise a no-op.
      */
-    void displaySplash()
+    private void displaySplash()
     {
         if (!mShowSplash)
             return;
