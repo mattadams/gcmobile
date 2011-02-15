@@ -20,10 +20,13 @@ import android.util.Log;
 import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.services.DatabaseService;
+import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
-/*
+/**
  * Stores the state of this device as registered with Inform Online
+ * (some of this information is dynamically populated)
  */
 public class InformOnlineState
 {
@@ -68,7 +71,7 @@ public class InformOnlineState
 
     private String accountNumber;           // The licence number
     private String accountKey;              // The licence key
-    private boolean accountOwner;
+    private boolean accountOwner;           // Is the user also the account owner?
     private String accountPlan;             // Plan type
     
     private int accountLicencedSeats;       // The number of licenced seats for the account
@@ -135,7 +138,7 @@ public class InformOnlineState
 
     public void setAccountKey(String accountKey)
     {
-        Log.d(Collect.LOGTAG, t + "setAccountKey() " + accountKey);
+        Log.d(Collect.LOGTAG, t + "setAccountKey() HIDDEN");
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(ACCOUNT_KEY, accountKey);
@@ -424,6 +427,7 @@ public class InformOnlineState
         new File(mContext.getCacheDir(), FileUtils.FOLDER_CACHE_FILE).delete();
         new File(mContext.getCacheDir(), FileUtils.SESSION_CACHE_FILE).delete();
 
+        // Shutdown CouchDB and remove databases & log files
         try {
             if (Collect.getInstance().getCouchService() instanceof ICouchService) {
                 // Stop CouchDB
@@ -441,6 +445,10 @@ public class InformOnlineState
             Log.e(Collect.LOGTAG, t + "unable to quit CouchDB: " + e.toString());
             e.printStackTrace();
         }
+        
+        // Shutdown other services to ensure a full reset off all stateful information
+        Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), DatabaseService.class));
+        Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), InformOnlineService.class));
     }
 
     private void loadPreferences()

@@ -199,7 +199,7 @@ public class BrowserActivity extends ListActivity
             if (!Collect.getInstance().getIoService().isSignedIn()) {
                 builder.setNeutralButton(getString(R.string.tf_go_online), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        new ToggleOnlineState().execute();
+                        new ToggleOnlineStateTask().execute();
                         removeDialog(DIALOG_FOLDER_UNAVAILABLE);
                     }
                 });
@@ -273,7 +273,7 @@ public class BrowserActivity extends ListActivity
 
             builder.setPositiveButton(buttonText, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    new ToggleOnlineState().execute();
+                    new ToggleOnlineStateTask().execute();
                     removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
                 }
             });
@@ -521,7 +521,7 @@ public class BrowserActivity extends ListActivity
      * 
      * Deal with case where user has asked to go offline/online but it could not be done co-operatively
      */
-    private class ToggleOnlineState extends AsyncTask<Void, Void, Void>
+    private class ToggleOnlineStateTask extends AsyncTask<Void, Void, Void>
     {        
         Boolean hasReplicatedFolders = false;
         Boolean missingCouch = false;
@@ -612,10 +612,11 @@ public class BrowserActivity extends ListActivity
             int i = 0;
             
             while (folderIds.hasNext()) {
-                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
-                Log.i(Collect.LOGTAG, t + "about to begin triggered replication of " + folder.getName());
+                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());                
                 
                 if (folder.isReplicated()) {
+                    Log.i(Collect.LOGTAG, t + "about to begin triggered replication of " + folder.getName());
+                    
                     // Update progress dialog
                     Message msg = progressHandler.obtainMessage();
                     msg.arg1 = ++i;

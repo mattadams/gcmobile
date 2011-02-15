@@ -173,9 +173,6 @@ public final class FileUtils {
         Log.i(t, "Image should be " + maxWidth + "x" + maxHeight 
                 + ".  Image has been scaled to "
                 + newWidth + "x" + newHeight);
-        
-        o = new BitmapFactory.Options();
-        o.inPreferredConfig = Bitmap.Config.ARGB_8888;
     
         return Bitmap.createScaledBitmap(
                 BitmapFactory.decodeFile(f.getAbsolutePath(), new Options()), 

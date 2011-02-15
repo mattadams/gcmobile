@@ -204,14 +204,21 @@ public class LauncherActivity extends Activity
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
         setContentView(R.layout.launcher);
                 
-        if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {
+        if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {            
             if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {                
                 if (Collect.getInstance().getInformDependencies().isInitialized()) {
-                    if (Collect.getInstance().getInformDependencies().allSatisfied())
+                    if (Collect.getInstance().getInformDependencies().allSatisfied()) {                        
+                        // Start the persistent online connection
+                        startService(new Intent(LauncherActivity.this, InformOnlineService.class));
+                        
+                        // Start the persistent database connection
+                        startService(new Intent(LauncherActivity.this, DatabaseService.class));                        
+                        
                         startActivityForResult(new Intent(LauncherActivity.this, BrowserActivity.class), BROWSER_ACTIVITY);                        
-                    else
-                        showDialog(DIALOG_DEPENDENCY_UNMET);                
-                }
+                    } else {
+                        showDialog(DIALOG_DEPENDENCY_UNMET);
+                    }
+                }                
             } else {                
                 /*
                  * Install database engine
@@ -240,17 +247,10 @@ public class LauncherActivity extends Activity
             new InitializeApplicationTask().execute(getApplicationContext());
         }
         
-        // Start the persistent online connection
-        startService(new Intent(LauncherActivity.this, InformOnlineService.class));
-        
         if (bindService(new Intent(LauncherActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE))
             Log.d(Collect.LOGTAG, t + "successfully bound to InformOnlineService");
         else 
             Log.e(Collect.LOGTAG, t + "unable to bind to InformOnlineService");
-        
-        
-        // Start the database connection
-        startService(new Intent(LauncherActivity.this, DatabaseService.class));
         
         if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
             Log.d(Collect.LOGTAG, t + "successfully bound to DatabaseService");
@@ -509,8 +509,8 @@ public class LauncherActivity extends Activity
     
     public class InitializeApplicationTask extends AsyncTask<Object, Void, Void> 
     {
-        private boolean mPinged = false;
-        private boolean mRegistered = false;
+        private boolean pinged = false;
+        private boolean registered = false;
         
         @Override
         protected Void doInBackground(Object... args)
@@ -521,37 +521,6 @@ public class LauncherActivity extends Activity
             // Create necessary directories
             FileUtils.createFolder(FileUtils.EXTERNAL_FILES);
             FileUtils.createFolder(FileUtils.EXTERNAL_CACHE);
-            
-            if (!Collect.getInstance().getInformDependencies().isInitialized())
-                Collect.getInstance().setInformDependencies(new InformDependencies(getApplicationContext()));               
-            
-            if (CouchInstaller.checkInstalled() && !CouchDbUtils.isEnvironmentInitialized())
-                CouchDbUtils.initializeEnvironment(mProgressHandler);
-            
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
-                // Start the database process
-                startService(new Intent(ICouchService.class.getName()));
-                
-                if (bindService(new Intent(ICouchService.class.getName()), mCouchConnection, Context.BIND_AUTO_CREATE))
-                    Log.d(Collect.LOGTAG, t + "successfully bound to ICouchService");
-                else 
-                    Log.e(Collect.LOGTAG, t + "unable to bind to ICouchService");                
-                
-                // Wait a reasonable period of time for the DB to start up
-                while (Collect.getInstance().getCouchService() == null) {
-                    if (seconds > 30)
-                        break;
-                    
-                    try {
-                        Thread.sleep(1000);
-                        seconds++;                        
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            
-            seconds = 0;
             
             // The InformOnlineService will perform ping and check-in immediately (no need to duplicate here)
             while (true) {
@@ -580,8 +549,41 @@ public class LauncherActivity extends Activity
                 }
             }
             
-            mPinged = Collect.getInstance().getIoService().isRespondingToPings();
-            mRegistered = Collect.getInstance().getIoService().isRegistered();
+            pinged = Collect.getInstance().getIoService().isRespondingToPings();
+            registered = Collect.getInstance().getIoService().isRegistered();
+            
+            seconds = 0;
+            
+            if (registered) {
+                if (!Collect.getInstance().getInformDependencies().isInitialized())
+                    Collect.getInstance().setInformDependencies(new InformDependencies(getApplicationContext()));               
+
+                if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized() == false)
+                    CouchDbUtils.initializeEnvironment(mProgressHandler);
+
+                if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
+                    // Start the database process
+                    startService(new Intent(ICouchService.class.getName()));
+
+                    if (bindService(new Intent(ICouchService.class.getName()), mCouchConnection, Context.BIND_AUTO_CREATE))
+                        Log.d(Collect.LOGTAG, t + "successfully bound to ICouchService");
+                    else 
+                        Log.e(Collect.LOGTAG, t + "unable to bind to ICouchService");                
+
+                    // Wait a reasonable period of time for the DB to start up
+                    while (Collect.getInstance().getCouchService() == null) {
+                        if (seconds > 30)
+                            break;
+
+                        try {
+                            Thread.sleep(1000);
+                            seconds++;                        
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
 
             return null;
         }
@@ -601,16 +603,15 @@ public class LauncherActivity extends Activity
         @Override
         protected void onPostExecute(Void nothing) 
         {            
-            if (mPinged) {
-                if (mRegistered) {
+            if (pinged) {
+                if (registered) {
                     restartActivity(false);
                 } else {
-                    Intent i = new Intent(getApplicationContext(), ClientRegistrationActivity.class);
-                    startActivity(i);
+                    startActivity(new Intent(getApplicationContext(), ClientRegistrationActivity.class));
                     finish();
                 }
             } else {
-                if (mRegistered) {
+                if (registered) {
                     if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
                         showDialog(DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED);
                     else

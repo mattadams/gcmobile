@@ -157,7 +157,7 @@
 	<string name="tf_about_inform_device_header">Information about the device you are currently using.</string>
 	<string name="tf_abort_exit">Abort exit</string>
 	<string name="tf_account_created">Account Created</string>
-	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About Inform\" option menu.\n\nWe have sent an email to %s confirming this new account.\n\nSelect OK to begin using Group Inform!</string>
+	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About Inform\" option menu.\n\nWe have sent an email to %s confirming this new account.</string>
 	<string name="tf_account_details">If you do not know these details you can have a reminder sent to the account owner.</string>
 	<string name="tf_account_device">Registered Device</string>
 	<string name="tf_account_devices">Account Devices</string>
@@ -329,7 +329,7 @@
 	<string name="tf_previous_instance">Previous</string>
 	<string name="tf_private">Private</string>
 	<string name="tf_public">Public</string>
-	<string name="tf_reactivation_delayed_reason">Please wait at least 5 minutes between resetting &amp; reactivating</string>
+	<string name="tf_reactivation_delayed_reason">Please wait 5 minutes after device reset</string>
 	<string name="tf_reactivation_delayed_wait">PIN will be accepted in%1$s%2$s %3$s</string>   
 	<string name="tf_register_this_device">Register this Device</string>
 	<string name="tf_registration_error_email_in_use">This email address is already in use</string>

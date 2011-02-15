@@ -87,11 +87,11 @@ public class InformOnlineService extends Service {
       
     @Override
     public void onCreate() {        
-        // Do some basic initialization of this service
+        // Do some basic initialization for this service
         Collect.getInstance().setInformOnlineState(new InformOnlineState(getApplicationContext()));
         restoreSession();        
         
-        // connect() will not be run while offline mode is enabled but metadata should still be loaded if available
+        // connect() may not be run because of offline mode but metadata should still be loaded if available
         if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
             AccountDeviceList.loadDeviceList();
             AccountFolderList.loadFolderList();
@@ -195,7 +195,7 @@ public class InformOnlineService extends Service {
         return mServicePingSuccessful;
     }
     
-    // Registered, connected & signed in
+    // Registered (implied) connected & signed in
     public boolean isSignedIn()
     {
         return mSignedIn;
@@ -214,6 +214,7 @@ public class InformOnlineService extends Service {
     
     /*
      * Sign in to the Inform Online service
+     * Only called by connect()
      */
     private boolean checkin()
     {
@@ -324,7 +325,7 @@ public class InformOnlineService extends Service {
              * to pretend that it is so that the UI can move forward to whatever state is most suitable.
              */
             mInitialized = true;
-            mConnecting = false; 
+            mConnecting = false;
             
             return;
         }

@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/*
+/**
+ * Class to store persistent HTTP cookies (sessions)
+ * 
  * Real cookie example
  * 
  * [version: 0]
@@ -17,9 +19,6 @@ import java.util.List;
  */
 public class InformOnlineSession implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1463065884577681730L;
 
     private List<InformOnlineSession> cookies = new ArrayList<InformOnlineSession>();

@@ -424,10 +424,11 @@ public class DatabaseService extends Service {
         Iterator<String> folderIds = folderSet.iterator();
         
         while (folderIds.hasNext()) {
-            AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
-            Log.i(Collect.LOGTAG, t + "about to begin scheduled replication of " + folder.getName());
+            AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());            
             
             if (folder.isReplicated()) {
+                Log.i(Collect.LOGTAG, t + "about to begin scheduled replication of " + folder.getName());
+                
                 try {
                     replicate(folder.getId(), REPLICATE_PUSH);
                     replicate(folder.getId(), REPLICATE_PULL);
