@@ -144,10 +144,13 @@ public class LauncherActivity extends Activity
             case CouchInstallActivity.ERROR:
                 AlertDialog.Builder builder = new AlertDialog.Builder(LauncherActivity.this);
                 
+                // TODO: write a better error message
                 builder.setMessage(LauncherActivity.this.getString(R.string.couch_install_error))
                     .setCancelable(false)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() { 
-                        public void onClick(DialogInterface dialog, int id) { }
+                        public void onClick(DialogInterface dialog, int id) { 
+                            finish();                            
+                        }
                     });
                 
                 AlertDialog alert = builder.create();
@@ -212,6 +215,8 @@ public class LauncherActivity extends Activity
             } else {                
                 /*
                  * Install database engine
+                 * 
+                 * TODO: calculate required space before install begins 
                  */
                 mProgressDialog = new ProgressDialog(LauncherActivity.this);
                 mProgressDialog.setCancelable(false);                
@@ -236,10 +241,21 @@ public class LauncherActivity extends Activity
         }
         
         // Start the persistent online connection
+        startService(new Intent(LauncherActivity.this, InformOnlineService.class));
+        
         if (bindService(new Intent(LauncherActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE))
             Log.d(Collect.LOGTAG, t + "successfully bound to InformOnlineService");
         else 
             Log.e(Collect.LOGTAG, t + "unable to bind to InformOnlineService");
+        
+        
+        // Start the database connection
+        startService(new Intent(LauncherActivity.this, DatabaseService.class));
+        
+        if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
+            Log.d(Collect.LOGTAG, t + "successfully bound to DatabaseService");
+        else 
+            Log.e(Collect.LOGTAG, t + "unable to bind to DatabaseService");
     }
 
     /*
@@ -406,7 +422,9 @@ public class LauncherActivity extends Activity
         case DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED:
             String msg;            
 
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized())
+            if (CouchInstaller.checkInstalled() 
+                    && CouchDbUtils.isEnvironmentInitialized()
+                    && Collect.getInstance().getInformOnlineState().hasReplicatedFolders())
                 msg = getString(R.string.tf_connection_error_registered_with_db_msg);
             else    
                 msg = getString(R.string.tf_connection_error_registered_without_db_msg);
@@ -513,7 +531,11 @@ public class LauncherActivity extends Activity
             if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
                 // Start the database process
                 startService(new Intent(ICouchService.class.getName()));
-                bindService(new Intent(ICouchService.class.getName()), mCouchConnection, Context.BIND_AUTO_CREATE);
+                
+                if (bindService(new Intent(ICouchService.class.getName()), mCouchConnection, Context.BIND_AUTO_CREATE))
+                    Log.d(Collect.LOGTAG, t + "successfully bound to ICouchService");
+                else 
+                    Log.e(Collect.LOGTAG, t + "unable to bind to ICouchService");                
                 
                 // Wait a reasonable period of time for the DB to start up
                 while (Collect.getInstance().getCouchService() == null) {
@@ -557,12 +579,6 @@ public class LauncherActivity extends Activity
                     e.printStackTrace();
                 }
             }
-            
-            // Start the database connection
-            if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
-                Log.d(Collect.LOGTAG, t + "successfully bound to DatabaseService");
-            else 
-                Log.e(Collect.LOGTAG, t + "unable to bind to DatabaseService");
             
             mPinged = Collect.getInstance().getIoService().isRespondingToPings();
             mRegistered = Collect.getInstance().getIoService().isRegistered();

@@ -14,11 +14,9 @@
 
 package com.radicaldynamic.groupinform.services;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -31,7 +29,6 @@ import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -47,8 +44,6 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.AccountDeviceList;
 import com.radicaldynamic.groupinform.activities.AccountFolderList;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.logic.AccountDevice;
-import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineSession;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
@@ -98,8 +93,8 @@ public class InformOnlineService extends Service {
         
         // connect() will not be run while offline mode is enabled but metadata should still be loaded if available
         if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
-            loadDeviceHash();
-            loadFolderHash();
+            AccountDeviceList.loadDeviceList();
+            AccountFolderList.loadFolderList();
         }
         
         Thread persistentConnectionThread = new Thread(null, mTask, "InformOnlineService");        
@@ -379,127 +374,17 @@ public class InformOnlineService extends Service {
             mServicePingSuccessful = mSignedIn = false;
         } finally {
             if (mSignedIn) {
-                AccountDeviceList.fetchDeviceList();
-                loadDeviceHash();
-                
-                AccountFolderList.fetchFolderList();               
-                loadFolderHash();
-            }             
+                AccountDeviceList.fetchDeviceList();                
+                AccountFolderList.fetchFolderList();                
+            }   
+            
+            // Load regardless of whether we are signed in
+            AccountDeviceList.loadDeviceList();
+            AccountFolderList.loadFolderList();
             
             // Unblock
             mInitialized = true;
             mConnecting = false;            
-        }
-    }
-
-    /*
-     * Parse the cached device hash and load it into memory for lookup by other pieces of this application.
-     * This allows us to have some fall back if we cannot connect to Inform Online immediately.
-     */
-    private void loadDeviceHash()
-    {
-        Log.d(Collect.LOGTAG , t + "loading device cache");
-              
-        try {
-            FileInputStream fis = new FileInputStream(new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE));        
-            InputStreamReader reader = new InputStreamReader(fis);
-            BufferedReader buffer = new BufferedReader(reader, 8192);
-            StringBuilder sb = new StringBuilder();
-            
-            String cur;
-    
-            while ((cur = buffer.readLine()) != null) {
-                sb.append(cur + "\n");
-            }
-            
-            buffer.close();
-            reader.close();
-            fis.close();
-            
-            try {
-                int assignedSeats = 0;
-                
-                JSONArray jsonDevices = (JSONArray) new JSONTokener(sb.toString()).nextValue();
-                
-                for (int i = 0; i < jsonDevices.length(); i++) {
-                    JSONObject jsonDevice = jsonDevices.getJSONObject(i);
-    
-                    AccountDevice device = new AccountDevice(
-                            jsonDevice.getString("id"),
-                            jsonDevice.getString("rev"),
-                            jsonDevice.getString("alias"),
-                            jsonDevice.getString("email"),
-                            jsonDevice.getString("status"));
-    
-                    // Optional information that will only be present if the user is also an account owner
-                    device.setLastCheckin(jsonDevice.optString("lastCheckin"));
-                    device.setPin(jsonDevice.optString("pin"));
-    
-                    Collect.getInstance().getInformOnlineState().getAccountDevices().put(device.getId(), device);
-                    
-                    // A device counts towards the list of "assigned" devices so long as it hasn't been removed
-                    if (!device.getStatus().equals("removed"))
-                        assignedSeats++;
-                }
-                
-                // Record the number of seats in this account that are assigned & allocated (not necessarily "active")
-                Collect.getInstance().getInformOnlineState().setAccountAssignedSeats(assignedSeats);
-            } catch (JSONException e) {
-                // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
-                e.printStackTrace();
-            }
-        } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "unable to read device cache: " + e.toString());
-            e.printStackTrace();
-        }
-    }
-    
-    private void loadFolderHash()
-    {
-        Log.d(Collect.LOGTAG , t + "loading folder cache");
-        
-        try {
-            FileInputStream fis = new FileInputStream(new File(Collect.getInstance().getCacheDir(), FileUtils.FOLDER_CACHE_FILE));
-            InputStreamReader reader = new InputStreamReader(fis);
-            BufferedReader buffer = new BufferedReader(reader, 8192);
-            StringBuilder sb = new StringBuilder();
-            
-            String cur;
-
-            while ((cur = buffer.readLine()) != null) {
-                sb.append(cur + "\n");
-            }
-            
-            buffer.close();
-            reader.close();
-            fis.close();
-            
-            try {
-                JSONArray jsonFolders = (JSONArray) new JSONTokener(sb.toString()).nextValue();
-                
-                for (int i = 0; i < jsonFolders.length(); i++) {
-                    JSONObject jsonFolder = jsonFolders.getJSONObject(i);
-                    
-                    AccountFolder folder = new AccountFolder(
-                            jsonFolder.getString("id"),
-                            jsonFolder.getString("rev"),
-                            jsonFolder.getString("owner"),
-                            jsonFolder.getString("name"),
-                            jsonFolder.getString("description"),
-                            jsonFolder.getString("visibility"),
-                            jsonFolder.getBoolean("replication"));
-                    
-                    Collect.getInstance().getInformOnlineState().getAccountFolders().put(folder.getId(), folder);
-                }
-            } catch (JSONException e) {
-                // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
-                e.printStackTrace();
-            }
-        } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "unable to read folder cache: " + e.toString());
-            e.printStackTrace();
         }
     }
 

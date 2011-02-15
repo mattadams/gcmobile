@@ -29,8 +29,8 @@ the License.
         <item>All (Start New Form)</item>        
         <item>Drafts</item>
         <item>Completed Forms</item>
-        <item>Unread Forms</item>                
-        <item>Conflicts</item>
+<!--    <item>Unread Forms</item> -->                
+<!--    <item>Conflicts</item> -->
     </string-array>    
         
     <string-array name="tf_time_period_entry_preferences">

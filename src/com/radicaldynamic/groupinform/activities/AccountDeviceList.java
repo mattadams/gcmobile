@@ -240,14 +240,14 @@ public class AccountDeviceList extends ListActivity
         }
     }
     
-    private ArrayList<AccountDevice> loadDeviceList()
+    public static ArrayList<AccountDevice> loadDeviceList()
     {
         Log.d(Collect.LOGTAG , t + "loading device cache");
         
         ArrayList<AccountDevice> devices = new ArrayList<AccountDevice>();
         
         try {
-            FileInputStream fis = new FileInputStream(new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE));        
+            FileInputStream fis = new FileInputStream(new File(Collect.getInstance().getCacheDir(), FileUtils.DEVICE_CACHE_FILE));        
             InputStreamReader reader = new InputStreamReader(fis);
             BufferedReader buffer = new BufferedReader(reader, 8192);
             StringBuilder sb = new StringBuilder();
@@ -263,6 +263,8 @@ public class AccountDeviceList extends ListActivity
             fis.close();
             
             try {
+                int assignedSeats = 0;
+                
                 JSONArray jsonDevices = (JSONArray) new JSONTokener(sb.toString()).nextValue();
                 
                 for (int i = 0; i < jsonDevices.length(); i++) {
@@ -279,10 +281,18 @@ public class AccountDeviceList extends ListActivity
                     device.setLastCheckin(jsonDevice.optString("lastCheckin"));
                     device.setPin(jsonDevice.optString("pin"));
                     
+                    // Update the lookup hash
+                    Collect.getInstance().getInformOnlineState().getAccountDevices().put(device.getId(), device);
+                    
                     // Show a device so long as it hasn't been marked as removed
-                    if (!device.getStatus().equals("removed"))
+                    if (!device.getStatus().equals("removed")) {                        
                         devices.add(device);
+                        assignedSeats++;
+                    }
                 }
+                
+                // Record the number of seats in this account that are assigned & allocated (not necessarily "active")
+                Collect.getInstance().getInformOnlineState().setAccountAssignedSeats(assignedSeats);
             } catch (JSONException e) {
                 // Parse error (malformed result)
                 Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());

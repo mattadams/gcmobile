@@ -29,6 +29,7 @@ import org.json.JSONTokener;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -65,9 +66,8 @@ public class AccountFolderList extends ListActivity
     
     private static final int CONTEXT_MENU_EDIT = Menu.FIRST;
     
-    public static final int DENIED_OWNER_ONLY_DIALOG = 0;
-    
-    private AlertDialog mAlertDialog;
+    public static final int DIALOG_DENIED_NOT_OWNER = 0;
+    public static final int DIALOG_OPENING = 1;
     
     private RefreshViewTask mRefreshViewTask;
 
@@ -109,25 +109,29 @@ public class AccountFolderList extends ListActivity
     @Override
     protected Dialog onCreateDialog(int id)
     {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        Dialog dialog = null;
+        
         switch (id) {
-        case DENIED_OWNER_ONLY_DIALOG:
-            mAlertDialog = new AlertDialog.Builder(this)
-            .setIcon(R.drawable.ic_dialog_info)
-            .setTitle(R.string.tf_unable_to_edit_folder_not_owner_title)
-            .setMessage(R.string.tf_unable_to_edit_folder_not_owner_msg)
-            .setPositiveButton(R.string.tf_remove, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    finish();
-                }
-            })
-            .create();
+        case DIALOG_DENIED_NOT_OWNER:            
+            builder
+                .setIcon(R.drawable.ic_dialog_info)
+                .setTitle(R.string.tf_unable_to_edit_folder_not_owner_title)
+                .setMessage(R.string.tf_unable_to_edit_folder_not_owner_msg)
+                .setPositiveButton(R.string.tf_remove, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
 
-            mAlertDialog.show();
-
+            dialog = builder.create();
             break;
+            
+        case DIALOG_OPENING:
+            dialog = ProgressDialog.show(this, "", getText(R.string.tf_opening_please_wait));
         }
 
-        return null;        
+        return dialog;    
     }    
 
     @Override
@@ -170,7 +174,7 @@ public class AccountFolderList extends ListActivity
                 i.putExtra(AccountFolderActivity.KEY_FOLDER_VISIBILITY, folder.getVisibility());
                 startActivity(i);
             } else {
-                showDialog(DENIED_OWNER_ONLY_DIALOG);
+                showDialog(DIALOG_DENIED_NOT_OWNER);
             }           
             
             break;
@@ -188,10 +192,8 @@ public class AccountFolderList extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-        AccountFolder folder = (AccountFolder) getListAdapter().getItem(position);        
-        Collect.getInstance().getInformOnlineState().setSelectedDatabase(folder.getId());
-        Toast.makeText(getApplicationContext(), getString(R.string.tf_opening_folder, folder.getName()), Toast.LENGTH_SHORT).show();  
-        finish();
+        AccountFolder folder = (AccountFolder) getListAdapter().getItem(position);
+        new SelectFolderTask().execute(folder);
     }
 
     @Override
@@ -255,6 +257,45 @@ public class AccountFolderList extends ListActivity
             }            
         }
     }
+    
+    private class SelectFolderTask extends AsyncTask<AccountFolder, Void, Void>
+    {
+        AccountFolder folder = null;
+        boolean folderReady = true;
+        
+        @Override
+        protected Void doInBackground(AccountFolder... selection)
+        {
+            folder = selection[0];
+            
+            // Initialize any databases that should be synchronized
+            if (folder.isReplicated())
+                if (!Collect.getInstance().getDbService().isDbLocal(folder.getId()))                  
+                    folderReady = Collect.getInstance().getDbService().initLocalDb(folder.getId());
+            
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute()
+        {
+            showDialog(DIALOG_OPENING);
+        }
+
+        @Override
+        protected void onPostExecute(Void nothing)
+        {
+            dismissDialog(DIALOG_OPENING);
+            
+            if (folderReady) {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_opened_folder, folder.getName()), Toast.LENGTH_SHORT).show();            
+                Collect.getInstance().getInformOnlineState().setSelectedDatabase(folder.getId());                  
+                finish();
+            } else {
+                Toast.makeText(getApplicationContext(), "Unable to open " + folder.getName() + ". Please try again later.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }    
     
     /*
      * Fetch a new folder list from Inform Online and store it on disk

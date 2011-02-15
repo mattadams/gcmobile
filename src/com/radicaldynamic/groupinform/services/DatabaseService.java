@@ -14,9 +14,18 @@
 
 package com.radicaldynamic.groupinform.services;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
+import org.ektorp.CouchDbConnector;
+import org.ektorp.CouchDbInstance;
+import org.ektorp.ReplicationCommand;
+import org.ektorp.ReplicationStatus;
 import org.ektorp.http.HttpClient;
 import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbConnector;
@@ -32,6 +41,7 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.logic.AccountFolder;
 
 /**
  * Database abstraction layer for CouchDB, based on Ektorp.
@@ -41,10 +51,14 @@ import com.radicaldynamic.groupinform.application.Collect;
  */
 public class DatabaseService extends Service {
     private static final String t = "DatabaseService: ";
-           
+
+    // Replication modes
+    public static final int REPLICATE_PUSH = 0;
+    public static final int REPLICATE_PULL = 1;    
+    
     private HttpClient mHttpClient = null;
-    private StdCouchDbInstance mDbInstance = null;
-    private StdCouchDbConnector mDb = null;
+    private CouchDbInstance mDbInstance = null;
+    private CouchDbConnector mDbConnector = null;
     
     private boolean mInit = false;
     private boolean mConnected = false;
@@ -61,18 +75,24 @@ public class DatabaseService extends Service {
     {
         public void run() {            
             for (int i = 1; i > 0; ++i) {
-                if (mInit == false)
+                if (mInit == false) {
                     try {
+                        mInit = true;
+                        
                         connect(Collect
                                 .getInstance()
                                 .getInformOnlineState()
                                 .getAccountFolders()
                                 .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
                                 .isReplicated());
+                        
+                        replicateAll();
                     } catch (Exception e) {
                         Log.w(Collect.LOGTAG, t + "error automatically connecting to DB: " + e.toString()); 
+                    } finally {
                         mInit = false;
-                    }
+                    }                    
+                }
                 
                 // Retry connection to CouchDB every 5 minutes
                 if (mCondition.block(300 * 1000))
@@ -158,7 +178,7 @@ public class DatabaseService extends Service {
         return dbs;
     }
     
-    public StdCouchDbConnector getDb() 
+    public CouchDbConnector getDb() 
     {
         // Last ditch attempt
         if (!mConnected) {
@@ -183,8 +203,36 @@ public class DatabaseService extends Service {
             }
         }
         
-        return mDb;        
-    }   
+        return mDbConnector;        
+    }
+    
+    public boolean initLocalDb(String db)
+    {
+        try {
+            ReplicationStatus status = replicate(db, REPLICATE_PULL);
+
+            if (status == null)
+                return false;
+            else 
+                return status.isOk();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /*
+     * Does a database exist on the local CouchDB instance?
+     */
+    public boolean isDbLocal(String db)
+    {
+        HttpClient httpClient = new StdHttpClient.Builder().host("127.0.0.1").port(5985).build();
+        CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient);
+        
+        if (dbInstance.getAllDatabases().indexOf("db_" + db) == -1)
+            return false;
+        else
+            return true;
+    }
         
     /**
      * Open a specific database
@@ -196,8 +244,6 @@ public class DatabaseService extends Service {
      */
     public void open(String db) throws DbUnavailableException 
     {
-        mInit = true;
-        
         // If database metadata is not yet available then abort here
         if (db == null || Collect.getInstance().getInformOnlineState().getAccountFolders().get(db) == null) {
             throw new DbUnavailableDueToMetadataException(db);
@@ -211,10 +257,9 @@ public class DatabaseService extends Service {
         
         if (mConnected) {
             // Return quickly if the database is already opened and we are connected to the right host
-            if (mDb instanceof StdCouchDbConnector && mDb.getDatabaseName().equals("db_" + db)) {
+            if (mDbConnector instanceof StdCouchDbConnector && mDbConnector.getDatabaseName().equals("db_" + db)) {
                 if ((dbToOpenIsReplicated && mConnectedToLocal) || (!dbToOpenIsReplicated && !mConnectedToLocal)) {
                     Log.d(Collect.LOGTAG, t + "database " + db + " already opened");
-                    mInit = false;
                     return;                
                 }
             }            
@@ -250,18 +295,16 @@ public class DatabaseService extends Service {
         }
         
         try {
-            mDb = new StdCouchDbConnector("db_" + db, mDbInstance);
+            mDbConnector = new StdCouchDbConnector("db_" + db, mDbInstance);
             
             // Only attempt to create the database if it is marked as being locally replicated
             if (mConnectedToLocal && dbToOpenIsReplicated)
-                mDb.createDatabaseIfNotExists();
+                mDbConnector.createDatabaseIfNotExists();
             
             Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + "while opening DB db_" + db + ": " + e.toString());
             throw new DbUnavailableException();
-        } finally {
-            mInit = false;
         }
     }
 
@@ -299,6 +342,100 @@ public class DatabaseService extends Service {
             Log.e(Collect.LOGTAG, t + "while connecting to server " + port + ": " + e.toString());            
             mConnected = false;            
             throw new DbUnavailableException();
+        }
+    }
+    
+    synchronized public ReplicationStatus replicate(String db, int mode)
+    {
+        // Will not replicate while offline
+        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
+            Log.d(Collect.LOGTAG, t + "aborting replication of " + db + " (offline mode is enabled)");
+            return null;
+        }
+        
+        // Will not replicate unless signed in
+        if (!Collect.getInstance().getIoService().isSignedIn()) {
+            Log.w(Collect.LOGTAG, t + "aborting replication of " + db + " (not signed in)");
+            return null;
+        }        
+        
+        /* 
+         * Lookup master cluster by IP.  Do this instead of relying on Erlang's internal resolver 
+         * (and thus Google's public DNS).  Our builds of Erlang for Android do not yet use 
+         * Android's native DNS resolver. 
+         */
+        String masterClusterIP = null;        
+        
+        try {
+            InetAddress [] clusterInetAddresses = InetAddress.getAllByName("arthur.902northland.adams.home");
+            masterClusterIP = clusterInetAddresses[new Random().nextInt(clusterInetAddresses.length)].getHostAddress();
+        } catch (UnknownHostException e) {
+            Log.e(Collect.LOGTAG, t + "unable to lookup master cluster IP addresses: " + e.toString());
+            e.printStackTrace();
+        }
+        
+        // Create local instance of database
+        boolean dbCreated = false;
+        
+        HttpClient httpClient = new StdHttpClient.Builder().host("127.0.0.1").port(5985).build();
+        CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient);
+        
+        if (dbInstance.getAllDatabases().indexOf("db_" + db) == -1) {
+            dbInstance.createDatabase("db_" + db);
+            dbCreated = true;
+        }
+        
+        // Configure replication direction
+        String source = null;
+        String target = null;
+
+        switch (mode) {
+        case REPLICATE_PUSH:
+            source = "http://127.0.0.1:5985/db_" + db; 
+            target = "http://" + masterClusterIP + ":5984/db_" + db;
+            Log.d(Collect.LOGTAG, t + "about to replicate from " + source + " to " + target);
+            break;
+
+        case REPLICATE_PULL:
+            source = "http://" + masterClusterIP + ":5984/db_" + db;
+            target = "http://127.0.0.1:5985/db_" + db;
+            Log.d(Collect.LOGTAG, t + "about to replicate from " + source + " to " + target);
+            break;
+        }
+        
+        ReplicationCommand cmd = new ReplicationCommand.Builder().source(source).target(target).build();
+        ReplicationStatus status = null;
+        
+        try {            
+            status = dbInstance.replicate(cmd);
+        } catch (Exception e) {
+            // Remove a recently created DB if the replication failed
+            if (dbCreated) {
+                dbInstance.deleteDatabase("db_" + db);
+            }
+        }
+        
+        return status;
+    }
+    
+    private void replicateAll()
+    {
+        Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
+        Iterator<String> folderIds = folderSet.iterator();
+        
+        while (folderIds.hasNext()) {
+            AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
+            Log.i(Collect.LOGTAG, t + "about to begin scheduled replication of " + folder.getName());
+            
+            if (folder.isReplicated()) {
+                try {
+                    replicate(folder.getId(), REPLICATE_PUSH);
+                    replicate(folder.getId(), REPLICATE_PULL);
+                } catch (Exception e) {
+                    Log.w(Collect.LOGTAG, t + "problem replicating " + folder.getId() + ": " + e.toString());
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }

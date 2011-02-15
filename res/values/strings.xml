@@ -320,7 +320,8 @@
 	<string name="tf_odk_library">ODK Library</string>
 	<string name="tf_offline_mode_enabled">Working Offline</string>
 	<string name="tf_offline_mode_enabled_msg">You are currently working offline.  Only those folders that have been synchronized for offline use are available at this time.\n\nPlease note that some parts of this app will be unavailable while offline.</string>
-	<string name="tf_opening_folder">Opening %s</string>
+	<string name="tf_opened_folder">Opened %s</string>
+	<string name="tf_opening_please_wait">Opening, please wait...</string>
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
 	<string name="tf_private">Private</string>
@@ -366,6 +367,7 @@
 	<string name="tf_save_and_exit">Save and exit</string>
 	<string name="tf_save_field_and_exit">Save field and exit</string>
 	<string name="tf_saving_please_wait">Saving...</string>
+	<string name="tf_select_folders_for_offline_use">Select folders for offline use</string>
 	<string name="tf_select_multiple_type">Select multiple</string>
 	<string name="tf_select_single_type">Select one</string>
 	<string name="tf_server_settings">Server settings</string>

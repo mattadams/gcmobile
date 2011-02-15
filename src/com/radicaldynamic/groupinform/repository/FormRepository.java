@@ -10,7 +10,6 @@ import org.ektorp.CouchDbConnector;
 import org.ektorp.ViewResult;
 import org.ektorp.ViewResult.Row;
 import org.ektorp.support.CouchDbRepositorySupport;
-import org.ektorp.support.View;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONTokener;
@@ -21,7 +20,6 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.documents.InstanceDocument;
 
-@View(name = "all", map = "function(doc) { if (doc.type && doc.type == 'form') emit (doc._id, doc._id) }")
 public class FormRepository extends CouchDbRepositorySupport<FormDocument>
 {
     private final static String t = "FormRepository: ";
@@ -36,7 +34,6 @@ public class FormRepository extends CouchDbRepositorySupport<FormDocument>
         return forms;
     }
     
-    @View(name = "by_instance_status", map = "function(doc) { if (doc.type && doc.type == 'instance') emit ([doc.formId, doc.status], 1); }", reduce = "function(keys, values) { return sum(values); }")
     public HashMap<String, String> getFormsByInstanceStatus(InstanceDocument.Status status) {
         HashMap<String, String> results = new HashMap<String, String>();
         ViewResult r = db.queryView(createQuery("by_instance_status").group(true));        
@@ -89,7 +86,6 @@ public class FormRepository extends CouchDbRepositorySupport<FormDocument>
         return results;
     }
     
-    @View(name = "by_instance_aggregate_readiness", map = "function(doc) { if (doc.type && doc.status && doc.type == 'instance' && doc.status == 'complete') if ( doc.dateAggregated == null || Date.parse(doc.dateUpdated) > Date.parse(doc.dateAggregated)) emit(doc.formId, doc._id); }" )
     public Map<String, List<String>> getFormsByAggregateReadiness() {
         Map<String, List<String>> results = new HashMap<String, List<String>>();
         ViewResult r = db.queryView(createQuery("by_instance_aggregate_readiness"));

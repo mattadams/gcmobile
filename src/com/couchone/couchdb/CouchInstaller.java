@@ -21,6 +21,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -222,7 +223,7 @@ public class CouchInstaller {
 //			throw new RuntimeException("Unsupported Platform");
 //		}
 		
-		packages.add("release-1.0");
+		packages.add("release-" + Build.VERSION.SDK_INT + "-1.0");
 		
 		return packages;
 	}

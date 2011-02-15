@@ -16,7 +16,9 @@ package com.radicaldynamic.groupinform.activities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -26,6 +28,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -51,6 +55,7 @@ import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.documents.InstanceDocument;
+import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.repository.InstanceRepository;
 import com.radicaldynamic.groupinform.services.DatabaseService;
@@ -249,19 +254,19 @@ public class BrowserActivity extends ListActivity
             String buttonText;
             
             builder
-                .setCancelable(false)
+                .setCancelable(false) 
                 .setIcon(R.drawable.ic_dialog_info);
             
             if (Collect.getInstance().getIoService().isSignedIn()) {
                 builder
                     .setTitle(getText(R.string.tf_go_offline) + "?")
-                    .setMessage("You are currently online. Group Inform will synchronize any folders that you have selected for offline use prior to going offline.");
+                    .setMessage("You are currently online.\n\nFolders that are selected for offline use will be synchronized prior to going offline.");
                 
                 buttonText = getText(R.string.tf_go_offline).toString();
             } else {
                 builder
                     .setTitle(getText(R.string.tf_go_online) + "?")
-                    .setMessage("You are currently offline. Group Inform will synchronize any folders that you have selected for offline use after going online.");
+                    .setMessage("You are currently offline.\n\nFolders that are selected for offline use will be synchronized after going online.");
 
                 buttonText = getText(R.string.tf_go_online).toString();
             }
@@ -520,22 +525,29 @@ public class BrowserActivity extends ListActivity
     private class ToggleOnlineState extends AsyncTask<Void, Void, Void>
     {
         Boolean hasCouch = true;
-        Boolean hasSynchronizedFolders = true;
+        Boolean hasSynchronizedFolders = false;
+        
+        ProgressDialog progressDialog = null;        
+        
+        final Handler progressHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                progressDialog.setMessage("Synchronizing folder " + msg.arg1 + "/" + msg.arg2);
+            }
+        };
         
         @Override
         protected Void doInBackground(Void... nothing)
         {
             if (Collect.getInstance().getIoService().isSignedIn()) {
-                if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
-                    hasSynchronizedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
-
-                    if (hasSynchronizedFolders)
-                        Collect.getInstance().getIoService().goOffline();
-                } else {
-                    hasCouch = false;
+                if (hasSynchronizedFolders) {                   
+                    synchronize();
+                    Collect.getInstance().getIoService().goOffline();
                 }
             } else {
-                Collect.getInstance().getIoService().goOnline();                    
+                Collect.getInstance().getIoService().goOnline();
+                
+                if (hasSynchronizedFolders)
+                    synchronize();
             }
 
             return null;
@@ -544,7 +556,18 @@ public class BrowserActivity extends ListActivity
         @Override
         protected void onPreExecute()
         {          
-            showDialog(DIALOG_ONLINE_STATE_CHANGING);
+            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
+                hasSynchronizedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
+            } else {
+                hasCouch = false;
+            }
+            
+            if (hasSynchronizedFolders) {
+                progressDialog = new ProgressDialog(BrowserActivity.this);
+                progressDialog.setMessage("Synchronizing folders...");  
+                progressDialog.show();
+            } else
+                showDialog(DIALOG_ONLINE_STATE_CHANGING);
             
             // Not available while toggling
             Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
@@ -559,11 +582,14 @@ public class BrowserActivity extends ListActivity
         @Override
         protected void onPostExecute(Void nothing)
         {   
-            removeDialog(DIALOG_ONLINE_STATE_CHANGING);
+            if (progressDialog == null)
+                removeDialog(DIALOG_ONLINE_STATE_CHANGING);
+            else
+                progressDialog.cancel();
             
             if (!hasCouch)
                 showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE);
-            else if (!hasSynchronizedFolders)
+            else if (!hasSynchronizedFolders && Collect.getInstance().getIoService().isSignedIn())
                 showDialog(DIALOG_NO_SYNCHRONIZED_DBS);
 
             loadScreen();
@@ -574,6 +600,35 @@ public class BrowserActivity extends ListActivity
             
             Button b2 = (Button) findViewById(R.id.folderTitleButton);
             b2.setEnabled(true);
+        }
+        
+        private void synchronize()
+        {
+            Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
+            Iterator<String> folderIds = folderSet.iterator();
+            
+            int i = 0;
+            
+            while (folderIds.hasNext()) {
+                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
+                Log.i(Collect.LOGTAG, t + "about to begin scheduled replication of " + folder.getName());
+                
+                if (folder.isReplicated()) {
+                    try {
+                        // Update progress dialog
+                        Message msg = progressHandler.obtainMessage();
+                        msg.arg1 = ++i;
+                        msg.arg2 = folderSet.size();
+                        progressHandler.sendMessage(msg);
+                        
+                        Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PUSH);
+                        Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL);
+                    } catch (Exception e) {
+                        Log.w(Collect.LOGTAG, t + "problem replicating " + folder.getId() + ": " + e.toString());
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 

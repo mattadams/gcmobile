@@ -67,6 +67,8 @@ public class AccountFolderReplicationList extends ListActivity
             }});
         
         new RefreshViewTask().execute();
+        
+        Toast.makeText(this, getString(R.string.tf_select_folders_for_offline_use), Toast.LENGTH_LONG).show();
     }
     
     @Override
@@ -134,8 +136,6 @@ public class AccountFolderReplicationList extends ListActivity
                 for (int i = 0; i < mListView.getCount(); i++) {
                     boolean isReplicated = ((AccountFolder) mListView.getItemAtPosition(i)).isReplicated();
                     
-                    Log.e(Collect.LOGTAG, "found item at position " + i + " replication state to be " + isReplicated);
-                    
                     if (isReplicated)
                         mListView.setItemChecked(i, true);
                     else 
@@ -162,7 +162,7 @@ public class AccountFolderReplicationList extends ListActivity
             for (int i = 0; i < checkedItemPositions.size(); i++) {
                 if (checkedItemPositions.valueAt(i)) {
                     String databaseId = ((AccountFolder) mListView.getItemAtPosition(i)).getId();                    
-                    Log.e(Collect.LOGTAG, t + "user selected database " + databaseId + " for replication");                    
+                    Log.v(Collect.LOGTAG, t + "selected database " + databaseId + " for replication");                    
                     databasesToReplicateById.add(databaseId);
                 }
             }
