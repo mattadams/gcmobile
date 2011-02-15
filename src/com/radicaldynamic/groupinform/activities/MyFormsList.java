@@ -49,6 +49,7 @@ import com.radicaldynamic.groupinform.adapters.MyFormsListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDocument;
 import com.radicaldynamic.groupinform.repository.FormRepository;
+import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 
 /*
@@ -67,20 +68,15 @@ public class MyFormsList extends ListActivity
     {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.generic_list);
-        
+        setContentView(R.layout.generic_list);        
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.main_menu));
-
-        // TODO: select "my forms" folder/database
     }
 
     @Override
     protected void onResume()
     {
         super.onResume();
-
-        if (Collect.getInstance().getDbService() != null)
-            loadScreen();
+        loadScreen();
     }
 
     @Override
@@ -115,7 +111,6 @@ public class MyFormsList extends ListActivity
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
         FormDocument form = (FormDocument) getListAdapter().getItem(position);
-
         Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
 
         Intent i = new Intent(this, FormBuilderFieldList.class);
@@ -128,7 +123,7 @@ public class MyFormsList extends ListActivity
     {
         switch (item.getItemId()) {
         case MENU_ADD:
-            promptForNewFormName();
+            createNewFormDialog();
             return true;
         }
         
@@ -176,6 +171,9 @@ public class MyFormsList extends ListActivity
                 
                 openOptionsMenu();
             } else {
+                TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+                nothingToDisplay.setVisibility(View.GONE);
+                
                 MyFormsListAdapter adapter;
                 
                 adapter = new MyFormsListAdapter(
@@ -196,19 +194,7 @@ public class MyFormsList extends ListActivity
         }
     }
 
-    /**
-     * Load the various elements of the screen that must wait for other tasks to
-     * complete
-     */
-    private void loadScreen()
-    {
-        mRefreshViewTask = new RefreshViewTask();
-        mRefreshViewTask.execute();
-
-        registerForContextMenu(getListView());
-    }    
-    
-    private void promptForNewFormName()
+    private void createNewFormDialog()
     {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         
@@ -218,7 +204,7 @@ public class MyFormsList extends ListActivity
         alert.setView(view);
         alert.setInverseBackgroundForced(true);
         alert.setTitle(getText(R.string.tf_create_form_dialog));
-
+    
         // Set an EditText view to get user input 
         final EditText input = (EditText) view.findViewById(R.id.formName);
         
@@ -227,16 +213,16 @@ public class MyFormsList extends ListActivity
                 FormDocument form = new FormDocument();
                 form.setName(input.getText().toString());
                 form.setStatus(FormDocument.Status.temporary);
-
+    
                 // Create a new form document and use an XForm template as the "xml" attachment
                 try {
                     InputStream is = getResources().openRawResource(R.raw.xform_template);
-
+    
                     // Set up variables to receive data
                     ByteArrayOutputStream data = new ByteArrayOutputStream();
                     byte[] inputbuf = new byte[8192];            
                     int inputlen;
-
+    
                     while ((inputlen = is.read(inputbuf)) > 0) {
                         data.write(inputbuf, 0, inputlen);
                     }
@@ -258,13 +244,31 @@ public class MyFormsList extends ListActivity
                 }
             }
         });
-
+    
         alert.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                // Cancelled.
+                dialog.cancel();
             }
         });
-
+    
         alert.show();
+    }
+
+    /**
+     * Load the various elements of the screen that must wait for other tasks to
+     * complete
+     */
+    private void loadScreen()
+    {
+        try {
+            Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getDefaultDatabase());            
+            
+            mRefreshViewTask = new RefreshViewTask();
+            mRefreshViewTask.execute();
+            
+            registerForContextMenu(getListView());
+        } catch (DatabaseService.DbUnavailableException e) {
+
+        }
     }
 }
