@@ -370,7 +370,7 @@ public class LauncherActivity extends Activity
             builder
                 .setCancelable(false)
                 .setIcon(R.drawable.ic_dialog_info)
-                .setTitle(R.string.tf_dependency_missing_dialog_title)
+                .setTitle(R.string.tf_dependency_missing_dialog)
                 .setMessage(getString(R.string.tf_dependency_missing_dialog_msg) + copy);
             
             builder.setPositiveButton(getText(R.string.tf_install), new DialogInterface.OnClickListener() {

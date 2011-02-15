@@ -522,7 +522,7 @@ public class ClientRegistrationActivity extends Activity
         builder
         .setCancelable(false)
         .setIcon(R.drawable.ic_dialog_info)
-        .setTitle(R.string.tf_licence_limit_reached_dialog_title)
+        .setTitle(R.string.tf_licence_limit_reached_dialog)
         .setMessage(getString(R.string.tf_licence_limit_reached_dialog_msg, seatLicenceLimit, planType))
         .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {

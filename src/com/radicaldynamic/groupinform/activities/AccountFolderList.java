@@ -287,12 +287,11 @@ public class AccountFolderList extends ListActivity
         {
             dismissDialog(DIALOG_OPENING);
             
-            if (folderReady) {
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_opened_folder, folder.getName()), Toast.LENGTH_SHORT).show();            
+            if (folderReady) {            
                 Collect.getInstance().getInformOnlineState().setSelectedDatabase(folder.getId());                  
                 finish();
             } else {
-                Toast.makeText(getApplicationContext(), "Unable to open " + folder.getName() + ". Please try again later.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Unable to open " + folder.getName() + ". Please try again later.", Toast.LENGTH_LONG).show();
             }
         }
     }    

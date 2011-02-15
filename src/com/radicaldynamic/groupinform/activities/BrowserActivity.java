@@ -74,9 +74,9 @@ public class BrowserActivity extends ListActivity
     private static final String t = "BrowserActivity: ";
     
     // Dialog status codes
-    private static final int DIALOG_DATABASE_UNAVAILABLE = 1;
-    private static final int DIALOG_NO_SYNCHRONIZED_DBS = 2;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE = 3;
+    private static final int DIALOG_FOLDER_UNAVAILABLE = 1;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 2;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 3;    
     private static final int DIALOG_ONLINE_STATE_CHANGING = 4;
     private static final int DIALOG_TOGGLE_ONLINE_STATE = 5;
         
@@ -182,17 +182,17 @@ public class BrowserActivity extends ListActivity
         Dialog dialog = null;
         
         switch (id) {   
-        case DIALOG_DATABASE_UNAVAILABLE:
+        case DIALOG_FOLDER_UNAVAILABLE:
             builder
                 .setCancelable(false)
                 .setIcon(R.drawable.ic_dialog_info)
-                .setTitle("Folder Unavailable")
+                .setTitle(R.string.tf_folder_unavailable)
                 .setMessage(mDialogMessage);
             
             builder.setPositiveButton(getString(R.string.tf_form_folders), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     startActivity(new Intent(BrowserActivity.this, AccountFolderList.class));
-                    removeDialog(DIALOG_DATABASE_UNAVAILABLE);
+                    removeDialog(DIALOG_FOLDER_UNAVAILABLE);
                 }
             });
             
@@ -200,37 +200,20 @@ public class BrowserActivity extends ListActivity
                 builder.setNeutralButton(getString(R.string.tf_go_online), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         new ToggleOnlineState().execute();
-                        removeDialog(DIALOG_DATABASE_UNAVAILABLE);
+                        removeDialog(DIALOG_FOLDER_UNAVAILABLE);
                     }
                 });
             }
             
             dialog = builder.create();
-            break;
+            break;            
             
-        case DIALOG_NO_SYNCHRONIZED_DBS:
-            builder
-            .setCancelable(false)
-            .setIcon(R.drawable.ic_dialog_info)
-            .setTitle("Cannot Go Offline")
-            .setMessage("Select at least one folder to be synchronized for offline use prior to going offline.");
-
-            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    dialog.cancel();
-                }
-            });
-
-            dialog = builder.create();
-            
-            break;
-        
-        case DIALOG_OFFLINE_MODE_UNAVAILABLE:
+        case DIALOG_OFFLINE_MODE_UNAVAILABLE_DB:
             builder
                 .setCancelable(false)
                 .setIcon(R.drawable.ic_dialog_alert)
-                .setTitle("Cannot Go Offline")
-                .setMessage("The Group Inform database is required to work offline.  If you are receiving this message it means that the database is unavailable for one or more reasons.\n\nPlease let us know that you are receiving this message by visiting us at http://groupinform.com/support - thank you!");
+                .setTitle(R.string.tf_unable_to_go_offline_dialog)
+                .setMessage(R.string.tf_unable_to_go_offline_dialog_msg_reason_db);
 
             builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -240,8 +223,25 @@ public class BrowserActivity extends ListActivity
             });
             
             dialog = builder.create();
-            break;
+            break;            
             
+        case DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_unable_to_go_offline_dialog)
+            .setMessage(R.string.tf_unable_to_go_offline_dialog_msg_reason_folders);
+
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    dialog.cancel();
+                }
+            });
+
+            dialog = builder.create();
+            
+            break;
+
         case DIALOG_ONLINE_STATE_CHANGING:
             if (Collect.getInstance().getIoService().isSignedIn())
                 dialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_disconnecting));
@@ -260,13 +260,13 @@ public class BrowserActivity extends ListActivity
             if (Collect.getInstance().getIoService().isSignedIn()) {
                 builder
                     .setTitle(getText(R.string.tf_go_offline) + "?")
-                    .setMessage("You are currently online.\n\nFolders that are selected for offline use will be synchronized prior to going offline.");
+                    .setMessage(R.string.tf_go_offline_dialog_msg);
                 
                 buttonText = getText(R.string.tf_go_offline).toString();
             } else {
                 builder
                     .setTitle(getText(R.string.tf_go_online) + "?")
-                    .setMessage("You are currently offline.\n\nFolders that are selected for offline use will be synchronized after going online.");
+                    .setMessage(R.string.tf_go_online_dialog_msg);
 
                 buttonText = getText(R.string.tf_go_online).toString();
             }
@@ -492,7 +492,6 @@ public class BrowserActivity extends ListActivity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
                     openOptionsMenu();
                 } else {
-//                  if (mAlertDialog instanceof Dialog && !mAlertDialog.isShowing())
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
                 }
             } else {
@@ -523,15 +522,16 @@ public class BrowserActivity extends ListActivity
      * Deal with case where user has asked to go offline/online but it could not be done co-operatively
      */
     private class ToggleOnlineState extends AsyncTask<Void, Void, Void>
-    {
-        Boolean hasCouch = true;
-        Boolean hasSynchronizedFolders = false;
+    {        
+        Boolean hasReplicatedFolders = false;
+        Boolean missingCouch = false;
+        Boolean missingSynchronizedFolders = false;
         
         ProgressDialog progressDialog = null;        
         
         final Handler progressHandler = new Handler() {
             public void handleMessage(Message msg) {
-                progressDialog.setMessage("Synchronizing folder " + msg.arg1 + "/" + msg.arg2);
+                progressDialog.setMessage(getString(R.string.tf_synchronizing_folder_count_dialog_msg, msg.arg1, msg.arg2));
             }
         };
         
@@ -539,14 +539,16 @@ public class BrowserActivity extends ListActivity
         protected Void doInBackground(Void... nothing)
         {
             if (Collect.getInstance().getIoService().isSignedIn()) {
-                if (hasSynchronizedFolders) {                   
-                    synchronize();
+                if (hasReplicatedFolders) {                   
+                    synchronize();                    
                     Collect.getInstance().getIoService().goOffline();
+                } else {
+                    missingSynchronizedFolders = true;
                 }
             } else {
                 Collect.getInstance().getIoService().goOnline();
                 
-                if (hasSynchronizedFolders)
+                if (hasReplicatedFolders)
                     synchronize();
             }
 
@@ -557,14 +559,14 @@ public class BrowserActivity extends ListActivity
         protected void onPreExecute()
         {          
             if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
-                hasSynchronizedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
+                hasReplicatedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
             } else {
-                hasCouch = false;
+                missingCouch = true;
             }
             
-            if (hasSynchronizedFolders) {
+            if (hasReplicatedFolders) {
                 progressDialog = new ProgressDialog(BrowserActivity.this);
-                progressDialog.setMessage("Synchronizing folders...");  
+                progressDialog.setMessage(getString(R.string.tf_synchronizing_folders_dialog_msg));  
                 progressDialog.show();
             } else
                 showDialog(DIALOG_ONLINE_STATE_CHANGING);
@@ -587,10 +589,10 @@ public class BrowserActivity extends ListActivity
             else
                 progressDialog.cancel();
             
-            if (!hasCouch)
-                showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE);
-            else if (!hasSynchronizedFolders && Collect.getInstance().getIoService().isSignedIn())
-                showDialog(DIALOG_NO_SYNCHRONIZED_DBS);
+            if (missingCouch)
+                showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE_DB);
+            else if (missingSynchronizedFolders)
+                showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS);
 
             loadScreen();
             
@@ -611,16 +613,16 @@ public class BrowserActivity extends ListActivity
             
             while (folderIds.hasNext()) {
                 AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
-                Log.i(Collect.LOGTAG, t + "about to begin scheduled replication of " + folder.getName());
+                Log.i(Collect.LOGTAG, t + "about to begin triggered replication of " + folder.getName());
                 
                 if (folder.isReplicated()) {
-                    try {
-                        // Update progress dialog
-                        Message msg = progressHandler.obtainMessage();
-                        msg.arg1 = ++i;
-                        msg.arg2 = folderSet.size();
-                        progressHandler.sendMessage(msg);
-                        
+                    // Update progress dialog
+                    Message msg = progressHandler.obtainMessage();
+                    msg.arg1 = ++i;
+                    msg.arg2 = folderSet.size();
+                    progressHandler.sendMessage(msg);
+                    
+                    try {                        
                         Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PUSH);
                         Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL);
                     } catch (Exception e) {
@@ -713,14 +715,14 @@ public class BrowserActivity extends ListActivity
                 break;
             }
         } catch (DatabaseService.DbUnavailableDueToMetadataException e) {            
-            mDialogMessage = "The selected folder is currently unavailable.\n\nThis might be because the owner of the folder has removed it or made it private.\n\nPlease select another folder.";
-            showDialog(DIALOG_DATABASE_UNAVAILABLE);
+            mDialogMessage = getString(R.string.tf_unable_to_open_folder_missing_metadata);
+            showDialog(DIALOG_FOLDER_UNAVAILABLE);
         } catch (DatabaseService.DbUnavailableWhileOfflineException e) {
-            mDialogMessage = "The folder \"" + folderName + "\" is unavailable while offline.\n\nPlease go online to access this folder or select a folder that is synchronized for offline use.";
-            showDialog(DIALOG_DATABASE_UNAVAILABLE);
+            mDialogMessage = getString(R.string.tf_unable_to_open_folder_while_offline, folderName);
+            showDialog(DIALOG_FOLDER_UNAVAILABLE);
         } catch (DatabaseService.DbUnavailableException e) {
-            mDialogMessage = "The folder \"" + folderName + "\" currently unavailable.\n\nPlease select another folder or try again.";
-            showDialog(DIALOG_DATABASE_UNAVAILABLE);
+            mDialogMessage = getString(R.string.tf_unable_to_open_folder, folderName);
+            showDialog(DIALOG_FOLDER_UNAVAILABLE);
         }
     }
 }
