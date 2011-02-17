@@ -317,7 +317,7 @@ public class DatabaseService extends Service {
             host = "127.0.0.1";
             port = 5985;
         } else {
-            host = "arthur.902northland.adams.home";
+            host = getString(R.string.tf_default_ionline_server);
             port = 5984;
         }
         
@@ -367,7 +367,7 @@ public class DatabaseService extends Service {
         String masterClusterIP = null;        
         
         try {
-            InetAddress [] clusterInetAddresses = InetAddress.getAllByName("arthur.902northland.adams.home");
+            InetAddress [] clusterInetAddresses = InetAddress.getAllByName(getString(R.string.tf_default_ionline_server));
             masterClusterIP = clusterInetAddresses[new Random().nextInt(clusterInetAddresses.length)].getHostAddress();
         } catch (UnknownHostException e) {
             Log.e(Collect.LOGTAG, t + "unable to lookup master cluster IP addresses: " + e.toString());
