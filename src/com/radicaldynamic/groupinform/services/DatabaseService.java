@@ -301,6 +301,13 @@ public class DatabaseService extends Service {
             if (mConnectedToLocal && dbToOpenIsReplicated)
                 mDbConnector.createDatabaseIfNotExists();
             
+            /* 
+             * This should trigger any 401:Unauthorized errors when connecting to a remote DB
+             * (better to know about them now then to experience a crash later because we didn't trap something)
+             */
+            if (!mConnectedToLocal)
+                mDbConnector.getDbInfo();
+            
             Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + "while opening DB db_" + db + ": " + e.toString());
@@ -323,8 +330,22 @@ public class DatabaseService extends Service {
         
         Log.d(Collect.LOGTAG, t + "establishing connection to " + host + ":" + port);
         
-        try {                        
-            mHttpClient = new StdHttpClient.Builder().host(host).port(port).build();     
+        try {                     
+            if (local)
+                mHttpClient = new StdHttpClient
+                    .Builder()
+                    .host(host)
+                    .port(port)
+                    .build();
+            else
+                mHttpClient = new StdHttpClient
+                    .Builder()
+                    .host(host)
+                    .port(port)
+                    .username(Collect.getInstance().getInformOnlineState().getDeviceId())
+                    .password(Collect.getInstance().getInformOnlineState().getDeviceKey())
+                    .build();
+            
             mDbInstance = new StdCouchDbInstance(mHttpClient);            
             
             mDbInstance.getAllDatabases();
@@ -392,14 +413,12 @@ public class DatabaseService extends Service {
         switch (mode) {
         case REPLICATE_PUSH:
             source = "http://127.0.0.1:5985/db_" + db; 
-            target = "http://" + masterClusterIP + ":5984/db_" + db;
-            Log.d(Collect.LOGTAG, t + "about to replicate from " + source + " to " + target);
+            target = "http://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":5984/db_" + db;
             break;
 
         case REPLICATE_PULL:
-            source = "http://" + masterClusterIP + ":5984/db_" + db;
+            source = "http://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":5984/db_" + db;
             target = "http://127.0.0.1:5985/db_" + db;
-            Log.d(Collect.LOGTAG, t + "about to replicate from " + source + " to " + target);
             break;
         }
         

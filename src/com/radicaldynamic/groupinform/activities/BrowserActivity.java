@@ -20,6 +20,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.ektorp.DbAccessException;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -433,20 +435,27 @@ public class BrowserActivity extends ListActivity
         @Override
         protected InstanceDocument.Status doInBackground(InstanceDocument.Status... status)
         {            
-            if (status[0] == InstanceDocument.Status.nothing) {
-                try {
-                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
-                    DocumentUtils.sortByName(documents);
-                } catch (ClassCastException e) {
-                    // TODO: is there a better way to handle empty lists?
+            try {
+                if (status[0] == InstanceDocument.Status.nothing) {
+                    try {
+                        documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
+                        DocumentUtils.sortByName(documents);
+                    } catch (ClassCastException e) {
+                        // TODO: is there a better way to handle empty lists?
+                    }
+                } else {
+                    instanceTallies = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
+                    
+                    if (!instanceTallies.isEmpty()) {
+                        documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
+                        DocumentUtils.sortByName(documents);
+                    }
                 }
-            } else {
-                instanceTallies = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
-                
-                if (!instanceTallies.isEmpty()) {
-                    documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
-                    DocumentUtils.sortByName(documents);
-                }
+            } catch (DbAccessException e) {
+                Log.w(Collect.LOGTAG, t + "database access refused: " + e.toString());
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
+                e.printStackTrace();
             }
 
             return status[0];
@@ -538,6 +547,9 @@ public class BrowserActivity extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
+            // TODO? Perform checkin on demand -- this gives us the most accurate state 
+            // Or maybe just again when the app starts up/is shown
+            
             if (Collect.getInstance().getIoService().isSignedIn()) {
                 if (hasReplicatedFolders) {                   
                     synchronize();                    
@@ -686,6 +698,10 @@ public class BrowserActivity extends ListActivity
                         .getAccountFolders()
                         .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
                         .getName();
+                
+                // Shorten names that are too long
+                if (folderName.length() > 23) 
+                    folderName = folderName.substring(0, 20) + "...";
             } catch (NullPointerException e) {
                 // Database metadata is not available at this time
                 Log.w(Collect.LOGTAG, t + "folder metadata not available at this time");

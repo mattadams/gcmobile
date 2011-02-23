@@ -396,7 +396,7 @@
 	<string name="tf_unable_to_proceed_without_licence_number_and_key">A licence number and key are required</string>
 	<string name="tf_unable_to_reactivate_while_in_use">The specified device is currently IN USE.  Reset the device and try again.</string>
 	<string name="tf_unable_to_remove">Unable to Remove</string>
-	<string name="tf_unable_to_remove_defaultdb">This special database cannot be removed</string>
+	<string name="tf_unable_to_remove_defaultdb">This special folder cannot be removed</string>
 	<string name="tf_unable_to_remove_self">You cannot remove yourself!</string>
 	<string name="tf_unable_to_reset_self">Cannot reset this device from here</string>
 	<string name="tf_unavailable">Unavailable</string>
