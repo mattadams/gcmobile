@@ -454,6 +454,19 @@ public class LauncherActivity extends Activity
 
             builder.setNegativeButton(getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
+                    // Make sure that Couch shuts down (since it's a remote process)
+                    if (Collect.getInstance().getCouchService() instanceof ICouchService) {
+                        // The user could not connect so there is no point of any of this continuing to run in the background
+                        try {
+                            Collect.getInstance().getCouchService().quitCouchDB();
+                        } catch (RemoteException e) {
+                            Log.w(Collect.LOGTAG, t + "unable to quit CouchDB: " + e.toString());
+                            e.printStackTrace();
+                        }
+                        
+                        Collect.getInstance().stopService(new Intent(ICouchService.class.getName()));
+                    }
+                    
                     finish();
                 }
             });
