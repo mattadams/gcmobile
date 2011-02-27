@@ -413,11 +413,11 @@ public class DatabaseService extends Service {
         switch (mode) {
         case REPLICATE_PUSH:
             source = "http://127.0.0.1:5985/db_" + db; 
-            target = "http://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":5984/db_" + db;
+            target = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
             break;
 
         case REPLICATE_PULL:
-            source = "http://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":5984/db_" + db;
+            source = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
             target = "http://127.0.0.1:5985/db_" + db;
             break;
         }

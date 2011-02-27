@@ -15,11 +15,10 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.DefaultHttpClient;
-
-import com.radicaldynamic.groupinform.application.Collect;
 
 import android.util.Log;
+
+import com.radicaldynamic.groupinform.application.Collect;
 
 public class HttpUtils
 {
@@ -33,7 +32,7 @@ public class HttpUtils
         String websiteData = null;
         
         try {
-            DefaultHttpClient client = new DefaultHttpClient();
+            SecureHttpClient client = new SecureHttpClient();
             
             // Load any cookies that have been stored
             if (Collect.getInstance().getInformOnlineState().getSession() == null) 
@@ -83,7 +82,7 @@ public class HttpUtils
         String websiteData = null;
         
         try {
-            DefaultHttpClient client = new DefaultHttpClient();
+            SecureHttpClient client = new SecureHttpClient();
             
             // Load any cookies that have been stored
             if (Collect.getInstance().getInformOnlineState().getSession() == null) 

@@ -40,7 +40,6 @@ import android.os.ConditionVariable;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.AccountDeviceList;
 import com.radicaldynamic.groupinform.activities.AccountFolderList;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -330,7 +329,7 @@ public class InformOnlineService extends Service {
             return;
         }
         
-        Log.d(Collect.LOGTAG, t + "pinging " + getString(R.string.tf_default_ionline_server) + ":" + getText(R.string.tf_default_ionline_port));
+        Log.d(Collect.LOGTAG, t + "pinging " + Collect.getInstance().getInformOnlineState().getServerUrl());
         
         // Try to ping the service to see if it is "up" (and determine whether we are registered)
         String pingUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/ping";

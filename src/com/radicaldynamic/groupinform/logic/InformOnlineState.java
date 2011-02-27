@@ -108,7 +108,7 @@ public class InformOnlineState
         loadPreferences();
         
         // Initialize server URL
-        setServerUrl("http://" + mContext.getText(R.string.tf_default_ionline_server) + ":" + mContext.getText(R.string.tf_default_ionline_port));
+        setServerUrl("https://" + mContext.getText(R.string.tf_default_ionline_server) + ":" + mContext.getText(R.string.tf_default_ionline_port));
         
         // Set the device finger print
         setDeviceFingerprint(mContext);
