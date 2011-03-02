@@ -325,7 +325,7 @@ public class DatabaseService extends Service {
             port = 5985;
         } else {
             host = getString(R.string.tf_default_ionline_server);
-            port = 5984;
+            port = 6984;
         }
         
         Log.d(Collect.LOGTAG, t + "establishing connection to " + host + ":" + port);
@@ -340,10 +340,11 @@ public class DatabaseService extends Service {
             else
                 mHttpClient = new StdHttpClient
                     .Builder()
+                    .enableSSL(true)            
                     .host(host)
                     .port(port)
                     .username(Collect.getInstance().getInformOnlineState().getDeviceId())
-                    .password(Collect.getInstance().getInformOnlineState().getDeviceKey())
+                    .password(Collect.getInstance().getInformOnlineState().getDeviceKey())                    
                     .build();
             
             mDbInstance = new StdCouchDbInstance(mHttpClient);            
@@ -360,7 +361,8 @@ public class DatabaseService extends Service {
             
             Log.d(Collect.LOGTAG, t + "connection to " + host + " successful");
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "while connecting to server " + port + ": " + e.toString());            
+            Log.e(Collect.LOGTAG, t + "while connecting to server " + port + ": " + e.toString());      
+            e.printStackTrace();
             mConnected = false;            
             throw new DbUnavailableException();
         }
