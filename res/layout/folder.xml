@@ -73,13 +73,13 @@
             android:id="@+id/folderVisibilityPrivate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/tf_private" />
+            android:text="@string/tf_folder_private" />
                 
         <RadioButton 
-            android:id="@+id/folderVisibilityPublic"
+            android:id="@+id/folderVisibilityShared"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/tf_public" />            
+            android:text="@string/tf_folder_shared" />            
     </RadioGroup>
         
     <TextView

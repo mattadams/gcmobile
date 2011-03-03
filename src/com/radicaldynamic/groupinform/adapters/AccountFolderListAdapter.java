@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.AccountFolderActivity;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 
 public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
@@ -42,10 +43,17 @@ public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
             TextView bt = (TextView) v.findViewById(R.id.secondLine);
             
             if (fi != null) {
-                if (f.isReplicated())
-                    fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_archive_sync));
-                else 
-                    fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_archive));
+                if (f.getVisibility().equals(AccountFolderActivity.PRIVATE_FOLDER)) {
+                    if (f.isReplicated())
+                        fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.folder_blue_backup));
+                    else 
+                        fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.folder_blue));
+                } else {
+                    if (f.isReplicated())
+                        fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.folder_green_backup));
+                    else 
+                        fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.folder_green));               
+                }                
             }
 
             if (tt != null) {

@@ -52,9 +52,9 @@ public class AccountFolderActivity extends Activity
     public static final int REMOVING_DIALOG = 1;
     public static final int CONFIRM_REMOVAL_DIALOG = 2;
     
-    // Status strings used by Inform Online
-    private static final String PRIVATE_FOLDER = "private";
-//    private static final String PUBLIC_FOLDER = "public";
+    // Visibility status strings used by Inform Online
+    public static final String PRIVATE_FOLDER = "private";
+    public static final String SHARED_FOLDER = "shared";
         
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
@@ -62,9 +62,9 @@ public class AccountFolderActivity extends Activity
     private AccountFolder mFolder;
     
     private EditText mFolderName;
-    private EditText mFolderDescription;    
-    private RadioButton mFolderVisibilityPrivate;
-    private RadioButton mFolderVisibilityPublic;
+    private EditText mFolderDescription;
+    private RadioButton mFolderVisibilityShared;
+    private RadioButton mFolderVisibilityPrivate;    
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -102,7 +102,7 @@ public class AccountFolderActivity extends Activity
         mFolderName = (EditText) findViewById(R.id.folderName);
         mFolderDescription = (EditText) findViewById(R.id.folderDescription);
         mFolderVisibilityPrivate = (RadioButton) findViewById(R.id.folderVisibilityPrivate);
-        mFolderVisibilityPublic = (RadioButton) findViewById(R.id.folderVisibilityPublic);
+        mFolderVisibilityShared = (RadioButton) findViewById(R.id.folderVisibilityShared);
         
         mFolderName.setText(mFolder.getName());
         mFolderDescription.setText(mFolder.getDescription());
@@ -111,7 +111,7 @@ public class AccountFolderActivity extends Activity
         if (mFolder.getVisibility().equals(PRIVATE_FOLDER)) {
             mFolderVisibilityPrivate.setChecked(true);
         } else {
-            mFolderVisibilityPublic.setChecked(true);
+            mFolderVisibilityShared.setChecked(true);
         }
     }
     
@@ -214,9 +214,9 @@ public class AccountFolderActivity extends Activity
             params.add(new BasicNameValuePair("description", mFolderDescription.getText().toString().trim()));
             
             if (mFolderVisibilityPrivate.isChecked())
-                params.add(new BasicNameValuePair("visibility", "private"));
+                params.add(new BasicNameValuePair("visibility", PRIVATE_FOLDER));
             else 
-                params.add(new BasicNameValuePair("visibility", "public"));
+                params.add(new BasicNameValuePair("visibility", SHARED_FOLDER));
             
             String processUrl;
             

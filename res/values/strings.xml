@@ -270,8 +270,10 @@
 	<string name="tf_folder_admin_description_label">Description</string>
 	<string name="tf_folder_admin_description_hint">A longer description explaining this folder.</string>
 	<string name="tf_folder_admin_visibility_label">Visibility</string>
-	<string name="tf_folder_admin_visibility_hint">Private folders are for your use only. Public folders may be used by any of your account team members.</string>
+	<string name="tf_folder_admin_visibility_hint">Private folders are for your use only. Shared folders may be used by any of your account team members.</string>
 	<string name="tf_folder_name_required">Folder name required</string>
+	<string name="tf_folder_private">Private</string>
+    <string name="tf_folder_shared">Shared</string>	
 	<string name="tf_folder_unavailable">Folder Unavailable</string>
 	<string name="tf_form_builder_itext_exception_msg">The form editor is currently unable to process forms with translated text.\n\nLocalization capabilities will be added in a future release.</string>
 	<string name="tf_form_builder_load_error">Problem Loading Form</string>
@@ -327,8 +329,6 @@
 	<string name="tf_opening_please_wait">Opening, please wait...</string>
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
-	<string name="tf_private">Private</string>
-	<string name="tf_public">Public</string>
 	<string name="tf_reactivation_delayed_reason">Please wait 5 minutes after device reset</string>
 	<string name="tf_reactivation_delayed_wait">PIN will be accepted in%1$s%2$s %3$s</string>   
 	<string name="tf_register_this_device">Register this Device</string>
