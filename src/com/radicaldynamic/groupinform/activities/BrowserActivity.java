@@ -621,8 +621,20 @@ public class BrowserActivity extends ListActivity
             Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
             Iterator<String> folderIds = folderSet.iterator();
             
-            int i = 0;
+            int progress = 0;
+            int total = 0;
             
+            // Figure out how many folders are marked for replication
+            while (folderIds.hasNext()) {
+                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
+                
+                if (folder.isReplicated())
+                    total++;
+            }
+            
+            // Reset iterator
+            folderIds = folderSet.iterator();    
+                
             while (folderIds.hasNext()) {
                 AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());                
                 
@@ -631,8 +643,8 @@ public class BrowserActivity extends ListActivity
                     
                     // Update progress dialog
                     Message msg = progressHandler.obtainMessage();
-                    msg.arg1 = ++i;
-                    msg.arg2 = folderSet.size();
+                    msg.arg1 = ++progress;
+                    msg.arg2 = total;
                     progressHandler.sendMessage(msg);
                     
                     try {                        
