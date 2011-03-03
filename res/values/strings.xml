@@ -388,8 +388,11 @@
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
-	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_db">The Group Inform database is required to work offline.  If you are receiving this message it means that the database is unavailable for one or more reasons.\n\nPlease let us know that you are receiving this message by visiting us at http://groupinform.com/support - thank you!</string>
+	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>
+	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Group Inform was unable to connect to the Simple Sharing service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
+	<string name="tf_unable_to_go_online_dialog">Cannot Go Online</string>
+	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Group Inform was unable to go online.\n\nPlease make sure that this device can access the Internet and try again.</string>
 	<string name="tf_unable_to_open_folder">The folder \"%s\" currently unavailable.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_missing_metadata">The selected folder is currently unavailable.\n\nThis might be because the owner of the folder has removed it or made it private.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_while_offline">The folder \"%s\" is unavailable while offline.\n\nPlease go online to access this folder or select a folder that is synchronized for offline use.</string>

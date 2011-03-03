@@ -81,6 +81,8 @@ public class BrowserActivity extends ListActivity
     private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 3;    
     private static final int DIALOG_ONLINE_STATE_CHANGING = 4;
     private static final int DIALOG_TOGGLE_ONLINE_STATE = 5;
+    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 6;
+    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 7;
         
     // Request codes for returning data from specified intent 
     private static final int RESULT_ABOUT_INFORM = 1;
@@ -183,7 +185,8 @@ public class BrowserActivity extends ListActivity
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         Dialog dialog = null;
         
-        switch (id) {   
+        switch (id) {
+        // Couldn't connect to DB (for a specific reason)
         case DIALOG_FOLDER_UNAVAILABLE:
             builder
                 .setCancelable(false)
@@ -210,6 +213,7 @@ public class BrowserActivity extends ListActivity
             dialog = builder.create();
             break;            
             
+        // We can't go offline (CouchDB not installed or not available locally)
         case DIALOG_OFFLINE_MODE_UNAVAILABLE_DB:
             builder
                 .setCancelable(false)
@@ -227,6 +231,7 @@ public class BrowserActivity extends ListActivity
             dialog = builder.create();
             break;            
             
+        // We can't go offline (user has not selected any databases to be replicated)
         case DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS:
             builder
             .setCancelable(false)
@@ -244,6 +249,7 @@ public class BrowserActivity extends ListActivity
             
             break;
 
+        // Simple progress dialog for online/offline
         case DIALOG_ONLINE_STATE_CHANGING:
             if (Collect.getInstance().getIoService().isSignedIn())
                 dialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_disconnecting));
@@ -251,7 +257,8 @@ public class BrowserActivity extends ListActivity
                 dialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_connecting));
             
             break;
-                    
+        
+        // Prompt user to connect/disconnect
         case DIALOG_TOGGLE_ONLINE_STATE:
             String buttonText;
             
@@ -286,6 +293,42 @@ public class BrowserActivity extends ListActivity
                 }
             });
             
+            dialog = builder.create();
+            break;
+            
+        // Tried going offline but couldn't
+        case DIALOG_OFFLINE_ATTEMPT_FAILED:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle(R.string.tf_unable_to_go_offline_dialog)
+            .setMessage(R.string.tf_unable_to_go_offline_dialog_msg_reason_generic);
+
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    loadScreen();
+                    dialog.cancel();
+                }
+            });
+
+            dialog = builder.create();
+            break;            
+            
+        // Tried going online but couldn't
+        case DIALOG_ONLINE_ATTEMPT_FAILED:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle(R.string.tf_unable_to_go_online_dialog)
+            .setMessage(R.string.tf_unable_to_go_online_dialog_msg_reason_generic);
+
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    loadScreen();
+                    dialog.cancel();
+                }
+            });
+
             dialog = builder.create();
             break;
             
@@ -535,6 +578,8 @@ public class BrowserActivity extends ListActivity
         Boolean hasReplicatedFolders = false;
         Boolean missingCouch = false;
         Boolean missingSynchronizedFolders = false;
+        Boolean unableToGoOffline = false;
+        Boolean unableToGoOnline = false;
         
         ProgressDialog progressDialog = null;        
         
@@ -551,17 +596,22 @@ public class BrowserActivity extends ListActivity
             // Or maybe just again when the app starts up/is shown
             
             if (Collect.getInstance().getIoService().isSignedIn()) {
-                if (hasReplicatedFolders) {                   
-                    synchronize();                    
-                    Collect.getInstance().getIoService().goOffline();
+                if (hasReplicatedFolders) {
+                    // Only attempt to synchronize if we can reasonably do so
+                    if (Collect.getInstance().getIoService().isSignedIn())
+                        synchronize();                      
+                    
+                    if (!Collect.getInstance().getIoService().goOffline())
+                        unableToGoOffline = true;
                 } else {
                     missingSynchronizedFolders = true;
                 }
             } else {
-                Collect.getInstance().getIoService().goOnline();
-                
-                if (hasReplicatedFolders)
-                    synchronize();
+                if (Collect.getInstance().getIoService().goOnline()) {                
+                    if (hasReplicatedFolders)
+                        synchronize();
+                } else
+                    unableToGoOnline = true;
             }
 
             return null;
@@ -601,19 +651,20 @@ public class BrowserActivity extends ListActivity
             else
                 progressDialog.cancel();
             
-            if (missingCouch)
+            if (missingCouch) {
                 showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE_DB);
-            else if (missingSynchronizedFolders)
+                loadScreen();
+            } else if (missingSynchronizedFolders) {
                 showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS);
-
-            loadScreen();
-            
-            // Re-enable
-            Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
-            b1.setEnabled(true);
-            
-            Button b2 = (Button) findViewById(R.id.folderTitleButton);
-            b2.setEnabled(true);
+                loadScreen();
+            } else if (unableToGoOffline) {
+                // Load screen after user acknowledges to avoid stacking of dialogs
+                showDialog(DIALOG_OFFLINE_ATTEMPT_FAILED);
+            } else if (unableToGoOnline) {
+                // Load screen after user acknowledges to avoid stacking of dialogs
+                showDialog(DIALOG_ONLINE_ATTEMPT_FAILED);
+            } else 
+                loadScreen();
         }
         
         private void synchronize()
@@ -664,13 +715,18 @@ public class BrowserActivity extends ListActivity
      */
     private void loadScreen()
     {
-        // Reflect the online/offline status
+        // Reflect the online/offline status (may be disabled thanks to toggling state)
         Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
+        b1.setEnabled(true);
 
         if (Collect.getInstance().getIoService().isSignedIn())
             b1.setText(getText(R.string.tf_inform_state_online));
         else
             b1.setText(getText(R.string.tf_inform_state_offline));
+        
+        // Re-enable (may be disabled thanks to toggling state)
+        Button b2 = (Button) findViewById(R.id.folderTitleButton);
+        b2.setEnabled(true);
 
         // Spinner must reflect results of refresh view below
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);        

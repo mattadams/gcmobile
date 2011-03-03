@@ -210,7 +210,7 @@ public class InformOnlineService extends Service {
         = mSignedIn
         = false;
     }
-    
+
     /*
      * Sign in to the Inform Online service
      * Only called by connect()
@@ -287,7 +287,7 @@ public class InformOnlineService extends Service {
                 Log.i(Collect.LOGTAG, t + "said goodbye to Inform Online");
             } else { 
                 Log.i(Collect.LOGTAG, t + "device checkout unnecessary");
-            }      
+            }
             
             saidGoodbye = true;
         } catch (NullPointerException e) {
