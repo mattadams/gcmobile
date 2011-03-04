@@ -41,7 +41,7 @@ public class AccountDevice
         if (getAlias() == null || getAlias().equals("null"))
             return getEmail();
         else
-            return getAlias();           
+            return getAlias();      
     }
     
     /*

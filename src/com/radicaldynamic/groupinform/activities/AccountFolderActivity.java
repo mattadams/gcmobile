@@ -169,7 +169,15 @@ public class AccountFolderActivity extends Activity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_REMOVE_FOLDER, 0, getString(R.string.tf_remove_folder)).setIcon(R.drawable.ic_menu_delete);        
+        
+        Boolean enabled = true;
+
+        // Certain menu entries should not be available when creating a new folder
+        if (mFolder.getId() == null)
+            enabled = false;
+        
+        menu.add(0, MENU_REMOVE_FOLDER, 0, getString(R.string.tf_remove_folder)).setIcon(R.drawable.ic_menu_delete).setEnabled(enabled);
+        
         return true;
     }    
     

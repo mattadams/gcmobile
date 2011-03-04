@@ -1,5 +1,8 @@
 package com.radicaldynamic.groupinform.logic;
 
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.application.Collect;
+
 
 
 /*
@@ -38,6 +41,16 @@ public class AccountFolder
 
     public void setRev(String rev) { this.rev = rev; }
     public String getRev() { return rev; }
+    
+    public String getOwnerAlias() 
+    { 
+        AccountDevice device = Collect.getInstance().getInformOnlineState().getAccountDevices().get(ownerId);
+        
+        if (device == null)
+            return Collect.getInstance().getString(R.string.tf_unavailable).toString();
+        else
+            return device.getDisplayName();
+    }
 
     public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
     public String getOwnerId() { return ownerId; }
@@ -54,5 +67,5 @@ public class AccountFolder
     public void setReplicated(boolean replicated) { this.replicated = replicated; }
     public boolean isReplicated() { return replicated; }
     
-    public String toString() { return getName(); }   
+    public String toString() { return getName(); }
 }

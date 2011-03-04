@@ -318,6 +318,7 @@
 	<string name="tf_main_menu_form_filter_prompt">Show...</string>
 	<string name="tf_manage">Manage Forms</string>
 	<string name="tf_manage_item">Manage %s</string>
+	<string name="tf_more_info">More Info</string>
 	<string name="tf_my_forms">My Forms</string>
 	<string name="tf_next_instance">Next</string>
 	<string name="tf_new_account">New Account</string>

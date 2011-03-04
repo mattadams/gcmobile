@@ -65,11 +65,15 @@ public class AccountFolderList extends ListActivity
     private static final int MENU_SYNC_LIST = Menu.FIRST + 1;
     
     private static final int CONTEXT_MENU_EDIT = Menu.FIRST;
+    private static final int CONTEXT_MENU_INFO = Menu.FIRST + 1;
     
     public static final int DIALOG_DENIED_NOT_OWNER = 0;
-    public static final int DIALOG_OPENING = 1;
+    public static final int DIALOG_MORE_INFO = 1;
+    public static final int DIALOG_OPENING = 2;
     
     private RefreshViewTask mRefreshViewTask;
+    
+    private AccountFolder mFolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -97,8 +101,8 @@ public class AccountFolderList extends ListActivity
         if (Collect.getInstance().getIoService().isSignedIn())
             enabled = true;
         
-        menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder))
-            .setEnabled(enabled);
+        menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder)).setEnabled(enabled);
+        menu.add(0, CONTEXT_MENU_INFO, 0, getString(R.string.tf_more_info));
     }
 
     /*
@@ -124,6 +128,23 @@ public class AccountFolderList extends ListActivity
                     }
                 });
 
+            dialog = builder.create();
+            break;
+            
+        case DIALOG_MORE_INFO:
+            String message = "Owner:\n" + mFolder.getOwnerAlias() + "\n\n";
+            message = message + "Description:\n" + mFolder.getDescription();
+            
+            builder
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(mFolder.getName())
+            .setMessage(message)
+            .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    removeDialog(DIALOG_MORE_INFO);
+                }
+            });
+            
             dialog = builder.create();
             break;
             
@@ -159,11 +180,10 @@ public class AccountFolderList extends ListActivity
     public boolean onContextItemSelected(MenuItem item)
     {
         AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+        AccountFolder folder = (AccountFolder) getListView().getItemAtPosition(info.position);
         
         switch (item.getItemId()) {
         case CONTEXT_MENU_EDIT:
-            AccountFolder folder = (AccountFolder) getListView().getItemAtPosition(info.position);
-            
             if (Collect.getInstance().getInformOnlineState().getDeviceId().equals(folder.getOwnerId())) {
                 Intent i = new Intent(this, AccountFolderActivity.class);
                 i.putExtra(AccountFolderActivity.KEY_FOLDER_ID, folder.getId());
@@ -177,6 +197,11 @@ public class AccountFolderList extends ListActivity
                 showDialog(DIALOG_DENIED_NOT_OWNER);
             }           
             
+            break;
+                        
+        case CONTEXT_MENU_INFO:
+            mFolder = folder;
+            showDialog(DIALOG_MORE_INFO);
             break;
             
         default:
