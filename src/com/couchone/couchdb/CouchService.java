@@ -21,7 +21,7 @@ import android.os.RemoteException;
 
 import com.couchone.libcouch.AeSimpleSHA1;
 import com.couchone.libcouch.Base64Coder;
-import com.couchone.libcouch.HTTPRequest;
+import com.couchone.libcouch.AndCouch;
 import com.couchone.libcouch.ICouchClient;
 import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
@@ -101,6 +101,8 @@ public class CouchService extends Service {
 
 			// clients can request a command database that proxies replication 
 			// requests as they dont have admin permissions to post directly
+			// Command databases are currently unused
+			/*
 			if (cmdDb) {
 
 				createIfNotExists(dbName + "-ctrl", userName, pass);
@@ -118,6 +120,7 @@ public class CouchService extends Service {
 					}
 				}).start();
 			}
+			*/
 
 			// Notify the client that their database is ready
 			callback.databaseCreated(dbName, userName, pass, tag);
@@ -159,7 +162,7 @@ public class CouchService extends Service {
 					+ "\"type\":\"user\"," + "\"name\":\"" + user + "\","
 					+ "\"roles\":[]," + "\"password_sha\":\"" + hashed + "\", "
 					+ "\"salt\":\"" + salt + "\"}";
-			HTTPRequest.post(couch.url() + "_users", json, adminHeaders());
+			AndCouch.post(couch.url() + "_users", json, adminHeaders());
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
@@ -176,13 +179,13 @@ public class CouchService extends Service {
 	private void createIfNotExists(String dbName, String user, String pass) {
 		try {
 			String url = couch.url() + dbName;
-			HTTPRequest res = HTTPRequest.get(couch.url() + dbName, adminHeaders());
+			AndCouch res = AndCouch.get(couch.url() + dbName, adminHeaders());
 			if (res.status == 404) {
 				createUser(user, pass);
-				HTTPRequest.put(url, null, adminHeaders());
+				AndCouch.put(url, null, adminHeaders());
 				String sec = "{\"admins\":{\"names\":[\"" + user
 						+ "\"],\"roles\":[]},\"readers\":{\"names\":[],\"roles\":[]}}";
-				HTTPRequest.put(url + "/_security", sec, adminHeaders());
+				AndCouch.put(url + "/_security", sec, adminHeaders());
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
