@@ -87,6 +87,7 @@ public class DatabaseService extends Service {
                                 .isReplicated());
                         
                         replicateAll();
+                        performLocalHousekeeping();
                     } catch (Exception e) {
                         Log.w(Collect.LOGTAG, t + "error automatically connecting to DB: " + e.toString()); 
                     } finally {
@@ -437,6 +438,43 @@ public class DatabaseService extends Service {
         }
         
         return status;
+    }
+    
+    // Perform any local house keeping (e.g., removing of non-synchronized DBs, compacting & view cleanup)
+    private void performLocalHousekeeping()
+    {
+        HttpClient httpClient = new StdHttpClient.Builder().host("127.0.0.1").port(5985).build();
+        CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient);
+        
+        try {
+            List<String> allDatabases = dbInstance.getAllDatabases();
+            Iterator<String> dbs = allDatabases.iterator();
+
+            while (dbs.hasNext()) {
+                String db = dbs.next();                
+                
+                // Skip special databases
+                if (!db.startsWith("_")) {
+                    // Our metadata knows nothing about the db_ prefix
+                    db = db.substring(3);
+                    
+                    AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db);
+                    
+                    if (folder == null) {
+                        Log.w(Collect.LOGTAG, t + "no metatdata for " + db);
+                    } else {
+                        // Remove databases that exist locally but are not replicated/marked for synchronization
+                        if (!folder.isReplicated()) {
+                            Log.i(Collect.LOGTAG, t + "deleting local database " + db);
+                            dbInstance.deleteDatabase("db_" + db);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, t + "while performing local housekeeping " + e.toString());
+            e.printStackTrace();
+        }
     }
     
     private void replicateAll()
