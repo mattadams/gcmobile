@@ -85,7 +85,43 @@ public class AccountDeviceActivity extends Activity
         mDeviceAlias.setText(mDevice.getAlias());
         mDeviceEmail.setText(mDevice.getEmail());
         mDevicePin.setText(mDevice.getPin());
-        mDeviceCheckin.setText(mDevice.getLastCheckin());
+        
+        // lastCheck is delivered in milliseconds
+        Integer lastCheckin = Integer.valueOf(mDevice.getLastCheckin()) / 1000;
+        String approximation = "";
+        String period = "";
+        String unit = "";
+        
+        if (lastCheckin / 86400 > 0) {
+            period = Integer.toString(lastCheckin / 86400);
+            approximation = "About ";
+            unit = " days";
+        } else if ((lastCheckin % 86400) / 3600 > 0) {
+            period = Integer.toString((lastCheckin % 86400) / 3600);
+            approximation = "About ";
+            unit = " hours";
+        } else if (((lastCheckin % 86400) % 3600) / 60 > 0) {
+            period = Integer.toString(((lastCheckin % 86400) % 3600) / 60);
+            unit = " minutes";
+        } else if ((lastCheckin % 86400) % 3600 > 0) {
+            period = Integer.toString((lastCheckin % 86400) % 3600);
+            unit = " seconds";
+        } else {
+            approximation = getString(R.string.tf_unavailable);
+        }
+
+        // Hack to turn "minutes" into "minute" or whatever
+        if (period.equals("1")) {
+            unit = unit.substring(0, unit.length() - 1);
+        }
+        
+        String text = approximation + period + unit;
+        
+        if (!text.equals(getString(R.string.tf_unavailable).toString())) {
+            text = text + " ago";
+        }
+
+        mDeviceCheckin.setText(text);
         
         // Initialize fields based on whether the device is locked
         if (mDevice.getStatus().equals(AccountDevice.STATUS_ACTIVE))

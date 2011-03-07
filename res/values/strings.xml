@@ -211,11 +211,11 @@
 	<string name="tf_dependency_missing_dialog">Install Helper Software?</string>
 	<string name="tf_dependency_missing_dialog_msg">The following free app will help to maximize the potential of Group Inform:\n\n</string>
 	<string name="tf_device_admin_alias_label">Alias</string>
-	<string name="tf_device_admin_alias_hint">If set this alias will be displayed in various places instead of using the email address to identify this user. Examples: Joe Smith, North Warehouse or Survey Team.</string>
+	<string name="tf_device_admin_alias_hint">Identify this user by an alias instead of using the the email address. Examples: Joe Smith, North Warehouse or Survey Team.</string>
 	<string name="tf_device_admin_checkin_label">Last Checkin</string>
-	<string name="tf_device_admin_checkin_hint">This is the last time that this device checked in to your account.</string>
+	<string name="tf_device_admin_checkin_hint">The last time that this device checked in to your account.</string>
 	<string name="tf_device_admin_email_label">Email</string>
-	<string name="tf_device_admin_email_hint">This email address should usually be set to whatever address the user of this device regularly receives email at. This email address must be unique to your account.</string>
+	<string name="tf_device_admin_email_hint">The email address of the primary user of this device. This email address must be unique to your account.</string>
 	<string name="tf_device_admin_pin_label">Device PIN</string>
 	<string name="tf_device_admin_pin_hint">If the device status is \"unused\" this PIN may be supplied during the registration process to reactivate this device registration.</string>
 	<string name="tf_device_admin_status_label">Status</string>	
