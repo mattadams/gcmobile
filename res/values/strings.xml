@@ -397,6 +397,7 @@
 	<string name="tf_unable_to_open_folder">The folder \"%s\" is currently unavailable.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_missing_metadata">The selected folder is currently unavailable.\n\nThis might be because the owner of the folder has removed it or made it private.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_while_offline">The folder \"%s\" is unavailable while offline.\n\nPlease go online to access this folder or select a folder that is synchronized for offline use.</string>
+	<string name="tf_unable_to_open_my_forms_folder">In order to manage forms the special \"My Forms\" folder must be available.  You must be online or have this folder synchronized for offline use.\n\nPlease ensure that this device can access the Internet and that Inform is online before trying again.</string>
 	<string name="tf_unable_to_proceed_without_licence_number_and_key">A licence number and key are required</string>
 	<string name="tf_unable_to_reactivate_while_in_use">The specified device is currently IN USE.  Reset the device and try again.</string>
 	<string name="tf_unable_to_remove">Unable to Remove</string>

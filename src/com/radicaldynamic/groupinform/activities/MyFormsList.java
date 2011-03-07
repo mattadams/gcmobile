@@ -21,8 +21,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.ektorp.Attachment;
+import org.ektorp.DbAccessException;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -58,6 +60,9 @@ import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 public class MyFormsList extends ListActivity
 {
     private static final String t = "MyFormsList: ";
+    
+    // Dialog status codes
+    private static final int DIALOG_FOLDER_UNAVAILABLE = 1;
 
     private static final int MENU_ADD = Menu.FIRST;
     
@@ -83,6 +88,34 @@ public class MyFormsList extends ListActivity
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
     {
         super.onCreateContextMenu(menu, v, menuInfo);
+    }
+    
+    public Dialog onCreateDialog(int id, Bundle data)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        Dialog dialog = null;
+        
+        switch (id) {
+        case DIALOG_FOLDER_UNAVAILABLE:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_folder_unavailable)
+            .setMessage(R.string.tf_unable_to_open_my_forms_folder);
+        
+        builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                finish();
+            }
+        });
+        
+        dialog = builder.create();
+            break;
+        default:
+            Log.e(Collect.LOGTAG, t + "showDialog() unimplemented for " + id);
+        }
+        
+        return dialog;        
     }
 
     @Override
@@ -137,6 +170,7 @@ public class MyFormsList extends ListActivity
     {
         private ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
         private HashMap<String, HashMap<String, String>> instanceTalliesByStatus = new HashMap<String, HashMap<String, String>>();
+        private boolean folderUnavailable = false;   
 
         @Override
         protected Void doInBackground(Void... nothing)
@@ -145,9 +179,11 @@ public class MyFormsList extends ListActivity
                 documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
                 DocumentUtils.sortByName(documents);                             
 
-                instanceTalliesByStatus = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();                    
+                instanceTalliesByStatus = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
+            } catch (DbAccessException e) {                
+                folderUnavailable = true;
             }
             
             return null;
@@ -165,28 +201,32 @@ public class MyFormsList extends ListActivity
             RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
             onscreenProgress.setVisibility(View.GONE);
             
-            if (documents.isEmpty()) {
-                TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-                nothingToDisplay.setVisibility(View.VISIBLE);
-                
-                openOptionsMenu();
-            } else {
-                TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-                nothingToDisplay.setVisibility(View.GONE);
-                
-                MyFormsListAdapter adapter;
-                
-                adapter = new MyFormsListAdapter(
-                        getApplicationContext(),
-                        R.layout.browser_list_item, 
-                        documents,
-                        instanceTalliesByStatus, 
-                        (Spinner) findViewById(R.id.form_filter));
-                
-                setListAdapter(adapter);
-                
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_LONG).show();
-            }            
+            if (folderUnavailable) {
+                showDialog(DIALOG_FOLDER_UNAVAILABLE);
+            } else { 
+                if (documents.isEmpty()) {
+                    TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+                    nothingToDisplay.setVisibility(View.VISIBLE);
+
+                    openOptionsMenu();
+                } else {
+                    TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+                    nothingToDisplay.setVisibility(View.GONE);
+
+                    MyFormsListAdapter adapter;
+
+                    adapter = new MyFormsListAdapter(
+                            getApplicationContext(),
+                            R.layout.browser_list_item, 
+                            documents,
+                            instanceTalliesByStatus, 
+                            (Spinner) findViewById(R.id.form_filter));
+
+                    setListAdapter(adapter);
+
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_LONG).show();
+                }
+            }
         }
     }
 
