@@ -246,6 +246,7 @@ public class DatabaseService extends Service {
             // Local database
             if (mConnectedToLocal) {
                 if (mLocalDbConnector instanceof StdCouchDbConnector && mLocalDbConnector.getDatabaseName().equals("db_" + db)) {
+                    Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
                     Log.d(Collect.LOGTAG, t + "local database " + db + " already open");
                     return;
                 }
@@ -271,6 +272,7 @@ public class DatabaseService extends Service {
             // Remote database
             if (mConnectedToRemote) {
                 if (mRemoteDbConnector instanceof StdCouchDbConnector && mRemoteDbConnector.getDatabaseName().equals("db_" + db)) {
+                    Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
                     Log.d(Collect.LOGTAG, t + "remote database " + db + " already open");
                     return;
                 }

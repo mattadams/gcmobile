@@ -123,7 +123,7 @@ public class MyFormsList extends ListActivity
     {
         switch (item.getItemId()) {
         case MENU_ADD:
-            createNewFormDialog();
+            showNewFormDialog();
             return true;
         }
         
@@ -156,7 +156,7 @@ public class MyFormsList extends ListActivity
         @Override
         protected void onPreExecute()
         {
-            //setProgressBarIndeterminateVisibility(true);
+
         }
 
         @Override
@@ -194,7 +194,25 @@ public class MyFormsList extends ListActivity
         }
     }
 
-    private void createNewFormDialog()
+    /**
+     * Load the various elements of the screen that must wait for other tasks to
+     * complete
+     */
+    private void loadScreen()
+    {
+        try {
+            Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getDefaultDatabase());            
+            
+            mRefreshViewTask = new RefreshViewTask();
+            mRefreshViewTask.execute();
+            
+            registerForContextMenu(getListView());
+        } catch (DatabaseService.DbUnavailableException e) {
+    
+        }
+    }
+
+    private void showNewFormDialog()
     {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         
@@ -252,23 +270,5 @@ public class MyFormsList extends ListActivity
         });
     
         alert.show();
-    }
-
-    /**
-     * Load the various elements of the screen that must wait for other tasks to
-     * complete
-     */
-    private void loadScreen()
-    {
-        try {
-            Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getDefaultDatabase());            
-            
-            mRefreshViewTask = new RefreshViewTask();
-            mRefreshViewTask.execute();
-            
-            registerForContextMenu(getListView());
-        } catch (DatabaseService.DbUnavailableException e) {
-
-        }
     }
 }

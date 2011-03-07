@@ -83,6 +83,9 @@ public class BrowserActivity extends ListActivity
     private static final int DIALOG_TOGGLE_ONLINE_STATE = 5;
     private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 6;
     private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 7;
+    
+    // Keys for persistence between screen orientation changes
+    private static final String KEY_DIALOG_MESSAGE = "dialog_msg";
         
     // Request codes for returning data from specified intent 
     private static final int RESULT_ABOUT_INFORM = 1;
@@ -105,10 +108,18 @@ public class BrowserActivity extends ListActivity
 
         // Load our custom window title
         getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.folder_selector_title);
+        
+        if (savedInstanceState == null) {
+            // Defaults?
+        } else {
+            // Restore custom dialog message
+            if (savedInstanceState.containsKey(KEY_DIALOG_MESSAGE))
+                mDialogMessage = savedInstanceState.getString(KEY_DIALOG_MESSAGE);
+        }
 
         // Initiate and populate spinner to filter forms displayed by instances types
         ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
-        .createFromResource(this, R.array.tf_main_menu_form_filters, android.R.layout.simple_spinner_item);        
+            .createFromResource(this, R.array.tf_main_menu_form_filters, android.R.layout.simple_spinner_item);        
         instanceStatus.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         Spinner s1 = (Spinner) findViewById(R.id.form_filter);
@@ -424,6 +435,13 @@ public class BrowserActivity extends ListActivity
 
         return super.onOptionsItemSelected(item);
     }
+    
+    @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_DIALOG_MESSAGE, mDialogMessage);
+    }
 
     /*
      * Determine how to load a form instance
@@ -474,6 +492,7 @@ public class BrowserActivity extends ListActivity
     {
         private ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
         private Map<String, String> instanceTallies = new HashMap<String, String>();
+        private boolean folderUnavailable = true;
 
         @Override
         protected InstanceDocument.Status doInBackground(InstanceDocument.Status... status)
@@ -494,6 +513,8 @@ public class BrowserActivity extends ListActivity
                         DocumentUtils.sortByName(documents);
                     }
                 }
+                
+                folderUnavailable = false;
             } catch (DbAccessException e) {
                 Log.w(Collect.LOGTAG, t + "database access refused: " + e.toString());
             } catch (Exception e) {
@@ -535,27 +556,32 @@ public class BrowserActivity extends ListActivity
             
             setListAdapter(adapter);
 
-            if (status == InstanceDocument.Status.nothing) {
-                // Provide hints to user
-                if (documents.isEmpty()) {
-                    TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-                    nothingToDisplay.setVisibility(View.VISIBLE);
-                    
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
-                    openOptionsMenu();
-                } else {
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
-                }
+            if (folderUnavailable) {
+                mDialogMessage = getString(R.string.tf_unable_to_open_folder, getSelectedFolderName());
+                showDialog(DIALOG_FOLDER_UNAVAILABLE);
             } else {
-                Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-                String descriptor = s1.getSelectedItem().toString().toLowerCase();
+                if (status == InstanceDocument.Status.nothing) {
+                    // Provide hints to user
+                    if (documents.isEmpty()) {
+                        TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+                        nothingToDisplay.setVisibility(View.VISIBLE);
 
-                // Provide hints to user
-                if (documents.isEmpty()) {
-                    TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-                    nothingToDisplay.setVisibility(View.VISIBLE);
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
+                        openOptionsMenu();
+                    } else {
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
+                    Spinner s1 = (Spinner) findViewById(R.id.form_filter);
+                    String descriptor = s1.getSelectedItem().toString().toLowerCase();
+
+                    // Provide hints to user
+                    if (documents.isEmpty()) {
+                        TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+                        nothingToDisplay.setVisibility(View.VISIBLE);
+                    } else {
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
 
@@ -709,6 +735,29 @@ public class BrowserActivity extends ListActivity
             }
         }
     }
+    
+    private String getSelectedFolderName()
+    {
+        String folderName = "...";
+        
+        try {
+            folderName = Collect
+                .getInstance()
+                .getInformOnlineState()
+                .getAccountFolders()
+                .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
+                .getName();
+            
+            // Shorten names that are too long
+            if (folderName.length() > 23) 
+                folderName = folderName.substring(0, 20) + "...";
+        } catch (NullPointerException e) {
+            // Database metadata is not available at this time
+            Log.w(Collect.LOGTAG, t + "folder metadata not available at this time");
+        }
+        
+        return folderName;
+    }
 
     /**
      * Load the various elements of the screen that must wait for other tasks to complete
@@ -752,30 +801,13 @@ public class BrowserActivity extends ListActivity
         TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
         nothingToDisplay.setVisibility(View.INVISIBLE);
         
-        String folderName = "...";
+        String folderName = getSelectedFolderName();
         
         // Open selected database
         try {            
             // Reflect the currently selected folder
             Button b2 = (Button) findViewById(R.id.folderTitleButton);
-            
-            try {
-                folderName = Collect
-                        .getInstance()
-                        .getInformOnlineState()
-                        .getAccountFolders()
-                        .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
-                        .getName();
-                
-                // Shorten names that are too long
-                if (folderName.length() > 23) 
-                    folderName = folderName.substring(0, 20) + "...";
-            } catch (NullPointerException e) {
-                // Database metadata is not available at this time
-                Log.w(Collect.LOGTAG, t + "folder metadata not available at this time");
-            } finally {
-                b2.setText(folderName);
-            }
+            b2.setText(folderName);
             
             Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
         

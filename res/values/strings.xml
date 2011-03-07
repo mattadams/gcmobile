@@ -394,7 +394,7 @@
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Group Inform was unable to connect to the Simple Sharing service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
 	<string name="tf_unable_to_go_online_dialog">Cannot Go Online</string>
 	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Group Inform was unable to go online.\n\nPlease make sure that this device can access the Internet and try again.</string>
-	<string name="tf_unable_to_open_folder">The folder \"%s\" currently unavailable.\n\nPlease select another folder and try again later.</string>
+	<string name="tf_unable_to_open_folder">The folder \"%s\" is currently unavailable.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_missing_metadata">The selected folder is currently unavailable.\n\nThis might be because the owner of the folder has removed it or made it private.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_while_offline">The folder \"%s\" is unavailable while offline.\n\nPlease go online to access this folder or select a folder that is synchronized for offline use.</string>
 	<string name="tf_unable_to_proceed_without_licence_number_and_key">A licence number and key are required</string>
