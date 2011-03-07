@@ -41,6 +41,7 @@ public class ClientRegistrationActivity extends Activity
     private static final int DIALOG_ACCOUNT_CREATED = 3;
     private static final int DIALOG_DEVICE_REGISTERED = 4;
     private static final int DIALOG_SYSTEM_ERROR = 10;
+    private static final int DIALOG_BETA_PREVIEW = 11;
     
     // verifyDeviceRegistration exit codes
     private static final int DEVICE_REGISTRATION_VERIFIED = 0;                              // Generic "registration ok"
@@ -102,7 +103,7 @@ public class ClientRegistrationActivity extends Activity
             @Override
             public void onClick(View v)
             {
-                showDialog(DIALOG_BEGIN_REGISTRATION);                
+                showDialog(DIALOG_BETA_PREVIEW);
             }            
         });
     }
@@ -189,6 +190,20 @@ public class ClientRegistrationActivity extends Activity
                     }
                 });
                 break;
+                
+            case DIALOG_BETA_PREVIEW:
+                builder
+                .setCancelable(false)
+                .setIcon(R.drawable.splash_beta_blue)
+                .setTitle("Technology Preview")
+                .setMessage("Please be aware that this software has not yet reached an official release.  We do not recommend relying on this system for production work at this time.\n\nPlease send any questions, bug reports or suggestions to beta@groupcomplete.com.  Try to provide as much information as possible when sending bug reports.")
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        removeDialog(DIALOG_BETA_PREVIEW);
+                        showDialog(DIALOG_BEGIN_REGISTRATION);
+                    }
+                });
+                break;                
         }
         
         return builder.create();
