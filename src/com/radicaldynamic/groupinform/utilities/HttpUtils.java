@@ -46,6 +46,10 @@ public class HttpUtils
             InputStream data = response.getEntity().getContent();            
             websiteData = generateString(data);
             
+            // Make sure we don't leak memory
+            data.close();
+            client.getConnectionManager().shutdown();
+            
             // Remember any session cookies that may have been returned
             List<Cookie> cookies = client.getCookieStore().getCookies();
             
@@ -96,6 +100,10 @@ public class HttpUtils
             HttpResponse response = client.execute(method);
             InputStream data = response.getEntity().getContent();
             websiteData = generateString(data);
+            
+            // Make sure we don't leak memory
+            data.close();
+            client.getConnectionManager().shutdown();
             
             // Remember any session cookies that may have been returned
             List<Cookie> cookies = client.getCookieStore().getCookies();
