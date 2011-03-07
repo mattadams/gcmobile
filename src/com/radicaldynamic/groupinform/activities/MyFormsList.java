@@ -185,11 +185,7 @@ public class MyFormsList extends ListActivity
                 
                 setListAdapter(adapter);
                 
-                Toast.makeText(
-                        getApplicationContext(),
-                        getString(R.string.tf_edit_form_definition_hint),
-                        Toast.LENGTH_LONG
-                ).show();
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_LONG).show();
             }            
         }
     }

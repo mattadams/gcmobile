@@ -86,15 +86,19 @@ public class BrowserActivity extends ListActivity
     
     // Keys for persistence between screen orientation changes
     private static final String KEY_DIALOG_MESSAGE = "dialog_msg";
+    private static final String KEY_SELECTED_DB    = "selected_db";
         
     // Request codes for returning data from specified intent 
     private static final int RESULT_ABOUT_INFORM = 1;
     
+    // Custom message consumed by onCreateDialog()
+    private String mDialogMessage;
+    
+    // To save the currently selected database when this activity begins (since MyFormsList may switch it)
+    private String mSelectedDatabase;
+    
     // See s1...OnItemSelectedListener() where this is used in a horrid workaround
     private boolean mSpinnerInit = false;
-    
-    // Custom message consumed by onCreateDialog()
-    private String mDialogMessage = null;
     
     private RefreshViewTask mRefreshViewTask;
 
@@ -110,11 +114,15 @@ public class BrowserActivity extends ListActivity
         getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.folder_selector_title);
         
         if (savedInstanceState == null) {
-            // Defaults?
+            mDialogMessage = "";
+            mSelectedDatabase = null;
         } else {
             // Restore custom dialog message
             if (savedInstanceState.containsKey(KEY_DIALOG_MESSAGE))
                 mDialogMessage = savedInstanceState.getString(KEY_DIALOG_MESSAGE);
+            
+            if (savedInstanceState.containsKey(KEY_SELECTED_DB))
+                mSelectedDatabase = savedInstanceState.getString(KEY_SELECTED_DB);
         }
 
         // Initiate and populate spinner to filter forms displayed by instances types
@@ -425,7 +433,9 @@ public class BrowserActivity extends ListActivity
         case R.id.tf_aggregate:
             startActivity(new Intent(this, InstanceUploaderList.class));
             return true;
-        case R.id.tf_manage:
+        case R.id.tf_manage:            
+            mSelectedDatabase = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
+            Log.v(Collect.LOGTAG, t + "saved selected database " + mSelectedDatabase);
             startActivity(new Intent(this, ManageFormsTabs.class));
             return true;
         case R.id.tf_info:
@@ -441,6 +451,7 @@ public class BrowserActivity extends ListActivity
     {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_DIALOG_MESSAGE, mDialogMessage);
+        outState.putString(KEY_SELECTED_DB, mSelectedDatabase);
     }
 
     /*
@@ -517,11 +528,11 @@ public class BrowserActivity extends ListActivity
                 folderUnavailable = false;
             } catch (DbAccessException e) {
                 Log.w(Collect.LOGTAG, t + "database access refused: " + e.toString());
-            } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
-                e.printStackTrace();
+            } catch (ClassCastException e) {
+                // TODO: is there a better way to handle empty lists?
+                folderUnavailable = false;
             }
-
+            
             return status[0];
         }
 
@@ -800,6 +811,13 @@ public class BrowserActivity extends ListActivity
         // Hide "nothing to display" message
         TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
         nothingToDisplay.setVisibility(View.INVISIBLE);
+        
+        // Restore selected database (but only once)
+        if (mSelectedDatabase != null) {
+            Log.v(Collect.LOGTAG, t + "restoring selected database " + mSelectedDatabase);
+            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedDatabase);
+            mSelectedDatabase = null;
+        }
         
         String folderName = getSelectedFolderName();
         

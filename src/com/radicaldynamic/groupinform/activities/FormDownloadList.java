@@ -378,6 +378,7 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
                         mAlertShowing = false;
                         // successful download, so quit
                         if (mSuccess) {
+                            // TODO: should take the user back to "Manage My Forms"
                             finish();
                         }
 

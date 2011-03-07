@@ -11,8 +11,12 @@ import com.radicaldynamic.groupinform.preferences.ServerPreferences;
 
 public class ManageFormsTabs extends TabActivity
 {
+    @SuppressWarnings("unused")
+    private static final String t = "ManageFormsTab: ";
+    
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) 
+    {
         super.onCreate(savedInstanceState);
         
         setContentView(R.layout.manage_forms);
