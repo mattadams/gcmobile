@@ -61,8 +61,8 @@ import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
-import com.radicaldynamic.groupinform.documents.InstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 import com.radicaldynamic.groupinform.logic.PropertyManager;
@@ -528,8 +528,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             builder.setPositiveButton(getString(R.string.tf_remove), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     try {
-                        InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);
-                        instance.setStatus(InstanceDocument.Status.removed);
+                        FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);
+                        instance.setStatus(FormInstanceDocument.Status.removed);
                         Collect.getInstance().getDbService().getDb().update(instance);
                         
                         removeDialog(REMOVE_DIALOG);
@@ -757,14 +757,14 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         dismissDialog(PROGRESS_DIALOG);
 
         if (fec == null) {
-            createErrorDialog(getString(R.string.load_error, Collect.getInstance().getDbService().getDb().get(FormDocument.class, mFormId).getName()), true);
+            createErrorDialog(getString(R.string.load_error, Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, mFormId).getName()), true);
         } else {
             Collect.getInstance().setFormEntryController(fec);
             mFormEntryModel = fec.getModel();
 
             // Initialize new instance document
             if (mInstanceId == null) {
-                InstanceDocument instance = new InstanceDocument();
+                FormInstanceDocument instance = new FormInstanceDocument();
                 instance.setFormId(mFormId);
                 Collect.getInstance().getDbService().getDb().create(instance);
                 mInstanceId = instance.getId();
@@ -1419,9 +1419,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     {
         // Remove an instance if it has no status (e.g.,
         // recently created)
-        InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);
+        FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);
 
-        if (instance.getStatus() == InstanceDocument.Status.placeholder) {
+        if (instance.getStatus() == FormInstanceDocument.Status.placeholder) {
             Collect.getInstance().getDbService().getDb().delete(instance);
             Log.d(Collect.LOGTAG, t + mFormId + ": removed placeholder instance " + mInstanceId);
         }
@@ -1631,9 +1631,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private boolean isInstanceComplete()
     {
         try {
-            InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);
+            FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);
 
-            if (instance.getStatus() == InstanceDocument.Status.complete)
+            if (instance.getStatus() == FormInstanceDocument.Status.complete)
                 return true;
             else
                 return false;

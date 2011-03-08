@@ -10,10 +10,9 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.application.Collect;
 
-public class InstanceDocument extends GenericDocument
+public class FormInstanceDocument extends GenericDocument
 {    
-    private static final String t = "InstanceDocument: ";
-
+    private static final String t = "FormInstanceDocument: ";
     private static final long serialVersionUID = -2924171490521236262L;
 
     /*
@@ -30,7 +29,7 @@ public class InstanceDocument extends GenericDocument
     private Status status;
     private String dateAggregated;          // The date that this document was last uploaded to an ODK Aggregate server
     
-    public InstanceDocument() {
+    public FormInstanceDocument() {
         super("instance");
         
         if (isNew())

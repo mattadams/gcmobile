@@ -1,7 +1,8 @@
 package com.radicaldynamic.groupinform.documents;
 
-public class FormDocument extends GenericDocument
+public class FormDefinitionDocument extends GenericDocument
 {
+    private static final String t = "FormDefinitionDocument: ";
     private static final long serialVersionUID = 8292491291779289389L;   
     
     public static enum Status {active, inactive, temporary};
@@ -9,7 +10,7 @@ public class FormDocument extends GenericDocument
     private String name;
     private Status status;
 
-    public FormDocument() {
+    public FormDefinitionDocument() {
         super("form");
     }
 

@@ -12,16 +12,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.documents.FormDocument;
-import com.radicaldynamic.groupinform.documents.InstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 
-public class MyFormsListAdapter extends ArrayAdapter<FormDocument>
+public class MyFormsListAdapter extends ArrayAdapter<FormDefinitionDocument>
 {       
     private Context mContext;
-    private ArrayList<FormDocument> mItems;
+    private ArrayList<FormDefinitionDocument> mItems;
     private HashMap<String, HashMap<String, String>> mInstanceTalliesByStatus;
     
-    public MyFormsListAdapter(Context context, int textViewResourceId, ArrayList<FormDocument> items, HashMap<String, HashMap<String, String>> instanceTalliesByStatus, Spinner spinner) {
+    public MyFormsListAdapter(Context context, int textViewResourceId, ArrayList<FormDefinitionDocument> items, HashMap<String, HashMap<String, String>> instanceTalliesByStatus, Spinner spinner) {
         super(context, textViewResourceId, items);
         mContext = context;
         mItems = items;           
@@ -38,7 +38,7 @@ public class MyFormsListAdapter extends ArrayAdapter<FormDocument>
             v = vi.inflate(R.layout.browser_list_item, null);
         } 
 
-        FormDocument f = mItems.get(position);
+        FormDefinitionDocument f = mItems.get(position);
 
         if (f != null) {
             TextView tt = (TextView) v.findViewById(R.id.toptext);
@@ -54,8 +54,8 @@ public class MyFormsListAdapter extends ArrayAdapter<FormDocument>
                 String complete = null;
                 
                 if (mInstanceTalliesByStatus.containsKey(f.getId())) {
-                    draft = mInstanceTalliesByStatus.get(f.getId()).get(InstanceDocument.Status.draft.toString());
-                    complete = mInstanceTalliesByStatus.get(f.getId()).get(InstanceDocument.Status.complete.toString());
+                    draft = mInstanceTalliesByStatus.get(f.getId()).get(FormInstanceDocument.Status.draft.toString());
+                    complete = mInstanceTalliesByStatus.get(f.getId()).get(FormInstanceDocument.Status.complete.toString());
                 }
                 
                 if (draft == null) 

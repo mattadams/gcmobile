@@ -34,7 +34,7 @@ import android.widget.Toast;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.UploaderListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.preferences.ServerPreferences;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
@@ -107,7 +107,7 @@ public class InstanceUploaderList extends ListActivity {
 
                     // Add all items if mToggled sets to select all
                     if (mToggled) {
-                        FormDocument form = (FormDocument) ls.getItemAtPosition(pos);
+                        FormDefinitionDocument form = (FormDefinitionDocument) ls.getItemAtPosition(pos);
                         mSelected.add(form.getId());                         
                     }
                 }
@@ -166,7 +166,7 @@ public class InstanceUploaderList extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);        
         
-        FormDocument form = (FormDocument) getListAdapter().getItem(position);
+        FormDefinitionDocument form = (FormDefinitionDocument) getListAdapter().getItem(position);
 
         // Add/remove from selected list
         if (mSelected.contains(form.getId()))
@@ -205,7 +205,7 @@ public class InstanceUploaderList extends ListActivity {
      */
     private class RefreshViewTask extends AsyncTask<Void, Void, Void>
     {
-        private ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
+        private ArrayList<FormDefinitionDocument> documents = new ArrayList<FormDefinitionDocument>();
     
         @Override
         protected Void doInBackground(Void... nothing)
@@ -213,7 +213,7 @@ public class InstanceUploaderList extends ListActivity {
             mInstanceTallies = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsByAggregateReadiness();
             
             if (!mInstanceTallies.isEmpty()) {
-                documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).
+                documents = (ArrayList<FormDefinitionDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).
                     getAllByKeys(new ArrayList<Object>(mInstanceTallies.keySet()));
             
                 DocumentUtils.sortByName(documents);
@@ -245,7 +245,7 @@ public class InstanceUploaderList extends ListActivity {
                 ListView ls = getListView();
                 
                 for (int pos = 0; pos < ls.getCount(); pos++) {
-                    FormDocument form = (FormDocument) ls.getItemAtPosition(pos);
+                    FormDefinitionDocument form = (FormDefinitionDocument) ls.getItemAtPosition(pos);
                     
                     if (mSelected.contains(form.getId()))                    
                         ls.setItemChecked(pos, true);

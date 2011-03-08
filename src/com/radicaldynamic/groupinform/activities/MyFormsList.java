@@ -49,7 +49,7 @@ import android.widget.Toast;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.MyFormsListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
@@ -143,7 +143,7 @@ public class MyFormsList extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-        FormDocument form = (FormDocument) getListAdapter().getItem(position);
+        FormDefinitionDocument form = (FormDefinitionDocument) getListAdapter().getItem(position);
         Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
 
         Intent i = new Intent(this, FormBuilderFieldList.class);
@@ -168,7 +168,7 @@ public class MyFormsList extends ListActivity
      */
     private class RefreshViewTask extends AsyncTask<Void, Void, Void>
     {
-        private ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
+        private ArrayList<FormDefinitionDocument> documents = new ArrayList<FormDefinitionDocument>();
         private HashMap<String, HashMap<String, String>> instanceTalliesByStatus = new HashMap<String, HashMap<String, String>>();
         private boolean folderUnavailable = false;   
 
@@ -176,7 +176,7 @@ public class MyFormsList extends ListActivity
         protected Void doInBackground(Void... nothing)
         {
             try {
-                documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
+                documents = (ArrayList<FormDefinitionDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
                 DocumentUtils.sortByName(documents);                             
 
                 instanceTalliesByStatus = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();
@@ -264,9 +264,9 @@ public class MyFormsList extends ListActivity
         
         alert.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {                
-                FormDocument form = new FormDocument();
+                FormDefinitionDocument form = new FormDefinitionDocument();
                 form.setName(input.getText().toString());
-                form.setStatus(FormDocument.Status.temporary);
+                form.setStatus(FormDefinitionDocument.Status.temporary);
     
                 // Create a new form document and use an XForm template as the "xml" attachment
                 try {

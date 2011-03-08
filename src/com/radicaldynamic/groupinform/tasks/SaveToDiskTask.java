@@ -37,7 +37,7 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.InstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
@@ -152,12 +152,12 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
             int read = is.read(data, 0, len);
             
             if (read > 0) {
-                InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);   
+                FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);   
                                 
                 if (markCompleted)
-                    instance.setStatus(InstanceDocument.Status.complete);
+                    instance.setStatus(FormInstanceDocument.Status.complete);
                 else
-                    instance.setStatus(InstanceDocument.Status.draft);
+                    instance.setStatus(FormInstanceDocument.Status.draft);
                 
                 // Save form data
                 instance.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data, Base64.DEFAULT), "text/xml"));
@@ -174,7 +174,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                         Log.d(Collect.LOGTAG, t + mInstanceId + ": attaching " + file);
                         
                         // Make sure we have the most current revision number
-                        InstanceDocument document = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);
+                        FormInstanceDocument document = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);
 
                         FileInputStream fis = new FileInputStream(new File(FileUtils.EXTERNAL_CACHE, file));
                         String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1));

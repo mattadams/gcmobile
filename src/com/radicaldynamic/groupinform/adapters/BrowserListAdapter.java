@@ -12,16 +12,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.documents.FormDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 
-public class BrowserListAdapter extends ArrayAdapter<FormDocument>
+public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDocument>
 {       
     private Context mContext;
-    private ArrayList<FormDocument> mItems;
+    private ArrayList<FormDefinitionDocument> mItems;
     private Map<String, String> mInstanceTallies;
     private Spinner mSpinner;
 
-    public BrowserListAdapter(Context context, int textViewResourceId, ArrayList<FormDocument> items, Map<String, String> instanceTallies, Spinner spinner) {
+    public BrowserListAdapter(Context context, int textViewResourceId, ArrayList<FormDefinitionDocument> items, Map<String, String> instanceTallies, Spinner spinner) {
         super(context, textViewResourceId, items);
         mContext = context;
         mItems = items;           
@@ -39,7 +39,7 @@ public class BrowserListAdapter extends ArrayAdapter<FormDocument>
             v = vi.inflate(R.layout.browser_list_item, null);
         } 
 
-        FormDocument f = mItems.get(position);
+        FormDefinitionDocument f = mItems.get(position);
 
         if (f != null) {
             TextView tt = (TextView) v.findViewById(R.id.toptext);

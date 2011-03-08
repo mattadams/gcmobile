@@ -9,13 +9,13 @@ import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 
 public final class FormWriter
 {
     private static final String t = "FormWriter: ";
     
-    private static FormDocument mFormDoc;
+    private static FormDefinitionDocument mFormDoc;
     private static XMLTag mFormTag;
     private static String mDefaultPrefix;
     private static String mInstanceRoot;

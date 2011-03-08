@@ -20,7 +20,7 @@ import android.widget.Toast;
 
 import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.documents.FormDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
@@ -59,7 +59,7 @@ public class Collect extends Application {
      * State variables for the form builder
      * TODO: it would be nice to refactor the form builder so we don't need these here
      */
-    private FormDocument fbForm = null;
+    private FormDefinitionDocument fbForm = null;
     private ArrayList<Bind> fbBindState = null;
     private ArrayList<Field> fbFieldState = null;
     private ArrayList<Instance> fbInstanceState = null;
@@ -207,8 +207,8 @@ public class Collect extends Application {
     public void setFbInstanceState(ArrayList<Instance> fbInstanceState) { this.fbInstanceState = fbInstanceState; }
     public ArrayList<Instance> getFbInstanceState() { return fbInstanceState; }
 
-    public void setFbForm(FormDocument fbForm) { this.fbForm = fbForm; }
-    public FormDocument getFbForm() { return fbForm; }
+    public void setFbForm(FormDefinitionDocument fbForm) { this.fbForm = fbForm; }
+    public FormDefinitionDocument getFbForm() { return fbForm; }
 
     public void setFbField(Field fbField) { this.fbField = fbField; }
     public Field getFbField() { return fbField; }

@@ -38,7 +38,7 @@ import android.util.Base64;
 
 import com.radicaldynamic.groupinform.activities.FormDownloadList;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.listeners.FormDownloaderListener;
 
 /**
@@ -209,7 +209,7 @@ public class DownloadFormsTask extends
             String fname = name.substring(0, dot - 1);           
             
             // Instantiate new form object
-            FormDocument form = new FormDocument();
+            FormDefinitionDocument form = new FormDefinitionDocument();
             form.setName(fname);
                                     
             // Write connection to file

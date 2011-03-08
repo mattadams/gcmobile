@@ -41,7 +41,7 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.GenericDocument;
-import com.radicaldynamic.groupinform.documents.InstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.InstanceUploaderListener;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
@@ -84,7 +84,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             // MIME POST
             MultipartEntity entity = new MultipartEntity();
             
-            InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, values[i]);
+            FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, values[i]);
             
             if (instance.getDateAggregated() != null && instance.getDateUpdatedAsCalendar().after(instance.getDateAggregatedAsCalendar())) {
                 Log.w(Collect.LOGTAG, t + values[i] + " cannot be uploaded to ODK Aggregate: dateUpdated is newer than dateAggregated");

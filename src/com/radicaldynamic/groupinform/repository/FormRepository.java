@@ -17,24 +17,24 @@ import org.json.JSONTokener;
 import android.util.Log;
 
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
-import com.radicaldynamic.groupinform.documents.InstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 
-public class FormRepository extends CouchDbRepositorySupport<FormDocument>
+public class FormRepository extends CouchDbRepositorySupport<FormDefinitionDocument>
 {
     private final static String t = "FormRepository: ";
     
     public FormRepository(CouchDbConnector db) {
-        super(FormDocument.class, db);
+        super(FormDefinitionDocument.class, db);
         initStandardDesignDocument();
     }
 
-    public List<FormDocument> getAllByKeys(Collection<Object> keys) {
-        List<FormDocument> forms = db.queryView(createQuery("all").keys(keys).includeDocs(true), FormDocument.class);
+    public List<FormDefinitionDocument> getAllByKeys(Collection<Object> keys) {
+        List<FormDefinitionDocument> forms = db.queryView(createQuery("all").keys(keys).includeDocs(true), FormDefinitionDocument.class);
         return forms;
     }
     
-    public HashMap<String, String> getFormsByInstanceStatus(InstanceDocument.Status status) {
+    public HashMap<String, String> getFormsByInstanceStatus(FormInstanceDocument.Status status) {
         HashMap<String, String> results = new HashMap<String, String>();
         ViewResult r = db.queryView(createQuery("by_instance_status").group(true));        
         List<Row> rows = r.getRows();

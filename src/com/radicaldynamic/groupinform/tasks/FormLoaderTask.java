@@ -47,8 +47,8 @@ import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
-import com.radicaldynamic.groupinform.documents.InstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
@@ -122,13 +122,13 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         FormEntryController fec = null;
         FormDef fd = null;
         
-        FormDocument form = null;
+        FormDefinitionDocument form = null;
         
         String formId = ids[0];
         String instanceId = ids[1];
                 
         try {
-            form = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);
+            form = Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, formId);
         } catch (DbAccessException e) {
             Log.w(Collect.LOGTAG, tt + "while retrieving form definition document " + e.toString());
             mErrorMsg = "Unable to read form definition from the database.\n\nPlease try again later.";
@@ -310,7 +310,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             
             // Also download any media attachments
             try {
-                InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, instanceId);            
+                FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceId);            
                 HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
 
                 for (Entry<String, Attachment> entry : attachments.entrySet()) {

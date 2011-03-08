@@ -36,7 +36,7 @@ import android.widget.Toast;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.FormBuilderFieldListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
@@ -70,7 +70,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
    
     private String mFormId;
     private String mInstanceRoot;
-    private FormDocument mForm;
+    private FormDefinitionDocument mForm;
     private FormReader mFormReader;
     private boolean mNewForm;
     
@@ -513,7 +513,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             resetStates();
             
             try {
-                mForm = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);
+                mForm = Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, formId);
                 Collect.getInstance().setFbForm(mForm);
                 Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
                 
@@ -601,7 +601,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                                 Base64.encodeToString(FormWriter.writeXml(mInstanceRoot), Base64.DEFAULT), 
                                 "text/xml"));
                 
-                mForm.setStatus(FormDocument.Status.inactive);
+                mForm.setStatus(FormDefinitionDocument.Status.inactive);
                 Collect.getInstance().getDbService().getDb().update(mForm);
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "failed writing XForm to XML: " + e.toString());
@@ -947,7 +947,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                         switch (which) {
                         case 0:
                             // Discard any changes and exit
-                            if (mForm.getStatus() == FormDocument.Status.temporary)
+                            if (mForm.getStatus() == FormDefinitionDocument.Status.temporary)
                                 Collect.getInstance().getDbService().getDb().delete(mForm);
                             
                             finish();

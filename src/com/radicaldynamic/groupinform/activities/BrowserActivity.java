@@ -55,8 +55,8 @@ import com.couchone.couchdb.CouchInstaller;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDocument;
-import com.radicaldynamic.groupinform.documents.InstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.repository.FormRepository;
 import com.radicaldynamic.groupinform.repository.InstanceRepository;
@@ -389,7 +389,7 @@ public class BrowserActivity extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-        FormDocument form = (FormDocument) getListAdapter().getItem(position);
+        FormDefinitionDocument form = (FormDefinitionDocument) getListAdapter().getItem(position);
         InstanceLoadPathTask ilp;
 
         Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
@@ -407,12 +407,12 @@ public class BrowserActivity extends ListActivity
         // Show all draft forms
         case 1:
             ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), InstanceDocument.Status.draft);
+            ilp.execute(form.getId(), FormInstanceDocument.Status.draft);
             break;
         // Show all completed forms
         case 2:
             ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), InstanceDocument.Status.complete);
+            ilp.execute(form.getId(), FormInstanceDocument.Status.complete);
             break;
         // Show all unread forms (e.g., those added or updated by others)
         case 3:
@@ -472,7 +472,7 @@ public class BrowserActivity extends ListActivity
         {
             try {
                 mFormId = (String) params[0];
-                InstanceDocument.Status status = (InstanceDocument.Status) params[1];
+                FormInstanceDocument.Status status = (FormInstanceDocument.Status) params[1];
                 mInstanceIds = new InstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);                
                 caughtExceptionInBackground = false;
             } catch (DbAccessException e) {
@@ -512,19 +512,19 @@ public class BrowserActivity extends ListActivity
     /*
      * Refresh the main form browser view as requested by the user
      */
-    private class RefreshViewTask extends AsyncTask<InstanceDocument.Status, Integer, InstanceDocument.Status>
+    private class RefreshViewTask extends AsyncTask<FormInstanceDocument.Status, Integer, FormInstanceDocument.Status>
     {
-        private ArrayList<FormDocument> documents = new ArrayList<FormDocument>();
+        private ArrayList<FormDefinitionDocument> documents = new ArrayList<FormDefinitionDocument>();
         private Map<String, String> instanceTallies = new HashMap<String, String>();
         private boolean folderUnavailable = true;
 
         @Override
-        protected InstanceDocument.Status doInBackground(InstanceDocument.Status... status)
+        protected FormInstanceDocument.Status doInBackground(FormInstanceDocument.Status... status)
         {            
             try {
-                if (status[0] == InstanceDocument.Status.nothing) {
+                if (status[0] == FormInstanceDocument.Status.nothing) {
                     try {
-                        documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
+                        documents = (ArrayList<FormDefinitionDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
                         DocumentUtils.sortByName(documents);
                     } catch (ClassCastException e) {
                         // TODO: is there a better way to handle empty lists?
@@ -533,7 +533,7 @@ public class BrowserActivity extends ListActivity
                     instanceTallies = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
                     
                     if (!instanceTallies.isEmpty()) {
-                        documents = (ArrayList<FormDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
+                        documents = (ArrayList<FormDefinitionDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
                         DocumentUtils.sortByName(documents);
                     }
                 }
@@ -556,7 +556,7 @@ public class BrowserActivity extends ListActivity
         }
 
         @Override
-        protected void onPostExecute(InstanceDocument.Status status)
+        protected void onPostExecute(FormInstanceDocument.Status status)
         {
             RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
             onscreenProgress.setVisibility(View.GONE);
@@ -584,7 +584,7 @@ public class BrowserActivity extends ListActivity
                 mDialogMessage = getString(R.string.tf_unable_to_open_folder, getSelectedFolderName());
                 showDialog(DIALOG_FOLDER_UNAVAILABLE);
             } else {
-                if (status == InstanceDocument.Status.nothing) {
+                if (status == FormInstanceDocument.Status.nothing) {
                     // Provide hints to user
                     if (documents.isEmpty()) {
                         TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
@@ -847,19 +847,19 @@ public class BrowserActivity extends ListActivity
             switch (position) {
             // Show all forms (in folder)
             case 0:
-                mRefreshViewTask.execute(InstanceDocument.Status.nothing);
+                mRefreshViewTask.execute(FormInstanceDocument.Status.nothing);
                 break;
                 // Show all draft forms
             case 1:
-                mRefreshViewTask.execute(InstanceDocument.Status.draft);
+                mRefreshViewTask.execute(FormInstanceDocument.Status.draft);
                 break;
                 // Show all completed forms
             case 2:
-                mRefreshViewTask.execute(InstanceDocument.Status.complete);
+                mRefreshViewTask.execute(FormInstanceDocument.Status.complete);
                 break;
                 // Show all unread forms (e.g., those added or updated by others)
             case 3:
-                mRefreshViewTask.execute(InstanceDocument.Status.updated);
+                mRefreshViewTask.execute(FormInstanceDocument.Status.updated);
                 break;
             }
         } catch (DatabaseService.DbUnavailableDueToMetadataException e) {            
