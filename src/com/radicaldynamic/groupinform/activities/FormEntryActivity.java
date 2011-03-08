@@ -16,6 +16,7 @@ package com.radicaldynamic.groupinform.activities;
 
 import java.io.File;
 
+import org.ektorp.DbAccessException;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.GroupDef;
@@ -113,9 +114,12 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private static final int MENU_LANGUAGES = Menu.FIRST + 2;
     private static final int MENU_HIERARCHY_VIEW = Menu.FIRST + 3;
     private static final int MENU_SAVE = Menu.FIRST + 4;
+    private static final int MENU_REMOVE = Menu.FIRST + 5;
 
     private static final int PROGRESS_DIALOG = 1;
     private static final int SAVING_DIALOG = 2;
+    private static final int REMOVE_DIALOG = 3;
+    private static final int REMOVING_DIALOG = 4;
 
     // TODO: Uncomment when ProgressBar slow down is fixed.
     // private ProgressBar mProgressBar;
@@ -279,7 +283,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         }        
 
         // Purge cache files that we no longer need
-        Log.d(Collect.LOGTAG, t + "removing instance cache files for instance " + mInstanceId);
+        Log.d(Collect.LOGTAG, t + "removing cache files for instance " + mInstanceId);
         FileUtils.deleteExternalInstanceCacheFiles(mInstanceId);
     
         super.onDestroy();
@@ -398,7 +402,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             
         case HIERARCHY_BROWSER:
             if (intent.getAction().equals("next_instance")) {
-                browseToNextInstance();
+                browseToNextInstance(false);
             } else if (intent.getAction().equals("previous_instance")) {
                 browseToPreviousInstance();
             } else if (intent.getAction().equals("return_to_browser")) {
@@ -406,122 +410,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             } else {
                 // We may have jumped to a new index in hierarchy activity, so refresh
                 refreshCurrentView();
-            }            
+            }    
             break;            
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see android.app.Activity#dispatchTouchEvent(android.view.MotionEvent)
-     */
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent mv)
-    {
-        boolean handled = onTouchEvent(mv);
-
-        if (!handled) {
-            return super.dispatchTouchEvent(mv);
-        }
-
-        // This is always true
-        return handled;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see android.app.Activity#onCreateDialog(int)
-     */
-    @Override
-    protected Dialog onCreateDialog(int id)
-    {
-        switch (id) {
-        case PROGRESS_DIALOG:
-            mProgressDialog = new ProgressDialog(this);
-
-            DialogInterface.OnClickListener loadingButtonListener = new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which)
-                {
-                    dialog.dismiss();
-                    mFormLoaderTask.setFormLoaderListener(null);
-                    mFormLoaderTask.cancel(true);
-                    finish();
-                }
-            };
-
-            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
-            mProgressDialog.setTitle(getString(R.string.loading_form));
-            mProgressDialog.setMessage(getString(R.string.please_wait));
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.setButton(getString(R.string.cancel_loading_form), loadingButtonListener);
-            
-            return mProgressDialog;
-            
-        case SAVING_DIALOG:
-            mProgressDialog = new ProgressDialog(this);
-
-            DialogInterface.OnClickListener savingButtonListener = new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which)
-                {
-                    dialog.dismiss();
-                    mSaveToDiskTask.setFormSavedListener(null);
-                    mSaveToDiskTask.cancel(true);
-                }
-            };
-
-            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
-            mProgressDialog.setTitle(getString(R.string.saving_form));
-            mProgressDialog.setMessage(getString(R.string.please_wait));
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.setButton(getString(R.string.cancel), savingButtonListener);
-            mProgressDialog.setButton(getString(R.string.cancel_saving_form), savingButtonListener);
-            
-            return mProgressDialog;
-
-        }
-
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see android.app.Activity#onKeyDown(int, android.view.KeyEvent)
-     */
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event)
-    {
-        switch (keyCode) {
-        case KeyEvent.KEYCODE_BACK:
-            createQuitDialog();
-            return true;
-            
-        case KeyEvent.KEYCODE_DPAD_RIGHT:
-            if (event.isAltPressed() && !mBeenSwiped) {
-                mBeenSwiped = true;
-                showNextView();
-                return true;
-            }
-            
-            break;
-            
-        case KeyEvent.KEYCODE_DPAD_LEFT:
-            if (event.isAltPressed() && !mBeenSwiped) {
-                mBeenSwiped = true;
-                showPreviousView();
-                return true;
-            }
-            
-            break;
-        }
-
-        return super.onKeyDown(keyCode, event);
     }
 
     /*
@@ -566,6 +457,149 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     /*
      * (non-Javadoc)
      * 
+     * @see android.app.Activity#onCreateDialog(int)
+     */
+    @Override
+    protected Dialog onCreateDialog(int id)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        Dialog dialog = null;
+        
+        switch (id) {
+        case PROGRESS_DIALOG:
+            mProgressDialog = new ProgressDialog(this);
+    
+            DialogInterface.OnClickListener loadingButtonListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    dialog.dismiss();
+                    mFormLoaderTask.setFormLoaderListener(null);
+                    mFormLoaderTask.cancel(true);
+                    finish();
+                }
+            };
+    
+            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
+            mProgressDialog.setTitle(getString(R.string.loading_form));
+            mProgressDialog.setMessage(getString(R.string.please_wait));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setButton(getString(R.string.cancel_loading_form), loadingButtonListener);
+            
+            return mProgressDialog;
+            
+        case SAVING_DIALOG:
+            mProgressDialog = new ProgressDialog(this);
+    
+            DialogInterface.OnClickListener savingButtonListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    dialog.dismiss();
+                    mSaveToDiskTask.setFormSavedListener(null);
+                    mSaveToDiskTask.cancel(true);
+                }
+            };
+    
+            mProgressDialog.setIcon(R.drawable.ic_dialog_info);
+            mProgressDialog.setTitle(getString(R.string.saving_form));
+            mProgressDialog.setMessage(getString(R.string.please_wait));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setButton(getString(R.string.cancel), savingButtonListener);
+            mProgressDialog.setButton(getString(R.string.cancel_saving_form), savingButtonListener);
+            
+            return mProgressDialog;
+            
+        case REMOVE_DIALOG:
+            String message;
+            
+            if (isInstanceComplete()) 
+                message = getString(R.string.tf_confirm_complete_instance_removal_dialog_msg);
+            else
+                message = getString(R.string.tf_confirm_instance_removal_dialog_msg);
+            
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_info)
+                .setMessage(message);
+            
+            builder.setPositiveButton(getString(R.string.tf_remove), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    try {
+                        InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);
+                        instance.setStatus(InstanceDocument.Status.removed);
+                        Collect.getInstance().getDbService().getDb().update(instance);
+                        
+                        removeDialog(REMOVE_DIALOG);
+                        
+                        if (Collect.getInstance().getInstanceBrowseList().size() > 1) {
+                            browseToNextInstance(true);
+                        } else {
+                            finish();
+                        }
+                    } catch (DbAccessException e) {
+                        Log.w(Collect.LOGTAG, t + "problem marking form instance document as removed " + e.toString());
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_form_instance), Toast.LENGTH_LONG).show();                        
+                    }
+                }
+            });
+            
+            builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(REMOVE_DIALOG);
+                }
+            });
+            
+            dialog = builder.create();
+            return dialog;
+            
+        case REMOVING_DIALOG:
+            break;
+        }
+    
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see android.app.Activity#onKeyDown(int, android.view.KeyEvent)
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)
+    {
+        switch (keyCode) {
+        case KeyEvent.KEYCODE_BACK:
+            createQuitDialog();
+            return true;
+            
+        case KeyEvent.KEYCODE_DPAD_RIGHT:
+            if (event.isAltPressed() && !mBeenSwiped) {
+                mBeenSwiped = true;
+                showNextView();
+                return true;
+            }
+            
+            break;
+            
+        case KeyEvent.KEYCODE_DPAD_LEFT:
+            if (event.isAltPressed() && !mBeenSwiped) {
+                mBeenSwiped = true;
+                showPreviousView();
+                return true;
+            }
+            
+            break;
+        }
+    
+        return super.onKeyDown(keyCode, event);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
      */
     @Override
@@ -584,6 +618,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         case MENU_SAVE:
             // Don't exit
             saveDataToDisk(false, isInstanceComplete());
+            return true;
+        case MENU_REMOVE:
+            showDialog(REMOVE_DIALOG);
             return true;
         case MENU_HIERARCHY_VIEW:
             if (currentPromptIsQuestion()) {
@@ -606,9 +643,12 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         menu.removeItem(MENU_LANGUAGES);
         menu.removeItem(MENU_HIERARCHY_VIEW);
         menu.removeItem(MENU_SAVE);
+        menu.removeItem(MENU_REMOVE);
     
         menu.add(0, MENU_SAVE, 0, getString(R.string.save_all_answers))
                 .setIcon(R.drawable.ic_menu_save);
+        menu.add(0, MENU_REMOVE, 0, getString(R.string.tf_remove_form))
+                .setIcon(R.drawable.ic_menu_delete);
         menu.add(0, MENU_CLEAR, 0, getString(R.string.clear_answer)).setIcon(
                 R.drawable.ic_menu_close_clear_cancel).setEnabled(
                 !mFormEntryModel.isIndexReadonly() ? true : false);
@@ -677,6 +717,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 showPreviousView();
                 handled = true;
                 break;
+                
             case SWIPE_LEFT:
                 mBeenSwiped = true;
                 showNextView();
@@ -685,6 +726,24 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             }
         }
     
+        return handled;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see android.app.Activity#dispatchTouchEvent(android.view.MotionEvent)
+     */
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent mv)
+    {
+        boolean handled = onTouchEvent(mv);
+    
+        if (!handled) {
+            return super.dispatchTouchEvent(mv);
+        }
+    
+        // This is always true
         return handled;
     }
 
@@ -698,8 +757,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         dismissDialog(PROGRESS_DIALOG);
 
         if (fec == null) {
-            createErrorDialog(getString(R.string.load_error, Collect.getInstance().getDbService()
-                    .getDb().get(FormDocument.class, mFormId).getName()), true);
+            createErrorDialog(getString(R.string.load_error, Collect.getInstance().getDbService().getDb().get(FormDocument.class, mFormId).getName()), true);
         } else {
             Collect.getInstance().setFormEntryController(fec);
             mFormEntryModel = fec.getModel();
@@ -862,7 +920,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                     new Button.OnClickListener() {
                         @Override
                         public void onClick(View arg0) {
-                            browseToNextInstance();
+                            browseToNextInstance(false);
                         }                        
                     });
             
@@ -888,9 +946,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
         if (mCurrentView instanceof AbstractFolioView)
             ((AbstractFolioView) mCurrentView).setFocus(this);
-        else {
+        else
             Collect.getInstance().hideSoftKeyboard(mCurrentView);
-        }
     }
     
     private void browseToInstance(String instanceId)
@@ -903,7 +960,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         finish();
     }
     
-    private void browseToNextInstance()
+    private void browseToNextInstance(boolean removeCurrentInstance)
     {
         String nextInstanceId;
         
@@ -912,6 +969,10 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         } else {
             nextInstanceId = Collect.getInstance().getInstanceBrowseList().get(0);
         }
+        
+        // For when a user "removes" a form instance
+        if (removeCurrentInstance)
+            Collect.getInstance().getInstanceBrowseList().remove(mInstanceId);
 
         browseToInstance(nextInstanceId);
     }
@@ -959,8 +1020,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             question = question.substring(0, 50) + "...";
         }
     
-        mAlertDialog.setMessage(getString(R.string.clearanswer_confirm,
-                question));
+        mAlertDialog.setMessage(getString(R.string.clearanswer_confirm, question));
     
         DialogInterface.OnClickListener quitListener = new DialogInterface.OnClickListener() {
             @Override
@@ -971,6 +1031,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                     clearCurrentAnswer();
                     saveCurrentAnswer(false);
                     break;
+                    
                 case DialogInterface.BUTTON2: // no
                     break;
                 }
@@ -978,10 +1039,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         };
     
         mAlertDialog.setCancelable(false);
-        mAlertDialog
-                .setButton(getString(R.string.discard_answer), quitListener);
-        mAlertDialog.setButton2(getString(R.string.clear_answer_no),
-                quitListener);
+        mAlertDialog.setButton(getString(R.string.discard_answer), quitListener);
+        mAlertDialog.setButton2(getString(R.string.clear_answer_no), quitListener);
         mAlertDialog.show();
     }
 
@@ -1002,8 +1061,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         }
     
         mAlertDialog.setTitle(getString(R.string.delete_repeat_ask));
-        mAlertDialog
-                .setMessage(getString(R.string.delete_repeat_confirm, name));
+        mAlertDialog.setMessage(getString(R.string.delete_repeat_confirm, name));
     
         DialogInterface.OnClickListener quitListener = new DialogInterface.OnClickListener() {
             @Override
@@ -1011,12 +1069,12 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             {
                 switch (i) {
                 case DialogInterface.BUTTON1: // yes
-                    FormEntryController fec = Collect.getInstance()
-                            .getFormEntryController();
+                    FormEntryController fec = Collect.getInstance().getFormEntryController();
                     FormIndex validIndex = fec.deleteRepeat();
                     jumpToContainingFolio(validIndex);
                     showPreviousView();
                     break;
+                    
                 case DialogInterface.BUTTON2: // no
                     break;
                 }
@@ -1025,8 +1083,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
         mAlertDialog.setCancelable(false);
         mAlertDialog.setButton(getString(R.string.discard_group), quitListener);
-        mAlertDialog.setButton2(getString(R.string.delete_repeat_no),
-                quitListener);
+        mAlertDialog.setButton2(getString(R.string.delete_repeat_no), quitListener);
         mAlertDialog.show();
     }
 
@@ -1355,8 +1412,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
      */
     private boolean currentPromptIsQuestion()
     {
-        return (mFormEntryModel.getEvent() == FormEntryController.EVENT_QUESTION)
-                || currentPromptIsGroupFolio();
+        return (mFormEntryModel.getEvent() == FormEntryController.EVENT_QUESTION) || currentPromptIsGroupFolio();
     }
     
     private void discardChangesAndExit()
@@ -1386,7 +1442,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     private FormEntryCaption[] getGroupsForCurrentIndex()
     {
         if (!(mFormEntryModel.getEvent() == FormEntryController.EVENT_QUESTION
-                || mFormEntryModel.getEvent() == FormEntryController.EVENT_PROMPT_NEW_REPEAT || currentPromptIsGroupFolio()))
+                || mFormEntryModel.getEvent() == FormEntryController.EVENT_PROMPT_NEW_REPEAT 
+                || currentPromptIsGroupFolio()))
             return null;
     
         int lastquestion = 1;
@@ -1395,8 +1452,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             lastquestion = 0;
     
         FormEntryCaption[] v = mFormEntryModel.getCaptionHierarchy();
-        FormEntryCaption[] groups = new FormEntryCaption[v.length
-                - lastquestion];
+        FormEntryCaption[] groups = new FormEntryCaption[v.length - lastquestion];
     
         for (int i = 0; i < v.length - lastquestion; i++) {
             groups[i] = v[i];
@@ -1415,9 +1471,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     {
         int event = stepToNextEvent();
 
-        while (event == FormEntryController.EVENT_GROUP
-                || event == FormEntryController.EVENT_REPEAT) {
-
+        while (event == FormEntryController.EVENT_GROUP || event == FormEntryController.EVENT_REPEAT) {
             if (currentPromptIsGroupFolio())
                 break;
 
@@ -1576,13 +1630,17 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
     private boolean isInstanceComplete()
     {
-        InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(
-                InstanceDocument.class, mInstanceId);
+        try {
+            InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, mInstanceId);
 
-        if (instance.getStatus() == InstanceDocument.Status.complete)
-            return true;
-        else
+            if (instance.getStatus() == InstanceDocument.Status.complete)
+                return true;
+            else
+                return false;
+        } catch (DbAccessException e) {
+            Log.w(Collect.LOGTAG, t + "while checking whether isInstanceComplete() " + e.toString());
             return false;
+        }
     }
 
     /**

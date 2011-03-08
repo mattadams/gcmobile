@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
+import org.ektorp.DbAccessException;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.condition.EvaluationContext;
 import org.javarosa.core.model.instance.TreeElement;
@@ -57,7 +58,8 @@ import com.radicaldynamic.groupinform.utilities.FileUtils;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FECWrapper> {
+public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FECWrapper> 
+{
     private static final String t = "FormLoaderTask: ";
     
     /**
@@ -113,19 +115,29 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      * an instance, it will be used to fill the {@link FormDef}.
      */
     @Override
-    protected FECWrapper doInBackground(String... ids) {
+    protected FECWrapper doInBackground(String... ids) 
+    {
+        final String tt = t + "doInBackground(): ";
+        
         FormEntryController fec = null;
         FormDef fd = null;
         
+        FormDocument form = null;
+        
         String formId = ids[0];
         String instanceId = ids[1];
-        
-        // TODO: we need to handle what happens when a form document no longer exists
-        // or perhaps we don't do that here at all...
-        FormDocument form = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);                
+                
+        try {
+            form = Collect.getInstance().getDbService().getDb().get(FormDocument.class, formId);
+        } catch (DbAccessException e) {
+            Log.w(Collect.LOGTAG, tt + "while retrieving form definition document " + e.toString());
+            mErrorMsg = "Unable to read form definition from the database.\n\nPlease try again later.";
+            return null;
+        }
+            
         File formBin = new File(Collect.getInstance().getCacheDir(), formId + ".formdef");
         
-        Log.i(Collect.LOGTAG, t + formId + ": loading form named " + form.getName());
+        Log.i(Collect.LOGTAG, tt + "for " + formId + ", loading form named " + form.getName());
 
         if (formBin.exists() && formBin.lastModified() < form.getDateUpdatedAsCalendar().getTimeInMillis()) {
             /*
@@ -133,14 +145,14 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
              * This is mainly used for development but could be more important going
              * forward if users are updating or adding IAV features to existing forms.
              */
-        	Log.d(Collect.LOGTAG, t + formId + ": removing stale form cache file");
+        	Log.d(Collect.LOGTAG, tt + "removing stale form cache file");
         	formBin.delete();
         }
             
         // If we have binary then attempt to deserialize it
         if (formBin.exists()) {        	
         	try {
-        	    Log.d(Collect.LOGTAG, t + formId + ": loading serialized form binary");
+        	    Log.d(Collect.LOGTAG, tt + "loading serialized form binary");
         		fd = deserializeFormDef(formBin);
         	} catch (Exception e) {
                 /*
@@ -149,7 +161,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                  * The common case here is that the JavaRosa library that serialized the binary is 
                  * incompatible with the JavaRosa library that is now attempting to deserialize it.
                  */        	    
-        	    Log.w(Collect.LOGTAG, t + formId + ": serialized form binary failed to load (deleting cache file): " + e.toString());
+        	    Log.w(Collect.LOGTAG, tt + "serialized form binary failed to load (deleting cache file): " + e.toString());
         		formBin.delete();
         	}
         }
@@ -157,26 +169,26 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         // Either a binary wasn't present or didn't load -- read directly from XML
         if (fd == null) {            
             try {
-            	Log.d(Collect.LOGTAG, t + formId + ": attempting read of " + form.getName() + " XML attachment");
+            	Log.d(Collect.LOGTAG, tt + "attempting read of " + form.getName() + " XML attachment");
             	
             	AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
             	fd = XFormUtils.getFormFromInputStream(ais);
             	ais.close();            	            	
             	
                 if (fd == null) {
-                    Log.e(Collect.LOGTAG, t + formId + ": failed to load form definition from XML");
+                    Log.e(Collect.LOGTAG, tt + "failed to load form definition from XML");
                     mErrorMsg = "Error reading XForm file";
                     return null;
                 } else {                
                     serializeFormDef(fd, formId);
                 }
             } catch (XFormParseException e) {
-                Log.e(Collect.LOGTAG, t + formId + ": failed to load form definition from XML: " + e.toString());
+                Log.e(Collect.LOGTAG, tt + "failed to load form definition from XML: " + e.toString());
                 mErrorMsg = e.getMessage();
                 e.printStackTrace();
                 return null;
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + formId + ": failed to load form definition from XML: " + e.toString());
+                Log.e(Collect.LOGTAG, tt + "failed to load form definition from XML: " + e.toString());
                 mErrorMsg = e.getMessage();
                 e.printStackTrace();
                 return null;
@@ -194,16 +206,16 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         // Import existing data into form definition
         try {            
 	        if (instanceId == null) {
-	            Log.d(Collect.LOGTAG, t + formId + ": new instance");
+	            Log.d(Collect.LOGTAG, tt + "new instance");
 	            fd.initialize(true);
 	        } else {
 	            // Import data, then initialise (this order is important)
-	            Log.d(Collect.LOGTAG, t + formId + ": existing instance");
+	            Log.d(Collect.LOGTAG, tt + "existing instance");
                 importData(formId, instanceId, fec);
                 fd.initialize(false);
 	        }
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + formId + ": failed loading data into form definition: " + e.toString());
+            Log.e(Collect.LOGTAG, tt + "failed loading data into form definition: " + e.toString());
         	e.printStackTrace();
         	
             this.publishProgress(Collect.getInstance().getString(R.string.load_error, form.getName()) + " : " + e.getMessage());
@@ -238,20 +250,36 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         }
     }
 
-    public boolean importData(String formId, String instanceId, FormEntryController fec) throws IOException {
-        Log.d(Collect.LOGTAG, t + formId + ": importing instance " + instanceId);
+    public boolean importData(String formId, String instanceId, FormEntryController fec) throws IOException 
+    {        
+        final String tt = t + "importData(): ";
         
-        // Retrieve instance XML attachment from database
-        AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, "xml");
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        Log.d(Collect.LOGTAG, tt + "for " + formId + ", importing instance " + instanceId);
+        
+        AttachmentInputStream ais = null;
+        ByteArrayOutputStream output = null;
+
         byte[] buffer = new byte[8192];
         int bytesRead;
         
-        while ((bytesRead = ais.read(buffer)) != -1) {
-            output.write(buffer, 0, bytesRead);
+        // Retrieve instance XML attachment from database
+        try {
+            ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, "xml");
+            output = new ByteArrayOutputStream();
+
+            while ((bytesRead = ais.read(buffer)) != -1) {
+                output.write(buffer, 0, bytesRead);
+            }
+
+            ais.close();
+        } catch (DbAccessException e) {
+            Log.w(Collect.LOGTAG, tt + e.toString());
+            return false;
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, tt + "unhandled exception: " + e.toString());
+            e.printStackTrace();
+            return false;
         }
-        
-        ais.close();        
 
         // Get the root of the saved and template instances
         TreeElement savedRoot = XFormParser.restoreDataModel(output.toByteArray(), null).getRoot();
@@ -261,7 +289,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
 
         // Weak check for matching forms
         if (!savedRoot.getName().equals(templateRoot.getName()) || savedRoot.getMult() != 0) {
-            Log.e(Collect.LOGTAG, t + formId + ": saved form instance does not match template form definition");
+            Log.e(Collect.LOGTAG, tt + "saved form instance does not match template form definition");
             return false;
         } else {
             // Populate the data model
@@ -281,27 +309,36 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             }
             
             // Also download any media attachments
-            InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, instanceId);            
-            HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
-            
-            for (Entry<String, Attachment> entry : attachments.entrySet()) {
-                String key = entry.getKey();
-                
-                // Do not download XML attachments (these are loaded directly into the form model)
-                if (!key.equals("xml")) {
-                    ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, key);                  
-                    
-                    FileOutputStream file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
-                    buffer = new byte[8192];
-                    bytesRead = 0;
-                    
-                    while ((bytesRead = ais.read(buffer)) != -1) {
-                        file.write(buffer, 0, bytesRead);
+            try {
+                InstanceDocument instance = Collect.getInstance().getDbService().getDb().get(InstanceDocument.class, instanceId);            
+                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
+
+                for (Entry<String, Attachment> entry : attachments.entrySet()) {
+                    String key = entry.getKey();
+
+                    // Do not download XML attachments (these are loaded directly into the form model)
+                    if (!key.equals("xml")) {
+                        ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, key);                  
+
+                        FileOutputStream file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
+                        buffer = new byte[8192];
+                        bytesRead = 0;
+
+                        while ((bytesRead = ais.read(buffer)) != -1) {
+                            file.write(buffer, 0, bytesRead);
+                        }
+
+                        ais.close();
+                        file.close();
                     }
-                    
-                    ais.close();
-                    file.close();
                 }
+            } catch (DbAccessException e) {
+                Log.w(Collect.LOGTAG, t + e.toString());
+                return false;
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
+                e.printStackTrace();
+                return false;
             }
 
             return true;
@@ -314,9 +351,10 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      * @param formDef serialized FormDef file
      * @return {@link FormDef} object
      */
-    public FormDef deserializeFormDef(File formDef) {
+    public FormDef deserializeFormDef(File formDef) 
+    {
         // TODO: any way to remove reliance on jrsp?
-    	Log.i(Collect.LOGTAG, t + "attempting read of " + formDef.getAbsolutePath());
+    	Log.i(Collect.LOGTAG, t + "deserializing form definition from " + formDef.getAbsolutePath());
 
         // Need a list of classes that formDef uses
         PrototypeManager.registerPrototypes(SERIALIABLE_CLASSES);
@@ -342,10 +380,10 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             e.printStackTrace();
             fd = null;
         } finally {
-        	if ( dis != null ) {
+        	if (dis != null) {
         		try {
         			dis.close();
-        		} catch ( IOException e ) {
+        		} catch (IOException e) {
         			// ignore...
         		}
         	}
@@ -359,8 +397,9 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      * 
      * @param filepath path to the form file
      */
-    public void serializeFormDef(FormDef fd, String id) {
-        Log.i(Collect.LOGTAG, t + id + ": serializing form as binary");
+    public void serializeFormDef(FormDef fd, String id)
+    {
+        Log.i(Collect.LOGTAG, t + id + ": serializing form definition");
 
         // Calculate unique md5 identifier            
         File formDef = new File(Collect.getInstance().getCacheDir(), id + ".formdef");
@@ -383,13 +422,15 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         }
     }
 
-    public void setFormLoaderListener(FormLoaderListener sl) {
+    public void setFormLoaderListener(FormLoaderListener sl) 
+    {
         synchronized (this) {
             mStateListener = sl;
         }
     }
 
-    public void destroy() {
+    public void destroy() 
+    {
         if (data != null) {
             data.free();
             data = null;

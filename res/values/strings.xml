@@ -186,6 +186,8 @@
 	<string name="tf_choose_select_type">Choose selection type</string>
 	<string name="tf_choose_select_type_hint">Choose whether to allow the user to select one or more items from the selection list</string>
 	<string name="tf_communication_error_try_again">Communication error - please try later</string>
+	<string name="tf_confirm_complete_instance_removal_dialog_msg">This is a completed form.\n\nAre you sure that you want to remove it?\n\nThis action can not be undone.</string>
+	<string name="tf_confirm_instance_removal_dialog_msg">Do you want to remove this form?\n\nThis action can not be undone.</string>
 	<string name="tf_confirm_removal">Confirm Removal</string>
 	<string name="tf_confirm_removal_msg">Are you sure you want to remove %s?</string>
 	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the Group Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
@@ -346,6 +348,7 @@
 	<string name="tf_remove_device_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! If you remove this registered device the following things will happen:\n\n1) The associated device will reset itself the next time it checks in with Group Inform. Following this the user will no longer be able to access this account.\n\n2) This alias or email address will continue to appear in association with records in various places but no further operations will be able to be performed using this device registration.\n\n3) You will be assigned as the owner of any folders currently associated with this user.</string>	
 	<string name="tf_remove_folder">Remove Folder</string>
 	<string name="tf_remove_folder_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! All form templates, drafts and completed forms contained in this folder will be lost upon removal.\n\nIf you need any of this information export it before removing this folder.</string>
+	<string name="tf_remove_form">Remove Form</string>
 	<string name="tf_removed_field">Removed field %s</string>	
 	<string name="tf_removed_item">Removed item %s</string>
 	<string name="tf_removed_with_param">Removed %s</string>
@@ -401,6 +404,7 @@
 	<string name="tf_unable_to_proceed_without_licence_number_and_key">A licence number and key are required</string>
 	<string name="tf_unable_to_reactivate_while_in_use">The specified device is currently IN USE.  Reset the device and try again.</string>
 	<string name="tf_unable_to_remove">Unable to Remove</string>
+	<string name="tf_unable_to_remove_form_instance">Unable to remove form at this time.  Please try again later.</string>
 	<string name="tf_unable_to_remove_defaultdb">This special folder cannot be removed</string>
 	<string name="tf_unable_to_remove_self">You cannot remove yourself!</string>
 	<string name="tf_unable_to_reset_self">Cannot reset this device from here</string>

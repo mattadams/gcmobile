@@ -465,14 +465,22 @@ public class BrowserActivity extends ListActivity
     {
         String mFormId;
         ArrayList<String> mInstanceIds = new ArrayList<String>();
+        boolean caughtExceptionInBackground = true;
 
         @Override
         protected Void doInBackground(Object... params)
         {
-            mFormId = (String) params[0];
-            InstanceDocument.Status status = (InstanceDocument.Status) params[1];
-
-            mInstanceIds = new InstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);
+            try {
+                mFormId = (String) params[0];
+                InstanceDocument.Status status = (InstanceDocument.Status) params[1];
+                mInstanceIds = new InstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);                
+                caughtExceptionInBackground = false;
+            } catch (DbAccessException e) {
+                Log.w(Collect.LOGTAG, t + "unable to access database while processing InstanceLoadPathTask.doInBackground(): " + e.toString());
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unhandled exception while processing InstanceLoadPathTask.doInBackground(): " + e.toString());
+                e.printStackTrace();
+            }
             
             return null;
         }
@@ -486,11 +494,16 @@ public class BrowserActivity extends ListActivity
         @Override
         protected void onPostExecute(Void nothing)
         {
-            Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
-            i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstanceIds);
-            i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstanceIds.get(0));
-            i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);            
-            startActivity(i);
+            if (caughtExceptionInBackground) {
+                mDialogMessage = getString(R.string.tf_unable_to_open_folder, getSelectedFolderName());
+                showDialog(DIALOG_FOLDER_UNAVAILABLE);
+            } else {
+                Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
+                i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstanceIds);
+                i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstanceIds.get(0));
+                i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);            
+                startActivity(i);
+            }
 
             setProgressVisibility(false);
         }
