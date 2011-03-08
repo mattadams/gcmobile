@@ -20,11 +20,11 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 
-public class FormRepository extends CouchDbRepositorySupport<FormDefinitionDocument>
+public class FormDefinitionRepository extends CouchDbRepositorySupport<FormDefinitionDocument>
 {
-    private final static String t = "FormRepository: ";
+    private final static String t = "FormDefinitionRepository: ";
     
-    public FormRepository(CouchDbConnector db) {
+    public FormDefinitionRepository(CouchDbConnector db) {
         super(FormDefinitionDocument.class, db);
         initStandardDesignDocument();
     }

@@ -50,7 +50,7 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.MyFormsListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
-import com.radicaldynamic.groupinform.repository.FormRepository;
+import com.radicaldynamic.groupinform.repository.FormDefinitionRepository;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 
@@ -176,10 +176,10 @@ public class MyFormsList extends ListActivity
         protected Void doInBackground(Void... nothing)
         {
             try {
-                documents = (ArrayList<FormDefinitionDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
+                documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getAll();
                 DocumentUtils.sortByName(documents);                             
 
-                instanceTalliesByStatus = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();
+                instanceTalliesByStatus = new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
             } catch (DbAccessException e) {                

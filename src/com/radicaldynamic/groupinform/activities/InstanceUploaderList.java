@@ -36,7 +36,7 @@ import com.radicaldynamic.groupinform.adapters.UploaderListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.preferences.ServerPreferences;
-import com.radicaldynamic.groupinform.repository.FormRepository;
+import com.radicaldynamic.groupinform.repository.FormDefinitionRepository;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 
 /**
@@ -210,10 +210,10 @@ public class InstanceUploaderList extends ListActivity {
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            mInstanceTallies = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsByAggregateReadiness();
+            mInstanceTallies = new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getFormsByAggregateReadiness();
             
             if (!mInstanceTallies.isEmpty()) {
-                documents = (ArrayList<FormDefinitionDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).
+                documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).
                     getAllByKeys(new ArrayList<Object>(mInstanceTallies.keySet()));
             
                 DocumentUtils.sortByName(documents);

@@ -58,8 +58,8 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
-import com.radicaldynamic.groupinform.repository.FormRepository;
-import com.radicaldynamic.groupinform.repository.InstanceRepository;
+import com.radicaldynamic.groupinform.repository.FormDefinitionRepository;
+import com.radicaldynamic.groupinform.repository.FormInstanceRepository;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.utilities.CouchDbUtils;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
@@ -473,7 +473,7 @@ public class BrowserActivity extends ListActivity
             try {
                 mFormId = (String) params[0];
                 FormInstanceDocument.Status status = (FormInstanceDocument.Status) params[1];
-                mInstanceIds = new InstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);                
+                mInstanceIds = new FormInstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);                
                 caughtExceptionInBackground = false;
             } catch (DbAccessException e) {
                 Log.w(Collect.LOGTAG, t + "unable to access database while processing InstanceLoadPathTask.doInBackground(): " + e.toString());
@@ -524,16 +524,16 @@ public class BrowserActivity extends ListActivity
             try {
                 if (status[0] == FormInstanceDocument.Status.nothing) {
                     try {
-                        documents = (ArrayList<FormDefinitionDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAll();
+                        documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getAll();
                         DocumentUtils.sortByName(documents);
                     } catch (ClassCastException e) {
                         // TODO: is there a better way to handle empty lists?
                     }
                 } else {
-                    instanceTallies = new FormRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
+                    instanceTallies = new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
                     
                     if (!instanceTallies.isEmpty()) {
-                        documents = (ArrayList<FormDefinitionDocument>) new FormRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
+                        documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
                         DocumentUtils.sortByName(documents);
                     }
                 }

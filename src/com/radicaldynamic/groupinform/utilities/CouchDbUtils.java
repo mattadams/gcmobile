@@ -43,7 +43,6 @@ public class CouchDbUtils
         return new File(DESTINATION_PATH, COUCHDIR).isDirectory();
     }
     
-    @SuppressWarnings("unchecked")
     public static void initializeEnvironment(Handler handler)
     {
         List<String> index = new ArrayList<String>();

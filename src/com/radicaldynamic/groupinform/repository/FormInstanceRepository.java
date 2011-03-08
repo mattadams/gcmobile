@@ -8,9 +8,12 @@ import org.ektorp.support.CouchDbRepositorySupport;
 
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 
-public class InstanceRepository extends CouchDbRepositorySupport<FormInstanceDocument>
+public class FormInstanceRepository extends CouchDbRepositorySupport<FormInstanceDocument>
 {
-    public InstanceRepository(CouchDbConnector db) {
+    @SuppressWarnings("unused")
+    private final static String t = "FormInstanceRepository: ";
+    
+    public FormInstanceRepository(CouchDbConnector db) {
         super(FormInstanceDocument.class, db);
         initStandardDesignDocument();
     }

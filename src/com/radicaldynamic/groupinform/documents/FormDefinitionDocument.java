@@ -2,6 +2,7 @@ package com.radicaldynamic.groupinform.documents;
 
 public class FormDefinitionDocument extends GenericDocument
 {
+    @SuppressWarnings("unused")
     private static final String t = "FormDefinitionDocument: ";
     private static final long serialVersionUID = 8292491291779289389L;   
     
