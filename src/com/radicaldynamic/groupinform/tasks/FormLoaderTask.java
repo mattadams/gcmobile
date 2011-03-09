@@ -250,6 +250,12 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         }
     }
 
+    @Override
+    protected void onProgressUpdate(String... values) 
+    {
+        Toast.makeText(Collect.getInstance().getApplicationContext(), values[0], Toast.LENGTH_LONG).show();
+    }
+
     public boolean importData(String formId, String instanceId, FormEntryController fec) throws IOException 
     {        
         final String tt = t + "importData(): ";
@@ -435,11 +441,5 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             data.free();
             data = null;
         }
-    }
-
-    @Override
-    protected void onProgressUpdate(String... values) 
-    {
-        Toast.makeText(Collect.getInstance().getApplicationContext(), values[0], Toast.LENGTH_LONG).show();
     }
 }

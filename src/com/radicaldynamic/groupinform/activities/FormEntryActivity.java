@@ -81,8 +81,7 @@ import com.radicaldynamic.groupinform.views.layout.GroupLayoutFactory;
  * 
  * @author Carl Hartung (carlhartung@gmail.com)
  */
-public class FormEntryActivity extends Activity implements AnimationListener,
-        FormLoaderListener, FormSavedListener
+public class FormEntryActivity extends Activity implements AnimationListener, FormLoaderListener, FormSavedListener
 {
     private static final String t = "FormEntryActivity: ";
 
@@ -410,7 +409,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             } else {
                 // We may have jumped to a new index in hierarchy activity, so refresh
                 refreshCurrentView();
-            }    
+            }
             break;            
         }
     }
@@ -623,9 +622,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             showDialog(REMOVE_DIALOG);
             return true;
         case MENU_HIERARCHY_VIEW:
-            if (currentPromptIsQuestion()) {
+            if (currentPromptIsQuestion())
                 saveCurrentAnswer(false);
-            }
     
             Intent i = new Intent(this, FormHierarchyList.class);
             i.putExtra(FormHierarchyList.KEY_INSTANCEID, mInstanceId);
@@ -678,18 +676,15 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     public Object onRetainNonConfigurationInstance()
     {
         // if a form is loading, pass the loader task
-        if (mFormLoaderTask != null
-                && mFormLoaderTask.getStatus() != AsyncTask.Status.FINISHED)
+        if (mFormLoaderTask != null && mFormLoaderTask.getStatus() != AsyncTask.Status.FINISHED)
             return mFormLoaderTask;
     
         // if a form is writing to disk, pass the save to disk task
-        if (mSaveToDiskTask != null
-                && mSaveToDiskTask.getStatus() != AsyncTask.Status.FINISHED)
+        if (mSaveToDiskTask != null && mSaveToDiskTask.getStatus() != AsyncTask.Status.FINISHED)
             return mSaveToDiskTask;
     
         // mFormEntryController is static so we don't need to pass it.
-        if (Collect.getInstance().getFormEntryController() != null
-                && currentPromptIsQuestion()) {
+        if (Collect.getInstance().getFormEntryController() != null && currentPromptIsQuestion()) {
             saveCurrentAnswer(false);
         }
     
@@ -836,28 +831,23 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
         switch (saveStatus) {
         case SaveToDiskTask.SAVED:
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.data_saved_ok), Toast.LENGTH_SHORT)
-                    .show();
+            Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();
             break;
+            
         case SaveToDiskTask.SAVED_AND_EXIT:
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.data_saved_ok), Toast.LENGTH_SHORT)
-                    .show();
+            Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();
             finish();
             break;
+            
         case SaveToDiskTask.SAVE_ERROR:
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.data_saved_error), Toast.LENGTH_LONG)
-                    .show();
+            Toast.makeText(getApplicationContext(), getString(R.string.data_saved_error), Toast.LENGTH_LONG).show();
             break;
+            
         case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
         case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
             // Form index will be of the offending constraint
             refreshCurrentView();
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.data_saved_error), Toast.LENGTH_LONG)
-                    .show();
+            Toast.makeText(getApplicationContext(), getString(R.string.data_saved_error), Toast.LENGTH_LONG).show();
             break;
         }
     }
@@ -1115,9 +1105,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             {
                 switch (i) {
                 case DialogInterface.BUTTON1:
-                    if (shouldExit) {
+                    if (shouldExit)
                         finish();
-                    }
+                    
                     break;
                 }
             }
@@ -1150,11 +1140,9 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 .setSingleChoiceItems(languages, selected,
                         new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog,
-                                    int whichButton)
+                            public void onClick(DialogInterface dialog, int whichButton)
                             {
-                                FormEntryController fec = Collect.getInstance()
-                                        .getFormEntryController();
+                                FormEntryController fec = Collect.getInstance().getFormEntryController();
                                 fec.setLanguage(languages[whichButton]);
                                 dialog.dismiss();
     
@@ -1204,8 +1192,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
             {
                 switch (i) {
                 case DialogInterface.BUTTON1: // yes, repeat
-                    FormEntryController fec = Collect.getInstance()
-                            .getFormEntryController();
+                    FormEntryController fec = Collect.getInstance().getFormEntryController();
                     fec.newRepeat();
                     showNextView();
                     break;
@@ -1218,20 +1205,14 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
         if (getLastRepeatCount(getGroupsForCurrentIndex()) > 0) {
             mAlertDialog.setTitle(getString(R.string.leaving_repeat_ask));
-            mAlertDialog.setMessage(getString(R.string.add_another_repeat,
-                    getLastGroupText(getGroupsForCurrentIndex())));
-            mAlertDialog.setButton(getString(R.string.add_another),
-                    repeatListener);
-            mAlertDialog.setButton2(getString(R.string.leave_repeat_yes),
-                    repeatListener);
+            mAlertDialog.setMessage(getString(R.string.add_another_repeat, getLastGroupText(getGroupsForCurrentIndex())));
+            mAlertDialog.setButton(getString(R.string.add_another), repeatListener);
+            mAlertDialog.setButton2(getString(R.string.leave_repeat_yes), repeatListener);
         } else {
             mAlertDialog.setTitle(getString(R.string.entering_repeat_ask));
-            mAlertDialog.setMessage(getString(R.string.add_repeat,
-                    getLastGroupText(getGroupsForCurrentIndex())));
-            mAlertDialog.setButton(getString(R.string.entering_repeat),
-                    repeatListener);
-            mAlertDialog.setButton2(getString(R.string.add_repeat_no),
-                    repeatListener);
+            mAlertDialog.setMessage(getString(R.string.add_repeat, getLastGroupText(getGroupsForCurrentIndex())));
+            mAlertDialog.setButton(getString(R.string.entering_repeat), repeatListener);
+            mAlertDialog.setButton2(getString(R.string.add_repeat_no), repeatListener);
         }
     
         mAlertDialog.setCancelable(false);
@@ -1296,10 +1277,8 @@ public class FormEntryActivity extends Activity implements AnimationListener,
         case FormEntryController.EVENT_BEGINNING_OF_FORM:
             View startView;
             startView = View.inflate(this, R.layout.form_entry_start, null);
-            setTitle(getString(R.string.app_name) + " > "
-                    + mFormEntryModel.getFormTitle());
-            ((TextView) startView.findViewById(R.id.form_full_title))
-                    .setText(mFormEntryModel.getFormTitle());
+            setTitle(getString(R.string.app_name) + " > " + mFormEntryModel.getFormTitle());
+            ((TextView) startView.findViewById(R.id.form_full_title)).setText(mFormEntryModel.getFormTitle());
             Drawable image = null;
     
             try {
@@ -1337,8 +1316,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 image = getResources().getDrawable(R.drawable.opendatakit_zig);
             }
     
-            ((ImageView) startView.findViewById(R.id.form_start_bling))
-                    .setImageDrawable(image);
+            ((ImageView) startView.findViewById(R.id.form_start_bling)).setImageDrawable(image);
     
             return startView;
         case FormEntryController.EVENT_END_OF_FORM:
@@ -1349,8 +1327,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                             mFormEntryModel.getFormTitle()));
     
             // Checkbox for if finished or ready to send
-            mInstanceComplete = ((CheckBox) endView
-                    .findViewById(R.id.mark_finished));
+            mInstanceComplete = ((CheckBox) endView.findViewById(R.id.mark_finished));
             mInstanceComplete.setChecked(isInstanceComplete());
     
             // Create 'save for later' button
@@ -1366,8 +1343,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
             return endView;
         case FormEntryController.EVENT_GROUP:
-            GroupView gv = new GroupView(mHandler, mFormEntryModel
-                    .getFormIndex(), this);
+            GroupView gv = new GroupView(mHandler, mFormEntryModel.getFormIndex(), this);
             gv.buildView(mInstancePath, getGroupsForCurrentIndex());
     
             // If we came from a constraint violation, set the focus to the
@@ -1377,8 +1353,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
     
             return gv;
         case FormEntryController.EVENT_QUESTION:
-            QuestionView qv = new QuestionView(mHandler, mFormEntryModel
-                    .getFormIndex(), this);
+            QuestionView qv = new QuestionView(mHandler, mFormEntryModel.getFormIndex(), this);
             qv.buildView(mInstancePath, getGroupsForCurrentIndex());
             return qv;
         default:
