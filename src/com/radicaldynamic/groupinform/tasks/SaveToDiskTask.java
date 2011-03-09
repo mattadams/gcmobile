@@ -30,7 +30,6 @@ import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.model.xform.XFormSerializingVisitor;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
@@ -47,14 +46,16 @@ import com.radicaldynamic.groupinform.utilities.FileUtils;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
+public class SaveToDiskTask extends AsyncTask<Void, String, Integer> 
+{
     private final static String t = "SaveToDiskTask: ";
 
     private FormSavedListener mSavedListener;
-    private Context mContext;
+
     private Boolean mSave;
     private Boolean mMarkCompleted;
-    private String mInstanceId;
+
+    private FormInstanceDocument mFormInstanceDoc;
 
     public static final int SAVED = 500;
     public static final int SAVE_ERROR = 501;
@@ -62,13 +63,13 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     public static final int VALIDATED = 503;
     public static final int SAVED_AND_EXIT = 504;
 
-
     /**
      * Initialize {@link FormEntryController} with {@link FormDef} from binary or from XML. If given
      * an instance, it will be used to fill the {@link FormDef}.
      */
     @Override
-    protected Integer doInBackground(Void... nothing) {
+    protected Integer doInBackground(Void... nothing) 
+    {
         // Validation failed, pass specific failure
         int validateStatus = validateAnswers(mMarkCompleted);
         
@@ -78,9 +79,9 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
 
         Collect.getInstance().getFormEntryController().getModel().getForm().postProcessInstance();
 
-        if (mSave && exportData(mContext, mMarkCompleted)) {
+        if (mSave && exportData(mMarkCompleted)) {
             return SAVED_AND_EXIT;
-        } else if (exportData(mContext, mMarkCompleted)) {
+        } else if (exportData(mMarkCompleted)) {
             return SAVED;
         }
 
@@ -89,7 +90,8 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
 
 
     @Override
-    protected void onPostExecute(Integer result) {
+    protected void onPostExecute(Integer result)
+    {
         synchronized (this) {
             if (mSavedListener != null)
                 mSavedListener.savingComplete(result);
@@ -103,8 +105,8 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         Collect.getInstance().createConstraintToast(values[0], Integer.valueOf(values[1]).intValue());
     }
 
-
-    public boolean exportData(Context context, boolean markCompleted) {
+    public boolean exportData(boolean markCompleted)
+    {
         ByteArrayPayload payload;
         
         try {
@@ -124,23 +126,22 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         return true;
     }
 
-
-    public void setExportVars(Context context, String instanceId, Boolean saveAndExit, Boolean markCompleted) {        
-        mContext = context;
-        mSave = saveAndExit;
+    public void setExportVars(FormInstanceDocument formInstanceDoc, Boolean saveAndExit, Boolean markCompleted) 
+    {
+        mFormInstanceDoc = formInstanceDoc;
         mMarkCompleted = markCompleted;
-        mInstanceId = instanceId;
+        mSave = saveAndExit;
     }
 
-
-    public void setFormSavedListener(FormSavedListener fsl) {
+    public void setFormSavedListener(FormSavedListener fsl)
+    {
         synchronized (this) {
             mSavedListener = fsl;
         }
     }
 
-
-    private boolean exportXmlFile(ByteArrayPayload payload, boolean markCompleted) {
+    private boolean exportXmlFile(ByteArrayPayload payload, boolean markCompleted)
+    {
         // Create data stream
         InputStream is = payload.getPayloadStream();
         int len = (int) payload.getLength();
@@ -152,29 +153,27 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
             int read = is.read(data, 0, len);
             
             if (read > 0) {
-                FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);   
-                                
                 if (markCompleted)
-                    instance.setStatus(FormInstanceDocument.Status.complete);
+                    mFormInstanceDoc.setStatus(FormInstanceDocument.Status.complete);
                 else
-                    instance.setStatus(FormInstanceDocument.Status.draft);
+                    mFormInstanceDoc.setStatus(FormInstanceDocument.Status.draft);
                 
                 // Save form data
-                instance.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data, Base64.DEFAULT), "text/xml"));
-                Collect.getInstance().getDbService().getDb().update(instance);
+                mFormInstanceDoc.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data, Base64.DEFAULT), "text/xml"));
+                Collect.getInstance().getDbService().getDb().update(mFormInstanceDoc);
                 
                 // Save media attachments one by one
                 File cacheDir = new File(FileUtils.EXTERNAL_CACHE);
                 String[] fileNames = cacheDir.list();                           
                                             
                 for (String file : fileNames) {
-                    Log.v(Collect.LOGTAG, t + mInstanceId + ": evaluating " + file + " for save to DB");
+                    Log.v(Collect.LOGTAG, t + mFormInstanceDoc.getId() + ": evaluating " + file + " for save to DB");
                     
-                    if (Pattern.matches("^" + mInstanceId + "[.].*", file)) {                                
-                        Log.d(Collect.LOGTAG, t + mInstanceId + ": attaching " + file);
+                    if (Pattern.matches("^" + mFormInstanceDoc.getId() + "[.].*", file)) {
+                        Log.d(Collect.LOGTAG, t + mFormInstanceDoc.getId() + ": attaching " + file);
                         
                         // Make sure we have the most current revision number
-                        FormInstanceDocument document = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);
+                        FormInstanceDocument document = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mFormInstanceDoc.getId());
 
                         FileInputStream fis = new FileInputStream(new File(FileUtils.EXTERNAL_CACHE, file));
                         String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1));
@@ -189,7 +188,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                     }
                 }
                 
-                if (instance.getId().length() > 0) 
+                if (mFormInstanceDoc.getId().length() > 0)
                     return true;
                 else 
                     return false;
@@ -203,7 +202,6 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         return false;
     }
 
-
     /**
      * Goes through the entire form to make sure all entered answers comply with their constraints.
      * Constraints are ignored on 'jump to', so answers can be outside of constraints. We don't
@@ -212,7 +210,8 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
      * @param markCompleted
      * @return validatedStatus
      */
-    private int validateAnswers(Boolean markCompleted) {
+    private int validateAnswers(Boolean markCompleted)
+    {
     	FormEntryController fec = Collect.getInstance().getFormEntryController();
         FormEntryModel fem = fec.getModel();
         FormIndex i = fem.getFormIndex();

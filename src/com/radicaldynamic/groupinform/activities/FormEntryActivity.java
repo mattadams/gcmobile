@@ -15,6 +15,7 @@
 package com.radicaldynamic.groupinform.activities;
 
 import java.io.File;
+import java.util.HashMap;
 
 import org.ektorp.DbAccessException;
 import org.javarosa.core.model.FormDef;
@@ -63,6 +64,7 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
+import com.radicaldynamic.groupinform.documents.GenericDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 import com.radicaldynamic.groupinform.logic.PropertyManager;
@@ -91,11 +93,15 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     public static final int AUDIO_CAPTURE = 3;
     public static final int VIDEO_CAPTURE = 4;
     public static final int LOCATION_CAPTURE = 5;
-    //public static final int HIERARCHY_ACTIVITY = 6;               // Kept to make sense of intent of upstream changeset 402
+    //public static final int HIERARCHY_ACTIVITY = 6;               // Kept to make sense of intent osf upstream changeset 402
     public static final int HIERARCHY_BROWSER = 7;                  // Navigate to another instance (via FormHierarchyActivity)
 
     public static final String LOCATION_RESULT = "LOCATION_RESULT";
     
+    // See onRetainNonConfigurationInstance()
+    private static final String KEY_FORM_DEFINITION = "formdefinition";
+    private static final String KEY_FORM_INSTANCE = "forminstance";
+
     public static final String KEY_FORMID = "formpath";             // Identifies the location of the form used to launch form entry
     public static final String KEY_FORMPATH = "formpath";
     public static final String KEY_FORMACTUALPATH = "formactualpath";
@@ -120,13 +126,11 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     private static final int REMOVE_DIALOG = 3;
     private static final int REMOVING_DIALOG = 4;
 
-    // TODO: Uncomment when ProgressBar slow down is fixed.
-    // private ProgressBar mProgressBar;
-
     private String mFormId = null;
     private String mInstanceId = null;
-    private String mInstancePath;
-    private CheckBox mInstanceComplete;
+
+    private FormDefinitionDocument mFormDefinitionDoc = null;
+    private FormInstanceDocument mFormInstanceDoc = null;
 
     public FormEntryModel mFormEntryModel;
 
@@ -139,6 +143,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     private RelativeLayout mRelativeLayout;
     private View mCurrentView;
     private View mBrowserButtons;
+    // TODO: Uncomment when ProgressBar slow down is fixed.
+    // private ProgressBar mProgressBar;
+    private CheckBox mInstanceComplete;
 
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
@@ -151,6 +158,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         LEFT, RIGHT, FADE
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -184,10 +192,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             if (savedInstanceState.containsKey(KEY_FORMID))
                 mFormId = savedInstanceState.getString(KEY_FORMID);
 
-            if (savedInstanceState.containsKey(KEY_INSTANCEID)) {
-                mInstanceId = savedInstanceState.getString(KEY_INSTANCEID);    
-                mInstancePath = FileUtils.EXTERNAL_CACHE + File.separator + mInstanceId + ".";
-            }
+            if (savedInstanceState.containsKey(KEY_INSTANCEID))
+                mInstanceId = savedInstanceState.getString(KEY_INSTANCEID);
             
             if (savedInstanceState.containsKey(KEY_INSTANCES))             
                 Collect.getInstance().setInstanceBrowseList(savedInstanceState.getStringArrayList(KEY_INSTANCES));  
@@ -213,6 +219,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             mFormLoaderTask = (FormLoaderTask) data;
         } else if (data instanceof SaveToDiskTask) {
             mSaveToDiskTask = (SaveToDiskTask) data;
+        } else if (data instanceof HashMap<?, ?>) {
+            mFormDefinitionDoc = (FormDefinitionDocument) ((HashMap<String, GenericDocument>) data).get(KEY_FORM_DEFINITION);
+            mFormInstanceDoc = (FormInstanceDocument) ((HashMap<String, GenericDocument>) data).get(KEY_FORM_INSTANCE); 
         } else if (data == null) {
             FormEntryController fec = Collect.getInstance().getFormEntryController();
 
@@ -527,12 +536,13 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             builder.setPositiveButton(getString(R.string.tf_remove), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     try {
-                        FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);
-                        instance.setStatus(FormInstanceDocument.Status.removed);
-                        Collect.getInstance().getDbService().getDb().update(instance);
+                        mFormInstanceDoc.setStatus(FormInstanceDocument.Status.removed);
+                        Collect.getInstance().getDbService().getDb().update(mFormInstanceDoc);
                         
                         removeDialog(REMOVE_DIALOG);
                         
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, getString(R.string.form)), Toast.LENGTH_SHORT).show();
+
                         if (Collect.getInstance().getInstanceBrowseList().size() > 1) {
                             browseToNextInstance(true);
                         } else {
@@ -687,8 +697,13 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         if (Collect.getInstance().getFormEntryController() != null && currentPromptIsQuestion()) {
             saveCurrentAnswer(false);
         }
-    
-        return null;
+
+        // Avoid refetching documents from database by preserving them
+        HashMap<String, GenericDocument> persistentData = new HashMap<String, GenericDocument>();
+        persistentData.put(KEY_FORM_DEFINITION, mFormDefinitionDoc);
+        persistentData.put(KEY_FORM_INSTANCE, mFormInstanceDoc);
+
+        return persistentData;
     }
 
     /*
@@ -742,38 +757,45 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         return handled;
     }
 
-    /**
-     * loadingComplete() is called by FormLoaderTask once it has finished
-     * loading a form.
-     */
+
+    // Called by FormLoaderTask once it has finished loading a form
     @Override
-    public void loadingComplete(FormEntryController fec)
+    public void loadingComplete(FormEntryController fec, FormDefinitionDocument fdd, FormInstanceDocument fid)
     {
+        final String tt = t + "loadingComplete(): ";
+
         dismissDialog(PROGRESS_DIALOG);
 
         if (fec == null) {
-            createErrorDialog(getString(R.string.load_error, Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, mFormId).getName()), true);
+            try {
+                createErrorDialog(getString(R.string.load_error, fdd.getName()), true);
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, tt + "unable to retrieve form name for createErrorDialog()");
+                createErrorDialog(getString(R.string.load_error, getString(R.string.tf_unavailable)), true);
+            }
         } else {
             Collect.getInstance().setFormEntryController(fec);
             mFormEntryModel = fec.getModel();
+            mFormDefinitionDoc = fdd;
 
             // Initialize new instance document
             if (mInstanceId == null) {
-                FormInstanceDocument instance = new FormInstanceDocument();
-                instance.setFormId(mFormId);
-                Collect.getInstance().getDbService().getDb().create(instance);
-                mInstanceId = instance.getId();
-                mInstancePath = FileUtils.EXTERNAL_CACHE + File.separator + mInstanceId + ".";
+                mFormInstanceDoc = new FormInstanceDocument();
+                mFormInstanceDoc.setFormId(mFormId);
+
+                Collect.getInstance().getDbService().getDb().create(mFormInstanceDoc);
+
+                mInstanceId = mFormInstanceDoc.getId();
             } else {
-                mInstancePath = FileUtils.EXTERNAL_CACHE + File.separator + mInstanceId + ".";
+                mFormInstanceDoc = fid;
                 
-                // We've just loaded a saved form, so start in the hierarchy view
+                // Start in the hierarchy view after loading a saved form
                 Intent i = new Intent(this, FormHierarchyList.class);
                 i.putExtra(FormHierarchyList.KEY_INSTANCEID, mInstanceId);
                 i.putExtra(FormHierarchyList.KEY_AUTO_LOAD, true);                
                 startActivityForResult(i, HIERARCHY_BROWSER);
 
-                // So we don't show the introduction screen before jumping to the hierarchy
+                // Do no show the introduction screen before jumping to the hierarchy
                 return;
             }
 
@@ -1262,6 +1284,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      */
     private View createView(int event, FormIndex subIndex)
     {
+        String formInstancePath = FileUtils.EXTERNAL_CACHE + File.separator + mInstanceId + ".";
+
         setTitle(getString(R.string.app_name) + " > " + mFormEntryModel.getFormTitle());
     
         /**
@@ -1317,8 +1341,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             }
     
             ((ImageView) startView.findViewById(R.id.form_start_bling)).setImageDrawable(image);
-    
+
             return startView;
+
         case FormEntryController.EVENT_END_OF_FORM:
             View endView = View.inflate(this, R.layout.form_entry_end, null);
     
@@ -1342,9 +1367,10 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                     });
     
             return endView;
+
         case FormEntryController.EVENT_GROUP:
             GroupView gv = new GroupView(mHandler, mFormEntryModel.getFormIndex(), this);
-            gv.buildView(mInstancePath, getGroupsForCurrentIndex());
+            gv.buildView(formInstancePath, getGroupsForCurrentIndex());
     
             // If we came from a constraint violation, set the focus to the
             // violated field
@@ -1352,10 +1378,12 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 gv.setSubFocus(subIndex);
     
             return gv;
+
         case FormEntryController.EVENT_QUESTION:
             QuestionView qv = new QuestionView(mHandler, mFormEntryModel.getFormIndex(), this);
-            qv.buildView(mInstancePath, getGroupsForCurrentIndex());
+            qv.buildView(formInstancePath, getGroupsForCurrentIndex());
             return qv;
+
         default:
             Log.e(Collect.LOGTAG, t + "attempted to create a view that does not exist");
             return null;
@@ -1392,13 +1420,10 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     
     private void discardChangesAndExit()
     {
-        // Remove an instance if it has no status (e.g.,
-        // recently created)
-        FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);
-
-        if (instance.getStatus() == FormInstanceDocument.Status.placeholder) {
-            Collect.getInstance().getDbService().getDb().delete(instance);
-            Log.d(Collect.LOGTAG, t + mFormId + ": removed placeholder instance " + mInstanceId);
+        // Remove an instance if it has not been saved
+        if (mFormInstanceDoc.getStatus() == FormInstanceDocument.Status.placeholder) {
+            Log.d(Collect.LOGTAG, t + mFormId + ": removing placeholder instance " + mFormInstanceDoc.getId());
+            Collect.getInstance().getDbService().getDb().delete(mFormInstanceDoc);
         }
 
         finish();
@@ -1605,17 +1630,10 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
     private boolean isInstanceComplete()
     {
-        try {
-            FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mInstanceId);
-
-            if (instance.getStatus() == FormInstanceDocument.Status.complete)
-                return true;
-            else
-                return false;
-        } catch (DbAccessException e) {
-            Log.w(Collect.LOGTAG, t + "while checking whether isInstanceComplete() " + e.toString());
+        if (mFormInstanceDoc.getStatus() == FormInstanceDocument.Status.complete)
+            return true;
+        else
             return false;
-        }
     }
 
     /**
@@ -1677,19 +1695,15 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     {
         // Save current answer
         if (!saveCurrentAnswer(true)) {
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.data_saved_error), Toast.LENGTH_SHORT)
-                    .show();
+            Toast.makeText(getApplicationContext(), getString(R.string.data_saved_error), Toast.LENGTH_SHORT).show();
             return false;
         }
     
         mSaveToDiskTask = new SaveToDiskTask();
         mSaveToDiskTask.setFormSavedListener(this);
     
-        // TODO move to constructor <--? No. the mInstancePath isn't set until
-        // the form loads.
-        // TODO remove context
-        mSaveToDiskTask.setExportVars(getApplicationContext(), mInstanceId, exit, complete);
+        // TODO move to constructor <--? No. the mInstancePath isn't set until the form loads.
+        mSaveToDiskTask.setExportVars(mFormInstanceDoc, exit, complete);
         mSaveToDiskTask.execute();
         showDialog(SAVING_DIALOG);
     

@@ -16,10 +16,13 @@ package com.radicaldynamic.groupinform.listeners;
 
 import org.javarosa.form.api.FormEntryController;
 
+import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
+
 /**
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public interface FormLoaderListener {
-    void loadingComplete(FormEntryController fec);
+    void loadingComplete(FormEntryController fec, FormDefinitionDocument fdd, FormInstanceDocument fid);
     void loadingError(String errorMsg);
 }

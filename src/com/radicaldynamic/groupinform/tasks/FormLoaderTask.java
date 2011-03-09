@@ -89,9 +89,6 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         "org.javarosa.xpath.expr.XPathVariableReference"
     };
     
-    FormLoaderListener mStateListener;
-    String mErrorMsg = "unexpected error";
-
     protected class FECWrapper {
         FormEntryController controller;
 
@@ -110,6 +107,12 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
 
     FECWrapper data;
 
+    FormLoaderListener mStateListener;
+    String mErrorMsg = "unexpected error";
+
+    FormDefinitionDocument mFormDefinitionDoc = null;
+    FormInstanceDocument mFormInstanceDoc = null;
+
     /**
      * Initialize {@link FormEntryController} with {@link FormDef} from binary or from XML. If given
      * an instance, it will be used to fill the {@link FormDef}.
@@ -122,24 +125,27 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         FormEntryController fec = null;
         FormDef fd = null;
         
-        FormDefinitionDocument form = null;
-        
         String formId = ids[0];
         String instanceId = ids[1];
                 
         try {
-            form = Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, formId);
+            mFormDefinitionDoc = Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, formId);
         } catch (DbAccessException e) {
             Log.w(Collect.LOGTAG, tt + "while retrieving form definition document " + e.toString());
             mErrorMsg = "Unable to read form definition from the database.\n\nPlease try again later.";
             return null;
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, tt + "unhandled exception while retrieving form definition document: " + e.toString());
+            mErrorMsg = "Unable to read form definition from the database.\n\nPlease try again later.";
+            e.printStackTrace();
+            return null;
         }
-            
-        File formBin = new File(Collect.getInstance().getCacheDir(), formId + ".formdef");
-        
-        Log.i(Collect.LOGTAG, tt + "for " + formId + ", loading form named " + form.getName());
 
-        if (formBin.exists() && formBin.lastModified() < form.getDateUpdatedAsCalendar().getTimeInMillis()) {
+        Log.i(Collect.LOGTAG, tt + "for " + mFormDefinitionDoc.getId() + ", loading form named " + mFormDefinitionDoc.getName());
+        
+        File formBin = new File(Collect.getInstance().getCacheDir(), mFormDefinitionDoc.getId() + ".formdef");
+
+        if (formBin.exists() && formBin.lastModified() < mFormDefinitionDoc.getDateUpdatedAsCalendar().getTimeInMillis()) {
             /*
              * The cache is stale with regards to the XML so delete the cache file.
              * This is mainly used for development but could be more important going
@@ -169,9 +175,9 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         // Either a binary wasn't present or didn't load -- read directly from XML
         if (fd == null) {            
             try {
-            	Log.d(Collect.LOGTAG, tt + "attempting read of " + form.getName() + " XML attachment");
+            	Log.d(Collect.LOGTAG, tt + "attempting read of " + mFormDefinitionDoc.getName() + " XML attachment");
             	
-            	AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
+            	AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(mFormDefinitionDoc.getId(), "xml");
             	fd = XFormUtils.getFormFromInputStream(ais);
             	ais.close();            	            	
             	
@@ -180,7 +186,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                     mErrorMsg = "Error reading XForm file";
                     return null;
                 } else {                
-                    serializeFormDef(fd, formId);
+                    serializeFormDef(fd, mFormDefinitionDoc.getId());
                 }
             } catch (XFormParseException e) {
                 Log.e(Collect.LOGTAG, tt + "failed to load form definition from XML: " + e.toString());
@@ -211,23 +217,22 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
 	        } else {
 	            // Import data, then initialise (this order is important)
 	            Log.d(Collect.LOGTAG, tt + "existing instance");
-                importData(formId, instanceId, fec);
+                importData(instanceId, fec);
                 fd.initialize(false);
 	        }
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, tt + "failed loading data into form definition: " + e.toString());
         	e.printStackTrace();
         	
-            this.publishProgress(Collect.getInstance().getString(R.string.load_error, form.getName()) + " : " + e.getMessage());
+            this.publishProgress(Collect.getInstance().getString(R.string.load_error, mFormDefinitionDoc.getName()) + " : " + e.getMessage());
 
         	return null;
         }
 
-        Collect.getInstance().registerMediaPath(FileUtils.EXTERNAL_CACHE + File.separator + formId + ".");
+        Collect.getInstance().registerMediaPath(FileUtils.EXTERNAL_CACHE + File.separator + mFormDefinitionDoc.getId() + ".");
 
         fd = null;
         formBin = null;
-        form = null;
         formId = null;
         instanceId = null;
 
@@ -243,7 +248,10 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 if (wrapper == null) {
                     mStateListener.loadingError(mErrorMsg);
                 } else {
-                    mStateListener.loadingComplete(wrapper.getController());    
+                    mStateListener.loadingComplete(wrapper.getController(), mFormDefinitionDoc, mFormInstanceDoc);
+
+                    mFormDefinitionDoc = null;
+                    mFormInstanceDoc = null;
                 }
             }
                 
@@ -256,11 +264,11 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         Toast.makeText(Collect.getInstance().getApplicationContext(), values[0], Toast.LENGTH_LONG).show();
     }
 
-    public boolean importData(String formId, String instanceId, FormEntryController fec) throws IOException 
+    public boolean importData(String instanceId, FormEntryController fec) throws IOException 
     {        
         final String tt = t + "importData(): ";
         
-        Log.d(Collect.LOGTAG, tt + "for " + formId + ", importing instance " + instanceId);
+        Log.d(Collect.LOGTAG, tt + "for " + mFormDefinitionDoc.getId() + ", importing instance " + instanceId);
         
         AttachmentInputStream ais = null;
         ByteArrayOutputStream output = null;
@@ -316,15 +324,15 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             
             // Also download any media attachments
             try {
-                FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceId);            
-                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
+                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceId);
+                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) mFormInstanceDoc.getAttachments();
 
                 for (Entry<String, Attachment> entry : attachments.entrySet()) {
                     String key = entry.getKey();
 
                     // Do not download XML attachments (these are loaded directly into the form model)
                     if (!key.equals("xml")) {
-                        ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, key);                  
+                        ais = Collect.getInstance().getDbService().getDb().getAttachment(mFormInstanceDoc.getId(), key);
 
                         FileOutputStream file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
                         buffer = new byte[8192];

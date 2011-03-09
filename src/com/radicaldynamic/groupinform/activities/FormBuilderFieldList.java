@@ -37,6 +37,7 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.FormBuilderFieldListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
@@ -550,7 +551,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             synchronized (this) {
                 if (mStateListener != null) {
                     if (mError == null) {
-                        mStateListener.loadingComplete(null);                        
+                        mStateListener.loadingComplete(null, null, null);
                     } else {
                         mStateListener.loadingError(mError); 
                     }
@@ -741,7 +742,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
      * @see com.radicaldynamic.turboform.listeners.FormLoaderListener#loadingComplete
      */
     @Override
-    public void loadingComplete(FormEntryController fec)
+    public void loadingComplete(FormEntryController fec, FormDefinitionDocument fdd, FormInstanceDocument fid)
     {
         dismissDialog(LOADING_DIALOG);        
         refreshView(mFieldState);
