@@ -294,9 +294,10 @@ public class AccountFolderList extends ListActivity
             folder = selection[0];
             
             // Initialize any databases that should be synchronized
-            if (folder.isReplicated())
+            if (folder.isReplicated()) {
                 if (!Collect.getInstance().getDbService().isDbLocal(folder.getId()))                  
                     folderReady = Collect.getInstance().getDbService().initLocalDb(folder.getId());
+            }                
             
             return null;
         }

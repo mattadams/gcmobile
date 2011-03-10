@@ -332,6 +332,7 @@
 	<string name="tf_opening_please_wait">Opening, please wait...</string>
 	<string name="tf_preferences">Preferences</string>	
 	<string name="tf_previous_instance">Previous</string>
+	<string name="tf_processing">Processing...</string>
 	<string name="tf_reactivation_delayed_reason">Please wait 5 minutes after device reset</string>
 	<string name="tf_reactivation_delayed_wait">PIN will be accepted in%1$s%2$s %3$s</string>   
 	<string name="tf_register_this_device">Register this Device</string>

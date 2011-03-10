@@ -40,9 +40,9 @@ public class AccountFolderReplicationList extends ListActivity
     private final String t = "AccountFolderReplicationList: ";
     
     public static final int SAVING_DIALOG = 0;
+    public static final int POSTSAVE_DIALOG = 1;
     
     private AlertDialog mAlertDialog;
-    private ProgressDialog mProgressDialog;
     
     private ListView mListView;
     
@@ -76,11 +76,18 @@ public class AccountFolderReplicationList extends ListActivity
     {
         switch (id) {
         case SAVING_DIALOG:
-            mProgressDialog = new ProgressDialog(this);   
-            mProgressDialog.setMessage(getText(R.string.tf_saving_please_wait));
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);            
-            return mProgressDialog;
+            ProgressDialog saving = new ProgressDialog(this);   
+            saving.setMessage(getText(R.string.tf_saving_please_wait));
+            saving.setIndeterminate(true);
+            saving.setCancelable(false);            
+            return saving;
+            
+        case POSTSAVE_DIALOG:
+            ProgressDialog postsave = new ProgressDialog(this);   
+            postsave.setMessage(getText(R.string.tf_processing));
+            postsave.setIndeterminate(true);
+            postsave.setCancelable(false);            
+            return postsave;
         }
         
         return null;
@@ -100,6 +107,47 @@ public class AccountFolderReplicationList extends ListActivity
         return super.onKeyDown(keyCode, event);
     }
     
+    /*
+     * Housekeeping following a SUCCESSFUL selections update on server.  If this fails further
+     * attempts will be made by DatabaseService.performLocalHousekeeping()
+     */
+    private class PostReplicationsUpdateTask extends AsyncTask<Void, Void, Void>
+    {
+        @Override
+        protected Void doInBackground(Void... nothing)
+        {
+            SparseBooleanArray checkedItemPositions = mListView.getCheckedItemPositions();
+            
+            for (int i = 0; i < checkedItemPositions.size(); i++) {
+                // User has not selected folder for synchronization
+                if (!checkedItemPositions.valueAt(i)) {                    
+                    String db = ((AccountFolder) mListView.getItemAtPosition(i)).getId();                  
+                    Log.v(Collect.LOGTAG, t + "database " + db + " not selected for replication (checking for local copy)");                    
+                    
+                    if (Collect.getInstance().getDbService().isDbLocal(db)) {
+                        Log.d(Collect.LOGTAG, t + "database " + db + " is local, performing final replication before removal");
+                        Collect.getInstance().getDbService().removeLocalDb(db);
+                    }
+                }
+            }
+            
+            return null;        
+        }
+        
+        @Override
+        protected void onPreExecute()
+        {
+            showDialog(POSTSAVE_DIALOG);
+        }
+        
+        @Override
+        protected void onPostExecute(Void nothing)
+        {
+            removeDialog(POSTSAVE_DIALOG);
+            finish();
+        }
+    }
+
     /*
      * Refresh the main form browser view as requested by the user
      */
@@ -147,10 +195,8 @@ public class AccountFolderReplicationList extends ListActivity
         }
     }
     
-    /*
-     * Refresh the main form browser view as requested by the user
-     */
-    private class UpdateFolderReplicationList extends AsyncTask<Void, Void, String>
+    // Send selections to update device record on server
+    private class UpdateReplicationsTask extends AsyncTask<Void, Void, String>
     {   
         @Override
         protected String doInBackground(Void... nothing)
@@ -187,7 +233,7 @@ public class AccountFolderReplicationList extends ListActivity
         @Override
         protected void onPostExecute(String postResult)
         {
-            mProgressDialog.cancel();
+            removeDialog(SAVING_DIALOG);
             
             JSONObject update;
             
@@ -203,9 +249,8 @@ public class AccountFolderReplicationList extends ListActivity
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
                     new File(getCacheDir(), FileUtils.FOLDER_CACHE_FILE).setLastModified(0);
-                    
-                    // Get out of here
-                    finish();
+
+                    new PostReplicationsUpdateTask().execute();
                 } else {
                     // Something bad happened
                     Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
@@ -249,7 +294,7 @@ public class AccountFolderReplicationList extends ListActivity
     
                         case 1:
                             // Save and exit                            
-                            new UpdateFolderReplicationList().execute();
+                            new UpdateReplicationsTask().execute();
                             break;
     
                         case 2:

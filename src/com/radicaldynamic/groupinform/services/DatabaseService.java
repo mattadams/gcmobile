@@ -204,6 +204,8 @@ public class DatabaseService extends Service {
             else 
                 return status.isOk();
         } catch (Exception e) {
+            Log.e(Collect.LOGTAG, t + "replication pull failed at " + e.toString());
+            e.printStackTrace();
             return false;
         }
     }
@@ -213,10 +215,7 @@ public class DatabaseService extends Service {
      */
     public boolean isDbLocal(String db)
     {
-        HttpClient httpClient = new StdHttpClient.Builder().host("127.0.0.1").port(5985).build();
-        CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient);
-        
-        if (dbInstance.getAllDatabases().indexOf("db_" + db) == -1)
+        if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) == -1)
             return false;
         else
             return true;
@@ -294,6 +293,27 @@ public class DatabaseService extends Service {
             }
             
             openRemoteDatabase(db);
+        }
+    }
+    
+    // Database is candidate for controlled removal (remove only if final replication push is successful)
+    public boolean removeLocalDb(String db)
+    {
+        try {
+            ReplicationStatus status = replicate(db, REPLICATE_PUSH);
+
+            if (status == null)
+                return false;
+            else if (status.isOk()) {
+                Log.i(Collect.LOGTAG, t + "final replication push successful, removing " + db);
+                mLocalDbInstance.deleteDatabase("db_" + db);
+            }
+            
+            return status.isOk();
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, t + "replication push failed at " + e.toString());
+            e.printStackTrace();
+            return false;
         }
     }
     
@@ -388,7 +408,7 @@ public class DatabaseService extends Service {
         }
     }
 
-    // Perform any local house keeping (e.g., removing of non-synchronized DBs, compacting & view cleanup)
+    // Perform any local house keeping (e.g., removing of unused DBs, view compaction & cleanup)
     private void performLocalHousekeeping()
     {   
         try {
@@ -396,7 +416,7 @@ public class DatabaseService extends Service {
             Iterator<String> dbs = allDatabases.iterator();
     
             while (dbs.hasNext()) {
-                String db = dbs.next();                
+                String db = dbs.next();
                 
                 // Skip special databases
                 if (!db.startsWith("_")) {
@@ -404,15 +424,14 @@ public class DatabaseService extends Service {
                     db = db.substring(3);
                     
                     AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db);
-                    
+
                     if (folder == null) {
-                        Log.w(Collect.LOGTAG, t + "no metatdata for " + db);
-                    } else {
-                        // Remove databases that exist locally but are not replicated/marked for synchronization
-                        if (!folder.isReplicated()) {
-                            Log.i(Collect.LOGTAG, t + "deleting local database " + db);
-                            mLocalDbInstance.deleteDatabase("db_" + db);
-                        }
+                        // Remove databases that exist locally but for which we have no metadata
+                        Log.i(Collect.LOGTAG, t + "no metatdata for " + db + " (removing)");
+                        mLocalDbInstance.deleteDatabase("db_" + db);
+                    } else if (isDbLocal(folder.getId()) && folder.isReplicated() == false) {
+                        // Purge any databases that were not zapped at the time of removal from the synchronization list
+                        removeLocalDb(folder.getId());
                     }
                 }
             }
@@ -436,7 +455,7 @@ public class DatabaseService extends Service {
         if (!Collect.getInstance().getIoService().isSignedIn()) {
             Log.w(Collect.LOGTAG, t + "aborting replication of " + db + " (not signed in)");
             return null;
-        }        
+        }
         
         /* 
          * Lookup master cluster by IP.  Do this instead of relying on Erlang's internal resolver 

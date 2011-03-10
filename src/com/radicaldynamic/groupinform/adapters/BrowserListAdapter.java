@@ -8,11 +8,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 
 public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDocument>
 {       
@@ -42,18 +45,39 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDocument>
         FormDefinitionDocument f = mItems.get(position);
 
         if (f != null) {
+            ImageView fi = (ImageView) v.findViewById(R.id.icon);
             TextView tt = (TextView) v.findViewById(R.id.toptext);
-            TextView bt = (TextView) v.findViewById(R.id.bottomtext);
+            TextView bt = (TextView) v.findViewById(R.id.bottomtext);            
 
             if (tt != null) {
                 tt.setText(f.getName());
             }
 
-            if (!mInstanceTallies.isEmpty()) {             
+            if (!mInstanceTallies.isEmpty()) {           
                 if (bt != null) {
                     String descriptor = mSpinner.getSelectedItem().toString().toLowerCase();
+                    
+                    switch (mSpinner.getSelectedItemPosition()) {
+                    // Show all forms (in folder)  
+                    case 0: 
+                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.ic_menu_agenda_new));
+                        break;
+    
+                        // Show all draft forms
+                    case 1:
+                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.ic_menu_agenda_draft));
+                        break;
+                        
+                    // Show all completed forms
+                    case 2:
+                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.ic_menu_agenda_complete));
+                        break;
+                    
+                    default:
+                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.ic_menu_agenda_new));
+                    }
 
-                    // Correct plural words (this only works in very simple circumstances using English)
+                    // FIXME: correct plural words (this only works in very simple circumstances using English)
                     if (mInstanceTallies.get(f.getId()).equals("1")) {                           
                         descriptor = descriptor.substring(0, descriptor.length() - 1);
                     }
