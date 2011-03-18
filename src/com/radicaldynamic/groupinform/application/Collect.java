@@ -172,7 +172,7 @@ public class Collect extends Application {
 		showCustomToast(constraintText);
 	}
 
-	private void showCustomToast(String message) 
+	public void showCustomToast(String message) 
 	{
 		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 

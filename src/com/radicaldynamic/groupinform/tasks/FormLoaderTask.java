@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
 import org.ektorp.DbAccessException;
+import org.ektorp.DocumentNotFoundException;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.condition.EvaluationContext;
 import org.javarosa.core.model.instance.TreeElement;
@@ -286,8 +287,11 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             }
 
             ais.close();
+        } catch (DocumentNotFoundException e) {
+            Log.w(Collect.LOGTAG, tt + "DocumentNotFoundException: " + e.toString());
+            return false;
         } catch (DbAccessException e) {
-            Log.w(Collect.LOGTAG, tt + e.toString());
+            Log.w(Collect.LOGTAG, tt + "DbAccessException: " + e.toString());
             return false;
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, tt + "unhandled exception: " + e.toString());
@@ -346,11 +350,14 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                         file.close();
                     }
                 }
+            } catch (DocumentNotFoundException e) {
+                Log.w(Collect.LOGTAG, tt + "DocumentNotFoundException: " + e.toString());
+                return false;
             } catch (DbAccessException e) {
-                Log.w(Collect.LOGTAG, t + e.toString());
+                Log.w(Collect.LOGTAG, tt + "DbAccessException: " + e.toString());
                 return false;
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
+                Log.e(Collect.LOGTAG, tt + "unhandled exception: " + e.toString());
                 e.printStackTrace();
                 return false;
             }

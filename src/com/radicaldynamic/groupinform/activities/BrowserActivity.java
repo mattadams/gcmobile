@@ -77,12 +77,13 @@ public class BrowserActivity extends ListActivity
     
     // Dialog status codes
     private static final int DIALOG_FOLDER_UNAVAILABLE = 1;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 2;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 3;    
-    private static final int DIALOG_ONLINE_STATE_CHANGING = 4;
-    private static final int DIALOG_TOGGLE_ONLINE_STATE = 5;
-    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 6;
-    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 7;
+    private static final int DIALOG_INSTANCES_UNAVAILABLE = 2;
+    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 3;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 4;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 5;    
+    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 6;
+    private static final int DIALOG_ONLINE_STATE_CHANGING = 7;
+    private static final int DIALOG_TOGGLE_ONLINE_STATE = 8;
     
     // Keys for persistence between screen orientation changes
     private static final String KEY_DIALOG_MESSAGE = "dialog_msg";
@@ -232,6 +233,24 @@ public class BrowserActivity extends ListActivity
             dialog = builder.create();
             break;            
             
+        // User requested forms (definitions or instances) to be loaded but none could be found 
+        case DIALOG_INSTANCES_UNAVAILABLE:
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_info)
+                .setTitle(R.string.tf_unable_to_load_instances_dialog)
+                .setMessage(R.string.tf_unable_to_load_instances_dialog_msg);
+
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    loadScreen();
+                    dialog.cancel();
+                }
+            });
+            
+            dialog = builder.create();
+            break;
+            
         // We can't go offline (CouchDB not installed or not available locally)
         case DIALOG_OFFLINE_MODE_UNAVAILABLE_DB:
             builder
@@ -350,9 +369,6 @@ public class BrowserActivity extends ListActivity
 
             dialog = builder.create();
             break;
-            
-        default:
-            Log.e(Collect.LOGTAG, t + "showDialog() unimplemented for " + id);
         }
         
         return dialog;        
@@ -498,11 +514,16 @@ public class BrowserActivity extends ListActivity
                 mDialogMessage = getString(R.string.tf_unable_to_open_folder, getSelectedFolderName());
                 showDialog(DIALOG_FOLDER_UNAVAILABLE);
             } else {
-                Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
-                i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstanceIds);
-                i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstanceIds.get(0));
-                i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);            
-                startActivity(i);
+                try {
+                    Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
+                    i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstanceIds);
+                    i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstanceIds.get(0));
+                    i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);            
+                    startActivity(i);
+                } catch (IndexOutOfBoundsException e) {
+                    // There were no mInstanceIds returned (no DB error, per-se but something was missing)
+                    showDialog(DIALOG_INSTANCES_UNAVAILABLE);
+                }
             }
 
             setProgressVisibility(false);

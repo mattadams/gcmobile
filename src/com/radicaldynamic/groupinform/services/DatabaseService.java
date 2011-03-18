@@ -215,10 +215,19 @@ public class DatabaseService extends Service {
      */
     public boolean isDbLocal(String db)
     {
-        if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) == -1)
-            return false;
-        else
-            return true;
+        final String tt = t + "isDbLocal(): ";
+        boolean result = false;
+        
+        try {
+            if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) != -1)
+                result = true;
+        } catch (DbAccessException e) {
+            Log.w(Collect.LOGTAG, tt + e.toString());
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, tt + "unhandled exception: " + e.toString());
+        }
+        
+        return result;
     }
         
     /**

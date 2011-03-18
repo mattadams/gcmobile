@@ -295,9 +295,9 @@ public class AccountFolderList extends ListActivity
             
             // Initialize any databases that should be synchronized
             if (folder.isReplicated()) {
-                if (!Collect.getInstance().getDbService().isDbLocal(folder.getId()))                  
+                if (!Collect.getInstance().getDbService().isDbLocal(folder.getId()))
                     folderReady = Collect.getInstance().getDbService().initLocalDb(folder.getId());
-            }                
+            }
             
             return null;
         }
@@ -317,7 +317,7 @@ public class AccountFolderList extends ListActivity
                 Collect.getInstance().getInformOnlineState().setSelectedDatabase(folder.getId());                  
                 finish();
             } else {
-                Toast.makeText(getApplicationContext(), "Unable to open " + folder.getName() + ". Please try again later.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Unable to open " + folder.getName() + ". Please try again in a few seconds.", Toast.LENGTH_LONG).show();
             }
         }
     }    

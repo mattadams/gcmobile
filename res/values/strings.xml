@@ -173,6 +173,7 @@
 	<string name="tf_alias_not_assigned">Alias not assigned</string>
 	<string name="tf_audio_media_type">Audio recording</string>
 	<string name="tf_begin_instance_hint">Select list item to begin new form</string>
+	<string name="tf_beta_release_msg">Please be aware that this software has not yet reached an official release.  We do not recommend using this system for production work at this time.\n\nPlease send any questions, bug reports or suggestions to confab@groupcomplete.com or visit us on our website at http://groupcomplete.com</string>
 	<string name="tf_browse_instances_hint">Select item to browse %s</string>
 	<string name="tf_change_select_type">Change select type?</string>
 	<string name="tf_change_select_type_msg">This multiple select field has more than one preselected list item. A single select field can only have one preselected item.\n\nIf you choose to change to a single select field all of the preselected list items will be unselected.\n\nDo you wish to continue?</string>
@@ -398,6 +399,8 @@
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Group Inform was unable to connect to the Simple Sharing service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
 	<string name="tf_unable_to_go_online_dialog">Cannot Go Online</string>
 	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Group Inform was unable to go online.\n\nPlease make sure that this device can access the Internet and try again.</string>
+	<string name="tf_unable_to_load_instances_dialog">Form(s) Not Found</string>
+    <string name="tf_unable_to_load_instances_dialog_msg">The form(s) that you were looking for cannot be retrieved.\n\nThis information was most likely removed recently by one of your team members.\n\nPress OK to refresh the screen.</string>
 	<string name="tf_unable_to_open_folder">The folder \"%s\" is currently unavailable.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_missing_metadata">The selected folder is currently unavailable.\n\nThis might be because the owner of the folder has removed it or made it private.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_while_offline">The folder \"%s\" is unavailable while offline.\n\nPlease go online to access this folder or select a folder that is synchronized for offline use.</string>
