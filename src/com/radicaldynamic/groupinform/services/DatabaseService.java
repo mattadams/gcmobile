@@ -254,7 +254,6 @@ public class DatabaseService extends Service {
             // Local database
             if (mConnectedToLocal) {
                 if (mLocalDbConnector instanceof StdCouchDbConnector && mLocalDbConnector.getDatabaseName().equals("db_" + db)) {
-                    Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
                     Log.d(Collect.LOGTAG, t + "local database " + db + " already open");
                     return;
                 }
@@ -280,7 +279,6 @@ public class DatabaseService extends Service {
             // Remote database
             if (mConnectedToRemote) {
                 if (mRemoteDbConnector instanceof StdCouchDbConnector && mRemoteDbConnector.getDatabaseName().equals("db_" + db)) {
-                    Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
                     Log.d(Collect.LOGTAG, t + "remote database " + db + " already open");
                     return;
                 }
@@ -359,7 +357,6 @@ public class DatabaseService extends Service {
         
         try {                     
             mRemoteHttpClient = new StdHttpClient.Builder()
-                .cleanupIdleConnections(false)
                 .enableSSL(true)            
                 .host(host)
                 .port(port)
@@ -390,8 +387,6 @@ public class DatabaseService extends Service {
             
             // Only attempt to create the database if it is marked as being locally replicated
             mLocalDbConnector.createDatabaseIfNotExists();
-            
-            Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + "while opening local DB " + db + ": " + e.toString());
             throw new DbUnavailableException();
@@ -409,8 +404,6 @@ public class DatabaseService extends Service {
              * (better to know about them now then to experience a crash later because we didn't trap something)
              */
             mRemoteDbConnector.getDbInfo();
-            
-            Collect.getInstance().getInformOnlineState().setSelectedDatabase(db);
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + "while opening remote DB " + db + ": " + e.toString());
             throw new DbUnavailableException();
