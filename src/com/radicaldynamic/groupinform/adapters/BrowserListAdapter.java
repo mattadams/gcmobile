@@ -15,7 +15,6 @@ import android.widget.TextView;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
-import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 
 public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDocument>
 {       

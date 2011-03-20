@@ -40,6 +40,7 @@ public class ClientRegistrationActivity extends Activity
     private static final int DIALOG_DEVICE_REGISTRATION_METHOD = 2;
     private static final int DIALOG_ACCOUNT_CREATED = 3;
     private static final int DIALOG_DEVICE_REGISTERED = 4;
+    private static final int DIALOG_DEVICE_ACTIVE = 5;
     private static final int DIALOG_SYSTEM_ERROR = 10;
     private static final int DIALOG_BETA_PREVIEW = 11;
     
@@ -62,6 +63,9 @@ public class ClientRegistrationActivity extends Activity
     private String mAccountKey = "";         // Licence key    
     private String mDevicePin = "";    
     private String mContactEmailAddress = "";  
+    
+    // Alternate notification logic used when attempting to reactivate a device profile that is already active
+    private boolean mOptionToNotifyDeviceUser = false;
     
     private TextWatcher mAutoFormat = new TextWatcher() {
         @Override
@@ -178,6 +182,24 @@ public class ClientRegistrationActivity extends Activity
                 });
                 break;
                 
+            case DIALOG_DEVICE_ACTIVE:
+                builder
+                .setCancelable(false)
+                .setTitle(R.string.tf_unable_to_reactivate_while_in_use_dialog)
+                .setMessage(R.string.tf_unable_to_reactivate_while_in_use_dialog_msg)
+                .setPositiveButton(R.string.tf_notify_device_owner, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        sendNotification();                        
+                        dialog.cancel();
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        removeDialog(DIALOG_DEVICE_ACTIVE);                        
+                    }
+                });
+                break;
+                
             case DIALOG_SYSTEM_ERROR:
                 builder
                 .setCancelable(false)
@@ -240,7 +262,10 @@ public class ClientRegistrationActivity extends Activity
                     if (verifyDeviceReactivation(pin)) {
                         showDialog(DIALOG_DEVICE_REGISTERED);
                     } else {
-                        reactivateDeviceDialog();
+                        if (mOptionToNotifyDeviceUser)
+                            mOptionToNotifyDeviceUser = false;
+                        else
+                            reactivateDeviceDialog();
                     }
                 }
             }
@@ -464,7 +489,7 @@ public class ClientRegistrationActivity extends Activity
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("email", email));
         
-        String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/send/account/reminder";
+        String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/send/reminder";
         
         String postResult = HttpUtils.postUrlData(verifyUrl, params);
         JSONObject verify;
@@ -513,6 +538,55 @@ public class ClientRegistrationActivity extends Activity
             e.printStackTrace();
             return false;
         }        
+    }    
+    
+    private boolean sendNotification()
+    {
+        // Data to POST
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("licenceNumber", mAccountNumber));
+        params.add(new BasicNameValuePair("licenceKey", mAccountKey));
+        params.add(new BasicNameValuePair("devicePin", mDevicePin));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));        
+        
+        String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/send/notice";
+        
+        String postResult = HttpUtils.postUrlData(verifyUrl, params);
+        JSONObject verify;
+        
+        try {            
+            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);            
+            verify = (JSONObject) new JSONTokener(postResult).nextValue();
+            
+            String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+            
+            if (result.equals(InformOnlineState.OK)) {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_device_owner_notified_of_pin_use), Toast.LENGTH_LONG).show();
+                return true;
+            } else if (result.equals(InformOnlineState.FAILURE)) {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_notify_device_user), Toast.LENGTH_LONG).show();
+                String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
+                Log.w(Collect.LOGTAG, t + "unable to notify device user: " + reason);
+                return false;
+            } else {
+                // Something bad happened
+                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
+                return false;
+            }
+        } catch (NullPointerException e) {
+            // Communication error
+            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+            return false;
+        } catch (JSONException e) {
+            // Parse error (malformed result)
+            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+            return false;
+        }   
     }
     
     /*
@@ -717,7 +791,8 @@ public class ClientRegistrationActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_pin), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_DEVICE_ACTIVE)) {
                     Log.i(Collect.LOGTAG, t + "reactivation failed (device active)");
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_reactivate_while_in_use), Toast.LENGTH_LONG).show();
+                    mOptionToNotifyDeviceUser = true;
+                    showDialog(DIALOG_DEVICE_ACTIVE);
                 } else if (reason.equals(REASON_REACTIVATION_DELAYED)) {
                     Log.i(Collect.LOGTAG, t + "reactivation delayed for " + reactivation.getString("delay") + "ms");
                     

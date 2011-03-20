@@ -227,6 +227,7 @@
 	<string name="tf_device_admin_status_unused">Unused (available for activation)</string>
 	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device. The address must be unique to this Group Inform account.</string>
 	<string name="tf_device_info">Device Info</string>
+	<string name="tf_device_owner_notified_of_pin_use">Use notified on your behalf via email</string>
 	<string name="tf_device_pin_label">Device PIN</string>
 	<string name="tf_device_pin_hint">Enter the PIN of the unused registration to have it activated and assigned to this device.</string>
 	<string name="tf_device_pin_required">A valid device PIN is required</string>
@@ -237,7 +238,7 @@
 	<string name="tf_device_registration_method_reactivate">Reactivate</string>
 	<string name="tf_do_not_exit_field">Return to field</string>
 	<string name="tf_do_you_have_an_account">Do You Have An Account?</string>
-	<string name="tf_do_you_have_an_account_msg">If you have ever registered another installation or have been told to use Inform by someone else then you will likely already have an account.\n\nDo you have an account?</string>
+	<string name="tf_do_you_have_an_account_msg">If you have registered another device or have been told to use Inform by someone else then probably have an account.\n\nDo you have an account?</string>
 	<string name="tf_edit">Edit</string>
 	<string name="tf_edit_folder">Edit Folder</string>
 	<string name="tf_edit_form_definition_hint">Select list item to edit form template</string>
@@ -326,6 +327,7 @@
 	<string name="tf_next_instance">Next</string>
 	<string name="tf_new_account">New Account</string>
 	<string name="tf_notification_settings">Notification settings</string>
+	<string name="tf_notify_device_owner">Notify User</string>
 	<string name="tf_odk_aggregate">ODK Aggregate</string>
 	<string name="tf_odk_library">ODK Library</string>
 	<string name="tf_offline_mode_enabled">Working Offline</string>
@@ -401,12 +403,14 @@
 	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Group Inform was unable to go online.\n\nPlease make sure that this device can access the Internet and try again.</string>
 	<string name="tf_unable_to_load_instances_dialog">Form(s) Not Found</string>
     <string name="tf_unable_to_load_instances_dialog_msg">The form(s) that you were looking for cannot be retrieved.\n\nThis information was most likely removed recently by one of your team members.\n\nPress OK to refresh the screen.</string>
+    <string name="tf_unable_to_notify_device_user">Unable to notify user at this time.  Please try again later.</string>
 	<string name="tf_unable_to_open_folder">The folder \"%s\" is currently unavailable.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_missing_metadata">The selected folder is currently unavailable.\n\nThis might be because the owner of the folder has removed it or made it private.\n\nPlease select another folder and try again later.</string>
 	<string name="tf_unable_to_open_folder_while_offline">The folder \"%s\" is unavailable while offline.\n\nPlease go online to access this folder or select a folder that is synchronized for offline use.</string>
 	<string name="tf_unable_to_open_my_forms_folder">In order to manage forms the special \"My Forms\" folder must be available.  You must be online or have this folder synchronized for offline use.\n\nPlease ensure that this device can access the Internet and that Inform is online before trying again.</string>
 	<string name="tf_unable_to_proceed_without_licence_number_and_key">A licence number and key are required</string>
-	<string name="tf_unable_to_reactivate_while_in_use">The specified device is currently IN USE.  Reset the device and try again.</string>
+    <string name="tf_unable_to_reactivate_while_in_use_dialog">Device In Use</string>
+    <string name="tf_unable_to_reactivate_while_in_use_dialog_msg">Our records indicate that the device profile associated with this PIN is currently in use.\n\nIf you have access to this device then you should reset Group Inform before reusing this profile.\n\nIf you cannot reset Group Inform then you should notify the person who uses this device.  Additional instructions will be sent to this person.</string>
 	<string name="tf_unable_to_remove">Unable to Remove</string>
 	<string name="tf_unable_to_remove_form_instance">Unable to remove form at this time.  Please try again later.</string>
 	<string name="tf_unable_to_remove_defaultdb">This special folder cannot be removed</string>
