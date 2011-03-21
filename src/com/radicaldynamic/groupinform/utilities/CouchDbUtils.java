@@ -29,14 +29,11 @@ public class CouchDbUtils
     private static final String LINK = "l";
     private static final String FILE = "f";
     
-    // The SD path with the source files for the init of the data directory (EXTERNAL_PATH starts with /mnt/)
-    private static final String SOURCE_PATH = FileUtils.EXTERNAL_PATH.substring(5, FileUtils.EXTERNAL_PATH.length());
+    // This cannot be dynamically determined from FileUtils.EXTERNAL_PATH because it changes between 2.1/2.2
+    private static final String SOURCE_PATH = "sdcard/Android/data/com.radicaldynamic.groupinform";
     
     // The private data directory to initialize into
-    private static final String DESTINATION_PATH = 
-        Environment.getDataDirectory() + File.separator +
-        "data" + File.separator + 
-        "com.radicaldynamic.groupinform";
+    private static final String DESTINATION_PATH = Environment.getDataDirectory() + File.separator + "data" + File.separator + "com.radicaldynamic.groupinform";
     
     public static boolean isEnvironmentInitialized()
     {
@@ -66,8 +63,15 @@ public class CouchDbUtils
         }
         
         Log.i(Collect.LOGTAG, t + "initializing data directory for CouchDB and Erlang/OTP");
-        Log.d(Collect.LOGTAG, t + "initial source path is " + SOURCE_PATH);
+        Log.d(Collect.LOGTAG, t + "source path is " + SOURCE_PATH);
+        Log.d(Collect.LOGTAG, t + "destination path is " + DESTINATION_PATH);
 
+        /*
+         * Go through each of the files listed in the index of installed files and take appropriate
+         * action depending on the type of file listed.  The purpose of this loop is to copy or link 
+         * files into the /data/data hierarchy where executable files can be used (and where the 
+         * compiled version of Couch/Erlang expects to find them). 
+         */
         try {
             index = org.apache.commons.io.FileUtils.readLines(new File(FileUtils.EXTERNAL_FILES, FILE_INDEX));            
             Iterator<String> entries = index.iterator();
@@ -104,6 +108,8 @@ public class CouchDbUtils
     }
     
     /*
+     * Figure out what to do with a file listed in the index of installed files
+     * 
      * The format of an entry in the index is 
      * FILE_TYPE FILE_MODE FILE_PATH LINK_TO
      * 0         1         2         3

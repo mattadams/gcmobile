@@ -34,12 +34,13 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import android.os.AsyncTask;
-import android.util.Base64;
 
+import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.activities.FormDownloadList;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.listeners.FormDownloaderListener;
+import com.radicaldynamic.groupinform.xform.FormWriter;
 
 /**
  * Background task for downloading forms from urls or a formlist from a url. We overload this task a
@@ -226,7 +227,7 @@ public class DownloadFormsTask extends
             }            
             
             // Create attachment and save form
-            form.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT), "text/xml"));            
+            form.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data.toByteArray())).toString(), "text/xml"));            
             Collect.getInstance().getDbService().getDb().create(form);
             
             data.close();            

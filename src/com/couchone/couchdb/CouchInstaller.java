@@ -33,7 +33,7 @@ public class CouchInstaller {
 //	final static String baseUrl = "http://couchone-android.s3.amazonaws.com/";
 //	final static String dataPath = "/data/data/com.couchone.couchdb";
     
-    final static String baseUrl = "http://arthur.902northland.adams.home/~matt/rdinc/projects/groupcomplete/couch/android-build/";
+    final static String baseUrl = "http://192.168.110.120/~matt/rdinc/projects/groupcomplete/couch/android-build/";
     final static String dataPath = "/data/data/com.radicaldynamic.groupinform";
 
 	final static String TAG = "CouchDB";

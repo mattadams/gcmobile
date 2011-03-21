@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
-import android.util.Base64;
 import android.util.Log;
 
+import com.couchone.libcouch.Base64Coder;
 import com.mycila.xmltool.CallBack;
 import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLTag;
@@ -124,8 +124,8 @@ public class FormReader
      * Returns a Base64 encoded form
      */
     public String getEncodedForm()
-    {
-        return Base64.encodeToString(mForm.gotoRoot().toBytes(), Base64.DEFAULT);       
+    {        
+        return new String(Base64Coder.encode(mForm.gotoRoot().toBytes())).toString();       
     }
     
     /*

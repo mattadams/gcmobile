@@ -46,22 +46,22 @@ public final class FileUtils {
     public static final String VALID_FILENAME = "[ _\\-A-Za-z0-9]*.x[ht]*ml";
 
     // Storage paths with support for API level 7
-    public static final String EXTERNAL_PATH = Environment.getExternalStorageDirectory() + "/Android/data/com.radicaldynamic.groupinform";
-    public static final String EXTERNAL_FILES = EXTERNAL_PATH + "/files";    // API level 8 can use getExternalFilesDir()
-    public static final String EXTERNAL_CACHE = EXTERNAL_PATH + "/cache";   // API level 8 can use getExternalCacheDir()
-    public static final String EXTERNAL_COUCH = EXTERNAL_PATH + "/couchdb";
+    public static final String EXTERNAL_PATH   = Environment.getExternalStorageDirectory() + "/Android/data/com.radicaldynamic.groupinform";
+    public static final String EXTERNAL_FILES  = EXTERNAL_PATH + "/files";    // API level 8 can use getExternalFilesDir()
+    public static final String EXTERNAL_CACHE  = EXTERNAL_PATH + "/cache";    // API level 8 can use getExternalCacheDir()
+    public static final String EXTERNAL_COUCH  = EXTERNAL_PATH + "/couchdb";
     public static final String EXTERNAL_ERLANG = EXTERNAL_PATH + "/erlang";
     
     public static final String CAPTURED_IMAGE_FILE = "tmp.jpg";
-    public static final String DEVICE_CACHE_FILE = "devices.json";
-    public static final String FOLDER_CACHE_FILE = "folders.json";
-    public static final String FORM_LOGO_FILE = "form_logo.png";
-    public static final String SESSION_CACHE_FILE = "session.bin";
-    public static final String SPLASH_SCREEN_FILE = "splash.png";
+    public static final String DEVICE_CACHE_FILE   = "devices.json";
+    public static final String FOLDER_CACHE_FILE   = "folders.json";
+    public static final String FORM_LOGO_FILE      = "form_logo.png";
+    public static final String SESSION_CACHE_FILE  = "session.bin";
+    public static final String SPLASH_SCREEN_FILE  = "splash.png";
     
-    public static final int IMAGE_WIDGET_MAX_WIDTH = 1024;
+    public static final int IMAGE_WIDGET_MAX_WIDTH  = 1024;
     public static final int IMAGE_WIDGET_MAX_HEIGHT = 768;
-    public static final int IMAGE_WIDGET_QUALITY = 75;
+    public static final int IMAGE_WIDGET_QUALITY    = 75;
 
     public static final int TIME_TWO_MINUTES = 120;
     

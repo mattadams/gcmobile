@@ -17,7 +17,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -33,6 +32,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.FormBuilderFieldListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -599,7 +599,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 mForm.addInlineAttachment(
                         new Attachment(
                                 "xml", 
-                                Base64.encodeToString(FormWriter.writeXml(mInstanceRoot), Base64.DEFAULT), 
+                                new String(Base64Coder.encode(FormWriter.writeXml(mInstanceRoot))).toString(),
                                 "text/xml"));
                 
                 mForm.setStatus(FormDefinitionDocument.Status.inactive);

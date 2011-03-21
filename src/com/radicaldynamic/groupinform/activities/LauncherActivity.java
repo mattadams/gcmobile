@@ -356,7 +356,7 @@ public class LauncherActivity extends Activity
              */        
             if (Collect.getInstance().getInformDependencies().getNextDependency() == null) {
                 restartActivity(false);
-                return null;
+                return builder.create();
             }
             
             String copy = getString(R.string.tf_unavailable);
@@ -512,9 +512,6 @@ public class LauncherActivity extends Activity
 
             dialog = builder.create();            
             break;       
-        
-        default:
-            Log.e(Collect.LOGTAG, t + "showDialog() unimplemented for " + id);
         }
         
         return dialog;

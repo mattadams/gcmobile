@@ -31,7 +31,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -46,6 +45,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.MyFormsListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -279,8 +279,8 @@ public class MyFormsList extends ListActivity
                     while ((inputlen = is.read(inputbuf)) > 0) {
                         data.write(inputbuf, 0, inputlen);
                     }
-                    
-                    form.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT), "text/xml"));
+
+                    form.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data.toByteArray())).toString(), "text/xml"));
                     Collect.getInstance().getDbService().getDb().create(form);
                     
                     is.close();

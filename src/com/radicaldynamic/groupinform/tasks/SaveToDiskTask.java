@@ -31,10 +31,10 @@ import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.model.xform.XFormSerializingVisitor;
 
 import android.os.AsyncTask;
-import android.util.Base64;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
+import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.FormSavedListener;
@@ -159,7 +159,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
                     mFormInstanceDoc.setStatus(FormInstanceDocument.Status.draft);
                 
                 // Save form data
-                mFormInstanceDoc.addInlineAttachment(new Attachment("xml", Base64.encodeToString(data, Base64.DEFAULT), "text/xml"));
+                mFormInstanceDoc.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data)).toString(), "text/xml"));
                 Collect.getInstance().getDbService().getDb().update(mFormInstanceDoc);
                 
                 // Save media attachments one by one
