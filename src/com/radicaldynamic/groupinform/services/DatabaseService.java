@@ -332,7 +332,12 @@ public class DatabaseService extends Service {
         Log.d(Collect.LOGTAG, t + "establishing connection to " + host + ":" + port);
         
         try {                     
-            mLocalHttpClient = new StdHttpClient.Builder().cleanupIdleConnections(false).host(host).port(port).build();           
+            mLocalHttpClient = new StdHttpClient.Builder()
+                .maxConnections(1)
+                .host(host)
+                .port(port)
+                .build();   
+            
             mLocalDbInstance = new StdCouchDbInstance(mLocalHttpClient);
             mLocalDbInstance.getAllDatabases();
             
@@ -357,6 +362,7 @@ public class DatabaseService extends Service {
         
         try {                     
             mRemoteHttpClient = new StdHttpClient.Builder()
+                .maxConnections(1)
                 .enableSSL(true)            
                 .host(host)
                 .port(port)

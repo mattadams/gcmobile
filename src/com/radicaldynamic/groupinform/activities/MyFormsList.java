@@ -103,16 +103,14 @@ public class MyFormsList extends ListActivity
             .setTitle(R.string.tf_folder_unavailable)
             .setMessage(R.string.tf_unable_to_open_my_forms_folder);
         
-        builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                finish();
-            }
-        });
-        
-        dialog = builder.create();
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    finish();
+                }
+            });
+
+            dialog = builder.create();
             break;
-        default:
-            Log.e(Collect.LOGTAG, t + "showDialog() unimplemented for " + id);
         }
         
         return dialog;        
@@ -237,6 +235,7 @@ public class MyFormsList extends ListActivity
     private void loadScreen()
     {
         try {
+            Collect.getInstance().getInformOnlineState().setSelectedDatabase(Collect.getInstance().getInformOnlineState().getDefaultDatabase());
             Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getDefaultDatabase());            
             
             mRefreshViewTask = new RefreshViewTask();
@@ -244,7 +243,7 @@ public class MyFormsList extends ListActivity
             
             registerForContextMenu(getListView());
         } catch (DatabaseService.DbUnavailableException e) {
-    
+            showDialog(DIALOG_FOLDER_UNAVAILABLE);
         }
     }
 
