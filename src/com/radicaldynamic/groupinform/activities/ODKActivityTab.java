@@ -10,7 +10,6 @@ import android.widget.TabHost;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.application.Collect;
 
 public class ODKActivityTab extends TabActivity
 {

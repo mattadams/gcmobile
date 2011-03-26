@@ -141,7 +141,15 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             e.printStackTrace();
             return null;
         }
-
+        
+//        An alternate method of notifying the parent process would be as follows.  See upstream changeset 475 for source.
+//            
+//        if (formPath == null && instancePath != null) {
+//            String instanceName = (new File(instancePath)).getName();
+//            this.publishProgress(Collect.getInstance().getString(R.string.load_error_no_form, instanceName));
+//            return null;
+//        }
+        
         Log.i(Collect.LOGTAG, tt + "for " + mFormDefinitionDoc.getId() + ", loading form named " + mFormDefinitionDoc.getName());
         
         File formBin = new File(Collect.getInstance().getCacheDir(), mFormDefinitionDoc.getId() + ".formdef");
