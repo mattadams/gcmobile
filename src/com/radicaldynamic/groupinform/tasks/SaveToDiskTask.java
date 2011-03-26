@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
+import org.ektorp.DbAccessException;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.instance.FormInstance;
@@ -41,7 +42,7 @@ import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 /**
- * Background task for loading a form.
+ * Background task for saving a form instance.
  * 
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
@@ -88,7 +89,6 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
         return SAVE_ERROR;
     }
 
-
     @Override
     protected void onPostExecute(Integer result)
     {
@@ -98,7 +98,6 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
         }
     }
 
-
     @Override
     protected void onProgressUpdate(String... values) 
     {
@@ -107,6 +106,8 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
 
     public boolean exportData(boolean markCompleted)
     {
+        final String tt = t + "exportData(): ";
+        
         ByteArrayPayload payload;
         
         try {
@@ -116,14 +117,12 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
             payload = (ByteArrayPayload) serializer.createSerializedPayload(datamodel);
     
             // Write out XML
-            exportXmlFile(payload, markCompleted);
+            return exportXmlFile(payload, markCompleted);
         } catch (IOException e) {
-            Log.e(Collect.LOGTAG, t + "error creating serialized payload");
+            Log.e(Collect.LOGTAG, tt + "error creating serialized payload");
             e.printStackTrace();
             return false;
         }
-    
-        return true;
     }
 
     public void setExportVars(FormInstanceDocument formInstanceDoc, Boolean saveAndExit, Boolean markCompleted) 
@@ -142,6 +141,10 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
 
     private boolean exportXmlFile(ByteArrayPayload payload, boolean markCompleted)
     {
+        final String tt = t + "exportXmlFile(): ";
+        
+        boolean result = false;
+        
         // Create data stream
         InputStream is = payload.getPayloadStream();
         int len = (int) payload.getLength();
@@ -167,10 +170,10 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
                 String[] fileNames = cacheDir.list();                           
                                             
                 for (String file : fileNames) {
-                    Log.v(Collect.LOGTAG, t + mFormInstanceDoc.getId() + ": evaluating " + file + " for save to DB");
+                    Log.v(Collect.LOGTAG, tt + mFormInstanceDoc.getId() + ": evaluating " + file + " for save to DB");
                     
                     if (Pattern.matches("^" + mFormInstanceDoc.getId() + "[.].*", file)) {
-                        Log.d(Collect.LOGTAG, t + mFormInstanceDoc.getId() + ": attaching " + file);
+                        Log.d(Collect.LOGTAG, tt + mFormInstanceDoc.getId() + ": attaching " + file);
                         
                         // Make sure we have the most current revision number
                         FormInstanceDocument document = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mFormInstanceDoc.getId());
@@ -187,19 +190,19 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
                         fis.close();
                     }
                 }
-                
-                if (mFormInstanceDoc.getId().length() > 0)
-                    return true;
-                else 
-                    return false;
+
+                if (mFormInstanceDoc.getId().length() > 0) {
+                    result = true;
+                }
             }
+        } catch (DbAccessException e) {
+            Log.e(Collect.LOGTAG, tt + "unable to access database: " + e.toString());
         } catch (IOException e) {
-            Log.e(Collect.LOGTAG, t + "error reading from payload data stream");
+            Log.e(Collect.LOGTAG, tt + "error reading from payload data stream");
             e.printStackTrace();
-            return false;
         }
-    
-        return false;
+        
+        return result;
     }
 
     /**

@@ -54,7 +54,7 @@ import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 /**
- * Background task for loading a form.
+ * Background task for loading a form definition & instance.
  * 
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
@@ -251,19 +251,18 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     }
 
     @Override
-    protected void onPostExecute(FECWrapper wrapper) {
+    protected void onPostExecute(FECWrapper wrapper) 
+    {
         synchronized (this) {
             if (mStateListener != null) {
                 if (wrapper == null) {
                     mStateListener.loadingError(mErrorMsg);
                 } else {
                     mStateListener.loadingComplete(wrapper.getController(), mFormDefinitionDoc, mFormInstanceDoc);
-
                     mFormDefinitionDoc = null;
                     mFormInstanceDoc = null;
                 }
-            }
-                
+            }                
         }
     }
 
