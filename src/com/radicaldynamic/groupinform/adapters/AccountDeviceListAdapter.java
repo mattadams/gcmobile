@@ -43,9 +43,9 @@ public class AccountDeviceListAdapter extends ArrayAdapter<AccountDevice>
             
             if (icon != null) {
                 if (f.getStatus().equals(AccountDevice.STATUS_ACTIVE))
-                    icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_user));
+                    icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.user_check));
                 else 
-                    icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_menu_blocked_user));
+                    icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.user));
             }
 
             if (tt != null) {
