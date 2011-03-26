@@ -14,18 +14,22 @@
 
 package com.radicaldynamic.groupinform.activities;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
+import org.ektorp.Attachment;
 import org.ektorp.DbAccessException;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -34,8 +38,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -43,6 +47,7 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -52,6 +57,7 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.couchone.couchdb.CouchInstaller;
+import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -76,6 +82,7 @@ public class BrowserActivity extends ListActivity
     private static final String t = "BrowserActivity: ";
     
     // Dialog status codes
+    private static final int DIALOG_CREATE_FORM = 0;
     private static final int DIALOG_FOLDER_UNAVAILABLE = 1;
     private static final int DIALOG_INSTANCES_UNAVAILABLE = 2;
     private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 3;
@@ -84,6 +91,13 @@ public class BrowserActivity extends ListActivity
     private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 6;
     private static final int DIALOG_ONLINE_STATE_CHANGING = 7;
     private static final int DIALOG_TOGGLE_ONLINE_STATE = 8;
+    
+    // Keys for option menu items
+    private static final int MENU_OPTION_REFRESH = 0;
+    private static final int MENU_OPTION_FOLDERS = 1;
+    private static final int MENU_OPTION_NEWFORM = 2;
+    private static final int MENU_OPTION_ODKTOOLS = 4;
+    private static final int MENU_OPTION_INFO = 5;
     
     // Keys for persistence between screen orientation changes
     private static final String KEY_DIALOG_MESSAGE = "dialog_msg";
@@ -112,7 +126,7 @@ public class BrowserActivity extends ListActivity
         setContentView(R.layout.browser);                
 
         // Load our custom window title
-        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.folder_selector_title);
+        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.title_browser_activity);
         
         if (savedInstanceState == null) {
             mDialogMessage = "";
@@ -128,10 +142,10 @@ public class BrowserActivity extends ListActivity
 
         // Initiate and populate spinner to filter forms displayed by instances types
         ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
-            .createFromResource(this, R.array.tf_main_menu_form_filters, android.R.layout.simple_spinner_item);        
+            .createFromResource(this, R.array.tf_task_spinner_values, android.R.layout.simple_spinner_item);        
         instanceStatus.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
+        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
         s1.setAdapter(instanceStatus);
         s1.setOnItemSelectedListener(new OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
@@ -206,6 +220,64 @@ public class BrowserActivity extends ListActivity
         Dialog dialog = null;
         
         switch (id) {
+        // User wishes to make a new form
+        case DIALOG_CREATE_FORM:
+            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View view = inflater.inflate(R.layout.create_form, null);        
+            
+            builder.setView(view);
+            builder.setInverseBackgroundForced(true);
+            builder.setTitle(getText(R.string.tf_create_form_dialog));
+        
+            // Set an EditText view to get user input 
+            final EditText input = (EditText) view.findViewById(R.id.formName);
+            
+            builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {                
+                    FormDefinitionDocument form = new FormDefinitionDocument();
+                    form.setName(input.getText().toString());
+                    form.setStatus(FormDefinitionDocument.Status.temporary);
+        
+                    // Create a new form document and use an XForm template as the "xml" attachment
+                    try {
+                        InputStream is = getResources().openRawResource(R.raw.xform_template);
+        
+                        // Set up variables to receive data
+                        ByteArrayOutputStream data = new ByteArrayOutputStream();
+                        byte[] inputbuf = new byte[8192];            
+                        int inputlen;
+        
+                        while ((inputlen = is.read(inputbuf)) > 0) {
+                            data.write(inputbuf, 0, inputlen);
+                        }
+
+                        form.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data.toByteArray())).toString(), "text/xml"));
+                        Collect.getInstance().getDbService().getDb().create(form);
+                        
+                        is.close();
+                        data.close();
+                        
+                        // Launch the form builder with the NEWFORM option set to true
+                        Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
+                        i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
+                        i.putExtra(FormEntryActivity.NEWFORM, true);
+                        startActivity(i);
+                    } catch (IOException e) {
+                        Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
+                        e.printStackTrace();
+                    }
+                }
+            });
+        
+            builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_CREATE_FORM);
+                }
+            });
+            
+            dialog = builder.create();
+            break;
+        
         // Couldn't connect to DB (for a specific reason)
         case DIALOG_FOLDER_UNAVAILABLE:
             builder
@@ -378,8 +450,11 @@ public class BrowserActivity extends ListActivity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_browser_options, menu);
+        menu.add(0, MENU_OPTION_REFRESH, 0, getString(R.string.refresh)).setIcon(R.drawable.ic_menu_refresh);
+        menu.add(0, MENU_OPTION_FOLDERS, 0, getString(R.string.tf_form_folders)).setIcon(R.drawable.ic_menu_archive);
+        menu.add(0, MENU_OPTION_NEWFORM, 0, getString(R.string.tf_create_form)).setIcon(R.drawable.ic_menu_add);
+        menu.add(0, MENU_OPTION_ODKTOOLS, 0, "Open Data Kit").setIcon(R.drawable.ic_menu_upload);
+        menu.add(0, MENU_OPTION_INFO, 0, getString(R.string.tf_inform_info)).setIcon(R.drawable.ic_menu_info_details);
         return true;
     }
     
@@ -407,31 +482,35 @@ public class BrowserActivity extends ListActivity
     {
         FormDefinitionDocument form = (FormDefinitionDocument) getListAdapter().getItem(position);
         InstanceLoadPathTask ilp;
+        Intent i;
 
         Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
 
-        Spinner s1 = (Spinner) findViewById(R.id.form_filter);
-
+        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
+        
         switch (s1.getSelectedItemPosition()) {
-        // Show all forms (in folder)
+        // When showing all forms in folder... start a new form
         case 0:
-            Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
+            i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
             i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, new ArrayList<String>());
             i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
             startActivity(i);
             break;
-        // Show all draft forms
+        // When showing all forms in folder... edit a form
         case 1:
+            i = new Intent(this, FormBuilderFieldList.class);
+            i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
+            startActivity(i);
+            break;
+        // When showing all draft forms in folder... browse selected form instances
+        case 2:
             ilp = new InstanceLoadPathTask();
             ilp.execute(form.getId(), FormInstanceDocument.Status.draft);
             break;
-        // Show all completed forms
-        case 2:
+        // When showing all completed forms in folder... browse selected form instances
+        case 3:
             ilp = new InstanceLoadPathTask();
             ilp.execute(form.getId(), FormInstanceDocument.Status.complete);
-            break;
-        // Show all unread forms (e.g., those added or updated by others)
-        case 3:
             break;
         }
     }
@@ -440,21 +519,19 @@ public class BrowserActivity extends ListActivity
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch (item.getItemId()) {
-        case R.id.tf_folders:
-            startActivity(new Intent(this, AccountFolderList.class));
-            break;
-        case R.id.tf_refresh:
+        case MENU_OPTION_REFRESH:
             loadScreen();
             break;
-        case R.id.tf_aggregate:
-            startActivity(new Intent(this, InstanceUploaderList.class));
-            return true;
-        case R.id.tf_manage:            
-            mSelectedDatabase = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
-            Log.v(Collect.LOGTAG, t + "saved selected database " + mSelectedDatabase);
-            startActivity(new Intent(this, ManageFormsTabs.class));
-            return true;
-        case R.id.tf_info:
+        case MENU_OPTION_FOLDERS:
+            startActivity(new Intent(this, AccountFolderList.class));
+            break;
+        case MENU_OPTION_NEWFORM:
+            showDialog(DIALOG_CREATE_FORM);
+            break;
+        case MENU_OPTION_ODKTOOLS:
+            startActivity(new Intent(this, ODKActivityTab.class));
+            break;          
+        case MENU_OPTION_INFO:
             startActivityForResult(new Intent(this, ClientInformationActivity.class), RESULT_ABOUT_INFORM);
             return true;
         }
@@ -536,38 +613,32 @@ public class BrowserActivity extends ListActivity
     private class RefreshViewTask extends AsyncTask<FormInstanceDocument.Status, Integer, FormInstanceDocument.Status>
     {
         private ArrayList<FormDefinitionDocument> documents = new ArrayList<FormDefinitionDocument>();
-        private Map<String, String> instanceTallies = new HashMap<String, String>();
-        private boolean folderUnavailable = true;
+        private HashMap<String, HashMap<String, String>> tallies = new HashMap<String, HashMap<String, String>>();
+        private boolean folderUnavailable = false;
 
         @Override
         protected FormInstanceDocument.Status doInBackground(FormInstanceDocument.Status... status)
-        {            
+        {
             try {
                 if (status[0] == FormInstanceDocument.Status.nothing) {
-                    try {
-                        documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getAll();
-                        DocumentUtils.sortByName(documents);
-                    } catch (ClassCastException e) {
-                        // TODO: is there a better way to handle empty lists?
-                    }
+                    tallies = new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();
+                    documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getAll();
+                    DocumentUtils.sortByName(documents);                    
                 } else {
-                    instanceTallies = new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
-                    
-                    if (!instanceTallies.isEmpty()) {
-                        documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(instanceTallies.keySet()));                    
+                    tallies = new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
+
+                    if (!tallies.isEmpty()) {
+                        documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(tallies.keySet()));                    
                         DocumentUtils.sortByName(documents);
-                    }
+                    }                 
                 }
-                
-                folderUnavailable = false;
-            } catch (DbAccessException e) {
-                Log.w(Collect.LOGTAG, t + "database access refused: " + e.toString());
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
-                folderUnavailable = false;
+            } catch (DbAccessException e) {                
+                folderUnavailable = true;
             }
-            
-            return status[0];
+
+            return status[0];                
         }
 
         @Override
@@ -592,12 +663,7 @@ public class BrowserActivity extends ListActivity
             if (isFinishing())
                 return;
             
-            BrowserListAdapter adapter = new BrowserListAdapter(
-                    getApplicationContext(),
-                    R.layout.browser_list_item, 
-                    documents,
-                    instanceTallies,
-                    (Spinner) findViewById(R.id.form_filter));
+            BrowserListAdapter adapter = new BrowserListAdapter(getApplicationContext(), R.layout.browser_list_item, documents, tallies, (Spinner) findViewById(R.id.taskSpinner));
             
             setListAdapter(adapter);
 
@@ -610,14 +676,11 @@ public class BrowserActivity extends ListActivity
                     if (documents.isEmpty()) {
                         TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                         nothingToDisplay.setVisibility(View.VISIBLE);
-
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_add_form_hint), Toast.LENGTH_LONG).show();
-                        openOptionsMenu();
                     } else {
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Spinner s1 = (Spinner) findViewById(R.id.form_filter);
+                    Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
                     String descriptor = s1.getSelectedItem().toString().toLowerCase();
 
                     // Provide hints to user
@@ -781,7 +844,7 @@ public class BrowserActivity extends ListActivity
         }
     }
     
-    private String getSelectedFolderName()
+    public static String getSelectedFolderName()
     {
         String folderName = "...";
         
@@ -823,7 +886,7 @@ public class BrowserActivity extends ListActivity
         b2.setEnabled(true);
 
         // Spinner must reflect results of refresh view below
-        Spinner s1 = (Spinner) findViewById(R.id.form_filter);        
+        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);        
         triggerRefresh(s1.getSelectedItemPosition());
     }
     
@@ -868,19 +931,16 @@ public class BrowserActivity extends ListActivity
             switch (position) {
             // Show all forms (in folder)
             case 0:
+            case 1:
                 mRefreshViewTask.execute(FormInstanceDocument.Status.nothing);
                 break;
                 // Show all draft forms
-            case 1:
+            case 2:
                 mRefreshViewTask.execute(FormInstanceDocument.Status.draft);
                 break;
                 // Show all completed forms
-            case 2:
-                mRefreshViewTask.execute(FormInstanceDocument.Status.complete);
-                break;
-                // Show all unread forms (e.g., those added or updated by others)
             case 3:
-                mRefreshViewTask.execute(FormInstanceDocument.Status.updated);
+                mRefreshViewTask.execute(FormInstanceDocument.Status.complete);
                 break;
             }
         } catch (DatabaseService.DbUnavailableDueToMetadataException e) {            

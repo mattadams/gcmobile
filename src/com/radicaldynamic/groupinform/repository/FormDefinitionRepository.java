@@ -24,18 +24,21 @@ public class FormDefinitionRepository extends CouchDbRepositorySupport<FormDefin
 {
     private final static String t = "FormDefinitionRepository: ";
     
-    public FormDefinitionRepository(CouchDbConnector db) {
+    public FormDefinitionRepository(CouchDbConnector db) 
+    {
         super(FormDefinitionDocument.class, db);
         initStandardDesignDocument();
     }
 
-    public List<FormDefinitionDocument> getAllByKeys(Collection<Object> keys) {
+    public List<FormDefinitionDocument> getAllByKeys(Collection<Object> keys) 
+    {
         List<FormDefinitionDocument> forms = db.queryView(createQuery("all").keys(keys).includeDocs(true), FormDefinitionDocument.class);
         return forms;
     }
     
-    public HashMap<String, String> getFormsByInstanceStatus(FormInstanceDocument.Status status) {
-        HashMap<String, String> results = new HashMap<String, String>();
+    public HashMap<String, HashMap<String, String>> getFormsByInstanceStatus(FormInstanceDocument.Status status) 
+    {
+        HashMap<String, HashMap<String, String>> results = new HashMap<String, HashMap<String, String>>();
         ViewResult r = db.queryView(createQuery("by_instance_status").group(true));        
         List<Row> rows = r.getRows();
         
@@ -48,7 +51,10 @@ public class FormDefinitionRepository extends CouchDbRepositorySupport<FormDefin
                  * Status category: key.getString(1)
                  */                
                 if (status.toString().equals(key.getString(1))) {
-                    results.put(key.getString(0), record.getValue());
+                    if (!results.containsKey(key.getString(0)))
+                        results.put(key.getString(0), new HashMap<String, String>());
+                    
+                    results.get(key.getString(0)).put(key.getString(1), record.getValue());
                 }
             } catch (JSONException e) {
                 Log.e(Collect.LOGTAG, t + "failed to parse complex key in getFormsByInstanceStatus, key: " + record.getKey() + ", value: " + record.getValue());
@@ -86,7 +92,8 @@ public class FormDefinitionRepository extends CouchDbRepositorySupport<FormDefin
         return results;
     }
     
-    public Map<String, List<String>> getFormsByAggregateReadiness() {
+    public Map<String, List<String>> getFormsByAggregateReadiness() 
+    {
         Map<String, List<String>> results = new HashMap<String, List<String>>();
         ViewResult r = db.queryView(createQuery("by_instance_aggregate_readiness"));
         List<Row> rows = r.getRows();

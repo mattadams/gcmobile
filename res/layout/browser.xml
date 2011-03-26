@@ -60,9 +60,9 @@ the License.
         android:gravity="center" />
             
     <Spinner 
-        android:id="@+id/form_filter"        
+        android:id="@+id/taskSpinner"        
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"                  
-        android:prompt="@string/tf_main_menu_form_filter_prompt" /> 
+        android:prompt="@string/tf_select_task" /> 
 </RelativeLayout>

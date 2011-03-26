@@ -189,7 +189,10 @@ public class AccountDeviceList extends ListActivity
      */
     static public void fetchDeviceList()
     {
-        Log.d(Collect.LOGTAG, t + "fetching new list of devices");
+        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
+            Log.d(Collect.LOGTAG, t + "off-line mode enabled, not fetching list of devices");
+        else
+            Log.d(Collect.LOGTAG, t + "fetching new list of devices");   
                 
         // Try to ping the service to see if it is "up"
         String deviceListUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/list";

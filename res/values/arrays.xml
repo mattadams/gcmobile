@@ -25,12 +25,11 @@ the License.
         <item>done</item>
     </string-array>
     
-    <string-array name="tf_main_menu_form_filters">
-        <item>All (Start New Form)</item>        
-        <item>Drafts</item>
-        <item>Completed Forms</item>
-<!--    <item>Unread Forms</item> -->                
-<!--    <item>Conflicts</item> -->
+    <string-array name="tf_task_spinner_values">
+        <item>Start New Form</item>        
+        <item>Edit Forms</item>
+        <item>Browse Drafts</item>
+        <item>Browse Completed Forms</item>
     </string-array>    
         
     <string-array name="tf_time_period_entry_preferences">

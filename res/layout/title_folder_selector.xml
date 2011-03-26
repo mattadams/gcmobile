@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/custom_title_root"
+    android:background="@android:drawable/title_bar"     
+    android:layout_width="fill_parent" 
+    android:layout_height="?android:windowTitleSize"
+    android:orientation="horizontal">
+        
+    <LinearLayout 
+        android:id="@+id/titleLeft"
+        android:gravity="center_vertical"         
+        android:layout_width="wrap_content" 
+        android:layout_height="fill_parent" 
+        android:layout_alignParentLeft="true">       
+            
+        <TextView 
+            android:id="@+id/titleLeftText" 
+            android:ellipsize="end" 
+            android:gravity="center_vertical"            
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content" 
+            android:layout_alignParentLeft="true" 
+            android:textColor="#ffffffff" 
+            android:text="@string/tf_abbrev_app_name"
+            style="?android:attr/windowTitleStyle" />
+    </LinearLayout>        
+        
+    <LinearLayout 
+        android:id="@+id/titleRight" 
+        android:gravity="center_vertical"        
+        android:layout_width="wrap_content" 
+        android:layout_height="fill_parent" 
+        android:layout_alignParentRight="true">
+        
+        <TextView 
+            android:textColor="#ffffffff" 
+            android:gravity="center_vertical" 
+            android:id="@+id/titleRightText" 
+            android:visibility="gone" 
+            android:layout_width="wrap_content" 
+            android:layout_height="fill_parent" />
+            
+        <ProgressBar             
+            android:id="@+id/titleProgressBar"
+            android:max="10000"                
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="5dip"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:visibility="gone"            
+            style="?android:attr/progressBarStyleSmallTitle" />
+            
+        <Button 
+            android:textColor="#ffffffff" 
+            android:gravity="center_vertical" 
+            android:id="@+id/folderTitleButton" 
+            android:background="@drawable/title_button" 
+            android:paddingLeft="5.0dip" 
+            android:paddingTop="0.0dip" 
+            android:paddingRight="5.0dip" 
+            android:paddingBottom="0.0dip" 
+            android:text="..."
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+</RelativeLayout>

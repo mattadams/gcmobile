@@ -40,7 +40,6 @@ import com.radicaldynamic.groupinform.activities.FormDownloadList;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.listeners.FormDownloaderListener;
-import com.radicaldynamic.groupinform.xform.FormWriter;
 
 /**
  * Background task for downloading forms from urls or a formlist from a url. We overload this task a

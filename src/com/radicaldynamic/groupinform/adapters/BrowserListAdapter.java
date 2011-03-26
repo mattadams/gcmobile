@@ -1,7 +1,7 @@
 package com.radicaldynamic.groupinform.adapters;
 
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.HashMap;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -15,19 +15,20 @@ import android.widget.TextView;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 
 public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDocument>
 {       
     private Context mContext;
     private ArrayList<FormDefinitionDocument> mItems;
-    private Map<String, String> mInstanceTallies;
+    private HashMap<String, HashMap<String, String>> mTallies;
     private Spinner mSpinner;
 
-    public BrowserListAdapter(Context context, int textViewResourceId, ArrayList<FormDefinitionDocument> items, Map<String, String> instanceTallies, Spinner spinner) {
+    public BrowserListAdapter(Context context, int textViewResourceId, ArrayList<FormDefinitionDocument> items, HashMap<String, HashMap<String, String>> tallies, Spinner spinner) {
         super(context, textViewResourceId, items);
         mContext = context;
         mItems = items;           
-        mInstanceTallies = instanceTallies;
+        mTallies = tallies;
         mSpinner = spinner;
     }
 
@@ -46,43 +47,67 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDocument>
         if (f != null) {
             ImageView fi = (ImageView) v.findViewById(R.id.icon);
             TextView tt = (TextView) v.findViewById(R.id.toptext);
-            TextView bt = (TextView) v.findViewById(R.id.bottomtext);            
-
+            TextView bt = (TextView) v.findViewById(R.id.bottomtext);
+            
             if (tt != null) {
                 tt.setText(f.getName());
             }
-
-            if (!mInstanceTallies.isEmpty()) {           
-                if (bt != null) {
-                    String descriptor = mSpinner.getSelectedItem().toString().toLowerCase();
+            
+            if (bt != null) {
+                String tallies    = "";
+                String draft      = null;
+                String complete   = null;
+                
+                switch (mSpinner.getSelectedItemPosition()) {
+                case 0:
+                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list));
                     
-                    switch (mSpinner.getSelectedItemPosition()) {
-                    // Show all forms (in folder)  
-                    case 0: 
-                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.ic_menu_agenda_new));
-                        break;
-    
-                        // Show all draft forms
-                    case 1:
-                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.ic_menu_agenda_draft));
-                        break;
-                        
-                    // Show all completed forms
-                    case 2:
-                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.ic_menu_agenda_complete));
-                        break;
+                case 1:
+                    if (mSpinner.getSelectedItemPosition() == 1)
+                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_edit));
                     
-                    default:
-                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.ic_menu_agenda_new));
+                    if (mTallies.containsKey(f.getId())) {
+                        draft    = mTallies.get(f.getId()).get(FormInstanceDocument.Status.draft.toString());
+                        complete = mTallies.get(f.getId()).get(FormInstanceDocument.Status.complete.toString());
                     }
-
-                    // FIXME: correct plural words (this only works in very simple circumstances using English)
-                    if (mInstanceTallies.get(f.getId()).equals("1")) {                           
-                        descriptor = descriptor.substring(0, descriptor.length() - 1);
-                    }
-
-                    bt.setText(mInstanceTallies.get(f.getId()) + " " + descriptor);
-                }
+                    
+                    if (draft == null) 
+                        draft = "0";
+                    
+                    if (complete == null)
+                        complete = "0";
+                    
+                    tallies = draft + " draft(s), " + complete + " complete";
+                    break;
+                    
+                case 2:
+                    draft = mTallies.get(f.getId()).get(FormInstanceDocument.Status.draft.toString());
+                    
+                    if (draft == null)
+                        draft = "0";
+                    
+                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked1));
+                    tallies = draft + " drafts";
+                    
+                    if (mTallies.get(f.getId()).get(FormInstanceDocument.Status.draft.toString()).equals("1"))
+                        tallies = tallies.substring(0, tallies.length() - 1);
+                    break;
+                    
+                case 3:
+                    complete = mTallies.get(f.getId()).get(FormInstanceDocument.Status.complete.toString());
+                    
+                    if (complete == null)
+                        complete = "0";
+                    
+                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked3));
+                    tallies = complete + " completed forms";
+                    
+                    if (mTallies.get(f.getId()).get(FormInstanceDocument.Status.complete.toString()).equals("1"))
+                        tallies = tallies.substring(0, tallies.length() - 1);
+                    break;
+                }                
+                
+                bt.setText(tallies);               
             }
         }
 

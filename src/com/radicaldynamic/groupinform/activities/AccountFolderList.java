@@ -55,21 +55,22 @@ import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 /*
- * 
+ * Interface used to switch between folders and select destination
+ * folders to copy and/or move forms and/or data to.
  */
 public class AccountFolderList extends ListActivity
 {
     private static final String t = "AccountFolderList: ";
 
-    private static final int MENU_ADD = Menu.FIRST;
-    private static final int MENU_SYNC_LIST = Menu.FIRST + 1;
+    private static final int MENU_ADD          = Menu.FIRST;
+    private static final int MENU_SYNC_LIST    = Menu.FIRST + 1;
     
     private static final int CONTEXT_MENU_EDIT = Menu.FIRST;
     private static final int CONTEXT_MENU_INFO = Menu.FIRST + 1;
     
     public static final int DIALOG_DENIED_NOT_OWNER = 0;
-    public static final int DIALOG_MORE_INFO = 1;
-    public static final int DIALOG_OPENING = 2;
+    public static final int DIALOG_MORE_INFO        = 1;
+    public static final int DIALOG_OPENING          = 2;
     
     private RefreshViewTask mRefreshViewTask;
     
@@ -327,7 +328,10 @@ public class AccountFolderList extends ListActivity
      */
     public static void fetchFolderList()
     {
-        Log.d(Collect.LOGTAG, t + "fetching new list of folders");
+        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
+            Log.d(Collect.LOGTAG, t + "off-line mode enabled, not fetching list of folders");
+        else
+            Log.d(Collect.LOGTAG, t + "fetching new list of folders");
         
         // Try to ping the service to see if it is "up"
         String folderListUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/folder/list";
