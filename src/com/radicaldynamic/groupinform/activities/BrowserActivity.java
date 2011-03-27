@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.ektorp.Attachment;
@@ -84,13 +85,14 @@ public class BrowserActivity extends ListActivity
     // Dialog status codes
     private static final int DIALOG_CREATE_FORM = 0;
     private static final int DIALOG_FOLDER_UNAVAILABLE = 1;
-    private static final int DIALOG_INSTANCES_UNAVAILABLE = 2;
-    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 3;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 4;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 5;    
-    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 6;
-    private static final int DIALOG_ONLINE_STATE_CHANGING = 7;
-    private static final int DIALOG_TOGGLE_ONLINE_STATE = 8;
+    private static final int DIALOG_FORM_BUILDER_LAUNCH_ERROR = 2;
+    private static final int DIALOG_INSTANCES_UNAVAILABLE = 3;
+    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 4;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 5;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 6;    
+    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 7;
+    private static final int DIALOG_ONLINE_STATE_CHANGING = 8;
+    private static final int DIALOG_TOGGLE_ONLINE_STATE = 9;
     
     // Keys for option menu items
     private static final int MENU_OPTION_REFRESH = 0;
@@ -110,7 +112,7 @@ public class BrowserActivity extends ListActivity
     private String mDialogMessage;
     
     // To save the currently selected database when this activity begins (since MyFormsList may switch it)
-    private String mSelectedDatabase;
+//    private String mSelectedDatabase;
     
     // See s1...OnItemSelectedListener() where this is used in a horrid workaround
     private boolean mSpinnerInit = false;
@@ -130,14 +132,14 @@ public class BrowserActivity extends ListActivity
         
         if (savedInstanceState == null) {
             mDialogMessage = "";
-            mSelectedDatabase = null;
+//            mSelectedDatabase = null;
         } else {
             // Restore custom dialog message
             if (savedInstanceState.containsKey(KEY_DIALOG_MESSAGE))
                 mDialogMessage = savedInstanceState.getString(KEY_DIALOG_MESSAGE);
             
-            if (savedInstanceState.containsKey(KEY_SELECTED_DB))
-                mSelectedDatabase = savedInstanceState.getString(KEY_SELECTED_DB);
+//            if (savedInstanceState.containsKey(KEY_SELECTED_DB))
+//                mSelectedDatabase = savedInstanceState.getString(KEY_SELECTED_DB);
         }
 
         // Initiate and populate spinner to filter forms displayed by instances types
@@ -303,7 +305,23 @@ public class BrowserActivity extends ListActivity
             }
             
             dialog = builder.create();
-            break;            
+            break;        
+            
+        // Unable to launch form builder (instances present) 
+        case DIALOG_FORM_BUILDER_LAUNCH_ERROR:
+            builder
+                .setIcon(R.drawable.ic_dialog_info)
+                .setTitle(R.string.tf_unable_to_launch_form_builder_dialog)
+                .setMessage(R.string.tf_unable_to_launch_form_builder_dialog_msg);
+                
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    dialog.cancel();
+                }
+            });
+            
+            dialog = builder.create();
+            break;
             
         // User requested forms (definitions or instances) to be loaded but none could be found 
         case DIALOG_INSTANCES_UNAVAILABLE:
@@ -498,9 +516,8 @@ public class BrowserActivity extends ListActivity
             break;
         // When showing all forms in folder... edit a form
         case 1:
-            i = new Intent(this, FormBuilderFieldList.class);
-            i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
-            startActivity(i);
+            FormBuilderLauncherTask fbl = new FormBuilderLauncherTask();
+            fbl.execute(form.getId());
             break;
         // When showing all draft forms in folder... browse selected form instances
         case 2:
@@ -544,15 +561,55 @@ public class BrowserActivity extends ListActivity
     {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_DIALOG_MESSAGE, mDialogMessage);
-        outState.putString(KEY_SELECTED_DB, mSelectedDatabase);
+//        outState.putString(KEY_SELECTED_DB, mSelectedDatabase);
+    }
+    
+    /*
+     * Determine whether it is safe to launch the form browser.  For the time
+     * being we need this so that we can allow/disallow access based on whether
+     * instances exist for a given form.
+     */
+    private class FormBuilderLauncherTask extends AsyncTask<String, Void, String>
+    {
+        @Override
+        protected String doInBackground(String... arg0)
+        {
+            String docId = arg0[0];
+            List<FormInstanceDocument> instanceIds = new ArrayList<FormInstanceDocument>();
+            instanceIds = new FormInstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormId(docId);
+            
+            if (instanceIds.isEmpty())
+                return docId;
+            else 
+                return "";
+        }
+        
+        @Override
+        protected void onPreExecute()
+        {
+            setProgressVisibility(true);
+        }
+        
+        @Override
+        protected void onPostExecute(String docId)
+        {
+            if (docId.length() > 0) {
+                // Success                
+                Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
+                i.putExtra(FormEntryActivity.KEY_FORMID, docId);
+                startActivity(i);
+            } else {
+                // Failure (instances present)
+                showDialog(DIALOG_FORM_BUILDER_LAUNCH_ERROR);
+            }
+            
+            setProgressVisibility(false);
+        }        
     }
 
     /*
-     * Determine how to load a form instance
-     * 
-     * If there is only one instance for the form in question then load that
-     * instance directly. If there is more than one instance then load the
-     * instance browser.
+     * Retrieve all instances of a certain status for a specified definition,
+     * populate the instance browse list and start FormEditActivity accordingly.
      */
     private class InstanceLoadPathTask extends AsyncTask<Object, Integer, Void>
     {
@@ -698,14 +755,7 @@ public class BrowserActivity extends ListActivity
     }
     
     /*
-     * TODO 
-     * 
-     * Implement progress dialog that will be updated to show the online/offline switch progress
-     * (i.e., progress of folder synchronisations)
-     * 
-     * TODO
-     * 
-     * Deal with case where user has asked to go offline/online but it could not be done co-operatively
+     * Go online or offline at users request; synchronize folders accordingly.
      */
     private class ToggleOnlineStateTask extends AsyncTask<Void, Void, Void>
     {        
@@ -764,8 +814,9 @@ public class BrowserActivity extends ListActivity
                 progressDialog = new ProgressDialog(BrowserActivity.this);
                 progressDialog.setMessage(getString(R.string.tf_synchronizing_folders_dialog_msg));  
                 progressDialog.show();
-            } else
+            } else {
                 showDialog(DIALOG_ONLINE_STATE_CHANGING);
+            }
             
             // Not available while toggling
             Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
@@ -797,8 +848,9 @@ public class BrowserActivity extends ListActivity
             } else if (unableToGoOnline) {
                 // Load screen after user acknowledges to avoid stacking of dialogs
                 showDialog(DIALOG_ONLINE_ATTEMPT_FAILED);
-            } else 
+            } else { 
                 loadScreen();
+            }
         }
         
         private void synchronize()
@@ -844,6 +896,7 @@ public class BrowserActivity extends ListActivity
         }
     }
     
+    // Attempt to return the current folder name (shortened to an appropriate length)
     public static String getSelectedFolderName()
     {
         String folderName = "...";
@@ -862,12 +915,13 @@ public class BrowserActivity extends ListActivity
         } catch (NullPointerException e) {
             // Database metadata is not available at this time
             Log.w(Collect.LOGTAG, t + "folder metadata not available at this time");
+            folderName = "?";
         }
         
         return folderName;
     }
 
-    /**
+    /*
      * Load the various elements of the screen that must wait for other tasks to complete
      */
     private void loadScreen()
@@ -910,11 +964,11 @@ public class BrowserActivity extends ListActivity
         nothingToDisplay.setVisibility(View.INVISIBLE);
         
         // Restore selected database (but only once)
-        if (mSelectedDatabase != null) {
-            Log.v(Collect.LOGTAG, t + "restoring selected database " + mSelectedDatabase);
-            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedDatabase);
-            mSelectedDatabase = null;
-        }
+//        if (mSelectedDatabase != null) {
+//            Log.v(Collect.LOGTAG, t + "restoring selected database " + mSelectedDatabase);
+//            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedDatabase);
+//            mSelectedDatabase = null;
+//        }
         
         String folderName = getSelectedFolderName();
         

@@ -399,6 +399,8 @@
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Group Inform was unable to connect to the Simple Sharing service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
 	<string name="tf_unable_to_go_online_dialog">Cannot Go Online</string>
 	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Group Inform was unable to go online.\n\nPlease make sure that this device can access the Internet and try again.</string>
+	<string name="tf_unable_to_launch_form_builder_dialog">Cannot Start Form Builder</string>
+	<string name="tf_unable_to_launch_form_builder_dialog_msg">Changes cannot be made to form templates when either draft or completed copies of the form are present.\n\nSupport for changes to forms with drafts/completed copies will be made available in a future version of this app.\n\nIf you wish to make changes to this form template either make a copy of it or remove all drafts/completed copies before editing it.</string>
 	<string name="tf_unable_to_load_instances_dialog">Form(s) Not Found</string>
     <string name="tf_unable_to_load_instances_dialog_msg">The form(s) that you were looking for cannot be retrieved.\n\nThis information was most likely removed recently by one of your team members.\n\nPress OK to refresh the screen.</string>
     <string name="tf_unable_to_notify_device_user">Unable to notify user at this time.  Please try again later.</string>

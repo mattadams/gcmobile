@@ -13,12 +13,14 @@ public class FormInstanceRepository extends CouchDbRepositorySupport<FormInstanc
     @SuppressWarnings("unused")
     private final static String t = "FormInstanceRepository: ";
     
-    public FormInstanceRepository(CouchDbConnector db) {
+    public FormInstanceRepository(CouchDbConnector db) 
+    {
         super(FormInstanceDocument.class, db);
         initStandardDesignDocument();
     }
     
-    public List<FormInstanceDocument> findByFormId(String formId) {
+    public List<FormInstanceDocument> findByFormId(String formId) 
+    {
         return queryView("by_formId", formId);
     }
 
@@ -27,7 +29,8 @@ public class FormInstanceRepository extends CouchDbRepositorySupport<FormInstanc
      * instance IDs belonging to the form in question and having the 
      * desired status.
      */
-    public ArrayList<String> findByFormAndStatus(String formId, FormInstanceDocument.Status status) {
+    public ArrayList<String> findByFormAndStatus(String formId, FormInstanceDocument.Status status) 
+    {
         List<FormInstanceDocument> instancesByForm = findByFormId(formId);
         ArrayList<String> instanceIds = new ArrayList<String>();
         String stat = status.toString();
