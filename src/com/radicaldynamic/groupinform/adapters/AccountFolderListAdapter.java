@@ -3,6 +3,7 @@ package com.radicaldynamic.groupinform.adapters;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,16 +13,15 @@ import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.AccountFolderActivity;
+import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 
 public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
-{       
-    private Context mContext;
+{
     private ArrayList<AccountFolder> mItems;
     
     public AccountFolderListAdapter(Context context, int textViewResourceId, ArrayList<AccountFolder> items) {
         super(context, textViewResourceId, items);
-        mContext = context;
         mItems = items;
     }
 
@@ -31,7 +31,7 @@ public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
         View v = convertView;        
 
         if (v == null) {            
-            LayoutInflater vi = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            LayoutInflater vi = (LayoutInflater) Collect.getInstance().getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             v = vi.inflate(R.layout.folder_list_item, null);
         } 
 
@@ -41,19 +41,36 @@ public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
             ImageView fi = (ImageView) v.findViewById(R.id.folderIcon);
             TextView tt = (TextView) v.findViewById(R.id.firstLine);
             TextView bt = (TextView) v.findViewById(R.id.secondLine);
+            int icon;
             
             if (fi != null) {
                 if (f.getVisibility().equals(AccountFolderActivity.PRIVATE_FOLDER)) {
-                    if (f.isReplicated())
-                        fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.folder_blue_backup));
-                    else 
-                        fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.folder_blue));
+                    if (f.isReplicated()) {
+                        if (Collect.getInstance().getInformOnlineState().getSelectedDatabase().equals(f.getId()))
+                            icon = R.drawable.folder_remote_backup_blue;
+                        else    
+                            icon = R.drawable.folder_blue_backup;
+                    } else { 
+                        if (Collect.getInstance().getInformOnlineState().getSelectedDatabase().equals(f.getId()))
+                            icon = R.drawable.folder_remote_blue;
+                        else    
+                            icon = R.drawable.folder_blue;
+                    }
                 } else {
-                    if (f.isReplicated())
-                        fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.folder_green_backup));
-                    else 
-                        fi.setImageDrawable(mContext.getResources().getDrawable(R.drawable.folder_green));               
-                }                
+                    if (f.isReplicated()) {
+                        if (Collect.getInstance().getInformOnlineState().getSelectedDatabase().equals(f.getId()))
+                            icon = R.drawable.folder_remote_backup_green;
+                        else 
+                            icon = R.drawable.folder_green_backup;
+                    } else {                         
+                        if (Collect.getInstance().getInformOnlineState().getSelectedDatabase().equals(f.getId()))
+                            icon = R.drawable.folder_remote_green;
+                        else
+                            icon = R.drawable.folder_green;
+                    }
+                }        
+                
+                fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(icon));
             }
 
             if (tt != null) {
