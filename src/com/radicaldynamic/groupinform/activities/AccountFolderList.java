@@ -68,21 +68,52 @@ public class AccountFolderList extends ListActivity
     private static final int CONTEXT_MENU_EDIT = Menu.FIRST;
     private static final int CONTEXT_MENU_INFO = Menu.FIRST + 1;
     
-    public static final int DIALOG_DENIED_NOT_OWNER = 0;
-    public static final int DIALOG_MORE_INFO        = 1;
-    public static final int DIALOG_OPENING          = 2;
+    public static final int DIALOG_DENIED_NOT_OWNER = 1;
+    public static final int DIALOG_MORE_INFO        = 2;
+    public static final int DIALOG_OPENING          = 3;
+    
+    // Intent keys
+    public static final String KEY_COPY_TO_FOLDER = "key_copytofolder";
+    public static final String KEY_FOLDER_ID      = "key_folderid";
+    public static final String KEY_FOLDER_NAME    = "key_foldername";    
     
     private RefreshViewTask mRefreshViewTask;
+    private SelectFolderTask mSelectFolderTask;
     
     private AccountFolder mFolder;
+    private boolean mCopyToFolder = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.generic_list);        
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_form_folders));
+        setContentView(R.layout.generic_list);
+        
+        if (savedInstanceState == null) {
+            Intent intent = getIntent();
+            
+            if (intent == null) {
+                // Load defaults
+            } else {
+                mCopyToFolder = intent.getBooleanExtra(KEY_COPY_TO_FOLDER, false);
+            }
+        } else {
+            if (savedInstanceState.containsKey(KEY_COPY_TO_FOLDER))
+                mCopyToFolder = savedInstanceState.getBoolean(KEY_COPY_TO_FOLDER);
+            
+            Object data = getLastNonConfigurationInstance();
+            
+            if (data instanceof RefreshViewTask)
+                mRefreshViewTask = (RefreshViewTask) data;
+            else if (data instanceof SelectFolderTask)
+                mSelectFolderTask = (SelectFolderTask) data;
+        }
+        
+        if (mCopyToFolder)
+            setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_copy_to_folder));
+        else 
+            setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_form_folders));
     }
 
     @Override
@@ -98,11 +129,15 @@ public class AccountFolderList extends ListActivity
         super.onCreateContextMenu(menu, v, menuInfo);
         
         boolean enabled = false;
+        boolean visible = true;
         
         if (Collect.getInstance().getIoService().isSignedIn())
             enabled = true;
         
-        menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder)).setEnabled(enabled);
+        if (mCopyToFolder)
+            visible = false;
+        
+        menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder)).setEnabled(enabled).setVisible(visible);
         menu.add(0, CONTEXT_MENU_INFO, 0, getString(R.string.tf_more_info));
     }
 
@@ -118,6 +153,8 @@ public class AccountFolderList extends ListActivity
         Dialog dialog = null;
         
         switch (id) {
+
+            
         case DIALOG_DENIED_NOT_OWNER:            
             builder
                 .setIcon(R.drawable.ic_dialog_info)
@@ -162,17 +199,23 @@ public class AccountFolderList extends ListActivity
         super.onCreateOptionsMenu(menu);
         
         boolean enabled = false;
+        boolean visible = true;
         
         if (Collect.getInstance().getIoService().isSignedIn())
             enabled = true;
         
+        if (mCopyToFolder)
+            visible = false;
+        
         menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_folder))
             .setIcon(R.drawable.ic_menu_add)
-            .setEnabled(enabled);
+            .setEnabled(enabled)
+            .setVisible(visible);            
         
         menu.add(0, MENU_SYNC_LIST, 0, getString(R.string.tf_replication_list))
             .setIcon(R.drawable.ic_menu_sync_list)
-            .setEnabled(enabled);
+            .setEnabled(enabled)
+            .setVisible(visible);
         
         return true;
     }
@@ -219,7 +262,8 @@ public class AccountFolderList extends ListActivity
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
         AccountFolder folder = (AccountFolder) getListAdapter().getItem(position);
-        new SelectFolderTask().execute(folder);
+        mSelectFolderTask = new SelectFolderTask();
+        mSelectFolderTask.execute(folder);
     }
 
     @Override
@@ -236,6 +280,25 @@ public class AccountFolderList extends ListActivity
         }
         
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public Object onRetainNonConfigurationInstance()
+    {
+        if (mRefreshViewTask != null && mRefreshViewTask.getStatus() != AsyncTask.Status.FINISHED)
+            return mRefreshViewTask;
+        
+        if (mSelectFolderTask != null && mSelectFolderTask.getStatus() != AsyncTask.Status.FINISHED)
+            return mSelectFolderTask;
+        
+        return null;
+    }
+    
+    @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_COPY_TO_FOLDER, mCopyToFolder);
     }
 
     /*
@@ -314,9 +377,17 @@ public class AccountFolderList extends ListActivity
         {
             dismissDialog(DIALOG_OPENING);
             
-            if (folderReady) {            
-                Collect.getInstance().getInformOnlineState().setSelectedDatabase(folder.getId());                  
-                finish();
+            if (folderReady) {
+                if (mCopyToFolder) {
+                    Intent i = new Intent();
+                    i.putExtra(KEY_FOLDER_NAME, folder.getName());
+                    i.putExtra(KEY_FOLDER_ID, folder.getId());
+                    setResult(RESULT_OK, i);
+                    finish();
+                } else {
+                    Collect.getInstance().getInformOnlineState().setSelectedDatabase(folder.getId());
+                    finish();
+                }
             } else {
                 Toast.makeText(getApplicationContext(), "Unable to open " + folder.getName() + ". Please try again in a few seconds.", Toast.LENGTH_LONG).show();
             }
@@ -441,5 +512,8 @@ public class AccountFolderList extends ListActivity
         mRefreshViewTask.execute();
 
         registerForContextMenu(getListView());
+        
+        if (mCopyToFolder)
+            Toast.makeText(getApplicationContext(), "Select destination folder", Toast.LENGTH_SHORT).show();
     }
 }

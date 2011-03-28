@@ -24,7 +24,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.ektorp.Attachment;
+import org.ektorp.AttachmentInputStream;
 import org.ektorp.DbAccessException;
+import org.ektorp.DocumentNotFoundException;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -38,12 +40,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -55,6 +60,7 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.couchone.couchdb.CouchInstaller;
@@ -64,6 +70,7 @@ import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
+import com.radicaldynamic.groupinform.documents.GenericDocument;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.repository.FormDefinitionRepository;
 import com.radicaldynamic.groupinform.repository.FormInstanceRepository;
@@ -84,15 +91,16 @@ public class BrowserActivity extends ListActivity
     
     // Dialog status codes
     private static final int DIALOG_CREATE_FORM = 0;
-    private static final int DIALOG_FOLDER_UNAVAILABLE = 1;
-    private static final int DIALOG_FORM_BUILDER_LAUNCH_ERROR = 2;
-    private static final int DIALOG_INSTANCES_UNAVAILABLE = 3;
-    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 4;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 5;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 6;    
-    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 7;
-    private static final int DIALOG_ONLINE_STATE_CHANGING = 8;
-    private static final int DIALOG_TOGGLE_ONLINE_STATE = 9;
+    private static final int DIALOG_COPY_TO_FOLDER = 1;
+    private static final int DIALOG_FOLDER_UNAVAILABLE = 2;
+    private static final int DIALOG_FORM_BUILDER_LAUNCH_ERROR = 3;
+    private static final int DIALOG_INSTANCES_UNAVAILABLE = 4;
+    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 5;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 6;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 7;    
+    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 8;
+    private static final int DIALOG_ONLINE_STATE_CHANGING = 9;
+    private static final int DIALOG_TOGGLE_ONLINE_STATE = 10;
     
     // Keys for option menu items
     private static final int MENU_OPTION_REFRESH = 0;
@@ -102,21 +110,25 @@ public class BrowserActivity extends ListActivity
     private static final int MENU_OPTION_INFO = 5;
     
     // Keys for persistence between screen orientation changes
-    private static final String KEY_DIALOG_MESSAGE = "dialog_msg";
-    private static final String KEY_SELECTED_DB    = "selected_db";
+    private static final String KEY_COPY_TO_FOLDER_NAME = "copy_to_folder_name";
+    private static final String KEY_COPY_TO_FOLDER_ID   = "copy_to_folder_id";
+    private static final String KEY_DIALOG_MESSAGE      = "dialog_msg";
+    private static final String KEY_FORM_DEFINITION     = "form_definition_doc";
+    private static final String KEY_SELECTED_DB         = "selected_db";
         
     // Request codes for returning data from specified intent 
     private static final int RESULT_ABOUT_INFORM = 1;
+    private static final int RESULT_COPY_TO_FOLDER = 2;    
+
+    private FormDefinitionDocument mFormDefinitionDoc;    // Stash for a selected form definition
     
-    // Custom message consumed by onCreateDialog()
-    private String mDialogMessage;
+    private String mCopyToFolderId;             // Data passed back from user selection on AccountFolderList
+    private String mCopyToFolderName;           // Same
+    private String mDialogMessage;              // Custom message consumed by onCreateDialog()
+    private String mSelectedDatabase;           // To save & restore the currently selected database
+    private boolean mSpinnerInit = false;       // See s1...OnItemSelectedListener() where this is used in a horrid workaround
     
-    // To save the currently selected database when this activity begins (since MyFormsList may switch it)
-//    private String mSelectedDatabase;
-    
-    // See s1...OnItemSelectedListener() where this is used in a horrid workaround
-    private boolean mSpinnerInit = false;
-    
+    private CopyToFolderTask mCopyToFolderTask;
     private RefreshViewTask mRefreshViewTask;
 
     @Override
@@ -132,14 +144,30 @@ public class BrowserActivity extends ListActivity
         
         if (savedInstanceState == null) {
             mDialogMessage = "";
-//            mSelectedDatabase = null;
+            mSelectedDatabase = null;
         } else {
+            // For "copy to folder" operation, restore destination folder
+            if (savedInstanceState.containsKey(KEY_COPY_TO_FOLDER_ID))
+                mCopyToFolderId = savedInstanceState.getString(KEY_COPY_TO_FOLDER_ID);
+            
+            if (savedInstanceState.containsKey(KEY_COPY_TO_FOLDER_NAME))
+                mCopyToFolderName = savedInstanceState.getString(KEY_COPY_TO_FOLDER_NAME);
+
+            if (savedInstanceState.containsKey(KEY_DIALOG_MESSAGE))
+                mDialogMessage = savedInstanceState.getString(KEY_DIALOG_MESSAGE);
+            
             // Restore custom dialog message
             if (savedInstanceState.containsKey(KEY_DIALOG_MESSAGE))
                 mDialogMessage = savedInstanceState.getString(KEY_DIALOG_MESSAGE);
             
-//            if (savedInstanceState.containsKey(KEY_SELECTED_DB))
-//                mSelectedDatabase = savedInstanceState.getString(KEY_SELECTED_DB);
+            if (savedInstanceState.containsKey(KEY_SELECTED_DB))
+                mSelectedDatabase = savedInstanceState.getString(KEY_SELECTED_DB);
+            
+            Object data = getLastNonConfigurationInstance();
+            
+            if (data instanceof HashMap<?, ?>) {
+                mFormDefinitionDoc = (FormDefinitionDocument) ((HashMap<String, GenericDocument>) data).get(KEY_FORM_DEFINITION);
+            }
         }
 
         // Initiate and populate spinner to filter forms displayed by instances types
@@ -213,31 +241,73 @@ public class BrowserActivity extends ListActivity
             setResult(RESULT_OK);
             finish();
             break; 
-        }        
+            
+        case RESULT_COPY_TO_FOLDER:
+            mCopyToFolderId   = intent.getStringExtra(AccountFolderList.KEY_FOLDER_ID);
+            mCopyToFolderName = intent.getStringExtra(AccountFolderList.KEY_FOLDER_NAME);
+            showDialog(DIALOG_COPY_TO_FOLDER);
+            break;
+        }
+    }
+    
+    @Override
+    public boolean onContextItemSelected(MenuItem item) 
+    {
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+        FormDefinitionDocument form = (FormDefinitionDocument) getListAdapter().getItem((int) info.id);
+        Intent i;
+        
+        switch (item.getItemId()) {
+        case R.id.copy:            
+            mFormDefinitionDoc = form;            
+            i = new Intent(this, AccountFolderList.class);
+            i.putExtra(AccountFolderList.KEY_COPY_TO_FOLDER, true);
+            startActivityForResult(i, RESULT_COPY_TO_FOLDER);
+            return true;
+            
+        case R.id.remove:
+            return true;
+            
+        case R.id.rename:
+            return true;    
+            
+        default:
+            return super.onContextItemSelected(item);
+        }
+    }
+    
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
+    {        
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.browseractivity_cmenu, menu);
     }
     
     public Dialog onCreateDialog(int id)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         Dialog dialog = null;
+        LayoutInflater inflater = null;        
+        View view = null;
         
         switch (id) {
         // User wishes to make a new form
         case DIALOG_CREATE_FORM:
-            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View view = inflater.inflate(R.layout.create_form, null);        
+            inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            view = inflater.inflate(R.layout.dialog_create_form, null);
+            
+            // Set an EditText view to get user input 
+            final EditText inputNewFormName = (EditText) view.findViewById(R.id.formName);
             
             builder.setView(view);
             builder.setInverseBackgroundForced(true);
             builder.setTitle(getText(R.string.tf_create_form_dialog));
-        
-            // Set an EditText view to get user input 
-            final EditText input = (EditText) view.findViewById(R.id.formName);
             
             builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {                
                     FormDefinitionDocument form = new FormDefinitionDocument();
-                    form.setName(input.getText().toString());
+                    form.setName(inputNewFormName.getText().toString());
                     form.setStatus(FormDefinitionDocument.Status.temporary);
         
                     // Create a new form document and use an XForm template as the "xml" attachment
@@ -280,6 +350,47 @@ public class BrowserActivity extends ListActivity
             dialog = builder.create();
             break;
         
+        case DIALOG_COPY_TO_FOLDER:
+            inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            view = inflater.inflate(R.layout.dialog_copy_to_folder, null);
+            
+            // Set an EditText view to get user input 
+            final TextView copyDestination = (TextView) view.findViewById(R.id.copyDestination);
+            final EditText copyName = (EditText) view.findViewById(R.id.copyName);
+            
+            copyDestination.setText(mCopyToFolderName);
+            copyName.setText(mFormDefinitionDoc.getName());
+            
+            builder
+                .setTitle(R.string.tf_copy_to_folder)
+                .setView(view)
+                .setInverseBackgroundForced(true);
+            
+            builder.setPositiveButton(getText(R.string.tf_copy), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    String copyAsName = copyName.getText().toString().trim();
+                    
+                    if (copyAsName.length() > 0) {
+                        mCopyToFolderTask = new CopyToFolderTask();
+                        mCopyToFolderTask.execute(mCopyToFolderId, mFormDefinitionDoc.getId(), mFormDefinitionDoc.getName(), copyAsName);
+                        removeDialog(DIALOG_COPY_TO_FOLDER);                        
+                    } else {
+                        removeDialog(DIALOG_COPY_TO_FOLDER);   
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_required), Toast.LENGTH_LONG).show();
+                        showDialog(DIALOG_COPY_TO_FOLDER);
+                    }
+                }
+            });
+            
+            builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_COPY_TO_FOLDER);
+                }
+            });
+            
+            dialog = builder.create();
+            break;
+            
         // Couldn't connect to DB (for a specific reason)
         case DIALOG_FOLDER_UNAVAILABLE:
             builder
@@ -557,11 +668,117 @@ public class BrowserActivity extends ListActivity
     }
     
     @Override
+    public Object onRetainNonConfigurationInstance()
+    {
+        // Avoid refetching documents from database by preserving them
+        HashMap<String, GenericDocument> persistentData = new HashMap<String, GenericDocument>();
+        persistentData.put(KEY_FORM_DEFINITION, mFormDefinitionDoc);
+        
+        return persistentData;
+    }
+    
+    @Override
     protected void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
+        outState.putString(KEY_COPY_TO_FOLDER_ID, mCopyToFolderId);
+        outState.putString(KEY_COPY_TO_FOLDER_NAME, mCopyToFolderName);
         outState.putString(KEY_DIALOG_MESSAGE, mDialogMessage);
-//        outState.putString(KEY_SELECTED_DB, mSelectedDatabase);
+        outState.putString(KEY_SELECTED_DB, mSelectedDatabase);
+    }
+    
+    private class CopyToFolderTask extends AsyncTask<String, Void, Void>
+    {
+        private static final String tt = t + "CopyToFolderTask: ";
+        
+        private static final String KEY_ITEM = "key_item";
+        
+        private boolean mCopied = false;
+        private String mCopyFormAsName;
+        private String mCopyToFolderId;
+        private String mFormToCopyId;
+        private String mFormToCopyName;
+        
+        ProgressDialog mProgressDialog = null;
+        
+        final Handler mProgressHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                mProgressDialog.setMessage(getString(R.string.tf_copying_with_param, msg.getData().getString(KEY_ITEM)));
+            }
+        };
+        
+        @Override
+        protected Void doInBackground(String... params)
+        {
+            mCopyToFolderId = params[0];
+            mFormToCopyId   = params[1];
+            mFormToCopyName = params[2];
+            mCopyFormAsName = params[3];
+            
+            Log.d(Collect.LOGTAG, tt + "about to copy " + mFormToCopyId + " to " + mCopyToFolderId);
+            
+            Message msg = mProgressHandler.obtainMessage();
+            Bundle b = new Bundle();
+            b.putString(KEY_ITEM, mFormToCopyName);
+            msg.setData(b);
+            mProgressHandler.sendMessage(msg);
+            
+            AttachmentInputStream ais = null;;
+            ByteArrayOutputStream output = null;
+            
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            
+            try {            
+                ais = Collect.getInstance().getDbService().getDb().getAttachment(mFormToCopyId, "xml");
+
+                output = new ByteArrayOutputStream();
+
+                while ((bytesRead = ais.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
+                }
+
+                ais.close();
+                
+                FormDefinitionDocument formDefDoc = new FormDefinitionDocument();
+                formDefDoc.setName(mCopyFormAsName);
+                formDefDoc.setStatus(FormDefinitionDocument.Status.active);
+                formDefDoc.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(output.toByteArray())).toString(), "text/xml"));
+                output.close();
+                
+                Collect.getInstance().getDbService().getDb(mCopyToFolderId).create(formDefDoc);
+                
+                mCopied = true;
+            } catch (DocumentNotFoundException e) {
+                Log.w(Collect.LOGTAG, tt + "DocumentNotFoundException: " + e.toString());
+            } catch (DbAccessException e) {
+                Log.w(Collect.LOGTAG, tt + "DbAccessException: " + e.toString());                
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, tt + "unhandled exception");
+                e.printStackTrace();
+            }
+            
+            return null;
+        }
+        
+        @Override
+        protected void onPreExecute()
+        {
+            mProgressDialog = new ProgressDialog(BrowserActivity.this);
+            mProgressDialog.setMessage(getString(R.string.tf_copying_please_wait));  
+            mProgressDialog.show();
+        }        
+
+        @Override
+        protected void onPostExecute(Void nothing)
+        {   
+            mProgressDialog.cancel();
+            
+            if (mCopied)
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_copy_successful), Toast.LENGTH_SHORT).show();
+            else
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_copy_failed), Toast.LENGTH_SHORT).show();           
+        }        
     }
     
     /*
@@ -776,7 +993,7 @@ public class BrowserActivity extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            // TODO? Perform checkin on demand -- this gives us the most accurate state 
+            // TODO? Perform checkin on demand -- this gives us the most accurate online/offline state 
             // Or maybe just again when the app starts up/is shown
             
             if (Collect.getInstance().getIoService().isSignedIn()) {
@@ -942,6 +1159,8 @@ public class BrowserActivity extends ListActivity
         // Spinner must reflect results of refresh view below
         Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);        
         triggerRefresh(s1.getSelectedItemPosition());
+        
+        registerForContextMenu(getListView());
     }
     
     private void setProgressVisibility(boolean visible)
@@ -964,11 +1183,11 @@ public class BrowserActivity extends ListActivity
         nothingToDisplay.setVisibility(View.INVISIBLE);
         
         // Restore selected database (but only once)
-//        if (mSelectedDatabase != null) {
-//            Log.v(Collect.LOGTAG, t + "restoring selected database " + mSelectedDatabase);
-//            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedDatabase);
-//            mSelectedDatabase = null;
-//        }
+        if (mSelectedDatabase != null) {
+            Log.v(Collect.LOGTAG, t + "restoring selected database " + mSelectedDatabase);
+            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedDatabase);
+            mSelectedDatabase = null;
+        }
         
         String folderName = getSelectedFolderName();
         

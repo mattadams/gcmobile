@@ -7,16 +7,31 @@
     android:padding="10dp">
     
     <TextView
-        android:id="@android:id/empty"  
-        android:text="@string/tf_form_name"        
+        android:id="@android:id/empty"          
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="3dp"
+        android:layout_width="wrap_content" 
+        android:text="@string/tf_destination"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/copyDestination"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp" />
+    
+    <TextView
+        android:id="@android:id/empty"  
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="3dp"
+        android:layout_width="wrap_content"
+        android:text="@string/tf_copy_as"  
         android:textSize="20sp" />
         
     <EditText
-        android:id="@+id/formName" 
+        android:id="@+id/copyName" 
         android:inputType="text|textCapWords"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content" 
-        android:text="" />        
+        android:text="" />
 </LinearLayout>

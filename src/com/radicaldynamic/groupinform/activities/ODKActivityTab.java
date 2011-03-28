@@ -32,7 +32,7 @@ public class ODKActivityTab extends TabActivity
         b1.setText(BrowserActivity.getSelectedFolderName());
 
         TextView t1 = (TextView) findViewById(R.id.titleLeftText);
-        t1.setText(getString(R.string.tf_abbrev_app_name) + " > " + getString(R.string.tf_open_data_kit_abbrev));
+        t1.setText(getString(R.string.app_name) + " > " + getString(R.string.tf_open_data_kit_abbrev));
 
         final TabHost tabHost = getTabHost();
         

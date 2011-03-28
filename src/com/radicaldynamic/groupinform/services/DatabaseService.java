@@ -169,18 +169,23 @@ public class DatabaseService extends Service {
             return DatabaseService.this;
         }
     }
-
+    
+    // Convenience method (uses currently selected database)
     public CouchDbConnector getDb() 
+    {
+        return getDb(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
+    }
+    
+    public CouchDbConnector getDb(String db)
     {
         final String tt = t + "getDb(): ";
         
-        String selectedDb = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
-        AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(selectedDb);
+        AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db);
         
         if (folder.isReplicated()) {
             // Local database
             try {
-                open(selectedDb);                
+                open(db);                
             } catch (DbUnavailableException e) {
                 Log.w(Collect.LOGTAG, tt + "unable to connect to local database server: " + e.toString());
             }
@@ -189,7 +194,7 @@ public class DatabaseService extends Service {
         } else {
             // Remote database
             try {
-                open(selectedDb);              
+                open(db);              
             } catch (DbUnavailableException e) {
                 Log.w(Collect.LOGTAG, tt + "unable to connect to remote database server: " + e.toString());
             }
