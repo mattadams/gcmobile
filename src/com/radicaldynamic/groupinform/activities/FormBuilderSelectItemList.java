@@ -90,7 +90,7 @@ public class FormBuilderSelectItemList extends ListActivity
                                                 
                         Toast.makeText(
                                 getApplicationContext(), 
-                                getString(R.string.tf_removed_item, item.getLabel().toString()), 
+                                getString(R.string.tf_removed_with_param, item.getLabel().toString()), 
                                 Toast.LENGTH_SHORT).show();
                         
                         // Trigger a refresh of the view (and display any pertenent messages)
@@ -259,7 +259,7 @@ public class FormBuilderSelectItemList extends ListActivity
         
         // Attach the layout to this dialog    
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.item_dialog, null);
+        View view = inflater.inflate(R.layout.fb_item_dialog, null);
         
         final EditText label = (EditText) view.findViewById(R.id.label);
         final EditText value = (EditText) view.findViewById(R.id.value);

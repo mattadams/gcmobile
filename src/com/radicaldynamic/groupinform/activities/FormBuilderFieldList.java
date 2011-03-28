@@ -174,7 +174,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             // This removes the (control) field from mFieldState
             mAdapter.remove(item);
             
-            displayRemovedMsg(getString(R.string.tf_removed_field, item.getLabel().toString()));       
+            displayRemovedMsg(getString(R.string.tf_removed_with_param, item.getLabel().toString()));       
         }
         
         private void removeByXPath(String xpath)
@@ -329,8 +329,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
     {
         super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.form_builder_context, menu);
+//        MenuInflater inflater = getMenuInflater();
+//        inflater.inflate(R.menu.form_builder_context, menu);
     }
     
     /*
