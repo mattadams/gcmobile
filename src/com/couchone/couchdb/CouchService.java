@@ -252,7 +252,7 @@ public class CouchService extends Service {
 		notification.setLatestEventInfo(
 				getApplicationContext(),
 				"Inform Database Running",
-				"Press to open Group Inform", 
+				"", 
 				PendingIntent.getActivity(CouchService.this, 0, i, 0));
 		mNM.cancel(1);
 		mNM.notify(2, notification);

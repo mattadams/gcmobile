@@ -210,7 +210,7 @@
 	<string name="tf_create_list_item">Add List Item</string>
 	<string name="tf_database_being_initialized">Initializing Database</string>
 	<string name="tf_database_being_installed">Installing Database</string>	
-	<string name="tf_default_ionline_server">192.168.110.120</string>
+	<string name="tf_default_ionline_server">groupcomplete.com</string>
 	<string name="tf_default_ionline_port">5101</string>	
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_dependency_missing_dialog">Install Helper Software?</string>
@@ -324,7 +324,7 @@
 	<string name="tf_loading_please_wait">Loading...</string>
 	<string name="tf_more_info">More Info</string>
 	<string name="tf_new_account">New Account</string>
-	<string name="tf_nothing_to_display_odk_aggregate">Nothing available to display.\n\nFolder owners may use this screen to upload completed forms from the current folder to ODK Aggregate.</string>
+	<string name="tf_nothing_to_display_odk_aggregate">Nothing available to display.\n\nUse this screen to upload completed forms from the current folder to ODK Aggregate.</string>
 	<string name="tf_notification_settings">Notification settings</string>
 	<string name="tf_notify_device_owner">Notify User</string>
 	<string name="tf_odk_aggregate">Send Complete Forms</string>

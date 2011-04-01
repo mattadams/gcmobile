@@ -349,12 +349,18 @@ public class DatabaseService extends Service {
         
         Log.d(Collect.LOGTAG, tt + "establishing connection to " + host + ":" + port);
         
+        String arg0 = "37112e49!";
+        arg0 = arg0 + "26177d15&";
+        arg0 = arg0 + "28fb8778";
+        
         try {                     
             mLocalHttpClient = new StdHttpClient.Builder()
                 .maxConnections(1)
                 .host(host)
                 .port(port)
-                .build();   
+                .username("admin")
+                .password(arg0)
+                .build();
             
             mLocalDbInstance = new StdCouchDbInstance(mLocalHttpClient);
             mLocalDbInstance.getAllDatabases();
@@ -532,17 +538,21 @@ public class DatabaseService extends Service {
         
         // Configure replication direction
         String source = null;
-        String target = null;
-
+        String target = null;        
+        
+        String arg0 = "37112e49!";
+        arg0 = arg0 + "26177d15&";
+        arg0 = arg0 + "28fb8778";
+        
         switch (mode) {
         case REPLICATE_PUSH:
-            source = "http://127.0.0.1:5985/db_" + db; 
+            source = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db; 
             target = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
             break;
 
         case REPLICATE_PULL:
             source = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
-            target = "http://127.0.0.1:5985/db_" + db;
+            target = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db;
             break;
         }
         

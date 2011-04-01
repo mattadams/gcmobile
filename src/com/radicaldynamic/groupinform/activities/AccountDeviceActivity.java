@@ -87,7 +87,15 @@ public class AccountDeviceActivity extends Activity
         mDevicePin.setText(mDevice.getPin());
         
         // lastCheck is delivered in milliseconds
-        Integer lastCheckin = Integer.valueOf(mDevice.getLastCheckin()) / 1000;
+        Integer lastCheckin;
+        
+        try {
+            lastCheckin = Integer.valueOf(mDevice.getLastCheckin()) / 1000;
+        } catch (NumberFormatException e) {
+            // Not sure why we run into problems with this
+            lastCheckin = 0;
+        }
+        
         String approximation = "";
         String period = "";
         String unit = "";

@@ -131,6 +131,7 @@ public class BrowserActivity extends ListActivity
     private CopyToFolderTask mCopyToFolderTask;
     private RefreshViewTask mRefreshViewTask;
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
