@@ -25,7 +25,7 @@
       android:theme="@style/GroupInformTheme">
     <activity 
         android:configChanges="orientation" 
-        android:label="@string/tf_inform" 
+        android:label="@string/app_name" 
         android:name=".activities.LauncherActivity">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />

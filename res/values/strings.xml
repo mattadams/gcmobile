@@ -21,7 +21,7 @@
 	<string name="add_repeat_no">Do Not Add</string>
 	<string name="advance">advance to next question</string>
 	<string name="altitude">Altitude</string>
-	<string name="app_name">Group Inform</string>
+	<string name="app_name">Inform</string>
 	<string name="audio_file_error">No audio file was specified.</string>
 	<string name="audio_file_invalid">File: %s is not a valid audio file.</string>
 	<string name="audio_file_missing">Audio File: %s is missing.</string>
@@ -153,7 +153,7 @@
 	<string name="username">Username</string>
 	<string name="view_hierarchy">Go To Prompt</string>
 	<!-- Group Inform string resources below -->
-	<string name="tf_about_inform_account_header">This screen displays information about your Group Inform installation. Certain details are only available to the account owner.</string>
+	<string name="tf_about_inform_account_header">This screen displays information about your Inform installation. Certain details are only available to the account owner.</string>
 	<string name="tf_about_inform_device_header">Information about the device you are currently using.</string>
 	<string name="tf_abort_exit">Abort exit</string>
 	<string name="tf_account_created">Account Created</string>
@@ -190,9 +190,9 @@
 	<string name="tf_confirm_instance_removal_dialog_msg">Do you want to remove this form?\n\nThis action can not be undone.</string>
 	<string name="tf_confirm_removal">Confirm Removal</string>
 	<string name="tf_confirm_removal_msg">Are you sure you want to remove %s?</string>
-	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the Group Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
-	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the Group Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
-	<string name="tf_connection_error_unregistered_msg">Unable to connect to the Group Inform service to register this installation.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
+	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
+	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
+	<string name="tf_connection_error_unregistered_msg">Unable to connect to the Inform service to register this installation.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
 	<string name="tf_connection_status_notification">CONNECTION STATUS NOTIFICATION</string>	
 	<string name="tf_connectivity_settings">Connectivity settings</string>
 	<string name="tf_contact_account_owner">Action reserved for your account owner!</string>
@@ -214,7 +214,7 @@
 	<string name="tf_default_ionline_port">5101</string>	
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_dependency_missing_dialog">Install Helper Software?</string>
-	<string name="tf_dependency_missing_dialog_msg">The following free app will help to maximize the potential of Group Inform:\n\n</string>
+	<string name="tf_dependency_missing_dialog_msg">The following free app will help to maximize the potential of Inform:\n\n</string>
 	<string name="tf_destination">Destination</string>
 	<string name="tf_device_admin_alias_label">Alias</string>
 	<string name="tf_device_admin_alias_hint">Identify this user by an alias instead of using the the email address. Examples: Joe Smith, North Warehouse or Survey Team.</string>
@@ -228,7 +228,7 @@
 	<string name="tf_device_admin_status_hint"></string>
 	<string name="tf_device_admin_status_inuse">In Use</string>	
 	<string name="tf_device_admin_status_unused">Unused (available for activation)</string>
-	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device. The address must be unique to this Group Inform account.</string>
+	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device. The address must be unique to this Inform account.</string>
 	<string name="tf_device_info">Device Info</string>
 	<string name="tf_device_owner_notified_of_pin_use">User notified on your behalf via email</string>
 	<string name="tf_device_pin_label">Device PIN</string>
@@ -296,7 +296,6 @@
 	<string name="tf_image_media_type">Photograph</string>
 	<string name="tf_improperly_formatted_licence_number">Improperly formatted licence number</string>
 	<string name="tf_improperly_formatted_licence_key">Improperly formatted licence key</string>
-	<string name="tf_inform">Inform</string>
 	<string name="tf_inform_info">About Inform</string>
 	<string name="tf_inform_state_connecting">Going online...</string>
 	<string name="tf_inform_state_disconnecting">Going offline...</string>
@@ -340,7 +339,7 @@
 	<string name="tf_register_this_device">Register this Device</string>
 	<string name="tf_registration_error_email_in_use">This email address is already in use</string>
 	<string name="tf_registration">Register Device</string>
-	<string name="tf_registration_msg">Welcome to Group Inform: mobile data collection made easy! This installation must be registered before it can be used.\n\nAll mobile devices used by your team must be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you during this registration process.\n\nCollaborative data collection with Group Inform is made possible by our Simple Sharing services. New accounts receive a Free Simple Sharing subscription as per our website.\n\nPlease visit http://groupcomplete.com for more information on Simple Sharing plans &amp; pricing.</string>
+	<string name="tf_registration_msg">Welcome to Inform: mobile data collection made easy! This installation must be registered before it can be used.\n\nAll mobile devices used by your team must be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you during this registration process.\n\nCollaborative data collection with Inform is made possible by our Simple Sharing services. New accounts receive a Free Simple Sharing subscription as per our website.\n\nPlease visit http://groupcomplete.com for more information on Simple Sharing plans &amp; pricing.</string>
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_remind">Remind</string>
 	<string name="tf_remind_later">Remind Later</string>
@@ -348,7 +347,7 @@
 	<string name="tf_removal_failed">Could not remove %s: group contains fields.\n\nRemove the inner fields first.</string>
 	<string name="tf_remove">Remove</string>	
 	<string name="tf_remove_device">Remove Profile</string>
-	<string name="tf_remove_device_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! If you remove this registered profile the following things will happen:\n\n1) The associated device will reset itself the next time it checks in with Group Inform. Following this the user will no longer be able to access this account.\n\n2) This alias or email address will continue to appear in association with records in various places but no further operations will be able to be performed using this device profile.\n\n3) You will be assigned as the owner of any folders currently associated with this user.</string>	
+	<string name="tf_remove_device_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! If you remove this registered profile the following things will happen:\n\n1) The associated device will reset itself the next time it checks in with Inform. Following this the user will no longer be able to access this account.\n\n2) This alias or email address will continue to appear in association with records in various places but no further operations will be able to be performed using this device profile.\n\n3) You will be assigned as the owner of any folders currently associated with this user.</string>	
 	<string name="tf_remove_folder">Remove Folder</string>
 	<string name="tf_remove_folder_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! All form templates, drafts and completed forms contained in this folder will be lost upon removal.\n\nIf you need any of this information export it before removing this folder.</string>
 	<string name="tf_remove_form">Remove Form</string>
@@ -359,17 +358,17 @@
 	<string name="tf_repeated_group_type">Repeated group of fields</string>
 	<string name="tf_replication_list">Synchronization</string>
 	<string name="tf_request_account_reminder">Request Reminder</string>
-	<string name="tf_request_account_reminder_hint">Hint: this is probably the email address of the person in your team that told you to use Group Inform.</string>
+	<string name="tf_request_account_reminder_hint">Hint: this is probably the email address of the person in your team that told you to use Inform.</string>
 	<string name="tf_request_account_reminder_msg">Enter the email address of the account owner. A reminder email containing the licence info will be sent to this person.</string>
 	<string name="tf_reset">Reset</string>	
 	<string name="tf_reset_device">Reset Device</string>	
 	<string name="tf_reset_inform">Reset Inform</string>	
 	<string name="tf_reset_complete">Reset Complete</string>
-	<string name="tf_reset_complete_msg">Group Inform has been successfully reset.\n\nAll data created by Inform has been removed from this device.</string>	
-	<string name="tf_reset_incomplete_msg">We were unable to reset this device. This is probably due to a problem communicating with Group Inform servers.\n\nPlease make sure that your device has Internet access and try again.</string>
+	<string name="tf_reset_complete_msg">Inform has been successfully reset.\n\nAll data created by Inform has been removed from this device.</string>	
+	<string name="tf_reset_incomplete_msg">We were unable to reset this device. This is probably due to a problem communicating with Inform servers.\n\nPlease make sure that your device has Internet access and try again.</string>
 	<string name="tf_reset_incomplete">Reset Failed</string>
-	<string name="tf_reset_warning_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all Inform data stored on this device and cause this device to forget its device registration. This will not uninstall the Group Inform app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to Group Inform.\n\nIf you need to access the data associated with this device after resetting you must reactivate this device profile by using the current licence number, key and device PIN.\n\nDevice profiles may be reactivated during the device registration process.</string>
-	<string name="tf_reset_warning_admin_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all Inform data stored on this device and cause this device to forget its device registration. This will not uninstall the Group Inform app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to Group Inform.\n\nThis device profile may be reactivated by using the current licence number, key and device PIN during the registration process.</string>
+	<string name="tf_reset_warning_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all Inform data stored on this device and cause this device to forget its device registration. This will not uninstall the Inform app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to Inform.\n\nIf you need to access the data associated with this device after resetting you must reactivate this device profile by using the current licence number, key and device PIN.\n\nDevice profiles may be reactivated during the device registration process.</string>
+	<string name="tf_reset_warning_admin_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all Inform data stored on this device and cause this device to forget its device registration. This will not uninstall the Inform app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to Inform.\n\nThis device profile may be reactivated by using the current licence number, key and device PIN during the registration process.</string>
 	<string name="tf_reset_with_param">Reset %s</string>
 	<string name="tf_resetting_please_wait">Resetting...</string>
 	<string name="tf_retry">Retry</string>
@@ -395,11 +394,11 @@
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
-	<string name="tf_unable_to_go_offline_dialog_msg_reason_db">The Group Inform database is required to work offline.  If you are receiving this message it means that the database is unavailable for one or more reasons.\n\nPlease let us know that you are receiving this message by visiting us at http://groupinform.com/support - thank you!</string>
+	<string name="tf_unable_to_go_offline_dialog_msg_reason_db">The Inform database is required to work offline.  If you are receiving this message it means that the database is unavailable for one or more reasons.\n\nPlease let us know that you are receiving this message by visiting us at http://groupinform.com/support - thank you!</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>
-	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Group Inform was unable to connect to the Simple Sharing service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
+	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Inform was unable to connect to the Simple Sharing service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
 	<string name="tf_unable_to_go_online_dialog">Cannot Go Online</string>
-	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Group Inform was unable to go online.\n\nPlease make sure that this device can access the Internet and try again.</string>
+	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Inform was unable to go online.\n\nPlease make sure that this device can access the Internet and try again.</string>
 	<string name="tf_unable_to_launch_form_builder_dialog">Cannot Start Form Builder</string>
 	<string name="tf_unable_to_launch_form_builder_dialog_msg">Changes cannot be made to form templates when either draft or completed copies of the form are present.\n\nSupport for changes to forms with drafts/completed copies will be made available in a future version of this app.\n\nIf you wish to make changes to this form template either make a copy of it or remove all drafts/completed copies before editing it.</string>
 	<string name="tf_unable_to_load_instances_dialog">Form(s) Not Found</string>
@@ -410,7 +409,7 @@
 	<string name="tf_unable_to_open_folder_while_offline">The folder \"%s\" is unavailable while offline.\n\nPlease go online to access this folder or select a folder that is synchronized for offline use.</string>
 	<string name="tf_unable_to_proceed_without_licence_number_and_key">A licence number and key are required</string>
 	<string name="tf_unable_to_reactivate_while_in_use_dialog">Device In Use</string>
-	<string name="tf_unable_to_reactivate_while_in_use_dialog_msg">Our records indicate that the device profile associated with this PIN is currently in use.\n\nIf you have access to this device then you should reset Group Inform before reusing this profile.\n\nIf you cannot reset Group Inform then you should notify the person who uses this device.  Additional instructions will be sent to this person.</string>
+	<string name="tf_unable_to_reactivate_while_in_use_dialog_msg">Our records indicate that the device profile associated with this PIN is currently in use.\n\nIf you have access to this device then you should reset Inform before reusing this profile.\n\nIf you cannot reset Inform then you should notify the person who uses this device.  Additional instructions will be sent to this person.</string>
 	<string name="tf_unable_to_remove">Unable to Remove</string>
 	<string name="tf_unable_to_remove_form_instance">Unable to remove form at this time.  Please try again later.</string>
 	<string name="tf_unable_to_remove_defaultdb">This special folder cannot be removed</string>
