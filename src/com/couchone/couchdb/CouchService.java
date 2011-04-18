@@ -8,10 +8,7 @@ import java.util.Map.Entry;
 
 import org.json.JSONException;
 
-import android.app.LauncherActivity;
-import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -20,11 +17,10 @@ import android.os.IBinder;
 import android.os.RemoteException;
 
 import com.couchone.libcouch.AeSimpleSHA1;
-import com.couchone.libcouch.Base64Coder;
 import com.couchone.libcouch.AndCouch;
+import com.couchone.libcouch.Base64Coder;
 import com.couchone.libcouch.ICouchClient;
 import com.couchone.libcouch.ICouchService;
-import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 public class CouchService extends Service {
@@ -49,7 +45,7 @@ public class CouchService extends Service {
 	 */
 	@Override
 	public void onCreate() {
-		notifyStarting();
+//		notifyStarting();
 		couch.service = this;
 		couch.start("/system/bin/sh", FileUtils.EXTERNAL_COUCH + "/bin/couchdb", "");
 	}
@@ -197,7 +193,7 @@ public class CouchService extends Service {
 	 */
 	void couchStarted() throws RemoteException {
 		
-		notifyStarted();
+//		notifyStarted();
 		
 		for (Entry<String, ICouchClient> entry : couchClients.entrySet()) {
 			ICouchClient client = entry.getValue();
@@ -226,38 +222,37 @@ public class CouchService extends Service {
 		return packages[0];
 	}
 
-	private void notifyStarting() {
-		mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		int icon = R.drawable.ic_stat_group_complete;
-		CharSequence tickerText = "Inform Database Starting";
-		long when = System.currentTimeMillis();
-		Notification notification = new Notification(icon, tickerText, when);
-		Intent notificationIntent = new Intent(this, CouchFutonActivity.class);
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-		notification.setLatestEventInfo(
-		        getApplicationContext(),
-				"Group Inform Database Starting", "Please Wait...", 
-				contentIntent);
-		mNM.notify(1, notification);		
-	}
+//	private void notifyStarting() {
+//		mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+//		int icon = R.drawable.ic_stat_group_complete;
+//		CharSequence tickerText = "Inform Database Starting";
+//		long when = System.currentTimeMillis();
+//		Intent notificationIntent = new Intent(this, CouchFutonActivity.class);
+//		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+//		notification.setLatestEventInfo(
+//		        getApplicationContext(),
+//				"Group Inform Database Starting", "Please Wait...", 
+//				contentIntent);
+//		mNM.notify(1, notification);		
+//	}
 	
-	private void notifyStarted() { 
-		int icon = R.drawable.ic_stat_group_complete;
-		CharSequence tickerText = "Inform Database Running";
-		long when = System.currentTimeMillis();
-
-		Notification notification = new Notification(icon, tickerText, when);
-		notification.flags = Notification.FLAG_ONGOING_EVENT;
-		Intent i = new Intent(CouchService.this, LauncherActivity.class);
-		notification.setLatestEventInfo(
-				getApplicationContext(),
-				"Inform Database Running",
-				"", 
-				PendingIntent.getActivity(CouchService.this, 0, i, 0));
-		mNM.cancel(1);
-		mNM.notify(2, notification);
-		startForeground(2, notification);
-	}
+//	private void notifyStarted() { 
+//		int icon = R.drawable.ic_stat_group_complete;
+//		CharSequence tickerText = "Inform Database Running";
+//		long when = System.currentTimeMillis();
+//
+//		Notification notification = new Notification(icon, tickerText, when);
+//		notification.flags = Notification.FLAG_ONGOING_EVENT;
+//		Intent i = new Intent(CouchService.this, LauncherActivity.class);
+//		notification.setLatestEventInfo(
+//				getApplicationContext(),
+//				"Inform Database Running",
+//				"", 
+//				PendingIntent.getActivity(CouchService.this, 0, i, 0));
+//		mNM.cancel(1);
+//		mNM.notify(2, notification);
+//		startForeground(2, notification);
+//	}
 	
 	private String[][] adminHeaders() {
 		String auth = Base64Coder.encodeString(CouchProcess.adminUser + ":" + CouchProcess.adminPass);
