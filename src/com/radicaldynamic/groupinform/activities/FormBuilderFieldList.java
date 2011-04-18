@@ -59,6 +59,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private static final int REQUEST_EDITFIELD = 1;
     
     private static final String INSTANCE_ROOT = "instanceroot";
+    private static final String INSTANCE_ROOT_ID = "instancerootid";    
     
     private LoadFormDefinitionTask mLoadFormDefinitionTask;
     private SaveFormDefinitionTask mSaveFormDefinitionTask;
@@ -72,6 +73,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
    
     private String mFormId;
     private String mInstanceRoot;
+    private String mInstanceRootId;
     private FormDefinitionDocument mForm;
     private FormReader mFormReader;
     private boolean mNewForm;
@@ -280,6 +282,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             
             if (savedInstanceState.containsKey(INSTANCE_ROOT))
                 mInstanceRoot = savedInstanceState.getString(INSTANCE_ROOT);
+            
+            if (savedInstanceState.containsKey(INSTANCE_ROOT_ID))
+                mInstanceRootId = savedInstanceState.getString(INSTANCE_ROOT_ID);            
             
             // Check to see if this is a screen flip or a new form load
             Object data = getLastNonConfigurationInstance();
@@ -494,6 +499,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         outState.putBoolean(FormEntryActivity.NEWFORM, false);
         outState.putString(FormEntryActivity.KEY_FORMID, mFormId);
         outState.putString(INSTANCE_ROOT, mInstanceRoot);
+        outState.putString(INSTANCE_ROOT_ID, mInstanceRootId);
         outState.putStringArrayList(FormEntryActivity.KEY_FORMPATH, mPath);
         outState.putStringArrayList(FormEntryActivity.KEY_FORMACTUALPATH, mActualPath);
     }
@@ -529,6 +535,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 
                 mFieldState = mFormReader.getFields();
                 mInstanceRoot = mFormReader.getInstanceRoot();
+                mInstanceRootId = mFormReader.getInstanceRootId();
                 
                 Collect.getInstance().getFormBuilderState().setBinds(mFormReader.getBinds());
                 Collect.getInstance().getFormBuilderState().setFields(mFieldState);
@@ -598,7 +605,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 mForm.addInlineAttachment(
                         new Attachment(
                                 "xml", 
-                                new String(Base64Coder.encode(FormWriter.writeXml(mInstanceRoot))).toString(),
+                                new String(Base64Coder.encode(FormWriter.writeXml(mInstanceRoot, mInstanceRootId))).toString(),
                                 "text/xml"));
                 
                 mForm.setStatus(FormDefinitionDocument.Status.inactive);
@@ -1026,9 +1033,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         if (mAdapter.isEmpty()) {
             TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
             nothingToDisplay.setVisibility(View.VISIBLE);
-            
-            // FIXME: figure out why this does not work (shouldn't it?)
-//            openOptionsMenu();
         } else {
             TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
             nothingToDisplay.setVisibility(View.INVISIBLE);

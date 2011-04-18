@@ -189,7 +189,7 @@
 	<string name="tf_confirm_complete_instance_removal_dialog_msg">This is a completed form.\n\nAre you sure that you want to remove it?\n\nThis action can not be undone.</string>
 	<string name="tf_confirm_instance_removal_dialog_msg">Do you want to remove this form?\n\nThis action can not be undone.</string>
 	<string name="tf_confirm_removal">Confirm Removal</string>
-	<string name="tf_confirm_removal_msg">Are you sure you want to remove %s?</string>
+	<string name="tf_confirm_removal_msg">Are you sure you want to remove \"%s\"?</string>
 	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
 	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
 	<string name="tf_connection_error_unregistered_msg">Unable to connect to the Inform service to register this installation.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>

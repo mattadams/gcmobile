@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import android.util.Log;
 
-import com.couchone.libcouch.Base64Coder;
 import com.mycila.xmltool.CallBack;
 import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLTag;
@@ -20,8 +19,10 @@ public class FormReader
     
     private XMLTag mForm;                           // The "form" as it was loaded by xmltool
     private String mInstanceRoot;                   // The name of the instance root element 
-    private String mDefaultPrefix;                  // The name of the default XForm prefix (needed for navigation)    
-    private ArrayList<String> mFieldList = new ArrayList<String>();    
+    private String mInstanceRootId;                 // The name of the instance root ID attribute
+    private String mDefaultPrefix;                  // The name of the default XForm prefix (needed for navigation)
+    
+    private ArrayList<String> mFieldList = new ArrayList<String>();
     
     // State of binds, fields, instances and translations    
     private ArrayList<Bind> mBinds = new ArrayList<Bind>();
@@ -69,16 +70,17 @@ public class FormReader
             // This might now be rigorous enough for i18n input
             String formName = Collect.getInstance().getFormBuilderState().getFormDefDoc().getName(); 
             String instanceRoot = formName.replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9]", "");
+            String instanceRootId = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
             
             // Just in case the form name did not have anything useful in it with which to generate a sane instance root
             if (instanceRoot.length() == 0) {
-                Log.i(Collect.LOGTAG, t + "unable to construct instance root from form getName() of " + formName);
+                Log.w(Collect.LOGTAG, t + "unable to construct instance root from form getName() of " + formName);
                 instanceRoot = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
             }
             
-            // FIXME: See "Form ID Guidelines" (id is preferred vs. xmlns) http://code.google.com/p/opendatakit/wiki/XFormDesignGuidelines
+            // See "Form ID Guidelines" (id is preferred vs. xmlns) http://code.google.com/p/opendatakit/wiki/XFormDesignGuidelines
             mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
-            mForm.addTag(XMLDoc.from("<" + instanceRoot + " id=\"" + instanceRoot + "\"></" + instanceRoot + ">", false));
+            mForm.addTag(XMLDoc.from("<" + instanceRoot + " id=\"" + instanceRootId + "\"></" + instanceRoot + ">", false));
         }
         
         mInstanceRoot = mForm
@@ -87,6 +89,12 @@ public class FormReader
             .gotoChild()
             .getCurrentTagName();
         
+        mInstanceRootId = mForm
+            .gotoRoot()
+            .gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix)
+            .gotoChild()
+            .getAttribute("id");
+
         Log.d(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
         Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
     }
@@ -106,26 +114,24 @@ public class FormReader
         return mInstance;
     }
     
-    public ArrayList<Translation> getTranslations()
-    {
-        return mTranslations;
-    }
-    
-    /*
-     * If there is no instance root to return then we should generate one but perhaps 
-     * this should be done elsewhere?
-     */
     public String getInstanceRoot()
     {
         return mInstanceRoot;
     }
     
-    /*
-     * Returns a Base64 encoded form
-     */
-    public String getEncodedForm()
+    public String getInstanceRootId()
     {        
-        return new String(Base64Coder.encode(mForm.gotoRoot().toBytes())).toString();       
+        if (mInstanceRootId == null || mInstanceRootId.length() == 0) {
+            Log.w(Collect.LOGTAG, t + "missing instance root ID attribute, generating random string");
+            mInstanceRootId = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
+        }
+        
+        return mInstanceRootId;
+    }
+
+    public ArrayList<Translation> getTranslations()
+    {
+        return mTranslations;
     }
     
     /*

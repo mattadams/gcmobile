@@ -19,14 +19,17 @@ public final class FormWriter
     private static XMLTag mFormTag;
     private static String mDefaultPrefix;
     private static String mInstanceRoot;
+    private static String mInstanceRootId;
     
-    public static byte[] writeXml(String instanceRoot)
+    public static byte[] writeXml(String instanceRoot, String instanceRootId)
     {
         // Retrieve and load a template XForm file (this makes it easier than hardcoding a new one from scratch)
         InputStream xis = Collect.getInstance().getResources().openRawResource(R.raw.xform_template);        
         mFormTag = XMLDoc.from(xis, false);
         mDefaultPrefix = mFormTag.getPefix("http://www.w3.org/2002/xforms");
+        
         mInstanceRoot = instanceRoot;
+        mInstanceRootId = instanceRootId;
         
         // Insert the title of this form into the XML
         mFormDoc = Collect.getInstance().getFormBuilderState().getFormDefDoc();
@@ -154,10 +157,7 @@ public final class FormWriter
             
             // Initialize the instance root (only done once)
             mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
-            mFormTag.addTag(mInstanceRoot);            
-            
-            // TODO: find another way to accomplish this, xmltool makes it possible but very difficult
-            //mFormTag.addTag(XMLDoc.from("<" + mInstanceRoot + " xmlns=\"" + mInstanceRoot + "\"></" + mInstanceRoot + ">", false));
+            mFormTag.addTag(mInstanceRoot).addAttribute("id", mInstanceRootId);
         } else
             it = incomingInstance.getChildren().iterator();
             
