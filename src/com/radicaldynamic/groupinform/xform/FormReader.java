@@ -24,10 +24,10 @@ public class FormReader
     private ArrayList<String> mFieldList = new ArrayList<String>();    
     
     // State of binds, fields, instances and translations    
-    private ArrayList<Bind> mBindState = new ArrayList<Bind>();
-    private ArrayList<Field> mFieldState = new ArrayList<Field>();
-    private ArrayList<Instance> mInstanceState = new ArrayList<Instance>();
-    private ArrayList<Translation> mTranslationState = new ArrayList<Translation>();    
+    private ArrayList<Bind> mBinds = new ArrayList<Bind>();
+    private ArrayList<Field> mFields = new ArrayList<Field>();
+    private ArrayList<Instance> mInstance = new ArrayList<Instance>();
+    private ArrayList<Translation> mTranslations = new ArrayList<Translation>();    
     
     {
         // List of valid fields that we can handle
@@ -67,7 +67,7 @@ public class FormReader
         // Initialize new forms
         if (newForm) {
             // This might now be rigorous enough for i18n input
-            String formName = Collect.getInstance().getFbForm().getName(); 
+            String formName = Collect.getInstance().getFormBuilderState().getFormDefDoc().getName(); 
             String instanceRoot = formName.replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9]", "");
             
             // Just in case the form name did not have anything useful in it with which to generate a sane instance root
@@ -91,24 +91,24 @@ public class FormReader
         Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
     }
     
-    public ArrayList<Bind> getBindState()
+    public ArrayList<Bind> getBinds()
     {
-        return mBindState;
+        return mBinds;
     }
     
-    public ArrayList<Field> getFieldState()
+    public ArrayList<Field> getFields()
     {
-        return mFieldState;
+        return mFields;
     }
     
-    public ArrayList<Instance> getInstanceState()
+    public ArrayList<Instance> getInstance()
     {
-        return mInstanceState;
+        return mInstance;
     }
     
-    public ArrayList<Translation> getTranslationState()
+    public ArrayList<Translation> getTranslations()
     {
-        return mTranslationState;
+        return mTranslations;
     }
     
     /*
@@ -140,7 +140,7 @@ public class FormReader
             Log.d(Collect.LOGTAG, t + "no form translations to parse");
         
         // Temporary exception until the editor can handle localization
-        if (!getTranslationState().isEmpty()) {
+        if (!mTranslations.isEmpty()) {
             Log.w(Collect.LOGTAG, t + "itext unsupported, aborting parseForm()");
             throw new LocalizationNotSupportedException();
         }
@@ -165,7 +165,7 @@ public class FormReader
         if (mFieldList.contains(tag.getCurrentTagName())) {
             if (tag.getCurrentTagLocation().split("/").length == 2) {
                 // Add a top level field
-                mFieldState.add(new Field(tag, mBindState, mInstanceRoot, null));
+                mFields.add(new Field(tag, mBinds, mInstanceRoot, null));
             } else {
                 // Field belongs elsewhere as a child of another field
                 attachChildToParentField(tag, null);
@@ -201,7 +201,7 @@ public class FormReader
         Iterator<Field> it = null;
         
         if (incomingParent == null)
-            it = mFieldState.iterator();
+            it = mFields.iterator();
         else
             it = incomingParent.getChildren().iterator();
         
@@ -210,7 +210,7 @@ public class FormReader
             
             if (child.getCurrentTagLocation().split("/").length - parent.getLocation().split("/").length == 1 &&
                     parent.getLocation().equals(child.getCurrentTagLocation().substring(0, parent.getLocation().length())))
-                parent.getChildren().add(new Field(child, mBindState, mInstanceRoot, parent));
+                parent.getChildren().add(new Field(child, mBinds, mInstanceRoot, parent));
             
             if (!parent.getChildren().isEmpty())
                 attachChildToParentField(child, parent);
@@ -223,7 +223,7 @@ public class FormReader
      */
     private boolean applyProperty(XMLTag tag)
     {
-        Iterator<Field> it = mFieldState.iterator();
+        Iterator<Field> it = mFields.iterator();
         
         while (it.hasNext()) {
             Field c = it.next();
@@ -291,14 +291,14 @@ public class FormReader
     {
         if (tag.getCurrentTagName().equals("translation")) {
             Log.v(Collect.LOGTAG, t + "adding translations for " + tag.getAttribute("lang"));
-            mTranslationState.add(new Translation(tag.getAttribute("lang")));
+            mTranslations.add(new Translation(tag.getAttribute("lang")));
         } else if (tag.getCurrentTagName().equals("text")) {
             Log.v(Collect.LOGTAG, t + "adding translation ID " + tag.getAttribute("id"));
-            mTranslationState.get(mTranslationState.size() -1).getTexts().add(new Translation(tag.getAttribute("id"), null));
+            mTranslations.get(mTranslations.size() -1).getTexts().add(new Translation(tag.getAttribute("id"), null));
         } else if (tag.getCurrentTagName().equals("value")) {
             Log.v(Collect.LOGTAG, t + "adding translation: " + tag.getInnerText());
-            mTranslationState.get(mTranslationState.size() - 1)
-                .getTexts().get(mTranslationState.get(mTranslationState.size() - 1).getTexts().size() - 1)
+            mTranslations.get(mTranslations.size() - 1)
+                .getTexts().get(mTranslations.get(mTranslations.size() - 1).getTexts().size() - 1)
                 .setValue(tag.getInnerText());
         }
  
@@ -324,14 +324,14 @@ public class FormReader
             public void execute(XMLTag arg0)
             {
                 if (arg0.getCurrentTagName().equals("bind"))
-                    mBindState.add(new Bind(arg0, mInstanceRoot));               
+                    mBinds.add(new Bind(arg0, mInstanceRoot));               
             }
         });
     }
     
     /*
      * Recursively parse and use the information supplied in the form instance
-     * to supplement the field objects in mFieldState 
+     * to supplement the field objects in mFields 
      */
     private void parseFormInstance(XMLTag tag, final String instancePath)
     {
@@ -340,14 +340,14 @@ public class FormReader
          * (this only happens the first time this method runs) 
          */
         if (instancePath.equals("/" + mInstanceRoot) == false) {
-            Instance newInstance = new Instance(instancePath, tag.getInnerText(), tag.getCurrentTagLocation(), mBindState);
+            Instance newInstance = new Instance(instancePath, tag.getInnerText(), tag.getCurrentTagLocation(), mBinds);
             
             // Attempt to apply this instance to a pre-existing field -- if this fails then the instance is "hidden"
             newInstance.setHidden(!applyInstanceToField(null, newInstance));
             
             if (tag.getCurrentTagLocation().split("/").length == 5) {
                 // Add a top level instance
-                mInstanceState.add(newInstance);
+                mInstance.add(newInstance);
             } else {
                 attachChildToParentInstance(newInstance, null);
             }
@@ -373,7 +373,7 @@ public class FormReader
         Iterator<Field> it;
         
         if (field == null) {
-            it = mFieldState.iterator();
+            it = mFields.iterator();
         } else { 
             if (field.getXPath() != null && field.getXPath().equals(instance.getXPath())) {
                 Log.v(Collect.LOGTAG, t + "instance matched with field object via " + instance.getXPath());
@@ -405,7 +405,7 @@ public class FormReader
         Iterator<Instance> it = null;
         
         if (incomingParent == null)
-            it = mInstanceState.iterator();
+            it = mInstance.iterator();
         else
             it = incomingParent.getChildren().iterator();
         

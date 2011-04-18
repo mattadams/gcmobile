@@ -29,11 +29,11 @@ public final class FormWriter
         mInstanceRoot = instanceRoot;
         
         // Insert the title of this form into the XML
-        mFormDoc = Collect.getInstance().getFbForm();
+        mFormDoc = Collect.getInstance().getFormBuilderState().getFormDefDoc();
         mFormTag.gotoRoot().gotoTag("h:head/h:title").setText(FieldText.encodeXMLEntities(mFormDoc.getName()));
         
         // Either write out translations or remove the unused itext tag
-        if (Collect.getInstance().getFbTranslationState().size() > 0) {
+        if (Collect.getInstance().getFormBuilderState().getTranslations().size() > 0) {
             if (!mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix))
                 mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).addTag(mDefaultPrefix + ":itext");
             writeTranslations(null);
@@ -55,7 +55,7 @@ public final class FormWriter
         Iterator<Field> it;
         
         if (incomingField == null) {
-            it = Collect.getInstance().getFbFieldState().iterator();
+            it = Collect.getInstance().getFormBuilderState().getFields().iterator();
             mFormTag.gotoRoot().gotoTag("h:body");
         } else
             it = incomingField.getChildren().iterator();
@@ -113,7 +113,7 @@ public final class FormWriter
 
     private static void writeBinds()
     {
-        Iterator<Bind> it = Collect.getInstance().getFbBindState().iterator();
+        Iterator<Bind> it = Collect.getInstance().getFormBuilderState().getBinds().iterator();
         
         mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix);
         
@@ -150,7 +150,7 @@ public final class FormWriter
         Iterator<Instance> it;
         
         if (incomingInstance == null) {
-            it = Collect.getInstance().getFbInstanceState().iterator();
+            it = Collect.getInstance().getFormBuilderState().getInstance().iterator();
             
             // Initialize the instance root (only done once)
             mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
@@ -191,7 +191,7 @@ public final class FormWriter
         Iterator<Translation> it;
         
         if (i18n == null)       
-            it = Collect.getInstance().getFbTranslationState().iterator();
+            it = Collect.getInstance().getFormBuilderState().getTranslations().iterator();
         else
             it = i18n.getTexts().iterator();
         

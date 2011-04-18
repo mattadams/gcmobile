@@ -44,6 +44,7 @@ import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
 import com.radicaldynamic.groupinform.views.TouchListView;
 import com.radicaldynamic.groupinform.xform.Bind;
 import com.radicaldynamic.groupinform.xform.Field;
+import com.radicaldynamic.groupinform.xform.FormBuilderState;
 import com.radicaldynamic.groupinform.xform.FormReader;
 import com.radicaldynamic.groupinform.xform.FormWriter;
 import com.radicaldynamic.groupinform.xform.Instance;
@@ -183,7 +184,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             removeInstanceByXPath(xpath, null);
             
             // Also remove the related bind
-            Iterator<Bind> it = Collect.getInstance().getFbBindState().iterator();
+            Iterator<Bind> it = Collect.getInstance().getFormBuilderState().getBinds().iterator();
             
             while (it.hasNext()) {
                 Bind bind = it.next();
@@ -210,7 +211,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             Iterator<Instance> it;
             
             if (incomingInstance == null)
-                it = Collect.getInstance().getFbInstanceState().iterator();
+                it = Collect.getInstance().getFormBuilderState().getInstance().iterator();
             else
                 it = incomingInstance.getChildren().iterator();
             
@@ -289,8 +290,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 mSaveFormDefinitionTask = (SaveFormDefinitionTask) data;
             } else if (data == null) {
                 // Load important bits of the form definition from memory
-                mFieldState = Collect.getInstance().getFbFieldState();
-                mForm = Collect.getInstance().getFbForm();
+                mFieldState = Collect.getInstance().getFormBuilderState().getFields();
+                mForm = Collect.getInstance().getFormBuilderState().getFormDefDoc();
 
                 refreshView();
             }            
@@ -305,7 +306,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         
         switch (requestCode) {
         case REQUEST_EDITFIELD:
-            Field field = Collect.getInstance().getFbField();
+            Field field = Collect.getInstance().getFormBuilderState().getField();
             
             if (field.isSaved()) {
                 field.setSaved(false);
@@ -515,7 +516,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             
             try {
                 mForm = Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, formId);
-                Collect.getInstance().setFbForm(mForm);
+                Collect.getInstance().getFormBuilderState().setFormDefDoc(mForm);
                 Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
                 
                 Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
@@ -526,13 +527,13 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 
                 mFormReader.parseForm();
                 
-                mFieldState = mFormReader.getFieldState();
+                mFieldState = mFormReader.getFields();
                 mInstanceRoot = mFormReader.getInstanceRoot();
                 
-                Collect.getInstance().setFbBindState(mFormReader.getBindState());
-                Collect.getInstance().setFbFieldState(mFieldState);
-                Collect.getInstance().setFbInstanceState(mFormReader.getInstanceState());
-                Collect.getInstance().setFbTranslationState(mFormReader.getTranslationState());
+                Collect.getInstance().getFormBuilderState().setBinds(mFormReader.getBinds());
+                Collect.getInstance().getFormBuilderState().setFields(mFieldState);
+                Collect.getInstance().getFormBuilderState().setInstance(mFormReader.getInstance());
+                Collect.getInstance().getFormBuilderState().setTranslations(mFormReader.getTranslations());
             } catch (IOException e) {
                 e.printStackTrace();
                 mError = e.toString();
@@ -573,10 +574,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             mActualPath = new ArrayList<String>();
             
             // States stored in the global application context
-            Collect.getInstance().setFbBindState(null);
-            Collect.getInstance().setFbFieldState(null);
-            Collect.getInstance().setFbInstanceState(null);
-            Collect.getInstance().setFbTranslationState(null);
+            Collect.getInstance().setFormBuilderState(null);
+            Collect.getInstance().setFormBuilderState(new FormBuilderState());
         }
     }
     
@@ -806,7 +805,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             addNewRegularField(f);
         
         // Display with the new field included
-        mFieldState = Collect.getInstance().getFbFieldState();
+        mFieldState = Collect.getInstance().getFormBuilderState().getFields();
         refreshView();
     }
     
@@ -823,7 +822,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             
             // If parent is null then we are at the top of the form
             if (parent == null)
-                Collect.getInstance().getFbFieldState().add(f);
+                Collect.getInstance().getFormBuilderState().getFields().add(f);
             else
                 parent.getChildren().add(f);
         }
@@ -870,16 +869,16 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             
             // If parent is null then we are at the top of the form
             if (parent == null)
-                Collect.getInstance().getFbFieldState().add(f);
+                Collect.getInstance().getFormBuilderState().getFields().add(f);
             else
                 parent.getChildren().add(f);
             
             // Also add the instance
-            Collect.getInstance().getFbInstanceState().add(f.getRepeat().getInstance());
+            Collect.getInstance().getFormBuilderState().getInstance().add(f.getRepeat().getInstance());
         }
         
         // Also add the bind
-        Collect.getInstance().getFbBindState().add(f.getRepeat().getBind());        
+        Collect.getInstance().getFormBuilderState().getBinds().add(f.getRepeat().getBind());        
     }
     
     private void addNewRegularField(Field f)
@@ -910,19 +909,19 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             parent.getRepeat().getChildren().add(f);
         } else {
             if (parent == null)
-                Collect.getInstance().getFbFieldState().add(f);
+                Collect.getInstance().getFormBuilderState().getFields().add(f);
             else
                 parent.getChildren().add(f);
         }
         
         // Binds are a flat list, so it does not matter where they are added
-        Collect.getInstance().getFbBindState().add(f.getBind());
+        Collect.getInstance().getFormBuilderState().getBinds().add(f.getBind());
         
         // Whether the parent is a repeated group influences how the instance is recorded
         if (Field.isRepeatedGroup(parent))
             parent.getRepeat().getInstance().getChildren().add(f.getInstance());
         else
-            Collect.getInstance().getFbInstanceState().add(f.getInstance());
+            Collect.getInstance().getFormBuilderState().getInstance().add(f.getInstance());
     }
 
     /*
@@ -1048,7 +1047,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
      */
     private void startFieldEditor(String type, Field field)
     {
-        Collect.getInstance().setFbField(field);
+        Collect.getInstance().getFormBuilderState().setField(field);
         
         Intent i = new Intent(this, FormBuilderFieldEditor.class);
         i.putExtra(FormBuilderFieldEditor.KEY_FIELDTYPE, type);        

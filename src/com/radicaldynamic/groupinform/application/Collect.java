@@ -20,16 +20,12 @@ import android.widget.Toast;
 
 import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
-import com.radicaldynamic.groupinform.xform.Bind;
-import com.radicaldynamic.groupinform.xform.Field;
-import com.radicaldynamic.groupinform.xform.Instance;
-import com.radicaldynamic.groupinform.xform.Translation;
+import com.radicaldynamic.groupinform.xform.FormBuilderState;
 
 public class Collect extends Application {
     public final static String LOGTAG = "Inform";
@@ -55,18 +51,8 @@ public class Collect extends Application {
     // Instance browse list, used for switching between instances of a given form
     private ArrayList<String> instanceBrowseList = new ArrayList<String>();
 
-    /*
-     * State variables for the form builder
-     * TODO: it would be nice to refactor the form builder so we don't need these here
-     */
-    private FormDefinitionDocument fbForm = null;
-    private ArrayList<Bind> fbBindState = null;
-    private ArrayList<Field> fbFieldState = null;
-    private ArrayList<Instance> fbInstanceState = null;
-    private ArrayList<Translation> fbTranslationState = null;  
-    private Field fbField = null;
-    private Instance fbInstance = null;
-    private ArrayList<Field> fbItemList = null;
+    // State container for the form builder
+    private FormBuilderState formBuilderState = new FormBuilderState();
 
 	/* (non-Javadoc)
 	 * @see android.app.Application#onConfigurationChanged(android.content.res.Configuration)
@@ -195,30 +181,6 @@ public class Collect extends Application {
     public void setDbService(DatabaseService dbService) { this.dbService = dbService; }
     public DatabaseService getDbService() { return dbService; }
 
-    public void setFbTranslationState(ArrayList<Translation> fbTranslationState) { this.fbTranslationState = fbTranslationState; }
-    public ArrayList<Translation> getFbTranslationState() { return fbTranslationState; }
-    
-    public void setFbFieldState(ArrayList<Field> fbFieldState) { this.fbFieldState = fbFieldState; }
-    public ArrayList<Field> getFbFieldState() { return fbFieldState; }
-    
-    public void setFbBindState(ArrayList<Bind> fbBindState) { this.fbBindState = fbBindState; }
-    public ArrayList<Bind> getFbBindState() { return fbBindState; }
-
-    public void setFbInstanceState(ArrayList<Instance> fbInstanceState) { this.fbInstanceState = fbInstanceState; }
-    public ArrayList<Instance> getFbInstanceState() { return fbInstanceState; }
-
-    public void setFbForm(FormDefinitionDocument fbForm) { this.fbForm = fbForm; }
-    public FormDefinitionDocument getFbForm() { return fbForm; }
-
-    public void setFbField(Field fbField) { this.fbField = fbField; }
-    public Field getFbField() { return fbField; }
-
-    public void setFbInstance(Instance fbInstance) { this.fbInstance = fbInstance; }
-    public Instance getFbInstance() { return fbInstance; }
-
-    public void setFbItemList(ArrayList<Field> fbItemList) { this.fbItemList = fbItemList; }
-    public ArrayList<Field> getFbItemList() { return fbItemList; }
-
     public void setInformDependencies(InformDependencies informDependencies) { this.informDependencies = informDependencies; }
     public InformDependencies getInformDependencies() { return informDependencies; }
 
@@ -230,4 +192,7 @@ public class Collect extends Application {
 
     public void setIoService(InformOnlineService ioService) { this.ioService = ioService; }
     public InformOnlineService getIoService() { return ioService; }
+
+	public void setFormBuilderState(FormBuilderState formBuilderState) { this.formBuilderState = formBuilderState; }
+	public FormBuilderState getFormBuilderState() { return formBuilderState; }
 }

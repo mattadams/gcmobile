@@ -135,7 +135,7 @@ public class FieldText
      */
     private String getTranslation(String language, String id)
     {
-        Iterator<Translation> translations = Collect.getInstance().getFbTranslationState().iterator();
+        Iterator<Translation> translations = Collect.getInstance().getFormBuilderState().getTranslations().iterator();
         
         while (translations.hasNext()) {
             Translation translation = translations.next();

@@ -70,7 +70,7 @@ public class FormBuilderFieldEditor extends Activity
         setContentView(R.layout.fb_field_editor);  
         
         // Retrieve field (if any)
-        mField = Collect.getInstance().getFbField();
+        mField = Collect.getInstance().getFormBuilderState().getField();
 
         // Create a new field if one is needed (further init will occur in the field-specific method)
         if (mField == null)
@@ -86,7 +86,7 @@ public class FormBuilderFieldEditor extends Activity
                 mSelectInstanceDefault = mField.getInstance().getDefaultValue();
                 
                 // This is becoming problematic but we must reset this somewhere
-                Collect.getInstance().setFbItemList(null);
+                Collect.getInstance().getFormBuilderState().setItemList(null);
             }
         } else {
             if (savedInstanceState.containsKey(KEY_FIELDTYPE))
@@ -199,7 +199,7 @@ public class FormBuilderFieldEditor extends Activity
                 // Preselected list items may have changed, store off this list
                 ArrayList<String> defaults = new ArrayList<String>();
                 
-                Iterator<Field> it = Collect.getInstance().getFbItemList().iterator();
+                Iterator<Field> it = Collect.getInstance().getFormBuilderState().getItemList().iterator();
                 
                 while (it.hasNext()) {
                     Field item = it.next();
@@ -292,7 +292,7 @@ public class FormBuilderFieldEditor extends Activity
         outState.putString(KEY_SELECTDEFAULT, mSelectInstanceDefault);
         
         // Save this specific field state for orientation changes & select item editor
-        Collect.getInstance().setFbField(mField);
+        Collect.getInstance().getFormBuilderState().setField(mField);
     }
 
     private void createQuitDialog()
@@ -709,7 +709,7 @@ public class FormBuilderFieldEditor extends Activity
         // Mark the field as having been saved
         mField.setSaved(true);
         
-        Collect.getInstance().setFbField(mField);
+        Collect.getInstance().getFormBuilderState().setField(mField);
         
         return true;
     }
@@ -810,11 +810,11 @@ public class FormBuilderFieldEditor extends Activity
         }   
         
         // Save any changes to the list of items
-        if (Collect.getInstance().getFbItemList() != null) {            
+        if (Collect.getInstance().getFormBuilderState().getItemList() != null) {            
             mField.getChildren().clear();
-            mField.getChildren().addAll((ArrayList<Field>) Collect.getInstance().getFbItemList().clone());
+            mField.getChildren().addAll((ArrayList<Field>) Collect.getInstance().getFormBuilderState().getItemList().clone());
             
-            Collect.getInstance().setFbItemList(null);
+            Collect.getInstance().getFormBuilderState().setItemList(null);
         }
         
         mField.getInstance().setDefaultValue(mSelectInstanceDefault);

@@ -120,7 +120,7 @@ public class FormBuilderSelectItemList extends ListActivity
         findViewById(R.id.pathText).setVisibility(View.GONE);
         findViewById(R.id.jumpPreviousButton).setVisibility(View.GONE);        
         
-        mField = Collect.getInstance().getFbField();
+        mField = Collect.getInstance().getFormBuilderState().getField();
         
         if (mField.getLabel().toString().length() == 0)
             setTitle(getString(R.string.app_name) + " > " + "List Items for Select Field");
@@ -135,10 +135,10 @@ public class FormBuilderSelectItemList extends ListActivity
                 mSingleSelect = intent.getBooleanExtra(KEY_SINGLE, false);
                 
                 // Select field types keep their items in the children array list         
-                if (Collect.getInstance().getFbItemList() == null)
+                if (Collect.getInstance().getFormBuilderState().getItemList() == null)
                     mItemList = (ArrayList<Field>) mField.getChildren().clone();
                 else
-                    mItemList = Collect.getInstance().getFbItemList();
+                    mItemList = Collect.getInstance().getFormBuilderState().getItemList();
                 
                 // Set list item preselect states
                 Iterator<Field> it = mItemList.iterator();
@@ -165,7 +165,7 @@ public class FormBuilderSelectItemList extends ListActivity
                 }
             }
         } else {           
-            mItemList = Collect.getInstance().getFbItemList();            
+            mItemList = Collect.getInstance().getFormBuilderState().getItemList();            
             mSingleSelect = savedInstanceState.getBoolean(KEY_SINGLE);
         }
     }
@@ -216,7 +216,7 @@ public class FormBuilderSelectItemList extends ListActivity
     protected void onPause()
     {
         // Save off the state of the item list before loosing this activity
-        Collect.getInstance().setFbItemList(mItemList);
+        Collect.getInstance().getFormBuilderState().setItemList(mItemList);
         
         super.onPause();
     }
@@ -234,7 +234,7 @@ public class FormBuilderSelectItemList extends ListActivity
         super.onSaveInstanceState(outState);
         outState.putBoolean(KEY_SINGLE, mSingleSelect);
         
-        Collect.getInstance().setFbItemList(mItemList);
+        Collect.getInstance().getFormBuilderState().setItemList(mItemList);
     }
     
     private static class NoSpaces implements InputFilter  
