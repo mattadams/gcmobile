@@ -13,5 +13,5 @@
     </menu>
 </item>
 <item android:icon="@android:drawable/ic_menu_view" android:id="@+id/view_instance" android:title="@string/tf_view_instance"></item>
-<item android:icon="@android:drawable/ic_menu_help" android:id="@+id/help" android:title="@string/tf_help"></item>
+<!-- <item android:icon="@android:drawable/ic_menu_help" android:id="@+id/help" android:title="@string/tf_help"></item> -->
 </menu>

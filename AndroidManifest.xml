@@ -130,21 +130,13 @@
         android:name=".services.InformOnlineService" />
     
     <!-- CouchDB -->
-    <activity 
-        android:configChanges="keyboardHidden|orientation"
-        android:label="@string/app_name"
-        android:launchMode="singleTask"
-        android:name="com.couchone.couchdb.CouchFutonActivity" />
-    <activity 
-        android:configChanges="keyboardHidden|orientation"
-        android:name="com.couchone.couchdb.CouchInstallActivity" />
     <service 
         android:enabled="true" 
-        android:exported="true" 
-        android:name="com.couchone.couchdb.CouchService" 
+        android:exported="false" 
+        android:name="com.radicaldynamic.groupinform.couchdb.CouchService" 
         android:process=":remote">
       <intent-filter>
-        <action android:name="com.couchone.libcouch.ICouchService" />
+        <action android:name="com.radicaldynamic.groupinform.couchdb.InformCouchService" />
       </intent-filter>
     </service>        
   </application>

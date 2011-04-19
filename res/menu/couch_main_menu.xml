@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
- <item android:id="@+id/stop"
-          android:icon="@drawable/couch_quitcouch"
-          android:title="@string/couch_stop" />
- <item android:id="@+id/adminpass"
-          android:icon="@drawable/couch_password"
-          android:title="@string/couch_password" />
-</menu>

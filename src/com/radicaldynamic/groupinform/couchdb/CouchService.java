@@ -1,4 +1,4 @@
-package com.couchone.couchdb;
+package com.radicaldynamic.groupinform.couchdb;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -19,16 +19,14 @@ import android.os.RemoteException;
 import com.couchone.libcouch.AeSimpleSHA1;
 import com.couchone.libcouch.AndCouch;
 import com.couchone.libcouch.Base64Coder;
-import com.couchone.libcouch.ICouchClient;
-import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
-public class CouchService extends Service {
-
+public class CouchService extends Service 
+{
 	private CouchProcess couch = new CouchProcess();
 	
 	// A list of couchClients that awaiting notifications of couch starting
-	private Map<String, ICouchClient> couchClients = new HashMap<String, ICouchClient>();
+	private Map<String, InformCouchClient> couchClients = new HashMap<String, InformCouchClient>();
 
 	// Contains a mapping of database names to their listeners
 	public class dbListeners {
@@ -71,11 +69,11 @@ public class CouchService extends Service {
 	/*
 	 * implements the callbacks that clients can call into the couchdb service
 	 */
-	public class CouchServiceImpl extends ICouchService.Stub {
+	public class CouchServiceImpl extends InformCouchService.Stub {
 
 		@Override
-		public void initCouchDB(ICouchClient cb) throws RemoteException {
-
+		public void initCouchDB(InformCouchClient cb) throws RemoteException 
+		{
 			String packageName = packageNameFromUid(Binder.getCallingUid());
 			couchClients.put(packageName, cb);
 
@@ -86,9 +84,8 @@ public class CouchService extends Service {
 		}
 
 		@Override
-		public void initDatabase(ICouchClient callback, String tag, String pass, boolean cmdDb) 
-				throws RemoteException {
-			
+		public void initDatabase(InformCouchClient callback, String tag, String pass, boolean cmdDb) throws RemoteException 
+		{			
 			String packageName = packageNameFromUid(Binder.getCallingUid());
 			String userName = packageName.replace(".", "_");
 			String dbName = tag + "-" + userName;
@@ -127,7 +124,8 @@ public class CouchService extends Service {
 		 * dont actually stop couch, that is done when the last client unbinds
 		 */
 		@Override
-		public void quitCouchDB() throws RemoteException {
+		public void quitCouchDB() throws RemoteException 
+		{
 			cancelListeners();
 		}
 	};
@@ -135,7 +133,8 @@ public class CouchService extends Service {
 	/*
 	 * Applications that restart may have existing listener objects
 	 */
-	private CouchCtrlListener getOrCreateListener(dbListeners tmp, String packageName, String dbName) {
+	@SuppressWarnings("unused")
+    private CouchCtrlListener getOrCreateListener(dbListeners tmp, String packageName, String dbName) {
 		if (tmp.databases.containsKey(dbName)) {
 			return tmp.databases.get(dbName);
 		} else {
@@ -195,8 +194,8 @@ public class CouchService extends Service {
 		
 //		notifyStarted();
 		
-		for (Entry<String, ICouchClient> entry : couchClients.entrySet()) {
-			ICouchClient client = entry.getValue();
+		for (Entry<String, InformCouchClient> entry : couchClients.entrySet()) {
+			InformCouchClient client = entry.getValue();
 			client.couchStarted(couch.host, couch.port);
 			couchClients.remove(entry.getKey());
 		}

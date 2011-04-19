@@ -1,4 +1,4 @@
-package com.couchone.couchdb;
+package com.radicaldynamic.groupinform.couchdb;
 
 import org.json.JSONArray;
 import org.json.JSONException;

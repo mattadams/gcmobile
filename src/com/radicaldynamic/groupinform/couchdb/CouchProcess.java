@@ -1,4 +1,4 @@
-package com.couchone.couchdb;
+package com.radicaldynamic.groupinform.couchdb;
 
 import java.io.BufferedReader;
 import java.io.File;

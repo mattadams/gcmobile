@@ -17,9 +17,9 @@ import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.couchdb.InformCouchService;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
@@ -429,10 +429,10 @@ public class InformOnlineState
 
         // Shutdown CouchDB and remove databases & log files
         try {
-            if (Collect.getInstance().getCouchService() instanceof ICouchService) {
+            if (Collect.getInstance().getCouchService() instanceof InformCouchService) {
                 // Stop CouchDB
                 Collect.getInstance().getCouchService().quitCouchDB();              
-                Collect.getInstance().stopService(new Intent(ICouchService.class.getName()));
+                Collect.getInstance().stopService(new Intent(InformCouchService.class.getName()));
 
                 // Remove DB files & log files
                 if (FileUtils.deleteFolder(FileUtils.EXTERNAL_COUCH + "/var/lib/couchdb"))

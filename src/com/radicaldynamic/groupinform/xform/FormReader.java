@@ -83,18 +83,9 @@ public class FormReader
             mForm.addTag(XMLDoc.from("<" + instanceRoot + " id=\"" + instanceRootId + "\"></" + instanceRoot + ">", false));
         }
         
-        mInstanceRoot = mForm
-            .gotoRoot()
-            .gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix)
-            .gotoChild()
-            .getCurrentTagName();
+        mInstanceRoot = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getCurrentTagName();
+        mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute("id");
         
-        mInstanceRootId = mForm
-            .gotoRoot()
-            .gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix)
-            .gotoChild()
-            .getAttribute("id");
-
         Log.d(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
         Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
     }

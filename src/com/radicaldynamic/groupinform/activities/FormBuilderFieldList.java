@@ -371,7 +371,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     {
         super.onCreateOptionsMenu(menu);
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.form_builder_options, menu);
+        inflater.inflate(R.menu.formbuilderfieldlist_omenu, menu);
         return true;
     }
     
@@ -476,8 +476,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             startActivity(i);
             break;            
             
-        case R.id.help:
-            break;            
+//        case R.id.help:
+//            break;            
         }
         
         return super.onOptionsItemSelected(item);

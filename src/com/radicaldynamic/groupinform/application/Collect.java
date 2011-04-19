@@ -18,8 +18,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.couchdb.InformCouchService;
 import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
@@ -38,7 +38,7 @@ public class Collect extends Application {
     private boolean firstReferenceInitialization = true;
     
     // Service connections
-    private ICouchService couchService = null; 
+    private InformCouchService couchService = null; 
     private DatabaseService dbService = null;
     private InformOnlineService ioService = null;
     
@@ -175,8 +175,8 @@ public class Collect extends Application {
 		t.show();
 	}
 
-    public void setCouchService(ICouchService couchService) { this.couchService = couchService; }
-    public ICouchService getCouchService() { return couchService; }    
+    public void setCouchService(InformCouchService couchService) { this.couchService = couchService; }
+    public InformCouchService getCouchService() { return couchService; }    
 
     public void setDbService(DatabaseService dbService) { this.dbService = dbService; }
     public DatabaseService getDbService() { return dbService; }

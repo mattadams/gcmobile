@@ -43,16 +43,15 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
 
-import com.couchone.couchdb.CouchInstallActivity;
-import com.couchone.couchdb.CouchInstaller;
-import com.couchone.libcouch.ICouchClient;
-import com.couchone.libcouch.ICouchService;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.couchdb.CouchInitializer;
+import com.radicaldynamic.groupinform.couchdb.CouchInstaller;
+import com.radicaldynamic.groupinform.couchdb.InformCouchClient;
+import com.radicaldynamic.groupinform.couchdb.InformCouchService;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
-import com.radicaldynamic.groupinform.utilities.CouchDbUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 /**
@@ -84,7 +83,7 @@ public class LauncherActivity extends Activity
      * Implement the callbacks that allow CouchDB to talk to this app
      * (not really necessary)
      */
-    private ICouchClient mCallback = new ICouchClient.Stub() {
+    private InformCouchClient mCallback = new InformCouchClient.Stub() {
         @Override
         public void couchStarted(String host, int port) throws RemoteException {
         }
@@ -98,7 +97,7 @@ public class LauncherActivity extends Activity
     private ServiceConnection mCouchConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             try {
-                Collect.getInstance().setCouchService(ICouchService.Stub.asInterface(service));
+                Collect.getInstance().setCouchService(InformCouchService.Stub.asInterface(service));
                 Collect.getInstance().getCouchService().initCouchDB(mCallback);
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -141,7 +140,7 @@ public class LauncherActivity extends Activity
         public void handleMessage(Message msg) {
             switch (msg.what) {
             
-            case CouchInstallActivity.ERROR:
+            case CouchInstaller.ERROR:
                 AlertDialog.Builder builder = new AlertDialog.Builder(LauncherActivity.this);
                 
                 // TODO: write a better error message
@@ -157,12 +156,12 @@ public class LauncherActivity extends Activity
                 alert.show();                
                 break;
 
-            case CouchInstallActivity.PROGRESS:
+            case CouchInstaller.PROGRESS:
                 if (msg.arg1 > 0)
                     mProgressDialog.setProgress(msg.arg1);                
                 break;
 
-            case CouchInstallActivity.COMPLETE:
+            case CouchInstaller.COMPLETE:
                 mProgressDialog.dismiss();
                 
                 if (msg.arg1 == 0)
@@ -205,7 +204,7 @@ public class LauncherActivity extends Activity
         setContentView(R.layout.launcher);
                 
         if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {            
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {                
+            if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized()) {                
                 if (Collect.getInstance().getInformDependencies().isInitialized()) {
                     if (Collect.getInstance().getInformDependencies().allSatisfied()) {                        
                         // Start the persistent online connection
@@ -238,7 +237,7 @@ public class LauncherActivity extends Activity
                         } catch (Exception e) {
                             e.printStackTrace();
                             mProgressDialog.dismiss();
-                            mProgressHandler.sendMessage(mProgressHandler.obtainMessage(CouchInstallActivity.ERROR));
+                            mProgressHandler.sendMessage(mProgressHandler.obtainMessage(CouchInstaller.ERROR));
                         }
                     }
                 }.start();
@@ -271,7 +270,7 @@ public class LauncherActivity extends Activity
     protected void onDestroy()
     {
         // Close down our services (not all can be expected to be running)
-        if (Collect.getInstance().getCouchService() instanceof ICouchService) {
+        if (Collect.getInstance().getCouchService() instanceof InformCouchService) {
             try {
                 Log.d(Collect.LOGTAG, t + "unbinding from CouchService");
                 unbindService(mCouchConnection);                
@@ -312,7 +311,7 @@ public class LauncherActivity extends Activity
     {
         super.onResume();        
         
-        if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized())
+        if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized())
             if (Collect.getInstance().getInformDependencies().isInitialized())
                 if (!Collect.getInstance().getInformDependencies().allSatisfied())
                     showDialog(DIALOG_DEPENDENCY_UNMET);
@@ -423,7 +422,7 @@ public class LauncherActivity extends Activity
             String msg;            
 
             if (CouchInstaller.checkInstalled() 
-                    && CouchDbUtils.isEnvironmentInitialized()
+                    && CouchInitializer.isEnvironmentInitialized()
                     && Collect.getInstance().getInformOnlineState().hasReplicatedFolders())
                 msg = getString(R.string.tf_connection_error_registered_with_db_msg);
             else    
@@ -442,7 +441,7 @@ public class LauncherActivity extends Activity
             });
             
             if (CouchInstaller.checkInstalled() 
-                    && CouchDbUtils.isEnvironmentInitialized()
+                    && CouchInitializer.isEnvironmentInitialized()
                     && Collect.getInstance().getInformOnlineState().hasReplicatedFolders()) {
                 
                 builder.setNeutralButton(getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
@@ -455,7 +454,7 @@ public class LauncherActivity extends Activity
             builder.setNegativeButton(getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     // Make sure that Couch shuts down (since it's a remote process)
-                    if (Collect.getInstance().getCouchService() instanceof ICouchService) {
+                    if (Collect.getInstance().getCouchService() instanceof InformCouchService) {
                         // The user could not connect so there is no point of any of this continuing to run in the background
                         try {
                             Collect.getInstance().getCouchService().quitCouchDB();
@@ -464,7 +463,7 @@ public class LauncherActivity extends Activity
                             e.printStackTrace();
                         }
                         
-                        Collect.getInstance().stopService(new Intent(ICouchService.class.getName()));
+                        Collect.getInstance().stopService(new Intent(InformCouchService.class.getName()));
                     }
                     
                     finish();
@@ -568,17 +567,17 @@ public class LauncherActivity extends Activity
                 if (!Collect.getInstance().getInformDependencies().isInitialized())
                     Collect.getInstance().setInformDependencies(new InformDependencies(getApplicationContext()));               
 
-                if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized() == false)
-                    CouchDbUtils.initializeEnvironment(mProgressHandler);
+                if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized() == false)
+                    CouchInitializer.initializeEnvironment(mProgressHandler);
 
-                if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
+                if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized()) {
                     // Start the database process
-                    startService(new Intent(ICouchService.class.getName()));
+                    startService(new Intent(InformCouchService.class.getName()));
 
-                    if (bindService(new Intent(ICouchService.class.getName()), mCouchConnection, Context.BIND_AUTO_CREATE))
-                        Log.d(Collect.LOGTAG, t + "successfully bound to ICouchService");
+                    if (bindService(new Intent(InformCouchService.class.getName()), mCouchConnection, Context.BIND_AUTO_CREATE))
+                        Log.d(Collect.LOGTAG, t + "successfully bound to InformCouchService");
                     else 
-                        Log.e(Collect.LOGTAG, t + "unable to bind to ICouchService");                
+                        Log.e(Collect.LOGTAG, t + "unable to bind to InformCouchService");                
 
                     // Wait a reasonable period of time for the DB to start up
                     while (Collect.getInstance().getCouchService() == null) {
@@ -601,7 +600,7 @@ public class LauncherActivity extends Activity
         @Override
         protected void onPreExecute()
         {
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized() == false) {
+            if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized() == false) {
                 mProgressDialog = new ProgressDialog(LauncherActivity.this);
                 mProgressDialog.setCancelable(false);                
                 mProgressDialog.setTitle(R.string.tf_database_being_initialized);

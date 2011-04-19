@@ -1,4 +1,4 @@
-package com.couchone.couchdb;
+package com.radicaldynamic.groupinform.couchdb;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,6 +33,10 @@ public class CouchInstaller {
     final static String dataPath = "/data/data/com.radicaldynamic.groupinform";
 
 	final static String TAG = "CouchDB";
+	
+	public final static int ERROR = 0;
+	public final static int PROGRESS = 1;
+	public final static int COMPLETE = 2;
 
 	public static void doInstall(Handler handler) throws IOException {		
 		// WARNING: This deleted any previously installed couchdb data 
@@ -53,7 +57,7 @@ public class CouchInstaller {
 		}
 
 		Message done = Message.obtain();
-		done.what = CouchInstallActivity.COMPLETE;
+		done.what = CouchInstaller.COMPLETE;
 		handler.sendMessage(done);
 	}
 
@@ -142,7 +146,7 @@ public class CouchInstaller {
 				Message progress = new Message();
 				progress.arg1 = (int) Math.round(++filesUnpacked / filesInArchive * 100);
 				progress.arg2 = 0;
-				progress.what = CouchInstallActivity.PROGRESS;
+				progress.what = PROGRESS;
 				handler.sendMessage(progress);
 			}
 

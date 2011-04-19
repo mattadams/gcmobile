@@ -63,11 +63,12 @@ import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 
-import com.couchone.couchdb.CouchInstaller;
 import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.couchdb.CouchInitializer;
+import com.radicaldynamic.groupinform.couchdb.CouchInstaller;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.documents.GenericDocument;
@@ -75,7 +76,6 @@ import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.repository.FormDefinitionRepository;
 import com.radicaldynamic.groupinform.repository.FormInstanceRepository;
 import com.radicaldynamic.groupinform.services.DatabaseService;
-import com.radicaldynamic.groupinform.utilities.CouchDbUtils;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 
 /**
@@ -1022,7 +1022,7 @@ public class BrowserActivity extends ListActivity
         @Override
         protected void onPreExecute()
         {          
-            if (CouchInstaller.checkInstalled() && CouchDbUtils.isEnvironmentInitialized()) {
+            if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized()) {
                 hasReplicatedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
             } else {
                 missingCouch = true;

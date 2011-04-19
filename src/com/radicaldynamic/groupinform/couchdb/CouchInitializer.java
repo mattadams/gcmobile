@@ -1,4 +1,4 @@
-package com.radicaldynamic.groupinform.utilities;
+package com.radicaldynamic.groupinform.couchdb;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,11 +12,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.couchone.couchdb.CouchInstallActivity;
-import com.couchone.couchdb.CouchInstaller;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.utilities.FileUtils;
 
-public class CouchDbUtils
+public class CouchInitializer
 {
     private final static String t = "CouchDbUtils: ";
     
@@ -88,7 +87,7 @@ public class CouchDbUtils
                     Message progress = new Message();
                     progress.arg1 = (int) Math.round(++entriesProcessed / index.size() * 100);
                     progress.arg2 = 0;
-                    progress.what = CouchInstallActivity.PROGRESS;
+                    progress.what = CouchInstaller.PROGRESS;
                     handler.sendMessage(progress);
                 }
             }
@@ -97,7 +96,7 @@ public class CouchDbUtils
             Message progress = new Message();
             progress.arg1 = 1;                  // Our way of telling the handler not to restart the activity
             progress.arg2 = 0;
-            progress.what = CouchInstallActivity.COMPLETE;
+            progress.what = CouchInstaller.COMPLETE;
             handler.sendMessage(progress);
         } catch (IOException e) {
             // TODO Auto-generated catch block
