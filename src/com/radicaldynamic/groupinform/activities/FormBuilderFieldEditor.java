@@ -762,6 +762,7 @@ public class FormBuilderFieldEditor extends Activity
                 repeat.setType("repeat");
 
                 mField.getChildren().add(repeat);
+                mField.getRepeat().setParent(mField);
 
                 if (!regularGroupChildren.isEmpty())
                     mField.getRepeat().getChildren().addAll(regularGroupChildren);

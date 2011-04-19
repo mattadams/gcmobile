@@ -636,111 +636,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     }
     
     /*
-     * Finds the currently active fields and returns it (or null to indicate no active field)
-     * 
-     * Does not change the state of the currently active field, as opposed to gotoParentField()
-     */
-    public Field gotoActiveField(Field f)
-    {
-        Iterator<Field> it = null;
-        
-        if (f == null)
-            it = mFieldState.iterator();
-        else {
-            if (f.isActive())
-                
-                return f;       
-            
-            it = f.getChildren().iterator();
-        }        
-        
-        while (it.hasNext()) {                  
-            Field result = gotoActiveField(it.next());
-            
-            if (result instanceof Field)
-                return result;
-        }
-
-        return null;        
-    }
-    
-    /*
-     * Finds the current active field, sets it to inactive and either returns 
-     * null to signal that the "top level" of the form has been reached or 
-     * sets the parent field to active and returns it.
-     */
-    public Field gotoParentField(Field f)
-    {
-        Iterator<Field> it = null;
-        
-        if (f == null)
-            it = mFieldState.iterator();
-        else {
-            if (f.isActive()) {                
-                f.setActive(false);
-                
-                if (f.getParent() == null) {
-                    return null;
-                } else if (f.getParent().getType().equals("repeat")) {
-                    // Set the parent of our parent (e.g., a group) active and return it
-                    f.getParent().getParent().setActive(true);
-                    return f.getParent().getParent();
-                } else {
-                    f.getParent().setActive(true);
-                    return f.getParent();
-                }
-            }
-            
-            it = f.getChildren().iterator();
-        }        
-        
-        while (it.hasNext()) {                  
-            Field result = gotoParentField(it.next());
-            
-            if (result instanceof Field)
-                return result;
-        }
-    
-        return null;        
-    }
-
-    public void goUpLevel()
-    {
-        Field destination;
-        
-        // Special logic to hide the complexity of repeated elements
-        if (mActualPath.size() > mPath.size()) {
-            /*
-             * This will evaluate to true when we have navigated into a repeated group since
-             * the actual representation is <group><label>...</label><repeat ... /></group>
-             * and we want to represent it as one field vs. travelling two depths to get at
-             * the list of repeated elements.
-             */
-            mPath.remove(mPath.size() - 1);                 // Remove the "group" label
-            mActualPath.remove(mActualPath.size() - 1);     // Remove the repeated element 
-            mActualPath.remove(mActualPath.size() - 1);     // Remove the "group" element
-        } else {
-            mPath.remove(mPath.size() - 1);
-            mActualPath.remove(mActualPath.size() - 1);     // Remove the group element
-        }
-        
-        destination = gotoParentField(null);
-        
-        if (destination == null)
-            refreshView(mFieldState);
-        else {
-            // Special support for nested repeated groups
-            if (Field.isRepeatedGroup(destination)) {
-                mActualPath.add(destination.getLabel().toString());
-                mActualPath.add(destination.getRepeat().getLabel().toString());
-                refreshView(destination.getRepeat().getChildren());
-            } else {
-                refreshView(destination.getChildren());
-            }
-        }
-    }
-    
-    /*
      * This is repurposed from the FormLoadListener used for FormEntryActivity and as such
      * the FormEntryController parameter has no use here and will be passed a null value.
      * 
@@ -819,7 +714,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private void addNewGroupField(Field f)
     {
         // Assign this group field as a child of the currently active field
-        Field parent = gotoActiveField(null);
+        Field parent = returnActiveField(null);
         
         if (Field.isRepeatedGroup(parent)) {
             f.setParent(parent.getRepeat());
@@ -841,7 +736,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
          * Assign this repeated group field as a child of the currently active field
          * (taking into account the complexity of repeated groups)
          */
-        Field parent = gotoActiveField(null);
+        Field parent = returnActiveField(null);
         String xpath = "";
         
         // Determine proper XPath for our new repeated group
@@ -891,7 +786,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private void addNewRegularField(Field f)
     {
         // Assign this field as a child of the currently active field
-        Field parent = gotoActiveField(null);
+        Field parent = returnActiveField(null);
         String xpath = "";
         
         // Associated parent to field and set proper XPath
@@ -979,13 +874,92 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         mAlertDialog.show();
     }
     
+    /*
+     * Finds the current active field, sets it to inactive and either returns 
+     * null to signal that the "top level" of the form has been reached or 
+     * sets the parent field to active and returns it.
+     */
+    private Field gotoParentField(Field f)
+    {
+        @SuppressWarnings("unused")
+        final String tt = t + "gotoParentField(): ";
+        
+        Iterator<Field> it = null;
+        
+        if (f == null)
+            it = mFieldState.iterator();
+        else {
+            if (f.isActive()) {
+                f.setActive(false);
+                
+                if (f.getParent() == null) {
+                    return null;
+                } else if (f.getParent().getType().equals("repeat")) {                   
+                    // Set the parent of our parent (e.g., a group) active and return it
+                    f.getParent().getParent().setActive(true);
+                    return f.getParent().getParent();
+                } else {
+                    f.getParent().setActive(true);
+                    return f.getParent();
+                }
+            }
+            
+            it = f.getChildren().iterator();
+        }        
+        
+        while (it.hasNext()) {                  
+            Field result = gotoParentField(it.next());
+            
+            if (result instanceof Field)
+                return result;
+        }
+
+        return null;        
+    }
+
+    private void goUpLevel()
+    {
+        Field destination;
+        
+        // Special logic to hide the complexity of repeated elements
+        if (mActualPath.size() > mPath.size()) {
+            /*
+             * This will evaluate to true when we have navigated into a repeated group since
+             * the actual representation is <group><label>...</label><repeat ... /></group>
+             * and we want to represent it as one field vs. travelling two depths to get at
+             * the list of repeated elements.
+             */
+            mPath.remove(mPath.size() - 1);                 // Remove the "group" label
+            mActualPath.remove(mActualPath.size() - 1);     // Remove the repeated element 
+            mActualPath.remove(mActualPath.size() - 1);     // Remove the "group" element
+        } else {
+            mPath.remove(mPath.size() - 1);
+            mActualPath.remove(mActualPath.size() - 1);     // Remove the group element
+        }
+        
+        destination = gotoParentField(null);
+        
+        if (destination == null)
+            refreshView(mFieldState);
+        else {
+            // Special support for nested repeated groups
+            if (Field.isRepeatedGroup(destination)) {
+                mActualPath.add(destination.getLabel().toString());
+                mActualPath.add(destination.getRepeat().getLabel().toString());
+                refreshView(destination.getRepeat().getChildren());
+            } else {
+                refreshView(destination.getChildren());
+            }
+        }
+    }
+
     /* 
      * Refresh the view (displaying the currently active field 
      * or the top level of the form if no field is currently active)
      */
     private void refreshView()
     {
-        Field destination = gotoActiveField(null);
+        Field destination = returnActiveField(null);
 
         if (destination == null)
             refreshView(mFieldState);
@@ -1046,6 +1020,37 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         tlv.setRemoveListener(onRemove);
     }
     
+    /*
+     * Finds the currently active fields and returns it (or null to indicate no active field)
+     * 
+     * Does not change the state of the currently active field, as opposed to gotoParentField()
+     */
+    private Field returnActiveField(Field f)
+    {
+        @SuppressWarnings("unused")
+        final String tt = t + "returnActiveField(): ";
+        
+        Iterator<Field> it = null;
+        
+        if (f == null)
+            it = mFieldState.iterator();
+        else {
+            if (f.isActive())
+                return f;
+            
+            it = f.getChildren().iterator();
+        }        
+        
+        while (it.hasNext()) {                  
+            Field result = returnActiveField(it.next());
+            
+            if (result instanceof Field)
+                return result;             
+        }
+
+        return null;
+    }
+
     /*
      * Launch the element editor either to add a new field or to modify an existing one 
      */
