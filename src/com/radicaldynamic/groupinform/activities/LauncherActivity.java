@@ -35,6 +35,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Window;
@@ -50,6 +51,7 @@ import com.radicaldynamic.groupinform.couchdb.CouchInstaller;
 import com.radicaldynamic.groupinform.couchdb.InformCouchClient;
 import com.radicaldynamic.groupinform.couchdb.InformCouchService;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
+import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
@@ -70,14 +72,11 @@ public class LauncherActivity extends Activity
     
     // Intent status codes
     private static final String KEY_REINIT_IOSERVICE = "key_reinit_ioservice";
-    private static final String KEY_SIGNIN_RESTART = "key_signin_restart";
     
     private static final int BROWSER_ACTIVITY = 1;
-
-    private static boolean mShowSplash = true;
-    private Toast mSplashToast;
-
+    
     private ProgressDialog mProgressDialog;
+    private Toast mSplashToast;
     
     /*
      * Implement the callbacks that allow CouchDB to talk to this app
@@ -183,19 +182,12 @@ public class LauncherActivity extends Activity
 
         Intent intent = getIntent();
         
-        if (intent == null) {
-            
+        if (intent == null) {            
         } else {
             if (intent.getBooleanExtra(KEY_REINIT_IOSERVICE, false)) {
                 if (Collect.getInstance().getIoService() instanceof InformOnlineService)
                     Collect.getInstance().getIoService().reinitializeService();
-                
-                mShowSplash = false;
             }
-            
-            // Hide splash screen
-            if (intent.getBooleanExtra(KEY_SIGNIN_RESTART, false))
-                mShowSplash = false;
         }
         
         displaySplash();
@@ -301,12 +293,6 @@ public class LauncherActivity extends Activity
     }
 
     @Override
-    protected void onPause()
-    {
-        super.onPause();
-    }
-
-    @Override
     protected void onResume()
     {
         super.onResume();        
@@ -315,15 +301,6 @@ public class LauncherActivity extends Activity
             if (Collect.getInstance().getInformDependencies().isInitialized())
                 if (!Collect.getInstance().getInformDependencies().allSatisfied())
                     showDialog(DIALOG_DEPENDENCY_UNMET);
-    }
-
-    @Override
-    protected void onStop()
-    {
-        super.onStop();
-        
-        // Re-enable the splash screen
-        mShowSplash = true;
     }
     
     @Override
@@ -640,24 +617,18 @@ public class LauncherActivity extends Activity
         // If the user wants a full restart then request reinitialization of the IO service
         if (fullRestart)
             i.putExtra(KEY_REINIT_IOSERVICE, true);
-        else 
-            i.putExtra(KEY_SIGNIN_RESTART, true);
         
         startActivity(i);
         finish();
     }
 
-    /**
-     * displaySplash
-     * 
-     * Shows the splash screen if the mShowSplash member variable is true.
-     * Otherwise a no-op.
-     */
     private void displaySplash()
     {
-        if (!mShowSplash)
+        // Don't show the splash screen if this app appears to be registered
+        if (PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString(InformOnlineState.DEVICE_ID, null) instanceof String) {
             return;
-    
+        }
+        
         // Fetch the splash screen Drawable
         Drawable image = null;
     

@@ -54,7 +54,7 @@ public class CouchService extends Service
 			couch.stop();
 		}
 		couchClients.clear();
-		mNM.cancelAll();
+//		mNM.cancelAll();
 	}
 
 	/*
