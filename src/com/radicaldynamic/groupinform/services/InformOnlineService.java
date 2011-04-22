@@ -230,9 +230,7 @@ public class InformOnlineService extends Service {
         JSONObject checkin;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);                
             checkin = (JSONObject) new JSONTokener(postResult).nextValue();
-            
             String result = checkin.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
             
             if (result.equals(InformOnlineState.OK)) {

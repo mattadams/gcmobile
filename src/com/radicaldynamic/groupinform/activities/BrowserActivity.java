@@ -289,13 +289,12 @@ public class BrowserActivity extends ListActivity
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         Dialog dialog = null;
-        LayoutInflater inflater = null;        
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);        
         View view = null;
         
         switch (id) {
         // User wishes to make a new form
         case DIALOG_CREATE_FORM:
-            inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             view = inflater.inflate(R.layout.dialog_create_form, null);
             
             // Set an EditText view to get user input 
@@ -352,7 +351,6 @@ public class BrowserActivity extends ListActivity
             break;
         
         case DIALOG_COPY_TO_FOLDER:
-            inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             view = inflater.inflate(R.layout.dialog_copy_to_folder, null);
             
             // Set an EditText view to get user input 

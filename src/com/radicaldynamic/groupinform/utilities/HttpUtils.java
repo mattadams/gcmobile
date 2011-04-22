@@ -29,6 +29,7 @@ public class HttpUtils
      */
     public static String getUrlData(String url)
     {
+        final String tt = t + "getUrlData(): ";
         String websiteData = null;
         
         try {
@@ -75,6 +76,8 @@ public class HttpUtils
             e.printStackTrace();
         }
         
+        Log.v(Collect.LOGTAG, tt + "parsing result " + websiteData);
+        
         return websiteData;
     }
     
@@ -83,6 +86,7 @@ public class HttpUtils
      */
     public static String postUrlData(String url, List<NameValuePair> params) 
     {
+        final String tt = t + "postUrlData(): ";
         String websiteData = null;
         
         try {
@@ -129,6 +133,8 @@ public class HttpUtils
         } catch (Exception e) {
             e.printStackTrace();
         }
+        
+        Log.v(Collect.LOGTAG, tt + "parsing result " + websiteData);
         
         return websiteData;
     }

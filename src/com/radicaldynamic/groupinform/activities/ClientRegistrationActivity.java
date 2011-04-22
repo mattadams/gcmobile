@@ -495,9 +495,7 @@ public class ClientRegistrationActivity extends Activity
         JSONObject verify;
         
         try {            
-            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);            
             verify = (JSONObject) new JSONTokener(postResult).nextValue();
-            
             String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
             
             if (result.equals(InformOnlineState.OK)) {

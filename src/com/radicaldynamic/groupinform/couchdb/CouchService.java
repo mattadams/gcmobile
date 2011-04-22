@@ -36,7 +36,8 @@ public class CouchService extends Service
 	// Contains a mapping of package names to database listeners
 	private Map<String, dbListeners> listeners = new HashMap<String, dbListeners>();
 
-	private NotificationManager mNM;
+	@SuppressWarnings("unused")
+    private NotificationManager mNM;
 
 	/*
 	 * This is called to start the service

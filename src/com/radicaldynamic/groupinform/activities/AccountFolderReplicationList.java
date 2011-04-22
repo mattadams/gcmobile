@@ -238,9 +238,7 @@ public class AccountFolderReplicationList extends ListActivity
             JSONObject update;
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);                
                 update = (JSONObject) new JSONTokener(postResult).nextValue();
-                
                 String result = update.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
                 
                 // Update successful

@@ -250,9 +250,7 @@ public class AccountFolderActivity extends Activity
             mProgressDialog.cancel();
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);                
                 update = (JSONObject) new JSONTokener(postResult).nextValue();
-                
                 String result = update.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
                 
                 // Update successful
