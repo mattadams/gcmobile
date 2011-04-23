@@ -16,15 +16,16 @@ public class FieldText
 {
     private final String t = "FieldText: ";
     
+    // If the value is null then ref should be non-null and refer to a translation ID
     private String value    = null;         // Regular string value associated with this text object
-    private String ref      = null;         // A reference to an itext translation
+    private String ref      = null;         // A reference to an itext translation ID
     
     /*
      * Used by Field class to supply a default empty FieldText (which will hopefully be replaced upon form parsing)
      */
     public FieldText()
     {
-        this.value = "";
+        value = "";
     }
     
     /*
@@ -40,54 +41,21 @@ public class FieldText
             String id = items[1];                       // The string between the single quotes
             
             ref = id;
+            value = null;
         } else {
             // Store these values as-is (they should be pre-encoded in the XML)
             value = valueOrRef;
+            ref = null;
         }
     }
         
-    @Override
-    public String toString()
-    {
-        //Log.v(Collect.LOGTAG, t + "trying to turn toString() a FieldText with value " + value + " and ref " + ref);
-        
-        String result = "";
-        
-        if (value == null) {
-            /*
-             * If this FieldText has a reference to an itext translation then obtain
-             * a single translation to represent this field on the form builder screen.
-             * 
-             * FIXME: We should select the most appropriate language (not necessarily English)
-             *        before falling back to English.  The most appropriate language can be determined
-             *        by checking the locale of the device. 
-             *        
-             * TODO: I am not sure that the translation will always be labelled as "English" as
-             *       I have seen at least one other XForm where it was written "eng".  Our code
-             *       needs to take this into account.
-             */
-            if (ref == null)
-                Log.w(Collect.LOGTAG, t + "exists but has neither value nor reference to itext translation");
-            else {
-                String translation = getTranslation("English", ref);
-                
-                if (translation.length() == 0)
-                    // FIXME: should be a string resource
-                    result = "[Translation Not Available]";
-                else
-                    // FIXME: so should i18n
-                    result = translation + " [i18n]";
-            }                          
-        } else
-            result = getValue();
-
-        return result;
-    }
-    
     // Takes a human readable string and encodes it for XMLs
     public void setValue(String value)
     {
-        this.value = encodeXMLEntities(value);
+        if (value == null) 
+            this.value = value;
+        else
+            this.value = encodeXMLEntities(value);
     }
     
     // Returns a decoded string ready for human consumption
@@ -130,25 +98,55 @@ public class FieldText
         return str;
     }
     
+    public boolean isTranslated()
+    {
+        return ref != null && ref.length() > 0 ? true : false;
+    }
+    
+    @Override
+    public String toString()
+    {
+        String result = "[English Translation Missing]";
+        
+        if (value == null) {
+            /*
+             * If this FieldText has a reference to an itext translation then obtain
+             * a single translation to represent this field on the form builder screen.
+             * 
+             * FIXME: We should select the most appropriate language (not necessarily English)
+             *        before falling back to English.  The most appropriate language can be determined
+             *        by checking the locale of the device.  Right now we just pick the first available language. 
+             */
+            if (ref == null) {
+                Log.w(Collect.LOGTAG, t + "field has neither value nor reference to itext translation");
+            } else {
+                String translation = getDefaultTranslation(ref);
+
+                if (translation instanceof String && translation.length() > 0)
+                    result = translation;
+            }                
+        } else {
+            result = getValue();
+        }
+    
+        return result; 
+    }
+
     /*
-     * Retrieve a translation for a specific ID from a specific language.
+     * Retrieve a default translation for a specific ID (try for English)
      */
-    private String getTranslation(String language, String id)
+    private String getDefaultTranslation(String id)
     {
         Iterator<Translation> translations = Collect.getInstance().getFormBuilderState().getTranslations().iterator();
         
         while (translations.hasNext()) {
-            Translation translation = translations.next();
+            Translation t = translations.next();
             
-            if (translation.getLang().equals(language)) {
-                Iterator<Translation> texts = translation.getTexts().iterator();
+            if (t.getLang().equals("eng") || t.getLang().toLowerCase().equals("english")) {
+                Iterator<Translation> x = t.getTexts().iterator();
                 
-                Log.v(Collect.LOGTAG, t + "looking up " + language + " translations");
-                
-                while (texts.hasNext()) {
-                    Translation text = texts.next();
-                    
-                    Log.v(Collect.LOGTAG, t + "looking at " + text.getId() + " for translation of " + id);
+                while (x.hasNext()) {
+                    Translation text = x.next();
                     
                     if (text.getId().equals(id))
                         return text.getValue();

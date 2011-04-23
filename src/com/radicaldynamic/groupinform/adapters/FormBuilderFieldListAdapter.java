@@ -60,14 +60,14 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
             fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_group));            
             
             // Special logic to hide the complexity of repeated elements
-            if (Field.isRepeatedGroup(field))
+            if (Field.isRepeatedGroup(field)) {
                 details.add("Repeated group");
-            else 
+            } else { 
                 if (field.getChildren().size() == 1)
                     details.add("Contains " + field.getChildren().size() + " field");
                 else
                     details.add("Contains " + field.getChildren().size() + " fields");
-            
+            }            
         } else if (field.getType().equals("input")) {
             Drawable icon = getDrawable(R.drawable.element_string);
             

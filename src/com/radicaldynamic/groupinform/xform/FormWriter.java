@@ -196,17 +196,23 @@ public final class FormWriter
             it = i18n.getTexts().iterator();
         
         while (it.hasNext()) {
-            Translation text = it.next();
+            Translation t = it.next();
             
-            if (text.isSet()) {
-                mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:itext", mDefaultPrefix);
-                mFormTag.addTag("translation").addAttribute("lang", text.getLang());
-                writeTranslations(text);
+            if (t.isGroup()) {
+                // Only write out sets that have translations
+                if (!t.getTexts().isEmpty()) {
+                    mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:itext", mDefaultPrefix);
+                    mFormTag.addTag("translation").addAttribute("lang", t.getLang());
+                    writeTranslations(t);
+                }
             } else {
-                mFormTag
-                    .addTag("text").addAttribute("id", text.getId())
-                    .addTag("value").setText(text.getValue())
-                    .gotoParent();
+                // Only write out translations that have content
+                if (t.getValue() instanceof String && t.getValue().length() > 0) {
+                    mFormTag
+                        .addTag("text").addAttribute("id", t.getId())
+                        .addTag("value").setText(t.getValue())
+                        .gotoParent();
+                }
             }
         }
     }

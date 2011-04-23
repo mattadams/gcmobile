@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:icon="@drawable/ic_menu_add" android:id="@+id/add" android:title="@string/tf_i18n_add_language"></item>
+<item android:icon="@drawable/ic_menu_end_conversation" android:id="@+id/remove" android:title="@string/tf_i18n_reset_translations"></item>
+<!-- <item android:icon="@android:drawable/ic_menu_help" android:id="@+id/help" android:title="@string/tf_help"></item> -->
+</menu>

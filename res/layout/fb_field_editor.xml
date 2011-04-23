@@ -39,17 +39,32 @@
     
     <TextView
         android:id="@android:id/empty"
-        android:textSize="20sp"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
         android:paddingTop="14dp"
-        android:text="@string/tf_fbel_label" />
+        android:text="@string/tf_fbel_label"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
     
-    <EditText
-        android:id="@+id/label"
-        android:inputType="textCapWords"
+    <RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/labelInput"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content">
+    
+        <EditText
+            android:id="@+id/label"
+            android:inputType="textCapWords"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+            
+        <Button
+            android:id="@+id/labelI18n"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Translate Label"
+            android:layout_below="@id/label"
+            style="?android:attr/buttonStyleSmall" />
+    </RelativeLayout>
     
     <TextView
         android:id="@android:id/empty"
@@ -68,17 +83,25 @@
         
         <TextView
             android:id="@android:id/empty"
-            android:textSize="20sp"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
             android:paddingTop="10dp"
-            android:text="@string/tf_fbel_hint" />
+            android:text="@string/tf_fbel_hint"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
     
         <EditText
             android:id="@+id/hint"
-            android:inputType="textCapSentences"
+            android:inputType="textCapSentences|textMultiLine"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content" />
+            
+        <Button
+            android:id="@+id/hintI18n"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Translate Description"
+            android:layout_below="@id/hint"
+            style="?android:attr/buttonStyleSmall" />
     
         <TextView
             android:id="@android:id/empty"
@@ -98,11 +121,11 @@
         
         <TextView
             android:id="@+id/groupTypeLabel"
-            android:textSize="20sp"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
             android:paddingTop="10dp"
-            android:text="@string/tf_choose_group_type" />
+            android:text="@string/tf_choose_group_type" 
+            android:textAppearance="?android:attr/textAppearanceLarge" />
         
         <RadioGroup
             android:id="@+id/groupRadioSelection"
@@ -143,11 +166,11 @@
         
         <TextView
             android:id="@+id/mediaTypeLabel"
-            android:textSize="20sp"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
             android:paddingTop="10dp"
-            android:text="@string/tf_choose_media_type" />
+            android:text="@string/tf_choose_media_type"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
         
         <RadioGroup
             android:id="@+id/mediaRadioSelection"
@@ -194,11 +217,11 @@
         
         <TextView
             android:id="@+id/numberTypeLabel"
-            android:textSize="20sp"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
             android:paddingTop="10dp"
-            android:text="@string/tf_choose_number_type" />
+            android:text="@string/tf_choose_number_type"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
         
         <RadioGroup
             android:id="@+id/numberRadioSelection"
@@ -239,11 +262,11 @@
         
         <TextView
             android:id="@+id/selectTypeLabel"
-            android:textSize="20sp"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
             android:paddingTop="10dp"
-            android:text="@string/tf_choose_select_type" />
+            android:text="@string/tf_choose_select_type" 
+            android:textAppearance="?android:attr/textAppearanceLarge" />
         
         <RadioGroup
             android:id="@+id/selectRadioSelection"
@@ -284,11 +307,11 @@
     
         <TextView
             android:id="@android:id/empty"
-            android:textSize="20sp"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
             android:paddingTop="10dp"
-            android:text="@string/tf_fbel_default" />
+            android:text="@string/tf_fbel_default"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
     
         <EditText
             android:id="@+id/defaultValue"
@@ -323,12 +346,12 @@
 
         <TextView
             android:id="@+id/fbel_readonly"
-            android:textSize="20sp"            
             android:layout_alignParentTop="true"
             android:layout_toRightOf="@id/readonly"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:text="@string/tf_fbel_readonly" />
+            android:text="@string/tf_fbel_readonly"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
                 
         <TextView
             android:id="@android:id/empty"
@@ -359,12 +382,12 @@
 
         <TextView
             android:id="@+id/fbel_required"
-            android:textSize="20sp"            
             android:layout_alignParentTop="true"
             android:layout_toRightOf="@id/required"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:text="@string/tf_fbel_required" />
+            android:text="@string/tf_fbel_required"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
                 
         <TextView
             android:id="@android:id/empty"

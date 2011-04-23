@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-<item android:icon="@android:drawable/ic_menu_add" android:id="@+id/add_form_field" android:title="@string/tf_add_form_field">
+<item android:icon="@drawable/ic_menu_add" android:id="@+id/add_form_field" android:title="@string/tf_add_form_field">
     <menu>
         <item android:id="@+id/barcode" android:title="@string/tf_element_barcode" />
         <item android:id="@+id/date" android:title="@string/tf_element_date" />
@@ -12,6 +12,7 @@
         <item android:id="@+id/text" android:title="@string/tf_element_text" />
     </menu>
 </item>
-<item android:icon="@android:drawable/ic_menu_view" android:id="@+id/view_instance" android:title="@string/tf_view_instance"></item>
+<item android:icon="@drawable/ic_menu_start_conversation" android:id="@+id/i18n_setup" android:title="@string/tf_i18n_setup"></item>
+<item android:icon="@drawable/ic_menu_view" android:id="@+id/view_instance" android:title="@string/tf_view_instance"></item>
 <!-- <item android:icon="@android:drawable/ic_menu_help" android:id="@+id/help" android:title="@string/tf_help"></item> -->
 </menu>

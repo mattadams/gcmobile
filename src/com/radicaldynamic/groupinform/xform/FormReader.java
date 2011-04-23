@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.mycila.xmltool.CallBack;
 import com.mycila.xmltool.XMLDoc;
+import com.mycila.xmltool.XMLDocumentException;
 import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.groupinform.application.Collect;
 
@@ -34,16 +35,7 @@ public class FormReader
         // List of valid fields that we can handle
         Collections.addAll(mFieldList, "group", "input", "item", "repeat", "select", "select1", "trigger", "upload");
     }
-    
-    @SuppressWarnings("serial")
-    public class LocalizationNotSupportedException extends Exception
-    {
-        LocalizationNotSupportedException()
-        {
-            super();
-        }
-    }
-    
+
     /*
      * Used to read in a form definition for manipulation by the Form Builder.
      * 
@@ -84,7 +76,19 @@ public class FormReader
         }
         
         mInstanceRoot = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getCurrentTagName();
-        mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute("id");
+        
+        try {
+            mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute("id");
+        } catch (XMLDocumentException e) {
+            Log.w(Collect.LOGTAG, t + e.toString());            
+
+            try {
+                // It's possible that the ID attribute doesn't exist -- if this is the case, try and use the old-style XMLNS attribute
+                mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute("xmlns");
+            } catch (XMLDocumentException e1) {
+                Log.w(Collect.LOGTAG, t + e1.toString());
+            }
+        }
         
         Log.d(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
         Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
@@ -128,20 +132,15 @@ public class FormReader
     /*
      * Trigger method for doing all of the actual work
      */
-    public void parseForm() throws LocalizationNotSupportedException
+    public void parseForm()
     {
         if (mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix)) {
             Log.d(Collect.LOGTAG, t + "parsing itext form translations...");
             parseFormTranslations(mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:itext", mDefaultPrefix));
-        } else
+        } else {
             Log.d(Collect.LOGTAG, t + "no form translations to parse");
-        
-        // Temporary exception until the editor can handle localization
-        if (!mTranslations.isEmpty()) {
-            Log.w(Collect.LOGTAG, t + "itext unsupported, aborting parseForm()");
-            throw new LocalizationNotSupportedException();
         }
-        
+
         Log.d(Collect.LOGTAG, t + "parsing form binds...");
         parseFormBinds(mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix));
 
@@ -291,11 +290,12 @@ public class FormReader
             mTranslations.add(new Translation(tag.getAttribute("lang")));
         } else if (tag.getCurrentTagName().equals("text")) {
             Log.v(Collect.LOGTAG, t + "adding translation ID " + tag.getAttribute("id"));
-            mTranslations.get(mTranslations.size() -1).getTexts().add(new Translation(tag.getAttribute("id"), null));
+            mTranslations.get(mTranslations.size() - 1).getTexts().add(new Translation(tag.getAttribute("id"), null));
         } else if (tag.getCurrentTagName().equals("value")) {
             Log.v(Collect.LOGTAG, t + "adding translation: " + tag.getInnerText());
-            mTranslations.get(mTranslations.size() - 1)
-                .getTexts().get(mTranslations.get(mTranslations.size() - 1).getTexts().size() - 1)
+            mTranslations
+                .get(mTranslations.size() - 1).getTexts()
+                .get(mTranslations.get(mTranslations.size() - 1).getTexts().size() - 1)
                 .setValue(tag.getInnerText());
         }
  

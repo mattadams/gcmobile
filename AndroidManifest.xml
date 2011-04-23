@@ -95,6 +95,12 @@
         android:label="@string/app_name"
         android:name=".activities.FormBuilderInstanceList" />
     <activity 
+        android:label="@string/app_name"
+        android:name=".activities.FormBuilderI18nList" />
+    <activity 
+        android:label="@string/app_name"
+        android:name=".activities.FormBuilderLanguageList" />
+    <activity 
         android:label="@string/app_name" 
         android:name=".activities.FormBuilderSelectItemList" 
         android:screenOrientation="portrait" />

@@ -19,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -38,6 +39,7 @@ public class FormBuilderFieldEditor extends Activity
     public static final String KEY_SELECTDEFAULT = "selectinstancedefault";
     
     private static final int REQUEST_ITEMLIST = 1;
+    private static final int REQUEST_TRANSLATIONS = 2;
     
     private static final int MENU_ADVANCED = Menu.FIRST;
     private static final int MENU_ITEMS = Menu.FIRST + 1;
@@ -54,7 +56,9 @@ public class FormBuilderFieldEditor extends Activity
     
     // Common input elements
     private EditText mLabel;
+    private Button   mLabelI18n;
     private EditText mHint;
+    private Button   mHintI18n;
     private EditText mDefaultValue;
     private CheckBox mReadonly;
     private CheckBox mRequired;
@@ -74,7 +78,7 @@ public class FormBuilderFieldEditor extends Activity
 
         // Create a new field if one is needed (further init will occur in the field-specific method)
         if (mField == null)
-            mField = new Field();     
+            mField = new Field();
         
         // If there is no instance state (e.g., this activity was loaded by another/this is not a flip)
         if (savedInstanceState == null) {           
@@ -111,7 +115,9 @@ public class FormBuilderFieldEditor extends Activity
         
         // Get a handle on common input elements
         mLabel          = (EditText) findViewById(R.id.label);
+        mLabelI18n      = (Button)   findViewById(R.id.labelI18n);
         mHint           = (EditText) findViewById(R.id.hint);
+        mHintI18n       = (Button)   findViewById(R.id.hintI18n);
         mDefaultValue   = (EditText) findViewById(R.id.defaultValue);
         mReadonly       = (CheckBox) findViewById(R.id.readonly);
         mRequired       = (CheckBox) findViewById(R.id.required);
@@ -119,6 +125,25 @@ public class FormBuilderFieldEditor extends Activity
         // New strings in either the label or hint should begin with a capital by default
         mLabel.setKeyListener(new QwertyKeyListener(TextKeyListener.Capitalize.SENTENCES, false));
         mHint.setKeyListener(new QwertyKeyListener(TextKeyListener.Capitalize.SENTENCES, false));
+        
+        // Access translations for label & hints
+        mLabelI18n.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                Intent i = new Intent(FormBuilderFieldEditor.this, FormBuilderI18nList.class);
+                i.putExtra(FormBuilderI18nList.KEY_FIELDTEXT_TYPE, FormBuilderI18nList.KEY_LABEL);
+                i.putExtra(FormBuilderI18nList.KEY_TRANSLATION_ID, mField.getLabel().getRef());                
+                startActivityForResult(i, REQUEST_TRANSLATIONS);
+            }
+        });
+        
+        mHintI18n.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                Intent i = new Intent(new Intent(FormBuilderFieldEditor.this, FormBuilderI18nList.class));
+                i.putExtra(FormBuilderI18nList.KEY_FIELDTEXT_TYPE, FormBuilderI18nList.KEY_DESCRIPTION);
+                i.putExtra(FormBuilderI18nList.KEY_TRANSLATION_ID, mField.getHint().getRef());                
+                startActivityForResult(i, REQUEST_TRANSLATIONS);             
+            }
+        });
         
         // Set up listener to detect changes to read-only input element
         mReadonly.setOnClickListener(new OnClickListener() {
@@ -219,6 +244,25 @@ public class FormBuilderFieldEditor extends Activity
             }
             
             break;
+            
+        // User may have adjusted translations or removed them altogether, refresh accordingly
+        case REQUEST_TRANSLATIONS:
+            if (resultCode == RESULT_OK) {
+                if (mField.getLabel().isTranslated())
+                    mLabel.setEnabled(false);
+                else 
+                    mLabel.setEnabled(true);
+
+                if (mField.getHint().isTranslated())
+                    mHint.setEnabled(false);
+                else 
+                    mHint.setEnabled(true);
+
+                mLabel.setText(mField.getLabel().toString());        
+                mHint.setText(mField.getHint().toString());
+            }
+            
+            break;
         }
     }
     
@@ -227,15 +271,15 @@ public class FormBuilderFieldEditor extends Activity
     {
         super.onCreateOptionsMenu(menu);
         
-        menu.add(0, MENU_ADVANCED, 0, getString(R.string.tf_advanced))
-            .setIcon(R.drawable.options);
+//        menu.add(0, MENU_ADVANCED, 0, getString(R.string.tf_advanced))
+//            .setIcon(R.drawable.options);
         
         menu.add(0, MENU_ITEMS, 0, getString(R.string.tf_list_items))
             .setIcon(R.drawable.ic_menu_mark)
             .setEnabled(mFieldType.equals("select") ? true : false);        
         
-        menu.add(0, MENU_HELP, 0, getString(R.string.tf_help))
-            .setIcon(R.drawable.ic_menu_help);
+//        menu.add(0, MENU_HELP, 0, getString(R.string.tf_help))
+//            .setIcon(R.drawable.ic_menu_help);
         
         return true;
     }
@@ -245,7 +289,12 @@ public class FormBuilderFieldEditor extends Activity
     {
         switch (keyCode) {
         case KeyEvent.KEYCODE_BACK:
-            createQuitDialog();
+            // Save and exit
+            if (saveChanges()) {
+                setResult(RESULT_OK);
+                finish();
+            }
+            
             return true;
         }
 
@@ -282,8 +331,8 @@ public class FormBuilderFieldEditor extends Activity
         }
     
         return super.onOptionsItemSelected(item);
-    }
-    
+    }    
+
     @Override
     protected void onSaveInstanceState(Bundle outState)
     {
@@ -293,47 +342,6 @@ public class FormBuilderFieldEditor extends Activity
         
         // Save this specific field state for orientation changes & select item editor
         Collect.getInstance().getFormBuilderState().setField(mField);
-    }
-
-    private void createQuitDialog()
-    {
-        String[] items = {
-                getString(R.string.do_not_save),
-                getString(R.string.tf_save_field_and_exit), 
-                getString(R.string.tf_do_not_exit_field)
-        };
-    
-        mAlertDialog = new AlertDialog.Builder(this)
-            .setIcon(R.drawable.ic_dialog_alert)
-            .setTitle(getString(R.string.quit_application))
-            .setItems(items,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        switch (which) {
-                        case 0:
-                            // Discard any changes and exit
-                            setResult(RESULT_CANCELED);
-                            finish();
-                            break;
-    
-                        case 1:
-                            // Save and exit
-                            if (saveChanges()) {
-                                setResult(RESULT_OK);
-                                finish();
-                            }
-                            break;
-    
-                        case 2:
-                            // Do nothing
-                            break;    
-                        }
-                    }
-                }).create();
-    
-        mAlertDialog.show();
     }
     
     // See loadSelectElement() for further information on this dialog
@@ -386,16 +394,23 @@ public class FormBuilderFieldEditor extends Activity
      * This should be done AFTER any primary initialization of newly created fields.
      */
     private void loadCommonAttributes()
-    {         
-         mLabel.setText(mField.getLabel().toString());
-         mHint.setText(mField.getHint().toString());
-         mDefaultValue.setText(mField.getInstance().getDefaultValue());
-         
-         if (mField.getBind().isReadonly())
-             mReadonly.setChecked(true);
-         
-         if (mField.getBind().isRequired())
-             mRequired.setChecked(true);
+    {
+        if (mField.getLabel().isTranslated())
+            mLabel.setEnabled(false);
+            
+        if (mField.getHint().isTranslated())
+            mHint.setEnabled(false);
+        
+        mLabel.setText(mField.getLabel().toString());        
+        mHint.setText(mField.getHint().toString());
+        
+        mDefaultValue.setText(mField.getInstance().getDefaultValue());
+
+        if (mField.getBind().isReadonly())
+            mReadonly.setChecked(true);
+
+        if (mField.getBind().isRequired())
+            mRequired.setChecked(true);
     }
     
     private void loadBarcodeElement()
@@ -680,8 +695,20 @@ public class FormBuilderFieldEditor extends Activity
         }
         
         // Save common attributes
-        mField.setLabel(mLabel.getText().toString().trim());
-        mField.setHint(mHint.getText().toString().trim());
+        if (mField.getLabel().isTranslated()) {
+            // Clear out any value that may have been stored
+            mField.getLabel().setValue(null);
+        } else {
+            mField.setLabel(mLabel.getText().toString().trim());   
+        }
+        
+        if (mField.getHint().isTranslated()) {
+            // Clear out any value that may have been stored
+            mField.getHint().setValue(null);
+        } else {
+            mField.setHint(mHint.getText().toString().trim());    
+        }
+                
         mField.getInstance().setDefaultValue(mDefaultValue.getText().toString().trim());        
         
         if (mReadonly.isChecked())

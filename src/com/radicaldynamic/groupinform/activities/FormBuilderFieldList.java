@@ -57,6 +57,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private static final int SAVING_DIALOG = 2;
     
     private static final int REQUEST_EDITFIELD = 1;
+    private static final int REQUEST_TRANSLATIONS = 2;
     
     private static final String INSTANCE_ROOT = "instanceroot";
     private static final String INSTANCE_ROOT_ID = "instancerootid";    
@@ -113,7 +114,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                     public void onClick(DialogInterface dialog, int whichButton) {
                         removeItem(item);
                         
-                        // Trigger a refresh of the view (and display any pertenent messages)
+                        // Trigger a refresh of the view (and display any pertinent messages)
                         if (mAdapter.isEmpty())
                             refreshView();
                     }
@@ -297,11 +298,11 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 // Load important bits of the form definition from memory
                 mFieldState = Collect.getInstance().getFormBuilderState().getFields();
                 mForm = Collect.getInstance().getFormBuilderState().getFormDefDoc();
-
+                
                 refreshView();
-            }            
-        } // end if savedInstanceState == null   
-    } // end onCreate
+            }          
+        } // end if savedInstanceState == null
+    }
     
     // Listen for results
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
@@ -311,23 +312,22 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         
         switch (requestCode) {
         case REQUEST_EDITFIELD:
-            Field field = Collect.getInstance().getFormBuilderState().getField();
-            
-            if (field.isSaved()) {
-                field.setSaved(false);
-                Toast.makeText(
-                        getApplicationContext(),
-                        getString(R.string.data_saved_ok), 
-                        Toast.LENGTH_SHORT).show();
-            }
+            if (Collect.getInstance().getFormBuilderState().getField().isSaved())
+                Collect.getInstance().getFormBuilderState().getField().setSaved(false);
 
-            // New fields require further initialization after being "saved" (hallelujah!)
-            if (field.isNewField())
-                addNewField(field);
-            else 
-                updateExistingField(field);
+            // New fields require further init after being saved
+            if (Collect.getInstance().getFormBuilderState().getField().isNewField())
+                addNewField(Collect.getInstance().getFormBuilderState().getField());
+            
+            // Display with the new field included
+            mFieldState = Collect.getInstance().getFormBuilderState().getFields();
+            refreshView();
             
             break;
+            
+        case REQUEST_TRANSLATIONS:
+            // User may have updated default translations and these need to be reflected on-screen
+            refreshView();
         }
     }
 
@@ -471,9 +471,13 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         case R.id.select:   startFieldEditor("select",    null);  break;
         case R.id.text:     startFieldEditor("text",      null);  break;
         
+        case R.id.i18n_setup:
+            Intent i = new Intent(this, FormBuilderI18nList.class);
+            startActivityForResult(i, REQUEST_TRANSLATIONS);
+            break;
+        
         case R.id.view_instance:
-            Intent i = new Intent(this, FormBuilderInstanceList.class);       
-            startActivity(i);
+            startActivity(new Intent(this, FormBuilderInstanceList.class));
             break;            
             
 //        case R.id.help:
@@ -481,15 +485,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         }
         
         return super.onOptionsItemSelected(item);
-    }
-    
-    @Override 
-    protected void onResume()
-    {
-        super.onResume();
-        
-        if (mAdapter != null)
-            mAdapter.notifyDataSetChanged();
     }
     
     @Override
@@ -544,8 +539,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             } catch (IOException e) {
                 e.printStackTrace();
                 mError = e.toString();
-            } catch (FormReader.LocalizationNotSupportedException e) {
-                mError = getString(R.string.tf_form_builder_itext_exception_msg).toString();
             } catch (Exception e) {
                 e.printStackTrace();
                 mError = e.toString();
@@ -705,10 +698,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 addNewGroupField(f);
         else
             addNewRegularField(f);
-        
-        // Display with the new field included
-        mFieldState = Collect.getInstance().getFormBuilderState().getFields();
-        refreshView();
     }
     
     private void addNewGroupField(Field f)
@@ -982,7 +971,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         String pathText = "";
         
         if (mPath.isEmpty()) {
-            pathText = "Viewing Top of Form";
+            pathText = getString(R.string.tf_at_top_of_form);
             jumpPreviousButton.setEnabled(false);
         } else {
             Iterator<String> it = mPath.iterator();
@@ -1059,13 +1048,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         Collect.getInstance().getFormBuilderState().setField(field);
         
         Intent i = new Intent(this, FormBuilderFieldEditor.class);
-        i.putExtra(FormBuilderFieldEditor.KEY_FIELDTYPE, type);        
+        i.putExtra(FormBuilderFieldEditor.KEY_FIELDTYPE, type);
         startActivityForResult(i, REQUEST_EDITFIELD);
-    }    
-    
-    private void updateExistingField(Field field)
-    {
-        // Update all references and nodesets, recursively
-        
     }
 }
