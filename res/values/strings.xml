@@ -325,11 +325,11 @@
 	<string name="tf_invalid_pin">This PIN is not registered with our system. Double check the PIN and try again.</string>
 	<string name="tf_item_missing_label_or_value">Cannot save: label and value required</string>
 	<string name="tf_item_default">Selected by default</string>
-	<string name="tf_item_default_hint">Checking this box will cause this item to be preselected when the list of items is displayed.</string>
+	<string name="tf_item_default_hint">Preselect item when list is displayed.</string>
 	<string name="tf_item_label">Label</string>
-	<string name="tf_item_label_hint">Text shown to users making a selection from the list.</string>
+	<string name="tf_item_label_hint">Item as displayed for selection.</string>
 	<string name="tf_item_value">Value</string>
-	<string name="tf_item_value_hint">Value stored in the output record when this item is selected.</string>
+	<string name="tf_item_value_hint">Value stored when item is selected.</string>
 	<string name="tf_item_value_not_unique">Cannot save: item must have a unique value</string>
 	<string name="tf_list_items">List Items</string>
 	<string name="tf_licence_limit_reached_dialog">All Licences In Use</string>

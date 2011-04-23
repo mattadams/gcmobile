@@ -48,7 +48,8 @@ public class FormBuilderI18nList extends ExpandableListActivity
     public static final String KEY_TRANSLATION_ID = "key_translation_id";           
     public static final String KEY_FIELDTEXT_TYPE = "key_fieldtext_type";           // Either "label" or "description"
     public static final String KEY_DESCRIPTION    = "description";
-    public static final String KEY_LABEL          = "label";    
+    public static final String KEY_LABEL          = "label"; 
+    public static final String KEY_ITEM_LABEL     = "item_label";
     
     private static final String KEY_SELECT_SINGLE_MODE = "key_select_single_translation";
     private static final String KEY_GROUP_POSITION = "key_group_position";

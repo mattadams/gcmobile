@@ -27,6 +27,7 @@ public class Field
     
     private Field parent;                       // The parent of this field item (null if at top of form hierarchy)
     
+    // For select or select1 fields (also see "children" attribute)
     private String itemValue = "";              // Any value assigned to this node (if it is an item)
     private boolean itemDefault = false;        // Whether this value should be preselected
     

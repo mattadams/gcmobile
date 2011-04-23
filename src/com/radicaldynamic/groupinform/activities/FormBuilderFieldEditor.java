@@ -249,14 +249,14 @@ public class FormBuilderFieldEditor extends Activity
         case REQUEST_TRANSLATIONS:
             if (resultCode == RESULT_OK) {
                 if (mField.getLabel().isTranslated())
-                    mLabel.setEnabled(false);
-                else 
-                    mLabel.setEnabled(true);
+                    toggleEditText(mLabel, false);
+                else
+                    toggleEditText(mLabel, true);
 
                 if (mField.getHint().isTranslated())
-                    mHint.setEnabled(false);
-                else 
-                    mHint.setEnabled(true);
+                    toggleEditText(mHint, false);
+                else
+                    toggleEditText(mHint, true);
 
                 mLabel.setText(mField.getLabel().toString());        
                 mHint.setText(mField.getHint().toString());
@@ -396,10 +396,10 @@ public class FormBuilderFieldEditor extends Activity
     private void loadCommonAttributes()
     {
         if (mField.getLabel().isTranslated())
-            mLabel.setEnabled(false);
-            
+            toggleEditText(mLabel, false);
+
         if (mField.getHint().isTranslated())
-            mHint.setEnabled(false);
+            toggleEditText(mHint, false);
         
         mLabel.setText(mField.getLabel().toString());        
         mHint.setText(mField.getHint().toString());
@@ -851,5 +851,12 @@ public class FormBuilderFieldEditor extends Activity
     private void saveTextElement()
     {
         
+    }
+    
+    private void toggleEditText(EditText v, Boolean b)
+    {
+        v.setEnabled(b);                    
+        v.setFocusable(b);
+        v.setFocusableInTouchMode(b);
     }
 }
