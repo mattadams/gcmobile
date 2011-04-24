@@ -407,6 +407,8 @@
 	<string name="tf_system_error_dialog">An Error Occurred</string>
 	<string name="tf_system_error_dialog_msg">We encountered a system error. A team of trained monkeys has been dispatched to fix the problem. Please try again later!</string>
 	<string name="tf_this_device">This Device</string>
+    <string name="tf_translate_hint">Translate Description</string>
+    <string name="tf_translate_label">Translate Label</string>
 	<string name="tf_unable_to_connect">Unable To Connect</string>
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>

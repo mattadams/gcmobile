@@ -49,7 +49,7 @@ public class FormBuilderI18nList extends ExpandableListActivity
     public static final String KEY_FIELDTEXT_TYPE = "key_fieldtext_type";           // Either "label" or "description"
     public static final String KEY_DESCRIPTION    = "description";
     public static final String KEY_LABEL          = "label"; 
-    public static final String KEY_ITEM_LABEL     = "item_label";
+    public static final String KEY_ITEM_LABEL     = "the item label";
     
     private static final String KEY_SELECT_SINGLE_MODE = "key_select_single_translation";
     private static final String KEY_GROUP_POSITION = "key_group_position";
@@ -200,11 +200,14 @@ public class FormBuilderI18nList extends ExpandableListActivity
                              */
                             if (mTranslationId == null) {
                                 mTranslationId = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
-                                
-                                if (mFieldTextType.equals(KEY_LABEL)) {
-                                    Collect.getInstance().getFormBuilderState().getField().setLabel("jr:itext('" + mTranslationId + "')");
+                                String jr = "jr:itext('" + mTranslationId + "')";                                
+                               
+                                if (mFieldTextType.equals(KEY_ITEM_LABEL)) {
+                                    Collect.getInstance().getFormBuilderState().getItem().setLabel(jr);
+                                } else if (mFieldTextType.equals(KEY_LABEL)) {
+                                    Collect.getInstance().getFormBuilderState().getField().setLabel(jr);
                                 } else if (mFieldTextType.equals(KEY_DESCRIPTION)) {
-                                    Collect.getInstance().getFormBuilderState().getField().setHint("jr:itext('" + mTranslationId + "')");
+                                    Collect.getInstance().getFormBuilderState().getField().setHint(jr);
                                 }
                             }
                             
@@ -256,7 +259,9 @@ public class FormBuilderI18nList extends ExpandableListActivity
                     }
                     
                     // Mark the current field label or description as being blank/untranslated
-                    if (mFieldTextType.equals(KEY_LABEL)) {
+                    if (mFieldTextType.equals(KEY_ITEM_LABEL)) {
+                        Collect.getInstance().getFormBuilderState().getItem().setLabel("");
+                    } else if (mFieldTextType.equals(KEY_LABEL)) {
                         Collect.getInstance().getFormBuilderState().getField().setLabel("");
                     } else if (mFieldTextType.equals(KEY_DESCRIPTION)) {
                         Collect.getInstance().getFormBuilderState().getField().setHint("");

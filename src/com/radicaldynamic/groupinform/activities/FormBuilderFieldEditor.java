@@ -86,12 +86,8 @@ public class FormBuilderFieldEditor extends Activity
             mFieldType = i.getStringExtra(KEY_FIELDTYPE);
             
             // We store off the instance default string for select types (this is special)
-            if (mFieldType.equals("select")) {
+            if (mFieldType.equals("select"))
                 mSelectInstanceDefault = mField.getInstance().getDefaultValue();
-                
-                // This is becoming problematic but we must reset this somewhere
-                Collect.getInstance().getFormBuilderState().setItemList(null);
-            }
         } else {
             if (savedInstanceState.containsKey(KEY_FIELDTYPE))
                 mFieldType = savedInstanceState.getString(KEY_FIELDTYPE);
@@ -224,7 +220,7 @@ public class FormBuilderFieldEditor extends Activity
                 // Preselected list items may have changed, store off this list
                 ArrayList<String> defaults = new ArrayList<String>();
                 
-                Iterator<Field> it = Collect.getInstance().getFormBuilderState().getItemList().iterator();
+                Iterator<Field> it = Collect.getInstance().getFormBuilderState().getField().getChildren().iterator();
                 
                 while (it.hasNext()) {
                     Field item = it.next();
@@ -824,7 +820,6 @@ public class FormBuilderFieldEditor extends Activity
         }
     }
     
-    @SuppressWarnings("unchecked")
     private void saveSelectElement()
     {
         final RadioButton radioSingle = (RadioButton) findViewById(R.id.selectTypeSingle);
@@ -836,14 +831,6 @@ public class FormBuilderFieldEditor extends Activity
             mField.setType("select");
             mField.getBind().setType("select");                        
         }   
-        
-        // Save any changes to the list of items
-        if (Collect.getInstance().getFormBuilderState().getItemList() != null) {            
-            mField.getChildren().clear();
-            mField.getChildren().addAll((ArrayList<Field>) Collect.getInstance().getFormBuilderState().getItemList().clone());
-            
-            Collect.getInstance().getFormBuilderState().setItemList(null);
-        }
         
         mField.getInstance().setDefaultValue(mSelectInstanceDefault);
     }

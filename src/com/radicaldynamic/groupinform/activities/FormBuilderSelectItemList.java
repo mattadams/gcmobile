@@ -1,10 +1,10 @@
 package com.radicaldynamic.groupinform.activities;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,13 +13,14 @@ import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.method.QwertyKeyListener;
 import android.text.method.TextKeyListener;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -34,34 +35,22 @@ import com.radicaldynamic.groupinform.xform.Field;
 
 public class FormBuilderSelectItemList extends ListActivity
 {
+    @SuppressWarnings("unused")
     private static final String t = "FormBuilderSelectItemList: ";
     
     private static final int MENU_ADD = Menu.FIRST;
+
+    private static final int REQUEST_TRANSLATIONS = 1;
     
     public static final String KEY_SINGLE = "singleselect";    
     public static final String KEY_DEFAULT = "instancedefault";
 
-    private AlertDialog mAlertDialog;
+    private FormBuilderSelectItemListAdapter mAdapter;
+    private Builder mAlertDialog;
+    private View mAlertDialogView;
+    private Field mItem;                                    // Currently selected item to be added/edited        
+    private boolean mSingleSelect;                          // Whether this is a single select field (see KEY_SINGLE)
     
-    private FormBuilderSelectItemListAdapter mAdapter = null;
-    
-    // The control field as saved to the application global state
-    private Field mField;                                   
-    
-    // A singular item for adding or editing
-    private Field mItem;                                    
-    
-    // The list of select items (used by only this activity)
-    private ArrayList<Field> mItemList = new ArrayList<Field>();                     
-    
-    // Whether this is a single select field (see KEY_SINGLE) 
-    private boolean mSingleSelect;
-    
-    /*
-     * FIXME: element icons are not kept consistent when list items are reordered.  
-     * I am not sure whether this affects only the items that are actually moved 
-     * or the ones that are next to them.
-     */
     private TouchListView.DropListener onDrop = new TouchListView.DropListener() {
         @Override
         public void drop(int from, int to)
@@ -78,54 +67,69 @@ public class FormBuilderSelectItemList extends ListActivity
         public void remove(int which)
         {
             final Field item = mAdapter.getItem(which);
+
+            mAlertDialog = new AlertDialog.Builder(FormBuilderSelectItemList.this);
+            mAlertDialog.setCancelable(false);
+            mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
+            mAlertDialog.setTitle(R.string.tf_confirm_removal);
+            mAlertDialog.setMessage(getString(R.string.tf_confirm_removal_msg, item.getLabel().toString()));
             
-            mAlertDialog = new AlertDialog.Builder(FormBuilderSelectItemList.this)
-                .setCancelable(false)
-                .setIcon(R.drawable.ic_dialog_alert)
-                .setTitle(R.string.tf_confirm_removal)
-                .setMessage(getString(R.string.tf_confirm_removal_msg, item.getLabel().toString()))
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {                                              
-                        mAdapter.remove(item);                        
-                                                
-                        Toast.makeText(
-                                getApplicationContext(), 
-                                getString(R.string.tf_removed_with_param, item.getLabel().toString()), 
-                                Toast.LENGTH_SHORT).show();
-                        
-                        // Trigger a refresh of the view (and display any pertenent messages)
-                        if (mAdapter.isEmpty())
-                            refreshView();
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
+            mAlertDialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {                                              
+                    mAdapter.remove(item);                        
+
+                    Toast.makeText(
+                            getApplicationContext(), 
+                            getString(R.string.tf_removed_with_param, item.getLabel().toString()), 
+                            Toast.LENGTH_SHORT).show();
+
+                    // Trigger a refresh of the view (and display any pertenent messages)
+                    if (mAdapter.isEmpty())
+                        refreshView();
                 }
-            })
-            .create();
-    
+            });
+            
+            mAlertDialog.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                }
+            });
+
             mAlertDialog.show();
         }
     };
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (resultCode == RESULT_CANCELED)
+            return;
+        
+        switch (requestCode) {
+        case REQUEST_TRANSLATIONS:
+            // Reflect any changes to the label translation in the dialog
+            EditText label = (EditText) mAlertDialogView.findViewById(R.id.label); 
+            label.setText(mItem.getLabel().toString());
+            
+            if (mItem.getLabel().isTranslated())
+                toggleEditText(label, false);
+            else 
+                toggleEditText(label, true);
+            
+            break;
+        }        
+    }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        
+
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_list_items));
         setContentView(R.layout.fb_main);
 
         // Remove things from this view that are not needed
         findViewById(R.id.pathText).setVisibility(View.GONE);
         findViewById(R.id.jumpPreviousButton).setVisibility(View.GONE);        
-        
-        mField = Collect.getInstance().getFormBuilderState().getField();
-        
-        if (mField.getLabel().toString().length() == 0)
-            setTitle(getString(R.string.app_name) + " > " + "List Items for Select Field");
-        else
-            setTitle(getString(R.string.app_name) + " > " + "List Items for " + mField.getLabel().toString());
         
         if (savedInstanceState == null) {
             Intent intent = getIntent();
@@ -134,14 +138,8 @@ public class FormBuilderSelectItemList extends ListActivity
                 // Determine if this is a single or multiple select type (see key comments)
                 mSingleSelect = intent.getBooleanExtra(KEY_SINGLE, false);
                 
-                // Select field types keep their items in the children array list         
-                if (Collect.getInstance().getFormBuilderState().getItemList() == null)
-                    mItemList = (ArrayList<Field>) mField.getChildren().clone();
-                else
-                    mItemList = Collect.getInstance().getFormBuilderState().getItemList();
-                
-                // Set list item preselect states
-                Iterator<Field> it = mItemList.iterator();
+                // Set preselected states for list items
+                Iterator<Field> it = Collect.getInstance().getFormBuilderState().getField().getChildren().iterator();
                 
                 while (it.hasNext()) {
                     Field i = it.next();
@@ -149,23 +147,16 @@ public class FormBuilderSelectItemList extends ListActivity
                     // Default to "off"
                     i.setItemDefault(false);
                     
-                    Log.v(Collect.LOGTAG, t + "evaluating preselect status of list item " + i.getLabel().toString() + " with value \"" + i.getItemValue() + "\"");
-                    
                     /*
                      * Items must be explicitly enabled/disabled because
                      * the defaults may have changed since last loading
-                     */
-                    
-                    for (String def : intent.getStringExtra(KEY_DEFAULT).split("\\s+")) {
-                        Log.v(Collect.LOGTAG, t + "processing instance default \"" + def + "\"");
-                        
+                     */                    
+                    for (String def : intent.getStringExtra(KEY_DEFAULT).split("\\s+"))
                         if (i.getItemValue().equals(def))
                             i.setItemDefault(true);                            
-                    }
                 }
             }
         } else {           
-            mItemList = Collect.getInstance().getFormBuilderState().getItemList();            
             mSingleSelect = savedInstanceState.getBoolean(KEY_SINGLE);
         }
     }
@@ -195,7 +186,7 @@ public class FormBuilderSelectItemList extends ListActivity
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
         mItem = (Field) getListAdapter().getItem(position);
-        createItemDialog();
+        showEditItemDialog();
     }
     
     @Override
@@ -205,20 +196,11 @@ public class FormBuilderSelectItemList extends ListActivity
         case MENU_ADD:
             mItem = new Field();
             mItem.setType("item");            
-            createItemDialog();
+            showEditItemDialog();
             return true;
         }
         
         return super.onOptionsItemSelected(item);
-    }
-    
-    @Override
-    protected void onPause()
-    {
-        // Save off the state of the item list before loosing this activity
-        Collect.getInstance().getFormBuilderState().setItemList(mItemList);
-        
-        super.onPause();
     }
     
     @Override
@@ -233,40 +215,48 @@ public class FormBuilderSelectItemList extends ListActivity
     {
         super.onSaveInstanceState(outState);
         outState.putBoolean(KEY_SINGLE, mSingleSelect);
-        
-        Collect.getInstance().getFormBuilderState().setItemList(mItemList);
     }
     
     private static class NoSpaces implements InputFilter  
     {
         @Override
-        public CharSequence filter(CharSequence source, int start, int end,
-                Spanned dest, int dstart, int dend)
+        public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend)
         {
             return source.subSequence(start, end).toString().replaceAll("\\s+", "");
         }        
     }
 
-    private void createItemDialog()
+    private void showEditItemDialog()
     {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        mAlertDialog = new AlertDialog.Builder(this);
+        mAlertDialog.setInverseBackgroundForced(true);
+        mAlertDialog.setCancelable(false);
         
-        // We don't want a translucent alert dialog
-        alert.setInverseBackgroundForced(true);
-        
-        // The user must use positive or negative response to close this dialog
-        alert.setCancelable(false);
-        
-        // Attach the layout to this dialog    
+        // Attach the layout to this mAlertDialog    
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.fb_item_dialog, null);
+        mAlertDialogView = inflater.inflate(R.layout.fb_item_dialog, null);
         
-        final EditText label = (EditText) view.findViewById(R.id.label);
-        final EditText value = (EditText) view.findViewById(R.id.value);
-        final CheckBox preselected = (CheckBox) view.findViewById(R.id.preselected);
+        final EditText label = (EditText) mAlertDialogView.findViewById(R.id.label);
+        final Button labelI18n = (Button) mAlertDialogView.findViewById(R.id.labelI18n);
+        final EditText value = (EditText) mAlertDialogView.findViewById(R.id.value);
+        final CheckBox preselected = (CheckBox) mAlertDialogView.findViewById(R.id.preselected);
         
         // Labels default to upper case characters at the beginning
         label.setKeyListener(new QwertyKeyListener(TextKeyListener.Capitalize.SENTENCES, false));
+        
+        // Access translations for label & hints
+        labelI18n.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                // For use by translation activity
+                Collect.getInstance().getFormBuilderState().setItem(mItem); 
+                
+                // Forward to translation screen
+                Intent i = new Intent(FormBuilderSelectItemList.this, FormBuilderI18nList.class);
+                i.putExtra(FormBuilderI18nList.KEY_FIELDTEXT_TYPE, FormBuilderI18nList.KEY_ITEM_LABEL);
+                i.putExtra(FormBuilderI18nList.KEY_TRANSLATION_ID, mItem.getLabel().getRef());
+                startActivityForResult(i, REQUEST_TRANSLATIONS);
+            }
+        });
         
         // Prevent spaces from being entered into the value field        
         value.setFilters(new InputFilter[] { new NoSpaces() });
@@ -289,74 +279,72 @@ public class FormBuilderSelectItemList extends ListActivity
         });        
         
         if (mItem.isEmpty()) {
-            alert.setTitle(getText(R.string.tf_create_list_item));            
+            mAlertDialog.setTitle(getText(R.string.tf_create_list_item));            
         } else {
-            alert.setTitle(getText(R.string.tf_edit_list_item));
+            mAlertDialog.setTitle(getText(R.string.tf_edit_list_item));
             
             label.setText(mItem.getLabel().toString());
             value.setText(mItem.getItemValue());
+            
+            // Translated labels should not be accessible
+            if (mItem.getLabel().isTranslated())
+                toggleEditText(label, false);
+            else 
+                toggleEditText(label, true);
             
             if (mItem.isItemDefault())
                 preselected.setChecked(true);
         }
 
-        alert.setView(view);
+        mAlertDialog.setView(mAlertDialogView);
 
-        alert.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
+        mAlertDialog.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface mAlertDialog, int whichButton) {
                 boolean error = false;
                 
-                // Get rid of the whitespace
-                label.setText(label.getText().toString().trim());
-                value.setText(value.getText().toString().trim());
-                
+                String labelText = label.getText().toString().trim();
+                String valueText = value.getText().toString().trim();
+
                 // Both label and value are required
-                if (label.getText().toString().length() == 0 || value.getText().toString().length() == 0) {
-                    Toast.makeText(
-                            getApplicationContext(), 
-                            getString(R.string.tf_item_missing_label_or_value), 
-                            Toast.LENGTH_LONG).show();
+                if ((!mItem.getLabel().isTranslated() && labelText.length() == 0) || valueText.length() == 0) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_item_missing_label_or_value), Toast.LENGTH_LONG).show();
                     
                     // Preserve user input
-                    mItem.setLabel(label.getText().toString());
-                    mItem.setItemValue(value.getText().toString());
+                    if (!mItem.getLabel().isTranslated())
+                        mItem.setLabel(labelText);
+                    
+                    mItem.setItemValue(valueText);
                     mItem.setItemDefault(preselected.isChecked());
                     
                     error = true;
                 }
                 
                 // Ensure uniqueness of value
-                Iterator<Field> it = mItemList.iterator();
+                Iterator<Field> it = Collect.getInstance().getFormBuilderState().getField().getChildren().iterator();
                 
                 // User input not preserved here (doing so makes the routine much more complex)
                 while (it.hasNext()) {
                     Field i = it.next();
                     
-                    if (i.getItemValue().equals(value.getText().toString()) &&
-                            !i.getLabel().toString().equals(mItem.getLabel().toString())) {                       
-                            
-                            Toast.makeText(
-                                    getApplicationContext(), 
-                                    getString(R.string.tf_item_value_not_unique), 
-                                    Toast.LENGTH_LONG).show();
-                        
-                            error = true;
+                    if (i.getItemValue().equals(value.getText().toString()) && !i.getLabel().toString().equals(mItem.getLabel().toString())) {
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_item_value_not_unique), Toast.LENGTH_LONG).show();                        
+                        error = true;
                     }
                 }
-
-                // TODO: process preselected defaults
                 
-                if (error)
-                    createItemDialog();
-                else {
-                    mItem.setLabel(label.getText().toString());
-                    mItem.setItemValue(value.getText().toString());
+                if (error) {
+                    showEditItemDialog();
+                } else {
+                    if (!mItem.getLabel().isTranslated())
+                        mItem.setLabel(labelText);
+                    
+                    mItem.setItemValue(valueText);
                     
                     // Special handling for the preselected checkbox (this is sensitive to the select type)
                     if (preselected.isChecked()) {
                         // Ensure that no other item is selected
                         if (mSingleSelect) {
-                            Iterator<Field> itemIterator = mItemList.iterator();
+                            Iterator<Field> itemIterator = Collect.getInstance().getFormBuilderState().getField().getChildren().iterator();
                             
                             while (itemIterator.hasNext())
                                 itemIterator.next().setItemDefault(false);
@@ -370,7 +358,7 @@ public class FormBuilderSelectItemList extends ListActivity
                     // Add new items to the list
                     if (mItem.isEmpty()) {
                         mItem.setEmpty(false);
-                        mItemList.add(mItem);
+                        Collect.getInstance().getFormBuilderState().getField().getChildren().add(mItem);
                     }
                     
                     refreshView();
@@ -378,13 +366,14 @@ public class FormBuilderSelectItemList extends ListActivity
             }
         });
 
-        alert.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                mItem = null;
-            }
-        });
-
-        alert.show();
+        mAlertDialog.show();
+    }
+    
+    private void toggleEditText(EditText v, Boolean b)
+    {
+        v.setEnabled(b);                    
+        v.setFocusable(b);
+        v.setFocusableInTouchMode(b);
     }
     
     /* 
@@ -393,15 +382,12 @@ public class FormBuilderSelectItemList extends ListActivity
      */
     private void refreshView()
     {
-        mAdapter = new FormBuilderSelectItemListAdapter(getApplicationContext(), mItemList);        
+        mAdapter = new FormBuilderSelectItemListAdapter(getApplicationContext(), Collect.getInstance().getFormBuilderState().getField().getChildren());        
         
         // Provide a hint to users if the list is empty
         if (mAdapter.isEmpty()) {
             TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
             nothingToDisplay.setVisibility(View.VISIBLE);
-            
-            // FIXME: figure out why this does not work (shouldn't it?)
-//            openOptionsMenu();
         } else {
             TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
             nothingToDisplay.setVisibility(View.INVISIBLE);

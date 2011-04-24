@@ -14,7 +14,7 @@ public class FormBuilderState
 {
     private FormDefinitionDocument  formDefDoc  = null;         // The form definition document from the DB for reference
     private Field                   field       = null;         // For passing a form "field" between activities
-    private ArrayList<Field>        itemList    = null;         // For passing items for a select one/multiple field between activities 
+    private Field                   item        = null;         // For passing a select list item to the translation screen
     
     private ArrayList<Bind>         binds           = null;
     private ArrayList<Field>        fields          = null;
@@ -24,13 +24,13 @@ public class FormBuilderState
     public FormBuilderState() { }
 
     public void setField(Field field) { this.field = field; }
-    public Field getField() { return field; }    
+    public Field getField() { return field; }
+    
+    public void setItem(Field item) { this.item = item; }
+    public Field getItem() { return item; }
 
     public void setFormDefDoc(FormDefinitionDocument formDefDoc) { this.formDefDoc = formDefDoc; }
     public FormDefinitionDocument getFormDefDoc() { return formDefDoc; }
-    
-    public void setItemList(ArrayList<Field> itemList) { this.itemList = itemList; }
-    public ArrayList<Field> getItemList() { return itemList; }
 
     public void setBinds(ArrayList<Bind> binds) { this.binds = binds; }
     public ArrayList<Bind> getBinds() { return binds; }

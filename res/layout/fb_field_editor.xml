@@ -61,7 +61,7 @@
             android:id="@+id/labelI18n"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Translate Label"
+            android:text="@string/tf_translate_label"
             android:layout_below="@id/label"
             style="?android:attr/buttonStyleSmall" />
     </RelativeLayout>
@@ -99,7 +99,7 @@
             android:id="@+id/hintI18n"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Translate Description"
+            android:text="@string/tf_translate_hint"
             android:layout_below="@id/hint"
             style="?android:attr/buttonStyleSmall" />
     
