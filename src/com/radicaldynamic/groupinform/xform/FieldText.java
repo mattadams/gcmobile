@@ -106,7 +106,7 @@ public class FieldText
     @Override
     public String toString()
     {
-        String result = "[English Translation Missing]";
+        String result = "[Default Translation Missing]";
         
         if (value == null) {
             /*
@@ -133,7 +133,7 @@ public class FieldText
     }
 
     /*
-     * Retrieve a default translation for a specific ID (try for English)
+     * Retrieve a default translation for a specific ID
      */
     private String getDefaultTranslation(String id)
     {
@@ -142,7 +142,7 @@ public class FieldText
         while (translations.hasNext()) {
             Translation t = translations.next();
             
-            if (t.getLang().equals("eng") || t.getLang().toLowerCase().equals("english")) {
+            if (t.isFallback()) {
                 Iterator<Translation> x = t.getTexts().iterator();
                 
                 while (x.hasNext()) {
