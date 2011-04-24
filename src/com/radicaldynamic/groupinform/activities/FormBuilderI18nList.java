@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextUtils.TruncateAt;
 import android.view.ContextMenu;
@@ -392,9 +393,23 @@ public class FormBuilderI18nList extends ExpandableListActivity
         } else if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
             int groupPos = ExpandableListView.getPackedPositionGroup(info.packedPosition); 
             
-            Bundle b = new Bundle();
-            b.putInt(KEY_GROUP_POSITION, groupPos);
-            showDialog(DIALOG_REMOVE_LANGUAGE, b);
+            switch (item.getItemId()) {
+            case R.id.removeLanguage:
+                Bundle b = new Bundle();
+                b.putInt(KEY_GROUP_POSITION, groupPos);
+                showDialog(DIALOG_REMOVE_LANGUAGE, b);
+                break;
+                
+            case R.id.makeDefault:
+                for (int i = 0; i < mTranslations.size(); i++) {
+                    if (i == groupPos)
+                        mTranslations.get(i).setFallback(true);                        
+                    else
+                        mTranslations.get(i).setFallback(false);
+                }
+                
+                refreshView();
+            }            
             
             return true;
         }
@@ -573,6 +588,12 @@ public class FormBuilderI18nList extends ExpandableListActivity
                 t.setText(mLanguages[i].toString());
             } else {
                 t.setText(getGroup(groupPosition).toString());
+            }            
+            
+            // Identify default/fallback translation
+            if (mTranslations.get(groupPosition).isFallback()) {
+                t.setTypeface(t.getTypeface(), Typeface.BOLD);
+                t.setText(t.getText() + " (Default)");
             }
             
             return v;

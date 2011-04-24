@@ -299,6 +299,7 @@
     <string name="tf_i18n_add_language_failed">\"%s\" is already supported</string>
     <string name="tf_i18n_added">Added \"%s\"</string>
     <string name="tf_i18n_edit_translation">Edit %s Translation</string>
+    <string name="tf_i18n_make_default">Make Default Language</string>
     <string name="tf_i18n_remove_language">Remove Language</string>
     <string name="tf_i18n_remove_language_dialog">Remove %s?</string>	
     <string name="tf_i18n_remove_language_dialog_msg">Do you want to remove support for the %s language?</string>

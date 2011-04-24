@@ -287,7 +287,13 @@ public class FormReader
     {
         if (tag.getCurrentTagName().equals("translation")) {
             Log.v(Collect.LOGTAG, t + "adding translations for " + tag.getAttribute("lang"));
-            mTranslations.add(new Translation(tag.getAttribute("lang")));
+            Translation t = new Translation(tag.getAttribute("lang"));
+            
+            // The first translation to be parsed is considered the default/fallback translation for the form
+            if (mTranslations.isEmpty())
+                t.setFallback(true);
+                
+            mTranslations.add(t);
         } else if (tag.getCurrentTagName().equals("text")) {
             Log.v(Collect.LOGTAG, t + "adding translation ID " + tag.getAttribute("id"));
             mTranslations.get(mTranslations.size() - 1).getTexts().add(new Translation(tag.getAttribute("id"), null));

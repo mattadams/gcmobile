@@ -11,7 +11,8 @@ public class Translation
     private String lang     = "";       // Translation groups will have this set 
     private String value    = "";       // Translation text will have this set 
     
-    private boolean group = false;     // Whether or not this object is a group of translations for a given language
+    private boolean fallback = false;   // Whether this is the default language for this form
+    private boolean group = false;      // Whether this object is a group of translations for a given language
     
     public Translation(String lang)
     {
@@ -35,6 +36,14 @@ public class Translation
             result = value;
         
         return result;
+    }
+
+    public void setFallback(boolean fallback) {
+        this.fallback = fallback;
+    }
+
+    public boolean isFallback() {
+        return fallback;
     }
 
     public void setGroup(boolean group) {

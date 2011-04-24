@@ -1,6 +1,7 @@
 package com.radicaldynamic.groupinform.xform;
 
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Iterator;
 
 import android.util.Log;
@@ -10,6 +11,7 @@ import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.utilities.TranslationSortByDefault;
 
 public final class FormWriter
 {
@@ -190,10 +192,12 @@ public final class FormWriter
     {
         Iterator<Translation> it;
         
-        if (i18n == null)       
-            it = Collect.getInstance().getFormBuilderState().getTranslations().iterator();
-        else
+        if (i18n == null) {            
+            Collections.sort(Collect.getInstance().getFormBuilderState().getTranslations(), new TranslationSortByDefault());
+            it = Collect.getInstance().getFormBuilderState().getTranslations().iterator();   
+        } else {
             it = i18n.getTexts().iterator();
+        }
         
         while (it.hasNext()) {
             Translation t = it.next();
