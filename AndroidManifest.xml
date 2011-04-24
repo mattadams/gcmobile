@@ -15,7 +15,7 @@
 <manifest 
     xmlns:android="http://schemas.android.com/apk/res/android" 
     android:versionCode="2" 
-    android:versionName="1.0.1-odk-1.1.6-tip" 
+    android:versionName="1.1.0"
     package="com.radicaldynamic.groupinform">
     <!-- android:debuggable="true" -->
   <application       
