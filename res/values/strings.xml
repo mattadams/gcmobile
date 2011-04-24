@@ -211,7 +211,7 @@
 	<string name="tf_create_list_item">Add List Item</string>
 	<string name="tf_database_being_initialized">Initializing Database</string>
 	<string name="tf_database_being_installed">Installing Database</string>	
-	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
+	<string name="tf_default_ionline_server">groupcomplete.com</string>
 	<string name="tf_default_ionline_port">5101</string>	
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_dependency_missing_dialog">Install Helper Software?</string>
