@@ -16,6 +16,7 @@ package com.radicaldynamic.groupinform.activities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -27,6 +28,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -46,6 +48,9 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.listeners.FormDownloaderListener;
 import com.radicaldynamic.groupinform.preferences.ServerPreferences;
 import com.radicaldynamic.groupinform.tasks.DownloadFormsTask;
+import com.radicaldynamic.groupinform.utilities.PasswordPromptDialogBuilder;
+import com.radicaldynamic.groupinform.utilities.WebUtils;
+import com.radicaldynamic.groupinform.utilities.PasswordPromptDialogBuilder.OnOkListener;
 
 /**
  * Responsible for displaying, adding and deleting all the valid forms in the forms directory.
@@ -80,7 +85,7 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
     private Button mToggleButton;
     private Button mRefreshButton;
 
-    private HashMap<String, String> mFormNamesAndURLs;
+    private HashMap<String, FormDetails> mFormNamesAndDetails;
     private ArrayAdapter<String> mFileAdapter;
 
     private boolean mToggled = false;
@@ -139,8 +144,8 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
         if (savedInstanceState != null) {
             // If the screen has rotated, the hashmap with the form names and urls is passed here.
             if (savedInstanceState.containsKey(BUNDLE_FORM_LIST)) {
-                mFormNamesAndURLs =
-                    (HashMap<String, String>) savedInstanceState.getSerializable(BUNDLE_FORM_LIST);
+                mFormNamesAndDetails =
+                    (HashMap<String, FormDetails>) savedInstanceState.getSerializable(BUNDLE_FORM_LIST);
             }
             // indicating whether or not select-all is on or off.
             if (savedInstanceState.containsKey(BUNDLE_TOGGLED_KEY)) {
@@ -199,7 +204,7 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
         super.onSaveInstanceState(outState);
         outState.putBoolean(BUNDLE_TOGGLED_KEY, mToggled);
         outState.putInt(BUNDLE_SELECTED_COUNT, selectedItemCount());
-        outState.putSerializable(BUNDLE_FORM_LIST, mFormNamesAndURLs);
+        outState.putSerializable(BUNDLE_FORM_LIST, mFormNamesAndDetails);
         outState.putString(DIALOG_TITLE, mAlertTitle);
         outState.putString(DIALOG_MSG, mAlertMsg);
         outState.putBoolean(DIALOG_SHOWING, mAlertShowing);
@@ -284,7 +289,7 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
 
 
     @Override
-	public void formDownloadingComplete(HashMap<String, String> result) {
+	public void formDownloadingComplete(HashMap<String, FormDetails> result) {
         dismissDialog(PROGRESS_DIALOG);
         String dialogMessage = null;
         String dialogTitle = null;
@@ -312,8 +317,8 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
                     mSuccess = true;
                 } else {
                     // Download of at least one form had an error
-                    String formName = result.get(DownloadFormsTask.DL_FORM);
-                    String errorMsg = result.get(DownloadFormsTask.DL_ERROR_MSG);
+                    String formName = result.get(DownloadFormsTask.DL_FORM).stringValue;
+                    String errorMsg = result.get(DownloadFormsTask.DL_ERROR_MSG).stringValue;
 
                     dialogMessage =
                         getString(R.string.download_failed_with_error, formName, errorMsg);
@@ -325,13 +330,13 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
                 // We tried to download a formlist
                 if (!result.containsKey(DownloadFormsTask.DL_ERROR_MSG)) {
                     // Download succeeded
-                    mFormNamesAndURLs = result;
+                    mFormNamesAndDetails = result;
                     mSuccess = true;
                 } else {
                     // Download failed
                     dialogMessage =
                         getString(R.string.list_failed_with_error, result
-                                .get(DownloadFormsTask.DL_ERROR_MSG));
+                                .get(DownloadFormsTask.DL_ERROR_MSG).stringValue);
                     dialogTitle = getString(R.string.load_remote_form_error);
                     createAlertDialog(dialogTitle, dialogMessage);
 
@@ -354,7 +359,7 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
 
 
     private void buildView() {
-        ArrayList<String> formNames = new ArrayList<String>(mFormNamesAndURLs.keySet());
+        ArrayList<String> formNames = new ArrayList<String>(mFormNamesAndDetails.keySet());
     
         mFileAdapter =
             new ArrayAdapter<String>(this, android.R.layout.simple_list_item_multiple_choice,
@@ -405,27 +410,65 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
         startActivity(i);
     }
 
+    private static class DownloadArgs {
+        HashMap<String, FormDetails> filesToDownload;
+        Set<String> hosts;
+        String username;
+    }
 
     @SuppressWarnings("unchecked")
     private void downloadFormList() {
-        mFormNamesAndURLs = new HashMap<String, String>();
+        mFormNamesAndDetails = new HashMap<String, FormDetails>();
         if (mProgressDialog != null) {
             // This is needed because onPrepareDialog() is broken in 1.6.
             mProgressDialog.setMessage(getString(R.string.please_wait));
         }
-        showDialog(PROGRESS_DIALOG);
-    
-        mDownloadFormsTask = new DownloadFormsTask();
-        mDownloadFormsTask.setDownloaderListener(this);
     
         SharedPreferences settings =
             PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         String url =
             settings.getString(ServerPreferences.KEY_SERVER, getString(R.string.default_server))
                     + "/formList";
-    
-        HashMap<String, String> arg = new HashMap<String, String>();
-        arg.put(LIST_URL, url);
+
+        HashMap<String, FormDetails> arg = new HashMap<String, FormDetails>();
+        arg.put(LIST_URL, new FormDetails(url));
+
+        boolean deferForPassword = false;
+        final String username =
+            settings.getString(ServerPreferences.KEY_USERNAME, null);
+        if (username != null && username.length() != 0 ) {
+            final Uri u = Uri.parse(url);
+            if ( !WebUtils.hasCredentials(username, u.getHost()) ) {
+                PasswordPromptDialogBuilder b = 
+                    new PasswordPromptDialogBuilder(this, 
+                            username, 
+                            u.getHost(),
+                            new OnOkListener() {
+
+                        @Override
+                        public void onOk(
+                                Object okListenerContext) {
+                            FormDownloadList.this.executeDownload((HashMap<String, FormDetails>) okListenerContext);
+                        }
+
+                    }, arg);
+                deferForPassword = true;
+                b.show();
+            }
+        }
+        
+        if ( !deferForPassword ) {
+            executeDownload(arg);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void executeDownload(HashMap<String, FormDetails> arg) {
+        showDialog(PROGRESS_DIALOG);
+        mDownloadFormsTask = new DownloadFormsTask();
+
+        mDownloadFormsTask.setDownloaderListener(this);
+
         mDownloadFormsTask.execute(arg);
     }
 
@@ -433,33 +476,97 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
     /**
      * Adds the selected form
      */
-    @SuppressWarnings("unchecked")
     private void downloadSelectedFiles() {
+        HashMap<String, FormDetails> filesToDownload = new HashMap<String, FormDetails>();
         totalCount = 0;
-        HashMap<String, String> filesToDownload = new HashMap<String, String>();
     
         SparseBooleanArray sba = getListView().getCheckedItemPositions();
         for (int i = 0; i < getListView().getCount(); i++) {
             if (sba.get(i, false)) {
                 String form = (String) getListAdapter().getItem(i);
-                filesToDownload.put(form, mFormNamesAndURLs.get(form));
+                filesToDownload.put(form, mFormNamesAndDetails.get(form));
             }
         }
         totalCount = filesToDownload.size();
     
         if (totalCount > 0) {
-            // show dialog box
-            showDialog(PROGRESS_DIALOG);
-    
-            mDownloadFormsTask = new DownloadFormsTask();
-            mDownloadFormsTask.setDownloaderListener(this);
-            mDownloadFormsTask.execute(filesToDownload);
+            SharedPreferences settings =
+                PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+ 
+            boolean deferForPassword = false;
+            String username =
+            	settings.getString(ServerPreferences.KEY_USERNAME, null);
+            if (username != null && username.length() != 0 ) {
+            	Set<String> hosts = new HashSet<String>();
+            	for ( FormDetails f : filesToDownload.values() ) {
+            		if ( f.downloadUrl != null ) {
+            			Uri u = Uri.parse(f.downloadUrl);
+                    	if ( !WebUtils.hasCredentials(username, u.getHost()) ) {
+                    		hosts.add(u.getHost());
+                    	}
+            		}
+            		if ( f.manifestUrl != null ) {
+            			Uri u = Uri.parse(f.manifestUrl);
+                    	if ( !WebUtils.hasCredentials(username, u.getHost()) ) {
+                    		hosts.add(u.getHost());
+                    	}
+            		}
+            	}
+
+            	if ( !hosts.isEmpty() ) {
+            		DownloadArgs args = new DownloadArgs();
+            		args.filesToDownload = filesToDownload;
+            		args.hosts = hosts;
+            		args.username = username;
+            		deferForPassword = true;
+            		launchPasswordDialog(args);
+            	}
+            }
+
+            if ( !deferForPassword ) {
+            	executeMultiDownload(filesToDownload);
+            }
+
         } else {
             Toast.makeText(getApplicationContext(), R.string.noselect_error, Toast.LENGTH_SHORT)
                     .show();
         }
     }
 
+    private void launchPasswordDialog( DownloadArgs args ) {
+    	if ( args.hosts.isEmpty() ) {
+    		executeMultiDownload(args.filesToDownload);
+    		return;
+    	}
+    	
+		String h = args.hosts.iterator().next();
+		args.hosts.remove(h);
+    	PasswordPromptDialogBuilder b = 
+    			new PasswordPromptDialogBuilder(this, 
+    											args.username, 
+    											h,
+    											new PasswordPromptDialogBuilder.OnOkListener() {
+
+													@Override
+													public void onOk(
+															Object okListenerContext) {
+														DownloadArgs args = (DownloadArgs) okListenerContext;
+									            		FormDownloadList.this.launchPasswordDialog(args);
+													}
+    				
+    			}, args);
+    	b.show();
+    }
+    
+    @SuppressWarnings("unchecked")
+	private void executeMultiDownload(HashMap<String, FormDetails> filesToDownload) {
+        // show dialog box
+        showDialog(PROGRESS_DIALOG);
+        mDownloadFormsTask = new DownloadFormsTask();
+        mDownloadFormsTask.setDownloaderListener(this);
+
+        mDownloadFormsTask.execute(filesToDownload);
+    }
 
     private int selectedItemCount() {
         int count = 0;

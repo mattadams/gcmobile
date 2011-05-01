@@ -14,36 +14,41 @@
 
 package com.radicaldynamic.groupinform.tasks;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.params.HttpClientParams;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
+import org.ektorp.DbAccessException;
+import org.ektorp.DocumentNotFoundException;
 
 import android.os.AsyncTask;
 import android.util.Log;
 
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.GenericDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
+import com.radicaldynamic.groupinform.documents.GenericDocument;
 import com.radicaldynamic.groupinform.listeners.InstanceUploaderListener;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.WebUtils;
 
 /**
  * Background task for uploading completed forms.
@@ -51,134 +56,217 @@ import com.radicaldynamic.groupinform.utilities.FileUtils;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<String>> {
-    private static final String t = "InstanceUploaderTask: ";
-    
-    //private static long MAX_BYTES = 1048576 - 1024;         // 1MB less 1KB overhead
-    private static final int CONNECTION_TIMEOUT = 30000;
-    
+
+    private static String t = "InstanceUploaderTask: ";
+    //private static long MAX_BYTES = 1048576 - 1024; // 1MB less 1KB overhead
     InstanceUploaderListener mStateListener;
-    String mUrl;   
+    String mUrl;
+    private static final int CONNECTION_TIMEOUT = 30000;
+
 
     public void setUploadServer(String newServer) {
         mUrl = newServer;
     }
-
+    
+    /**
+     * The values are the names of the instances to upload -- i.e., the directory names.
+     * 
+     */
     @Override
     protected ArrayList<String> doInBackground(String... values) {
-        ArrayList<String> uploadedIntances = new ArrayList<String>();
+        ArrayList<String> uploadedInstances = new ArrayList<String>();
         int instanceCount = values.length;
+
+        // get shared HttpContext so that authentication and cookies are retained.
+        HttpContext localContext = Collect.getInstance().getHttpContext();
+        
+        URI u = null;
+        try {
+            URL url = new URL(mUrl);
+            u = url.toURI();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
+    	HttpClient httpclient = WebUtils.createHttpClient(CONNECTION_TIMEOUT);
+        
+        HttpHead httpHead = WebUtils.createOpenRosaHttpHead(u);
+
+        // prepare response and return uploaded
+        HttpResponse response = null;
+        try {
+            response = httpclient.execute(httpHead,localContext);
+            int statusCode = response.getStatusLine().getStatusCode();
+            if ( statusCode != 204 ) {
+            	Log.w(t, "Status code on Head request: " + statusCode );
+            }
+	    } catch (ClientProtocolException e) {
+	        e.printStackTrace();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    } catch (IllegalStateException e) {
+	        e.printStackTrace();
+	    }
 
         for (int i = 0; i < instanceCount; i++) {
             publishProgress(i + 1, instanceCount);
-
-            // Configure connection
-            HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, CONNECTION_TIMEOUT);
-            HttpConnectionParams.setSoTimeout(params, CONNECTION_TIMEOUT);
-            HttpClientParams.setRedirecting(params, false);
-
-            // Setup client
-            DefaultHttpClient httpClient = new DefaultHttpClient(params);
-            HttpPost httpPost = new HttpPost(mUrl);
-
-            // MIME POST
-            MultipartEntity entity = new MultipartEntity();
             
-            FormInstanceDocument instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, values[i]);
+            FormInstanceDocument instance = null;
             
-            if (instance.getDateAggregated() != null && instance.getDateUpdatedAsCalendar().after(instance.getDateAggregatedAsCalendar())) {
-                Log.w(Collect.LOGTAG, t + values[i] + " cannot be uploaded to ODK Aggregate: dateUpdated is newer than dateAggregated");
-                cancel(true);
-            }
-            
-            HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
-            
-            for (Entry<String, Attachment> entry : attachments.entrySet()) {
-                String key = entry.getKey();
-                String contentType = entry.getValue().getContentType();
+            // Download instance files from database so ODK code can upload them
+            try {
+                instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, values[i]);
+                
+                if (instance.getDateAggregated() != null && instance.getDateUpdatedAsCalendar().after(instance.getDateAggregatedAsCalendar())) {
+                    Log.w(Collect.LOGTAG, t + values[i] + " cannot be uploaded to ODK Aggregate: dateUpdated is newer than dateAggregated");
+                    cancel(true);
+                }
+                
+                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
+                
+                for (Entry<String, Attachment> entry : attachments.entrySet()) {                    
+                    String key = entry.getKey();
 
-                AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(values[i], key);  
-                ByteArrayOutputStream output = new ByteArrayOutputStream();
-                byte[] buffer = new byte[8192];
-                int bytesRead = 0;
-
-                FileOutputStream file;
-
-                try {
+                    AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(values[i], key);
+                    
+                    // ODK code below expects the XML instance to have a .xml extension
                     if (key.equals("xml")) 
                         key = values[i] + ".xml";
                     
-                    file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
-                    
+                    FileOutputStream file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
+                    byte[] buffer = new byte[8192];
+                    int bytesRead = 0;                    
+
                     while ((bytesRead = ais.read(buffer)) != -1) {
                         file.write(buffer, 0, bytesRead);
                     }
-                    
+
                     ais.close();
-                    output.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    file.close();
                 }
-
-                File f = new File(FileUtils.EXTERNAL_CACHE, key);
-                FileBody fb = new FileBody(f, contentType);
-                
-                if (contentType.equals("text/xml"))
-                    entity.addPart("xml_submission_file", fb);
-                else 
-                    entity.addPart(f.getName(), fb);      
-                
-                Log.i(Collect.LOGTAG, t + "added " + contentType + " file named " + f.getName() + " prior to httpPost");                
+            } catch (DocumentNotFoundException e) {
+                Log.w(Collect.LOGTAG, t + "DocumentNotFoundException: " + e.toString());
+                cancel(true);
+            } catch (DbAccessException e) {
+                Log.w(Collect.LOGTAG, t + "DbAccessException: " + e.toString());
+                cancel(true);
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
+                e.printStackTrace();
+                cancel(true);
             }
-            
-            httpPost.setEntity(entity);
 
-            // Prepare response and return uploaded
-            HttpResponse response = null;
+            HttpPost httppost = WebUtils.createOpenRosaHttpPost(u);
             
+            // get instance file
+            File file = new File(FileUtils.EXTERNAL_CACHE, values[i] + ".xml");
+
+            // find all files in parent directory
+            File[] files = file.getParentFile().listFiles();
+            if (files == null) {
+                Log.e(t, "no files to upload");
+                cancel(true);
+            }
+
+            // mime post
+            MultipartEntity entity = new MultipartEntity();
+            for (int j = 0; j < files.length; j++) {
+                File f = files[j];
+                FileBody fb;
+                if (f.getName().endsWith(".xml")) {
+                	if ( f.getName().equals(values[i] + ".xml")) {
+	                    fb = new FileBody(f, "text/xml");
+	                    entity.addPart("xml_submission_file", fb);
+	                    Log.i(t, "added xml_submission_file: " + f.getName());
+                	} else {
+	                    fb = new FileBody(f, "text/xml");
+	                    entity.addPart(f.getName(), fb);
+	                    Log.i(t, "added xml file " + f.getName());
+                	}
+                } else if (f.getName().endsWith(".jpg")) {
+                    fb = new FileBody(f, "image/jpeg");
+                    entity.addPart(f.getName(), fb);
+                    Log.i(t, "added image file " + f.getName());
+                } else if (f.getName().endsWith(".3gpp")) {
+                    fb = new FileBody(f, "audio/3gpp");
+                    entity.addPart(f.getName(), fb);
+                    Log.i(t, "added audio file " + f.getName());
+                } else if (f.getName().endsWith(".3gp")) {
+                    fb = new FileBody(f, "video/3gpp");
+                    entity.addPart(f.getName(), fb);
+                    Log.i(t, "added video file " + f.getName());
+                } else if (f.getName().endsWith(".mp4")) {
+                    fb = new FileBody(f, "video/mp4");
+                    entity.addPart(f.getName(), fb);
+                    Log.i(t, "added video file " + f.getName());
+                } else {
+                    Log.w(t, "unsupported file type, not adding file: " + f.getName());
+                }
+            }
+            httppost.setEntity(entity);
+
+            // prepare response and return uploaded
+            response = null;
             try {
-                response = httpClient.execute(httpPost);
+                response = httpclient.execute(httppost,localContext);
             } catch (ClientProtocolException e) {
                 e.printStackTrace();
-                return uploadedIntances;
+                return uploadedInstances;
             } catch (IOException e) {
                 e.printStackTrace();
-                return uploadedIntances;
+                return uploadedInstances;
             } catch (IllegalStateException e) {
                 e.printStackTrace();
-                return uploadedIntances;
+                return uploadedInstances;
             }
 
-            // Check response
-            // TODO: This isn't handled correctly
-            String serverLocation = null;
-            Header[] h = response.getHeaders("Location");
-            
-            if (h != null && h.length > 0) {
-                serverLocation = h[0].getValue();
-            } else {
-                // Something should be done here...
-                Log.e(Collect.LOGTAG, t + "location header was absent");
-            }
-            
             int responseCode = response.getStatusLine().getStatusCode();
-            Log.e(Collect.LOGTAG, t + "received response code " + responseCode);
+            Log.e(t, "Response code:" + responseCode);
+            // check response.
+			try {
+				BufferedReader r;
+				r = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+				String line;
+				while ( (line = r.readLine()) != null ) {
+					if ( responseCode == 201 || responseCode == 202) {
+						Log.i(t, line);
+					} else {
+						Log.e(t, line);
+					}
+				}
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					response.getEntity().getContent().close();
+				} catch (IllegalStateException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 
-            // Verify that your response came from a known server
-            if (serverLocation != null && mUrl.contains(serverLocation) && responseCode == 201) {
-                uploadedIntances.add(values[i]);
+            // verify that the response was a 201 or 202.  
+			// If it wasn't, the submission has failed.
+            if (responseCode == 201 || responseCode == 202) {
+                uploadedInstances.add(values[i]);
                 
                 instance.setDateAggregated(GenericDocument.generateTimestamp());
                 Collect.getInstance().getDbService().getDb().update(instance);
             }
-            
+
             // Remove cache files pertaining to this upload
             Log.d(Collect.LOGTAG, t + "purging uploaded files");
             FileUtils.deleteExternalInstanceCacheFiles(values[i]);
         }
 
-        return uploadedIntances;
+        return uploadedInstances;
     }
+
 
     @Override
     protected void onPostExecute(ArrayList<String> value) {
@@ -189,6 +277,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
         }
     }
 
+
     @Override
     protected void onProgressUpdate(Integer... values) {
         synchronized (this) {
@@ -198,6 +287,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             }
         }
     }
+
 
     public void setUploaderListener(InstanceUploaderListener sl) {
         synchronized (this) {

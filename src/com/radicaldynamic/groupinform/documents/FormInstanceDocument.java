@@ -17,7 +17,7 @@ public class FormInstanceDocument extends GenericDocument
 
     /*
      * Placeholder: Created when a new instance is created for entry (may be deleted if instance entry is cancelled before being saved)
-     * Draft:       A form instance that is saved but not marked complete
+     * Draft:       A form instance that is saved but not marked complete (same as ODK "incomplete" status)
      * Complete:    A form instance that is saved and marked complete
      * Updated:     Not an actual status (represents forms that have been updated/created by others)
      * Removed:     A form instance marked for delayed deletion

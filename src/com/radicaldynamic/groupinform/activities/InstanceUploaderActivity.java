@@ -22,6 +22,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
@@ -30,6 +31,9 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.listeners.InstanceUploaderListener;
 import com.radicaldynamic.groupinform.preferences.ServerPreferences;
 import com.radicaldynamic.groupinform.tasks.InstanceUploaderTask;
+import com.radicaldynamic.groupinform.utilities.PasswordPromptDialogBuilder;
+import com.radicaldynamic.groupinform.utilities.WebUtils;
+import com.radicaldynamic.groupinform.utilities.PasswordPromptDialogBuilder.OnOkListener;
 
 /**
  * Activity to upload completed forms.
@@ -45,6 +49,11 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
 
     private InstanceUploaderTask mInstanceUploaderTask;
     private int totalCount = -1;
+    
+    private static final class UploadArgs {
+        String url;
+        ArrayList<String> instances;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,24 +75,55 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         mInstanceUploaderTask = (InstanceUploaderTask) getLastNonConfigurationInstance();
         
         if (mInstanceUploaderTask == null) {
-            // Setup dialog and upload task
-            showDialog(PROGRESS_DIALOG);
-            
-            mInstanceUploaderTask = new InstanceUploaderTask();
-
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
             String url = settings.getString(ServerPreferences.KEY_SERVER, getString(R.string.default_server)) + "/submission";
-            mInstanceUploaderTask.setUploadServer(url);
-            
-            totalCount = instances.size();
 
-            // Convert array list to an array
-            String[] sa = instances.toArray(new String[totalCount]);
-            
-            mInstanceUploaderTask.execute(sa);
+            UploadArgs args = new UploadArgs();
+            args.instances = instances;
+            args.url = url;
+            boolean deferForPassword = false;
+            String username =
+                settings.getString(ServerPreferences.KEY_USERNAME, null);
+            if (username != null && username.length() != 0 ) {
+                Uri u = Uri.parse(url);
+                if ( !WebUtils.hasCredentials(username, u.getHost()) ) {
+                    PasswordPromptDialogBuilder b = 
+                        new PasswordPromptDialogBuilder(this, 
+                                username, 
+                                u.getHost(),
+                                new OnOkListener() {
+
+                            @Override
+                            public void onOk(
+                                    Object okListenerContext) {
+                                UploadArgs args = (UploadArgs) okListenerContext;
+                                InstanceUploaderActivity.this.executeUpload(args);
+                            }
+
+                        },
+                        args);
+                    deferForPassword = true;
+                    b.show();
+                }
+            }
+            if ( !deferForPassword ) {
+                executeUpload(args);
+            }
         }
     }
+    
+    private void executeUpload(UploadArgs args) {
+        // setup dialog and upload task
+        showDialog(PROGRESS_DIALOG);
+        mInstanceUploaderTask = new InstanceUploaderTask();
 
+        mInstanceUploaderTask.setUploadServer(args.url);
+        totalCount = args.instances.size();
+
+        // convert array list to an array
+        String[] sa = args.instances.toArray(new String[totalCount]);
+        mInstanceUploaderTask.execute(sa);
+    }
 
     // TODO: if uploadingComplete() when activity backgrounded, won't work.
     // just check task status in onResume
