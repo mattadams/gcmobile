@@ -31,6 +31,6 @@
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="Register" />        
+        android:text="Get Started Now!" />        
 </LinearLayout>
 </ScrollView>
