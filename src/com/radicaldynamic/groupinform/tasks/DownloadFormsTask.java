@@ -315,7 +315,7 @@ public class DownloadFormsTask extends
             				continue; 
             			}
         				formList.put(formName, 
-        						new FormDetails(formId, formName, modelVersion, uiVersion, description, downloadUrl, manifestUrl));
+        						new FormDetails(formName, formId, modelVersion, uiVersion, description, downloadUrl, manifestUrl));
         			}                			
                 } else {
                 	// Aggregate 0.9.x mode...
@@ -344,7 +344,7 @@ public class DownloadFormsTask extends
                 						+ " is missing form name or url attribute"));
                 				continue;
                 			}
-        					formList.put(formName, new FormDetails(null, formName, null, null, null, downloadUrl, null));
+        					formList.put(formName, new FormDetails(formName, null, null, null, null, downloadUrl, null));
         				}
 	                }
                 }
