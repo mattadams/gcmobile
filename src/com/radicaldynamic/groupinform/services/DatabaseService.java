@@ -273,11 +273,11 @@ public class DatabaseService extends Service {
                 }
             } else {
                 connectToLocal();
-                
+
                 // Wait for a connection to become available
                 for (int i = 1; i > 0; ++i) {
                     if (mConnectedToLocal == true) 
-                        break;              
+                        break;
                     
                     // Ensure that we do not run out of int space too soon
                     try {
@@ -355,7 +355,6 @@ public class DatabaseService extends Service {
         
         try {                     
             mLocalHttpClient = new StdHttpClient.Builder()
-                .maxConnections(1)
                 .host(host)
                 .port(port)
                 .username("admin")
@@ -388,7 +387,6 @@ public class DatabaseService extends Service {
         
         try {                     
             mRemoteHttpClient = new StdHttpClient.Builder()
-                .maxConnections(1)
                 .enableSSL(true)            
                 .host(host)
                 .port(port)

@@ -14,6 +14,7 @@
 
 package com.radicaldynamic.groupinform.tasks;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -178,10 +179,11 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
                         // Make sure we have the most current revision number
                         FormInstanceDocument document = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mFormInstanceDoc.getId());
 
-                        FileInputStream fis = new FileInputStream(new File(FileUtils.EXTERNAL_CACHE, file));
+                        File f = new File(FileUtils.EXTERNAL_CACHE, file);
+                        FileInputStream fis = new FileInputStream(f);
                         String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1));
                         
-                        AttachmentInputStream a = new AttachmentInputStream(file, fis, contentType);
+                        AttachmentInputStream a = new AttachmentInputStream(file, fis, contentType, f.length());
                         
                         // Must use the revision number (why?) http://code.google.com/p/ektorp/issues/detail?id=28
                         Collect.getInstance().getDbService().getDb().createAttachment(document.getId(), document.getRevision(), a);

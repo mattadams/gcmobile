@@ -907,7 +907,9 @@ public class BrowserActivity extends ListActivity
                 }
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
-            } catch (DbAccessException e) {                
+                Log.w(Collect.LOGTAG, t + e.toString());
+            } catch (DbAccessException e) {
+                Log.w(Collect.LOGTAG, t + e.toString());
                 folderUnavailable = true;
             }
 
