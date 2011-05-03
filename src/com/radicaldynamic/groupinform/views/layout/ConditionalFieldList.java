@@ -139,7 +139,7 @@ public class ConditionalFieldList  implements IGroupLayout {
     }
 
     @Override
-	public void buildView(GroupView view, List<FormIndex> indices, String instancePath, FormEntryCaption[] groups) {
+	public void buildView(GroupView view, List<FormIndex> indices, String instanceDirPath, FormEntryCaption[] groups) {
 
         FormEntryModel model = Collect.getInstance().getFormEntryController().getModel();
 
@@ -204,7 +204,7 @@ public class ConditionalFieldList  implements IGroupLayout {
 
 		FormEntryPrompt formEntryPrompt = Collect.getInstance().getFormEntryController().getModel().getQuestionPrompt(fi);
         // if question or answer type is not supported, use text widget
-		AbstractQuestionWidget qvSelect = WidgetFactory.createWidgetFromPrompt(view.getHandler(), formEntryPrompt, view.getContext(), instancePath);
+		AbstractQuestionWidget qvSelect = WidgetFactory.createWidgetFromPrompt(view.getHandler(), formEntryPrompt, view.getContext(), instanceDirPath);
         viewList.add(qvSelect);
 		
         if ( values != null && qvSelect instanceof IMultipartSelectWidget ) {
@@ -223,7 +223,7 @@ public class ConditionalFieldList  implements IGroupLayout {
 		        	for ( FormIndex nestedFormIndex : nestedWidgets ) {
 		        		formEntryPrompt = Collect.getInstance().getFormEntryController().getModel().getQuestionPrompt(nestedFormIndex);
 		        		AbstractQuestionWidget nestedWidget =
-		        			WidgetFactory.createWidgetFromPrompt(view.getHandler(), formEntryPrompt, view.getContext(), instancePath);
+		        			WidgetFactory.createWidgetFromPrompt(view.getHandler(), formEntryPrompt, view.getContext(), instanceDirPath);
 
 		        		nestedWidget.buildView(view);
 		                
@@ -256,7 +256,7 @@ public class ConditionalFieldList  implements IGroupLayout {
 
     		formEntryPrompt = Collect.getInstance().getFormEntryController().getModel().getQuestionPrompt(fi);
             // if question or answer type is not supported, use text widget
-    		AbstractQuestionWidget mQuestionWidget = WidgetFactory.createWidgetFromPrompt(view.getHandler(), formEntryPrompt, view.getContext(), instancePath);
+    		AbstractQuestionWidget mQuestionWidget = WidgetFactory.createWidgetFromPrompt(view.getHandler(), formEntryPrompt, view.getContext(), instanceDirPath);
 
     		mQuestionWidget.buildView(view);
             

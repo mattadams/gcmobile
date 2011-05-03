@@ -262,6 +262,27 @@ public final class FileUtils {
             }
         }
         return mFolderList;
+    }    
+    
+    public static final String getInstanceDirPath(String instanceFilePath) {
+        File instance = new File(instanceFilePath);
+        File instanceDir = instance.getParentFile();
+        if ( !instance.getName().equals(instanceDir.getName() + ".xml")) {
+            return null;
+        }
+        return instanceDir.getAbsolutePath();
+    }
+
+    public static final String getInstanceFilePath(String instanceDirPath) {
+        File instanceDir = new File(instanceDirPath);
+        File instance = new File(instanceDir, instanceDir.getName() + ".xml");
+        return instance.getAbsolutePath();
+    }
+
+    public static final String getSubmissionBlobPath(String instanceDirPath) {
+        File instanceDir = new File(instanceDirPath);
+        File submissionBlob = new File(instanceDir, instanceDir.getName() + ".xml.submit");
+        return submissionBlob.getAbsolutePath();
     }
 
     public static final String getMd5Hash(File file) {

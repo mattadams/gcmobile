@@ -14,7 +14,15 @@
 
 package com.radicaldynamic.groupinform.activities;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.ektorp.DbAccessException;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -22,12 +30,14 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.InstanceUploaderListener;
 import com.radicaldynamic.groupinform.preferences.ServerPreferences;
 import com.radicaldynamic.groupinform.tasks.InstanceUploaderTask;
@@ -41,7 +51,7 @@ import com.radicaldynamic.groupinform.utilities.PasswordPromptDialogBuilder.OnOk
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class InstanceUploaderActivity extends Activity implements InstanceUploaderListener {
-    //private static final String t = "InstanceUploaderActivity: ";
+    private static final String t = "InstanceUploaderActivity: ";
 
     private final static int PROGRESS_DIALOG = 1;
     private final static String KEY_TOTALCOUNT = "totalcount";
@@ -51,8 +61,9 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
     private int totalCount = -1;
     
     private static final class UploadArgs {
-        String url;
+        Set<String> hosts;
         ArrayList<String> instances;
+        String username;
     }
 
     @Override
@@ -62,10 +73,8 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.send_data));
 
         // Get instances to upload
-        Intent i = getIntent();
-        
-        ArrayList<String> instances = i.getStringArrayListExtra(FormEntryActivity.KEY_INSTANCES);
-
+        Intent intent = getIntent();        
+        ArrayList<String> instances = intent.getStringArrayListExtra(FormEntryActivity.KEY_INSTANCES);
         // If nothing to upload
         if (instances == null) {
             return;
@@ -76,52 +85,94 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         
         if (mInstanceUploaderTask == null) {
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-            String url = settings.getString(ServerPreferences.KEY_SERVER, getString(R.string.default_server)) + "/submission";
 
-            UploadArgs args = new UploadArgs();
-            args.instances = instances;
-            args.url = url;
-            boolean deferForPassword = false;
             String username =
                 settings.getString(ServerPreferences.KEY_USERNAME, null);
+
+            UploadArgs argSet = new UploadArgs();
+            argSet.instances = instances;
+            argSet.hosts = new HashSet<String>();
+            argSet.username = username;
+
+            boolean deferForPassword = false;
+
             if (username != null && username.length() != 0 ) {
-                Uri u = Uri.parse(url);
-                if ( !WebUtils.hasCredentials(username, u.getHost()) ) {
-                    PasswordPromptDialogBuilder b = 
-                        new PasswordPromptDialogBuilder(this, 
-                                username, 
-                                u.getHost(),
-                                new OnOkListener() {
+                for (int i = 0; i < instances.size(); i++) {
+                    FormInstanceDocument instance = null;
+                    String urlString = null;
+                    
+                    try {
+                        instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instances.get(i));                        
+                        urlString = instance.getSubmissionUri();
+                        
+                        URL url = new URL(urlString);
+                        URI uri = url.toURI();
+                        String host = uri.getHost();
 
-                            @Override
-                            public void onOk(
-                                    Object okListenerContext) {
-                                UploadArgs args = (UploadArgs) okListenerContext;
-                                InstanceUploaderActivity.this.executeUpload(args);
-                            }
+                        if ( !WebUtils.hasCredentials(username, host) ) {
+                            argSet.hosts.add(host);
+                        }                        
+                    } catch (DbAccessException e) {
+                        Log.w(Collect.LOGTAG, t + e.toString());
+                    } catch ( MalformedURLException e ) {
+                        e.printStackTrace();
+                        Log.e(t, "Invalid url: " + urlString + " for submission " + instance.getId());
+                    } catch (URISyntaxException e ) {
+                        e.printStackTrace();
+                        Log.e(t, "Invalid uri: " + urlString + " for submission " + instance.getId());
+                    } catch ( Exception e ) {
+                        e.printStackTrace();
+                        Log.e(t, "Invalid uri: " + ((urlString == null) ? "null" : urlString) +
+                                " for submission " + instance.getId());
+                    }                
+                }
 
-                        },
-                        args);
+                // OK. we have the list of distinct hosts...
+                if ( !argSet.hosts.isEmpty() ) {
                     deferForPassword = true;
-                    b.show();
+                    launchPasswordDialog(argSet);
                 }
             }
+
             if ( !deferForPassword ) {
-                executeUpload(args);
+                executeUpload(instances);
             }
         }
     }
+
+    private void launchPasswordDialog( UploadArgs args ) {
+        if ( args.hosts.isEmpty() ) {
+            executeUpload(args.instances);
+            return;
+        }
+
+        String h = args.hosts.iterator().next();
+        args.hosts.remove(h);
+
+        PasswordPromptDialogBuilder b = 
+            new PasswordPromptDialogBuilder(
+                    this, 
+                    args.username, 
+                    h,
+                    new OnOkListener() {
+                        @Override
+                        public void onOk(Object okListenerContext) {
+                            UploadArgs args = (UploadArgs) okListenerContext;
+                            InstanceUploaderActivity.this.launchPasswordDialog(args);
+                        }
+                    }, args);
+        b.show();
+    }
     
-    private void executeUpload(UploadArgs args) {
+    private void executeUpload(ArrayList<String> instances) {
         // setup dialog and upload task
         showDialog(PROGRESS_DIALOG);
         mInstanceUploaderTask = new InstanceUploaderTask();
 
-        mInstanceUploaderTask.setUploadServer(args.url);
-        totalCount = args.instances.size();
+        totalCount = instances.size();
 
         // convert array list to an array
-        String[] sa = args.instances.toArray(new String[totalCount]);
+        String[] sa = instances.toArray(new String[totalCount]);
         mInstanceUploaderTask.execute(sa);
     }
 

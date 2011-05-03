@@ -25,7 +25,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.net.ssl.SSLException;
@@ -65,13 +68,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
     private static String t = "InstanceUploaderTask: ";
     //private static long MAX_BYTES = 1048576 - 1024; // 1MB less 1KB overhead
     InstanceUploaderListener mStateListener;
-    String mUrl;
     private static final int CONNECTION_TIMEOUT = 30000;
-
-
-    public void setUploadServer(String newServer) {
-        mUrl = newServer;
-    }
     
     /**
      * The values are the names of the instances to upload -- i.e., the directory names.
@@ -81,128 +78,146 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
     protected ArrayList<String> doInBackground(String... values) {
         ArrayList<String> uploadedInstances = new ArrayList<String>();
         int instanceCount = values.length;
-        ArrayList<String> uploadsList = new ArrayList<String>();
-        for ( int i = 0 ; i < instanceCount ; ++i ) {
-            uploadsList.add(values[i]);
-        }
-
+        Set<String> instances = new HashSet<String>();  
+        instances.addAll(Arrays.asList(values));
+        
         // get shared HttpContext so that authentication and cookies are retained.
-        HttpContext localContext = Collect.getInstance().getHttpContext();
-        
-        URI u = null;
-        try {
-            URL url = new URL(mUrl);
-            u = url.toURI();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            return uploadedInstances;
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            return uploadedInstances;
-        }
+        HttpContext localContext = Collect.getInstance().getHttpContext();        
+        HttpClient httpclient = WebUtils.createHttpClient(CONNECTION_TIMEOUT);
 
-        boolean openRosaServer = false;
-    	HttpClient httpclient = WebUtils.createHttpClient(CONNECTION_TIMEOUT);
-        
-        HttpHead httpHead = WebUtils.createOpenRosaHttpHead(u);
+        for (int i = 0; i < instances.size(); i++) {
+            FormInstanceDocument instanceDoc = null;
+            
+            try {
+                instanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, values[i]);
+            } catch (DocumentNotFoundException e) {
+                Log.w(Collect.LOGTAG, t + "DocumentNotFoundException: " + e.toString());
+                continue;
+            } catch (DbAccessException e) {
+                Log.w(Collect.LOGTAG, t + "DbAccessException: " + e.toString());
+                continue;
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
+                e.printStackTrace();
+                continue;
+            }
 
-        // prepare response
-        HttpResponse response = null;
-        try {
-            response = httpclient.execute(httpHead,localContext);
-            int statusCode = response.getStatusLine().getStatusCode();
-            if ( statusCode == 204 ) {
-                Header[] locations = response.getHeaders("Location");
-                if ( locations != null && locations.length == 1 ) {
-                    try {
-                        URL url = new URL (locations[0].getValue());
-                        URI uNew = url.toURI();
-                        if ( u.getHost().equalsIgnoreCase(uNew.getHost()) ) {
-                            openRosaServer = true;
-                            // trust the server to tell us a new location
-                            // ... and possibly to use https instead.
-                            u = uNew;
-                        } else {
-                            // Don't follow a redirection attempt to a different host.
-                            // We can't tell if this is a spoof or not.
-                            Log.e(t, "Unexpected redirection attempt to a different host: " + uNew.toString());
+            String urlString = instanceDoc.getSubmissionUri();
+            URI u = null;
+
+            try {
+                URL url = new URL(urlString);
+                u = url.toURI();
+            } catch ( MalformedURLException e ) {
+                e.printStackTrace();
+                Log.e(t, "Invalid url: " + urlString + " for submission " + instanceDoc.getId());
+            } catch (URISyntaxException e ) {
+                e.printStackTrace();
+                Log.e(t, "Invalid uri: " + urlString + " for submission " + instanceDoc.getId());
+            }
+
+            boolean openRosaServer = false;
+
+            HttpHead httpHead = WebUtils.createOpenRosaHttpHead(u);
+
+            // prepare response
+            HttpResponse response = null;
+
+            try {
+                response = httpclient.execute(httpHead,localContext);
+
+                int statusCode = response.getStatusLine().getStatusCode();
+
+                if ( statusCode == 204 ) {
+                    Header[] locations = response.getHeaders("Location");
+
+                    if ( locations != null && locations.length == 1 ) {
+                        try {
+                            URL url = new URL (locations[0].getValue());
+                            URI uNew = url.toURI();
+
+                            if ( u.getHost().equalsIgnoreCase(uNew.getHost()) ) {
+                                openRosaServer = true;
+                                // trust the server to tell us a new location
+                                // ... and possibly to use https instead.
+                                u = uNew;
+                            } else {
+                                // Don't follow a redirection attempt to a different host.
+                                // We can't tell if this is a spoof or not.
+                                Log.e(t, "Unexpected redirection attempt to a different host: " + uNew.toString());
+                                return uploadedInstances;
+                            }
+                        } catch ( MalformedURLException e ) {
+                            e.printStackTrace();
+                            return uploadedInstances;
+                        } catch (URISyntaxException e) {
+                            e.printStackTrace();
                             return uploadedInstances;
                         }
-                    } catch ( MalformedURLException e ) {
+                    }
+                } else {
+                    try {
+                        // don't really care about the stream...
+                        InputStream is = response.getEntity().getContent();
+                        // read to end of stream...
+                        final long count = 1024L;
+                        while ( is.skip(count) == count);
+                        is.close();
+                    } catch ( IOException e ) {
                         e.printStackTrace();
                         return uploadedInstances;
-                    } catch (URISyntaxException e) {
+                    } catch ( IllegalStateException e ) {
                         e.printStackTrace();
                         return uploadedInstances;
                     }
+                    Log.w(t, "Status code on Head request: " + statusCode );
                 }
-            } else {
-                try {
-                    // don't really care about the stream...
-                    InputStream is = response.getEntity().getContent();
-                    // read to end of stream...
-                    final long count = 1024L;
-                    while ( is.skip(count) == count);
-                    is.close();
-                } catch ( IOException e ) {
-                    e.printStackTrace();
-                    return uploadedInstances;
-                } catch ( IllegalStateException e ) {
-                    e.printStackTrace();
-                    return uploadedInstances;
-                }
-            	Log.w(t, "Status code on Head request: " + statusCode );
+            } catch (SSLException e) {
+                e.printStackTrace();
+                return uploadedInstances;
+            } catch (ClientProtocolException e) {
+                e.printStackTrace();
+                return uploadedInstances;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return uploadedInstances;
+            } catch (IllegalStateException e) {
+                e.printStackTrace();
+                return uploadedInstances;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return uploadedInstances;
             }
-        } catch (SSLException e) {
-            e.printStackTrace();
-            return uploadedInstances;
-	    } catch (ClientProtocolException e) {
-	        e.printStackTrace();
-	        return uploadedInstances;
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	        return uploadedInstances;
-	    } catch (IllegalStateException e) {
-	        e.printStackTrace();
-	        return uploadedInstances;
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return uploadedInstances;
-	    }
-	    // At this point, we may have updated the uri to use https.
-	    // This occurs only if the Location header keeps the host name
-	    // the same.  If it specifies a different host name, we error
-	    // out.
-	    // 
-	    // And we may have set authentication cookies in our 
-	    // cookiestore (referenced by localContext) that will enable
-	    // authenticated publication to the server.
-	    // 
-        for (int i = 0; i < instanceCount; i++) {
+
+            // At this point, we may have updated the uri to use https.
+            // This occurs only if the Location header keeps the host name
+            // the same.  If it specifies a different host name, we error
+            // out.
+            // 
+            // And we may have set authentication cookies in our 
+            // cookiestore (referenced by localContext) that will enable
+            // authenticated publication to the server.
+
             publishProgress(i + 1, instanceCount);
-            
-            FormInstanceDocument instance = null;
-            
-            // Download instance files from database so ODK code can upload them
+
+            HttpPost httppost = WebUtils.createOpenRosaHttpPost(u);
+
             try {
-                instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, values[i]);
-                
-                if (instance.getDateAggregated() != null && instance.getDateUpdatedAsCalendar().after(instance.getDateAggregatedAsCalendar())) {
-                    Log.w(Collect.LOGTAG, t + values[i] + " cannot be uploaded to ODK Aggregate: dateUpdated is newer than dateAggregated");
-                    return uploadedInstances;
-                }
-                
-                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
-                
+                // Download files from database
+                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instanceDoc.getAttachments();
+
                 for (Entry<String, Attachment> entry : attachments.entrySet()) {                    
                     String key = entry.getKey();
 
                     AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(values[i], key);
-                    
+
                     // ODK code below expects the XML instance to have a .xml extension
                     if (key.equals("xml")) 
                         key = values[i] + ".xml";
-                    
+
+                    if (key.equals("xml.submit"))
+                        key = values[i] + ".xml.submit";
+
                     FileOutputStream file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
                     byte[] buffer = new byte[8192];
                     int bytesRead = 0;                    
@@ -216,21 +231,22 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                 }
             } catch (DocumentNotFoundException e) {
                 Log.w(Collect.LOGTAG, t + "DocumentNotFoundException: " + e.toString());
-                return uploadedInstances;
+                continue;
             } catch (DbAccessException e) {
                 Log.w(Collect.LOGTAG, t + "DbAccessException: " + e.toString());
-                return uploadedInstances;
+                continue;
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
                 e.printStackTrace();
-                return uploadedInstances;
+                continue;
             }
 
-            HttpPost httppost = WebUtils.createOpenRosaHttpPost(u);
-            
             // get instance file
-            File file = new File(FileUtils.EXTERNAL_CACHE, values[i] + ".xml");
-            String xmlInstanceFile = file.getName();
+            File instanceFile = new File(FileUtils.EXTERNAL_CACHE, values[i] + ".xml");
+            File file = new File(FileUtils.EXTERNAL_CACHE, values[i] + ".xml.submit");
+
+            String submissionFile = file.getName();
+            String xmlInstanceFile = instanceFile.getName();
 
             // find all files in parent directory
             File[] files = file.getParentFile().listFiles();
@@ -245,27 +261,32 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
 
             // mime post
             MultipartEntity entity = new MultipartEntity();
+
             for (int j = 0; j < files.length; j++) {
                 File f = files[j];
                 FileBody fb;
-                String fileName = f.getName();
-                int idx = fileName.lastIndexOf(".");
+                String fileName = f.getName();                    
+                int idx = fileName.lastIndexOf(".");                    
                 String extension = "";
+
                 if ( idx != -1 ) {
                     extension = fileName.substring(idx+1);
                 }
+
                 String contentType = m.getMimeTypeFromExtension(extension);
 
-                if (extension.equals("xml")) {
-                    if ( f.getName().equals(xmlInstanceFile)) {
-	                    fb = new FileBody(f, "text/xml");
-	                    entity.addPart("xml_submission_file", fb);
-	                    Log.i(t, "added xml_submission_file: " + f.getName());
-                	} else if ( openRosaServer ) {
-	                    fb = new FileBody(f, "text/xml");
-	                    entity.addPart(f.getName(), fb);
-	                    Log.i(t, "added xml file " + f.getName());
-                	}
+                if ( fileName.equals(submissionFile) ) {
+                    fb = new FileBody(f, "text/xml");
+                    entity.addPart("xml_submission_file", fb);
+                    Log.i(t, "added xml_submission_file: " + f.getName());
+                } else if ( fileName.equals(xmlInstanceFile) ) {
+                    // skip it...we are sending submission file (above)
+                } else if (extension.equals("xml")) {
+                    if ( openRosaServer ) {
+                        fb = new FileBody(f, "text/xml");
+                        entity.addPart(f.getName(), fb);
+                        Log.i(t, "added xml file " + f.getName());
+                    }
                 } else if (extension.equals("jpg")) {
                     fb = new FileBody(f, "image/jpeg");
                     entity.addPart(f.getName(), fb);
@@ -305,10 +326,12 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
                     Log.w(t, "unrecognized file type " + f.getName());
                 }
             }
+
             httppost.setEntity(entity);
 
             // prepare response and return uploaded
             response = null;
+
             try {
                 response = httpclient.execute(httppost,localContext);
             } catch (ClientProtocolException e) {
@@ -327,53 +350,57 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<S
             // check response.
             InputStream is = null;
             BufferedReader r = null;
-			try {
-			    is = response.getEntity().getContent();
-			    r = new BufferedReader(new InputStreamReader(is));
-				String line;
-				while ( (line = r.readLine()) != null ) {
-					if ( responseCode == 201 || responseCode == 202) {
-						Log.i(t, line);
-					} else {
-						Log.e(t, line);
-					}
-				}
-			} catch (IllegalStateException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-			    if ( r != null ) {
-			        try {
-			            r.close();
-			        } catch ( Exception e ) {
-			        } finally {
-			            r = null;
-			        }
-			    }
-			    if ( is != null ) {
-			        try {
-			            is.close();
-			        } catch ( Exception e ) {
-			        } finally {
-			            is = null;
-			        }
-				}
-			}
+
+            try {
+                is = response.getEntity().getContent();
+                r = new BufferedReader(new InputStreamReader(is));
+                String line;
+
+                while ( (line = r.readLine()) != null ) {
+                    if ( responseCode == 201 || responseCode == 202) {
+                        Log.i(t, line);
+                    } else {
+                        Log.e(t, line);
+                    }
+                }
+            } catch (IllegalStateException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if ( r != null ) {
+                    try {
+                        r.close();
+                    } catch ( Exception e ) {
+                    } finally {
+                        r = null;
+                    }
+                }
+
+                if ( is != null ) {
+                    try {
+                        is.close();
+                    } catch ( Exception e ) {
+                    } finally {
+                        is = null;
+                    }
+                }
+            }
 
             // verify that the response was a 201 or 202.  
-			// If it wasn't, the submission has failed.
+            // If it wasn't, the submission has failed.
             if (responseCode == 201 || responseCode == 202) {
                 uploadedInstances.add(values[i]);
-                
-                instance.setDateAggregated(GenericDocument.generateTimestamp());
-                Collect.getInstance().getDbService().getDb().update(instance);
+
+                instanceDoc.setDateAggregated(GenericDocument.generateTimestamp());
+                Collect.getInstance().getDbService().getDb().update(instanceDoc);
             }
 
             // Remove cache files pertaining to this upload
             Log.d(Collect.LOGTAG, t + "purging uploaded files");
             FileUtils.deleteExternalInstanceCacheFiles(values[i]);
         }
+ 
 
         return uploadedInstances;
     }

@@ -20,6 +20,12 @@ import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
 
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
+import com.radicaldynamic.groupinform.utilities.DateUtils;
+import com.radicaldynamic.groupinform.views.AbstractFolioView;
+import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -32,12 +38,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.activities.FormEntryActivity;
-import com.radicaldynamic.groupinform.utilities.DateUtils;
-import com.radicaldynamic.groupinform.views.AbstractFolioView;
-import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
-
 /**
  * Widget that allows user to take pictures, sounds or video and add them to the form.
  * 
@@ -46,7 +46,7 @@ import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendan
  */
 public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget {
 
-    private final static String t = "AudioWidget";
+    private final static String t = "AudioWidget: ";
 
     private Button mCaptureButton;
     private Button mPlayButton;
@@ -62,18 +62,17 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
     private int mCaptureText;
     private int mReplaceText;
     private int mPlayText;
-    
-//    private FormEntryPrompt mPrompt;
 
-    public AudioWidget(Handler handler, Context context, FormEntryPrompt prompt, String instancePath) {
+
+    public AudioWidget(Handler handler, Context context, FormEntryPrompt prompt, String instanceDirPath) {
         super(handler, context, prompt);
-        initialize(instancePath);
-//        mPrompt = prompt;
+        initialize(instanceDirPath);
     }
 
-    private void initialize(String instancePath) {
-        mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf(File.separator) + 1);
-        mInstanceId = instancePath.substring(instancePath.lastIndexOf(File.separator) + 1, instancePath.length());
+    private void initialize(String instanceDirPath) {
+        mInstanceId = instanceDirPath.substring(instanceDirPath.lastIndexOf(File.separator) + 1, instanceDirPath.length());
+        mInstanceFolder = instanceDirPath.substring(0, instanceDirPath.lastIndexOf(File.separator)) + "/";
+
         mExternalUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         mCaptureIntent = android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION;
         mRequestCode = FormEntryActivity.AUDIO_CAPTURE;
@@ -127,7 +126,7 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
             	// focus change for buttons is not fired in touch mode
             	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
 	                Intent i = new Intent("android.intent.action.VIEW");
-	                File f = new File(mInstanceFolder + File.separator + mBinaryName);
+	                File f = new File(mInstanceFolder + "/" + mBinaryName);
 	                i.setDataAndType(Uri.fromFile(f), "audio/*");
 	                ((Activity) getContext()).startActivity(i);
             	}
@@ -148,7 +147,7 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
     	if ( mBinaryName == null ) return;
     	
         // get the file path and delete the file
-        File f = new File(mInstanceFolder + File.separator + mBinaryName);
+        File f = new File(mInstanceFolder + "/" + mBinaryName);
         if (!f.delete()) {
             Log.i(t, "Failed to delete " + f);
         }
@@ -184,7 +183,7 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
         c.moveToFirst();
 
         // create uri from path
-        String newPath = mExternalUri + File.separator + c.getInt(c.getColumnIndex("_id"));
+        String newPath = mExternalUri + "/" + c.getInt(c.getColumnIndex("_id"));
         c.close();
         return Uri.parse(newPath);
     }
@@ -212,16 +211,14 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
         // get the file path and move the file
         String binarypath = getPathFromUri((Uri) binaryuri);
         File f = new File(binarypath);
-        String s = mInstanceFolder + File.separator + mInstanceId
-                + DateUtils.now("yyyyMMdd-HHmmss") + "."
-                + binarypath.substring(binarypath.lastIndexOf('.') + 1);
+        String s = mInstanceFolder + File.separator + mInstanceId + DateUtils.now("yyyyMMdd-HHmmss") + "." + binarypath.substring(binarypath.lastIndexOf('.') + 1);
         if (!f.renameTo(new File(s))) {
             Log.i(t, "Failed to rename " + f.getAbsolutePath());
         }
 
         // remove the database entry and update the name
         getContext().getContentResolver().delete(getUriFromPath(binarypath), null, null);
-        mBinaryName = s.substring(s.lastIndexOf(File.separator) + 1);
+        mBinaryName = s.substring(s.lastIndexOf('/') + 1);
         saveAnswer(true); // and evaluate constraints and trigger UI update...
     }
 

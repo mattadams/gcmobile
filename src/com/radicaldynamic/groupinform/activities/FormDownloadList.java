@@ -539,22 +539,21 @@ public class FormDownloadList extends ListActivity implements FormDownloaderList
     		return;
     	}
     	
-		String h = args.hosts.iterator().next();
-		args.hosts.remove(h);
+    	String h = args.hosts.iterator().next();
+    	args.hosts.remove(h);
     	PasswordPromptDialogBuilder b = 
-    			new PasswordPromptDialogBuilder(this, 
-    											args.username, 
-    											h,
-    											new PasswordPromptDialogBuilder.OnOkListener() {
-
-													@Override
-													public void onOk(
-															Object okListenerContext) {
-														DownloadArgs args = (DownloadArgs) okListenerContext;
-									            		FormDownloadList.this.launchPasswordDialog(args);
-													}
-    				
-    			}, args);
+    	    new PasswordPromptDialogBuilder(
+    	            this, 
+    	            args.username, 
+    	            h,
+    	            new PasswordPromptDialogBuilder.OnOkListener() {
+    	                @Override
+    	                public void onOk(
+    	                        Object okListenerContext) {
+    	                    DownloadArgs args = (DownloadArgs) okListenerContext;
+    	                    FormDownloadList.this.launchPasswordDialog(args);
+    	                }
+    	            }, args);
     	b.show();
     }
     

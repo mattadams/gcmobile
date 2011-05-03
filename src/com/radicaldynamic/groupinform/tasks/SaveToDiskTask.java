@@ -25,11 +25,15 @@ import org.ektorp.AttachmentInputStream;
 import org.ektorp.DbAccessException;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
+import org.javarosa.core.model.IDataReference;
+import org.javarosa.core.model.SubmissionProfile;
 import org.javarosa.core.model.instance.FormInstance;
+import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.core.services.transport.payload.ByteArrayPayload;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.model.xform.XFormSerializingVisitor;
+import org.javarosa.model.xform.XPathReference;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -50,13 +54,12 @@ import com.radicaldynamic.groupinform.utilities.FileUtils;
 public class SaveToDiskTask extends AsyncTask<Void, String, Integer> 
 {
     private final static String t = "SaveToDiskTask: ";
-
-    private FormSavedListener mSavedListener;
-
-    private Boolean mSave;
-    private Boolean mMarkCompleted;
-
+    
+    private String mDefaultUrl;
     private FormInstanceDocument mFormInstanceDoc;
+    private Boolean mMarkCompleted;
+    private Boolean mSave;
+    private FormSavedListener mSavedListener;
 
     public static final int SAVED = 500;
     public static final int SAVE_ERROR = 501;
@@ -72,7 +75,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
     protected Integer doInBackground(Void... nothing) 
     {
         // Validation failed, pass specific failure
-        int validateStatus = validateAnswers(mMarkCompleted);
+        int validateStatus = validateAnswers();
         
         if (validateStatus != VALIDATED) {
             return validateStatus;
@@ -80,9 +83,9 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
 
         Collect.getInstance().getFormEntryController().getModel().getForm().postProcessInstance();
 
-        if (mSave && exportData(mMarkCompleted)) {
+        if (mSave && exportData()) {
             return SAVED_AND_EXIT;
-        } else if (exportData(mMarkCompleted)) {
+        } else if (exportData()) {
             return SAVED;
         }
 
@@ -104,29 +107,79 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
         Collect.getInstance().createConstraintToast(values[0], Integer.valueOf(values[1]).intValue());
     }
 
-    public boolean exportData(boolean markCompleted)
+    public boolean exportData()
     {
         final String tt = t + "exportData(): ";
         
-        ByteArrayPayload payload;
+        boolean result = false;
+        ByteArrayPayload payload = null;
+        XFormSerializingVisitor serializer = null;
         
         try {
             // Assume no binary data inside the model
             FormInstance datamodel = Collect.getInstance().getFormEntryController().getModel().getForm().getInstance();
-            XFormSerializingVisitor serializer = new XFormSerializingVisitor();
+            serializer = new XFormSerializingVisitor();
             payload = (ByteArrayPayload) serializer.createSerializedPayload(datamodel);
-    
-            // Write out XML
-            return exportXmlFile(payload, markCompleted);
+                        
+            // Write out instance XML
+            result = exportXmlFile(payload);
+
+            {
+                boolean canEditSubmission = true;
+                String url = mDefaultUrl;
+                
+                // now try to construct submission file                    
+                try {
+                    // assume no binary data inside the model.
+                    FormEntryModel dataModel = Collect.getInstance().getFormEntryController().getModel();
+                    FormDef formDef = dataModel.getForm();            
+                    FormInstance formInstance = formDef.getInstance();            
+                    IDataReference submissionElement = new XPathReference("/");
+                    
+                    // Determine the information about the submission...
+                    SubmissionProfile p = formDef.getSubmissionProfile();
+                    
+                    if (p != null) {                            
+                        submissionElement = p.getRef();
+                        String altUrl = p.getAction();
+                        
+                        if (submissionElement == null || altUrl == null || !altUrl.startsWith("http") || p.getMethod() == null || !p.getMethod().equals("form-data-post")) {
+                            Log.e(t, "Submission element should specify attributes: ref, method=\"form-data-post\", and action=\"http...\"");
+                            return false;
+                        }
+                        
+                        url = altUrl;
+                        TreeElement e = formInstance.resolveReference(new XPathReference("/"));
+                        TreeElement ee = formInstance.resolveReference(submissionElement);
+                        
+                        // we can edit the submission if the published fragment is the whole tree.
+                        canEditSubmission = e.equals(ee);
+                    }
+
+                    if (mMarkCompleted) {
+                        serializer = new XFormSerializingVisitor();
+                        payload = (ByteArrayPayload) serializer.createSerializedPayload(formInstance, submissionElement);
+
+                        exportXmlFile(payload, canEditSubmission, url);
+                    }
+                } catch (IOException e) {
+                    Log.e(t, "Error creating serialized payload");
+                    e.printStackTrace();
+                    return false;
+                }
+            }            
         } catch (IOException e) {
             Log.e(Collect.LOGTAG, tt + "error creating serialized payload");
             e.printStackTrace();
-            return false;
+            result = false;
         }
+        
+        return result;
     }
 
-    public void setExportVars(FormInstanceDocument formInstanceDoc, Boolean saveAndExit, Boolean markCompleted) 
+    public void setExportVars(FormInstanceDocument formInstanceDoc, String defaultUrl, Boolean saveAndExit, Boolean markCompleted) 
     {
+        mDefaultUrl = defaultUrl;
         mFormInstanceDoc = formInstanceDoc;
         mMarkCompleted = markCompleted;
         mSave = saveAndExit;
@@ -138,8 +191,11 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
             mSavedListener = fsl;
         }
     }
-
-    private boolean exportXmlFile(ByteArrayPayload payload, boolean markCompleted)
+    
+    /*
+     * Export XML instance file & associated media attachments.
+     */
+    private boolean exportXmlFile(ByteArrayPayload payload)
     {
         final String tt = t + "exportXmlFile(): ";
         
@@ -156,36 +212,39 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
             int read = is.read(data, 0, len);
             
             if (read > 0) {
-                if (markCompleted)
+                if (mMarkCompleted) {
                     mFormInstanceDoc.setStatus(FormInstanceDocument.Status.complete);
-                else
+                } else {                    
                     mFormInstanceDoc.setStatus(FormInstanceDocument.Status.draft);
-                
+                    mFormInstanceDoc.setSubmissionEditable(true);
+                    mFormInstanceDoc.setSubmissionUri(null);
+                }
+
                 // Save form data
                 mFormInstanceDoc.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data)).toString(), "text/xml"));
                 Collect.getInstance().getDbService().getDb().update(mFormInstanceDoc);
-                
+
                 // Save media attachments one by one
                 File cacheDir = new File(FileUtils.EXTERNAL_CACHE);
                 String[] fileNames = cacheDir.list();                           
-                                            
+
                 for (String file : fileNames) {
                     Log.v(Collect.LOGTAG, tt + mFormInstanceDoc.getId() + ": evaluating " + file + " for save to DB");
-                    
+
                     if (Pattern.matches("^" + mFormInstanceDoc.getId() + "[.].*", file)) {
                         Log.d(Collect.LOGTAG, tt + mFormInstanceDoc.getId() + ": attaching " + file);
-                        
+
                         // Make sure we have the most current revision number
                         FormInstanceDocument document = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mFormInstanceDoc.getId());
 
                         FileInputStream fis = new FileInputStream(new File(FileUtils.EXTERNAL_CACHE, file));
                         String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.substring(file.lastIndexOf(".") + 1));
-                        
+
                         AttachmentInputStream a = new AttachmentInputStream(file, fis, contentType);
-                        
+
                         // Must use the revision number (why?) http://code.google.com/p/ektorp/issues/detail?id=28
                         Collect.getInstance().getDbService().getDb().createAttachment(document.getId(), document.getRevision(), a);
-                        
+
                         a.close();
                         fis.close();
                     }
@@ -205,15 +264,56 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
         return result;
     }
 
+    /*
+     * Export submission file, for ODK compatibility.  SaveToDiskTask has a different but effectively similiar implementation.
+     */
+    private boolean exportXmlFile(ByteArrayPayload payload, boolean submissionEditable, String submissionUri) 
+    {
+        final String tt = t + "exportXmlSubmissionFile(): ";
+        
+        boolean result = false;
+        
+        // Create data stream
+        InputStream is = payload.getPayloadStream();
+        int len = (int) payload.getLength();
+    
+        // Read from data stream
+        byte[] data = new byte[len];
+        
+        try {
+            int read = is.read(data, 0, len);
+            
+            if (read > 0) {
+                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mFormInstanceDoc.getId());
+                mFormInstanceDoc.addInlineAttachment(new Attachment("xml.submit", new String(Base64Coder.encode(data)).toString(), "text/xml"));                
+                mFormInstanceDoc.setSubmissionEditable(submissionEditable);      
+                mFormInstanceDoc.setSubmissionUri(submissionUri);
+                Collect.getInstance().getDbService().getDb().update(mFormInstanceDoc);
+                
+                if (mFormInstanceDoc.getId().length() > 0) {
+                    Log.d(Collect.LOGTAG, tt + "successfully exported submission file");
+                    result = true;
+                }
+            }
+        } catch (DbAccessException e) {
+            Log.e(Collect.LOGTAG, tt + "unable to access database: " + e.toString());
+        } catch (IOException e) {
+            Log.e(Collect.LOGTAG, tt + "error reading from payload data stream");
+            e.printStackTrace();
+        }
+        
+        return result;
+    }
+
     /**
      * Goes through the entire form to make sure all entered answers comply with their constraints.
      * Constraints are ignored on 'jump to', so answers can be outside of constraints. We don't
      * allow saving to disk, though, until all answers conform to their constraints/requirements.
      * 
-     * @param markCompleted
+     * @param mMarkCompleted
      * @return validatedStatus
      */
-    private int validateAnswers(Boolean markCompleted)
+    private int validateAnswers()
     {
     	FormEntryController fec = Collect.getInstance().getFormEntryController();
         FormEntryModel fem = fec.getModel();
@@ -229,7 +329,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
             } else {
                 int saveStatus = fec.answerQuestion(fem.getQuestionPrompt().getAnswerValue());
                 
-                if (markCompleted && saveStatus != FormEntryController.ANSWER_OK) { 
+                if (mMarkCompleted && saveStatus != FormEntryController.ANSWER_OK) { 
                     this.publishProgress(fem.getQuestionPrompt().getConstraintText(), Integer.toString(saveStatus));
         			return saveStatus;
                 }

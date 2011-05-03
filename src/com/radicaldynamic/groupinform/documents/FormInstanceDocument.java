@@ -28,32 +28,14 @@ public class FormInstanceDocument extends GenericDocument
     private String formId;
     private Status status;
     private String dateAggregated;          // The date that this document was last uploaded to an ODK Aggregate server
+    private boolean submissionEditable;     // Same
+    private String submissionUri;           // Compatibility with ODK Collect 1.1.6 or r479+    
     
     public FormInstanceDocument() {
         super("instance");
         
         if (isNew())
             setStatus(Status.placeholder);
-    }
-
-    public void setFormId(String form)
-    {
-        this.formId = form;
-    }
-
-    public String getFormId()
-    {
-        return formId;
-    }
-
-    public void setStatus(Status status)
-    {
-        this.status = status;
-    }
-
-    public Status getStatus()
-    {
-        return status;
     }
 
     public void setDateAggregated(String dateAggregated)
@@ -78,5 +60,41 @@ public class FormInstanceDocument extends GenericDocument
         }
         
         return calendar;
+    }
+
+    public void setFormId(String form)
+    {
+        this.formId = form;
+    }
+
+    public String getFormId()
+    {
+        return formId;
+    }
+
+    public void setStatus(Status status)
+    {
+        this.status = status;
+    }
+
+    public Status getStatus()
+    {
+        return status;
+    }
+
+    public void setSubmissionEditable(boolean submissionEditable) {
+        this.submissionEditable = submissionEditable;
+    }
+
+    public boolean isSubmissionEditable() {
+        return submissionEditable;
+    }
+
+    public void setSubmissionUri(String submissionUri) {
+        this.submissionUri = submissionUri;
+    }
+
+    public String getSubmissionUri() {
+        return submissionUri;
     }
 }
