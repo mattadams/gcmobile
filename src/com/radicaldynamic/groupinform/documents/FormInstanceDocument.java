@@ -23,43 +23,27 @@ public class FormInstanceDocument extends GenericDocument
      * Removed:     A form instance marked for delayed deletion
      * Nothing:     Not an actual status (represents queries for forms without regard for instance status)
      */
-    public static enum Status {placeholder, draft, complete, submitted, updated, removed, nothing};
+    public static enum Status { placeholder, draft, complete, updated, removed, nothing };
+    
+    // See ODK provider/SubmissionsStorage.java
+    public static enum OdkSubmissionStatus { complete, partial, failed }; 
     
     private String formId;
     private Status status;
-    private String dateAggregated;          // The date that this document was last uploaded to an ODK Aggregate server
-    private boolean submissionEditable;     // Same
-    private String submissionUri;           // Compatibility with ODK Collect 1.1.6 or r479+    
     
-    public FormInstanceDocument() {
+    // Entirely for compatibility with ODK Aggregate
+    private String odkSubmissionDate;          // Last submission attempted
+    private boolean odkSubmissionEditable;     // Compatibility with ODK Collect 1.1.6 or r479+
+    private String odkSubmissionResultMsg;
+    private OdkSubmissionStatus odkSubmissionStatus;
+    private String odkSubmissionUri;           // Compatibility with ODK Collect 1.1.6 or r479+    
+    
+    public FormInstanceDocument() 
+    {
         super("instance");
         
         if (isNew())
             setStatus(Status.placeholder);
-    }
-
-    public void setDateAggregated(String dateAggregated)
-    {
-        this.dateAggregated = dateAggregated;
-    }
-
-    public String getDateAggregated()
-    {
-        return dateAggregated;
-    }
-    
-    @JsonIgnore
-    public Calendar getDateAggregatedAsCalendar() {
-        SimpleDateFormat sdf = new SimpleDateFormat(GenericDocument.DATETIME);
-        Calendar calendar = Calendar.getInstance();
-        
-        try {
-            calendar.setTime(sdf.parse(dateAggregated));
-        } catch (ParseException e1) {
-            Log.e(Collect.LOGTAG, t + "unable to parse dateAggregated, returning a valid date anyway: " + e1.toString());            
-        }
-        
-        return calendar;
     }
 
     public void setFormId(String form)
@@ -82,19 +66,68 @@ public class FormInstanceDocument extends GenericDocument
         return status;
     }
 
-    public void setSubmissionEditable(boolean submissionEditable) {
-        this.submissionEditable = submissionEditable;
+    public void setOdkSubmissionDate(String odkSubmissionDate) 
+    {
+        this.odkSubmissionDate = odkSubmissionDate;
     }
 
-    public boolean isSubmissionEditable() {
-        return submissionEditable;
+    public String getOdkSubmissionDate() 
+    {
+        return odkSubmissionDate;
     }
 
-    public void setSubmissionUri(String submissionUri) {
-        this.submissionUri = submissionUri;
+    @JsonIgnore
+    public Calendar getOdkSubmissionDateAsCalendar() 
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat(GenericDocument.DATETIME);
+        Calendar calendar = Calendar.getInstance();
+        
+        try {
+            calendar.setTime(sdf.parse(odkSubmissionDate));
+        } catch (ParseException e1) {
+            Log.e(Collect.LOGTAG, t + "unable to parse dateAggregated, returning a valid date anyway: " + e1.toString());            
+        }
+        
+        return calendar;
     }
 
-    public String getSubmissionUri() {
-        return submissionUri;
+    public void setOdkSubmissionEditable(boolean odkSubmissionEditable) 
+    {
+        this.odkSubmissionEditable = odkSubmissionEditable;
+    }
+
+    public boolean isOdkSubmissionEditable() 
+    {
+        return odkSubmissionEditable;
+    }
+
+    public void setOdkSubmissionResultMsg(String odkSubmissionResultMsg) 
+    {
+        this.odkSubmissionResultMsg = odkSubmissionResultMsg;
+    }
+
+    public String getOdkSubmissionResultMsg() 
+    {
+        return odkSubmissionResultMsg;
+    }
+
+    public void setOdkSubmissionStatus(OdkSubmissionStatus odkSubmissionStatus) 
+    {
+        this.odkSubmissionStatus = odkSubmissionStatus;
+    }
+
+    public OdkSubmissionStatus getOdkSubmissionStatus()
+    {
+        return odkSubmissionStatus;
+    }
+
+    public void setOdkSubmissionUri(String odkSubmissionUri) 
+    {
+        this.odkSubmissionUri = odkSubmissionUri;
+    }
+
+    public String getOdkSubmissionUri() 
+    {
+        return odkSubmissionUri;
     }
 }

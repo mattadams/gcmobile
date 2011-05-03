@@ -216,8 +216,8 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
                     mFormInstanceDoc.setStatus(FormInstanceDocument.Status.complete);
                 } else {                    
                     mFormInstanceDoc.setStatus(FormInstanceDocument.Status.draft);
-                    mFormInstanceDoc.setSubmissionEditable(true);
-                    mFormInstanceDoc.setSubmissionUri(null);
+                    mFormInstanceDoc.setOdkSubmissionEditable(true);
+                    mFormInstanceDoc.setOdkSubmissionUri(null);
                 }
 
                 // Save form data
@@ -286,8 +286,8 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
             if (read > 0) {
                 mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mFormInstanceDoc.getId());
                 mFormInstanceDoc.addInlineAttachment(new Attachment("xml.submit", new String(Base64Coder.encode(data)).toString(), "text/xml"));                
-                mFormInstanceDoc.setSubmissionEditable(submissionEditable);      
-                mFormInstanceDoc.setSubmissionUri(submissionUri);
+                mFormInstanceDoc.setOdkSubmissionEditable(submissionEditable);      
+                mFormInstanceDoc.setOdkSubmissionUri(submissionUri);
                 Collect.getInstance().getDbService().getDb().update(mFormInstanceDoc);
                 
                 if (mFormInstanceDoc.getId().length() > 0) {

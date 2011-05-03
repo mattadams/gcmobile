@@ -38,6 +38,7 @@ import android.widget.Toast;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
+import com.radicaldynamic.groupinform.documents.GenericDocument;
 import com.radicaldynamic.groupinform.listeners.InstanceUploaderListener;
 import com.radicaldynamic.groupinform.preferences.ServerPreferences;
 import com.radicaldynamic.groupinform.tasks.InstanceUploaderTask;
@@ -63,7 +64,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
     private static final class UploadArgs {
         Set<String> hosts;
         ArrayList<String> instances;
-        String username;
+        String userEmail;
     }
 
     @Override
@@ -85,31 +86,31 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         
         if (mInstanceUploaderTask == null) {
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-
-            String username =
-                settings.getString(ServerPreferences.KEY_USERNAME, null);
+            
+            String userEmail =
+                settings.getString(ServerPreferences.KEY_USER_EMAIL, null);
 
             UploadArgs argSet = new UploadArgs();
             argSet.instances = instances;
             argSet.hosts = new HashSet<String>();
-            argSet.username = username;
+            argSet.userEmail = userEmail;
 
             boolean deferForPassword = false;
 
-            if (username != null && username.length() != 0 ) {
+            if (userEmail != null && userEmail.length() != 0 ) {
                 for (int i = 0; i < instances.size(); i++) {
                     FormInstanceDocument instance = null;
                     String urlString = null;
                     
                     try {
                         instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instances.get(i));                        
-                        urlString = instance.getSubmissionUri();
+                        urlString = instance.getOdkSubmissionUri();
                         
                         URL url = new URL(urlString);
                         URI uri = url.toURI();
                         String host = uri.getHost();
 
-                        if ( !WebUtils.hasCredentials(username, host) ) {
+                        if ( !WebUtils.hasCredentials(userEmail, host) ) {
                             argSet.hosts.add(host);
                         }                        
                     } catch (DbAccessException e) {
@@ -152,7 +153,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         PasswordPromptDialogBuilder b = 
             new PasswordPromptDialogBuilder(
                     this, 
-                    args.username, 
+                    args.userEmail, 
                     h,
                     new OnOkListener() {
                         @Override
@@ -165,9 +166,11 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
     }
     
     private void executeUpload(ArrayList<String> instances) {
+        mInstanceUploaderTask = new InstanceUploaderTask();
+        mInstanceUploaderTask.setUploaderListener(this);
+        
         // setup dialog and upload task
         showDialog(PROGRESS_DIALOG);
-        mInstanceUploaderTask = new InstanceUploaderTask();
 
         totalCount = instances.size();
 
@@ -179,21 +182,58 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
     // TODO: if uploadingComplete() when activity backgrounded, won't work.
     // just check task status in onResume
     @Override
-	public void uploadingComplete(ArrayList<String> result) {
-        int resultSize = result.size();
+	public void uploadingComplete(ArrayList<InstanceUploaderListener.UploadOutcome> result) {
+        int failureCount = 0;
+        for ( UploadOutcome o : result ) {
+            if ( !o.isSuccessful ) {
+                ++failureCount;
+            }
+        }
         boolean success = false;
         
-        if (resultSize == totalCount) {
-            Toast.makeText(this, getString(R.string.upload_all_successful, totalCount), Toast.LENGTH_SHORT).show();
+        if (failureCount == 0) {
+            Toast.makeText(this, getString(R.string.upload_all_successful, totalCount),Toast.LENGTH_SHORT).show();
             success = true;
         } else {
-            String s = totalCount - resultSize + " of " + totalCount;
-            Toast.makeText(this, getString(R.string.upload_some_failed, s), Toast.LENGTH_LONG).show();
+            String s = failureCount + " of " + totalCount;
+            Toast.makeText(this, getString(R.string.upload_some_failed, s),
+                    Toast.LENGTH_LONG).show();
         }
 
-        Intent i = new Intent();
-        i.putExtra(FormEntryActivity.KEY_SUCCESS, success);
-        setResult(RESULT_OK, i);
+        for ( UploadOutcome o : result ) {
+            try {
+                FormInstanceDocument iDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, o.instanceDir);
+                iDoc.setOdkSubmissionDate(GenericDocument.generateTimestamp());
+                
+                if (o.isSuccessful) {
+                    if (o.notAllFilesUploaded) {
+                        iDoc.setOdkSubmissionStatus(FormInstanceDocument.OdkSubmissionStatus.partial);
+                    } else {
+                        iDoc.setOdkSubmissionStatus(FormInstanceDocument.OdkSubmissionStatus.complete);
+                    }
+                    
+                    iDoc.setOdkSubmissionResultMsg(null);
+                } else {
+                    iDoc.setOdkSubmissionStatus(FormInstanceDocument.OdkSubmissionStatus.failed);
+                    
+                    if (o.errorMessage != null) {
+                        iDoc.setOdkSubmissionResultMsg(o.errorMessage);
+                    }
+                }
+                
+                Collect.getInstance().getDbService().getDb().update(iDoc);
+            } catch (DbAccessException e) {
+                Log.e(Collect.LOGTAG, t + "unable to update ODK upload outcome for " + o.instanceDir);
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unhandled exception while updating ODK upload outcome for " + o.instanceDir);
+                e.printStackTrace();
+            }
+        }
+        
+        Intent in = new Intent();
+        in.putExtra(FormEntryActivity.KEY_SUCCESS, success);
+        setResult(RESULT_OK, in);
+        
         finish();
     }
 
