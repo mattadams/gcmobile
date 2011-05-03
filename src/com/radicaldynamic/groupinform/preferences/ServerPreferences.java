@@ -19,10 +19,14 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.PreferenceActivity;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.utilities.UrlUtils;
+import com.radicaldynamic.groupinform.utilities.WebUtils;
 
 public class ServerPreferences extends PreferenceActivity implements
         OnSharedPreferenceChangeListener {
@@ -30,12 +34,22 @@ public class ServerPreferences extends PreferenceActivity implements
     public static String KEY_SERVER = "server";
     public static String KEY_USER_EMAIL = "user_email";
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.server_preferences);
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.server_preferences));
+        addPreferencesFromResource(R.xml.server_preferences);
+        setContentView(R.layout.server_preferences);
+        
+        Button clearCredentials = (Button) findViewById(R.id.clear_credentials);
+        clearCredentials.setText(getString(R.string.clear_all_credentials));
+        clearCredentials.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+	        	WebUtils.clearAllCredentials();
+			}
+        });
+
         updateServer();
         updateUserEmail();
     }
