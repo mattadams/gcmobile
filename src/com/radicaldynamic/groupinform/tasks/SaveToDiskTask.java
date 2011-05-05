@@ -51,15 +51,16 @@ import com.radicaldynamic.groupinform.utilities.FileUtils;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class SaveToDiskTask extends AsyncTask<Void, String, Integer> 
-{
+public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     private final static String t = "SaveToDiskTask: ";
     
-    private String mDefaultUrl;
-    private FormInstanceDocument mFormInstanceDoc;
-    private Boolean mMarkCompleted;
-    private Boolean mSave;
     private FormSavedListener mSavedListener;
+    private String mInstanceDirPath;    
+    private String mDefaultUrl;    
+    private Boolean mSave;
+    private Boolean mMarkCompleted;    
+    
+    private FormInstanceDocument mFormInstanceDoc;    
 
     public static final int SAVED = 500;
     public static final int SAVE_ERROR = 501;
@@ -67,6 +68,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
     public static final int VALIDATED = 503;
     public static final int SAVED_AND_EXIT = 504;
 
+    
     /**
      * Initialize {@link FormEntryController} with {@link FormDef} from binary or from XML. If given
      * an instance, it will be used to fill the {@link FormDef}.
@@ -99,12 +101,6 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
             if (mSavedListener != null)
                 mSavedListener.savingComplete(result);
         }
-    }
-
-    @Override
-    protected void onProgressUpdate(String... values) 
-    {
-        Collect.getInstance().createConstraintToast(values[0], Integer.valueOf(values[1]).intValue());
     }
 
     public boolean exportData()
@@ -175,14 +171,6 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
         }
         
         return result;
-    }
-
-    public void setExportVars(FormInstanceDocument formInstanceDoc, String defaultUrl, Boolean saveAndExit, Boolean markCompleted) 
-    {
-        mDefaultUrl = defaultUrl;
-        mFormInstanceDoc = formInstanceDoc;
-        mMarkCompleted = markCompleted;
-        mSave = saveAndExit;
     }
 
     public void setFormSavedListener(FormSavedListener fsl)
@@ -284,6 +272,9 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
             int read = is.read(data, 0, len);
             
             if (read > 0) {
+                // SaveToDiskTask.java as of 1.1.6/r484 also sets
+                // values.put(SubmissionsStorage.KEY_DISPLAY_SUB_SUBTEXT, app.getString(R.string.will_be_sent_to) + url);
+                
                 mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mFormInstanceDoc.getId());
                 mFormInstanceDoc.addInlineAttachment(new Attachment("xml.submit", new String(Base64Coder.encode(data)).toString(), "text/xml"));                
                 mFormInstanceDoc.setOdkSubmissionEditable(submissionEditable);      
@@ -305,12 +296,19 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
         return result;
     }
 
+    public void setExportVars(FormInstanceDocument formInstanceDoc, String defaultUrl, Boolean saveAndExit, Boolean markCompleted) 
+    {
+        mFormInstanceDoc = formInstanceDoc;
+        mDefaultUrl = defaultUrl;                
+        mSave = saveAndExit;
+        mMarkCompleted = markCompleted;
+    }
+
     /**
      * Goes through the entire form to make sure all entered answers comply with their constraints.
      * Constraints are ignored on 'jump to', so answers can be outside of constraints. We don't
      * allow saving to disk, though, until all answers conform to their constraints/requirements.
      * 
-     * @param mMarkCompleted
      * @return validatedStatus
      */
     private int validateAnswers()
@@ -321,23 +319,29 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer>
     
         fec.jumpToIndex(FormIndex.createBeginningOfFormIndex());
     
-        int event;
-        
+        int event;        
         while ((event = fec.stepToNextEvent()) != FormEntryController.EVENT_END_OF_FORM) {
             if (event != FormEntryController.EVENT_QUESTION) {
                 continue;
             } else {
-                int saveStatus = fec.answerQuestion(fem.getQuestionPrompt().getAnswerValue());
-                
+                int saveStatus = fec.answerQuestion(fem.getQuestionPrompt().getAnswerValue());                
                 if (mMarkCompleted && saveStatus != FormEntryController.ANSWER_OK) { 
-                    this.publishProgress(fem.getQuestionPrompt().getConstraintText(), Integer.toString(saveStatus));
+                    this.publishProgress(fem.getQuestionPrompt().getConstraintText(), Integer
+                            .toString(saveStatus));
         			return saveStatus;
                 }
             }
         }
     
-        fec.jumpToIndex(i);
-        
+        fec.jumpToIndex(i);        
         return VALIDATED;
-    } 
+    }
+    
+
+    @Override
+    protected void onProgressUpdate(String... values) {
+        Collect.getInstance().createConstraintToast(values[0], 
+                Integer.valueOf(values[1]).intValue());
+    }
+    
 }

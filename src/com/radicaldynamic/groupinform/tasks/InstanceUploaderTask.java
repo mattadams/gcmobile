@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.Map.Entry;
 
 import org.apache.http.Header;
@@ -53,6 +54,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
+import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.InstanceUploaderListener;
@@ -64,425 +66,483 @@ import com.radicaldynamic.groupinform.utilities.WebUtils;
  * 
  * @author Carl Hartung (carlhartung@gmail.com)
  */
-public class InstanceUploaderTask extends AsyncTask<String, Integer, ArrayList<InstanceUploaderListener.UploadOutcome>> {
+public class InstanceUploaderTask extends
+        AsyncTask<String, Integer, ArrayList<InstanceUploaderListener.UploadOutcome>> {
 
-    private static String t = "InstanceUploaderTask: ";
-    //private static long MAX_BYTES = 1048576 - 1024; // 1MB less 1KB overhead
+    private static String t = "InstanceUploaderTask";
+    // private static long MAX_BYTES = 1048576 - 1024; // 1MB less 1KB overhead
     InstanceUploaderListener mStateListener;
     private static final int CONNECTION_TIMEOUT = 30000;
-    
+
+
     /**
      * The values are the names of the instances to upload -- i.e., the directory names.
-     * 
      */
     @Override
     protected ArrayList<InstanceUploaderListener.UploadOutcome> doInBackground(String... values) {
-        ArrayList<InstanceUploaderListener.UploadOutcome> uploadOutcome = new ArrayList<InstanceUploaderListener.UploadOutcome>();
+        ArrayList<InstanceUploaderListener.UploadOutcome> uploadOutcome =
+            new ArrayList<InstanceUploaderListener.UploadOutcome>();
         int instanceCount = values.length;
-        Set<String> instances = new HashSet<String>();  
-        instances.addAll(Arrays.asList(values));
-        
+        Set<String> instanceDirs = new HashSet<String>();
+        instanceDirs.addAll(Arrays.asList(values));
+
+        Collect app = Collect.getInstance();
+
         // get shared HttpContext so that authentication and cookies are retained.
-        HttpContext localContext = Collect.getInstance().getHttpContext();        
+        HttpContext localContext = app.getHttpContext();
         HttpClient httpclient = WebUtils.createHttpClient(CONNECTION_TIMEOUT);
-        
-        Map<URI,URI> uriRemap = new HashMap<URI,URI>();
 
-        for (int i = 0; i < instances.size(); i++) {
-            FormInstanceDocument instanceDoc = null;
+        Map<URI, URI> uriRemap = new HashMap<URI, URI>();
+
+//        FilterCriteria fc =
+//            FilterUtils.buildInverseSelectionClause(SubmissionsStorage.KEY_STATUS,
+//                SubmissionsStorage.STATUS_INCOMPLETE);
+
+//        Cursor c = null;
+        try {
+//            c =
+//                app.getContentResolver().query(
+//                    SubmissionsStorage.CONTENT_URI_INFO_DATASET,
+//                    new String[] {
+//                            SubmissionsStorage.KEY_ID, SubmissionsStorage.KEY_SUBMISSION_URI,
+//                            SubmissionsStorage.KEY_INSTANCE_DIRECTORY_PATH
+//                    }, fc.selection, fc.selectionArgs, null);
+//
+//            int idxInstanceDir = c.getColumnIndex(SubmissionsStorage.KEY_INSTANCE_DIRECTORY_PATH);
+//            int idxUri = c.getColumnIndex(SubmissionsStorage.KEY_SUBMISSION_URI);
+//            int i = 0;
+//            while (c.moveToNext()) {
+//                String instanceDir = c.getString(idxInstanceDir);
+//                if (!instanceDirs.contains(instanceDir))
+//                    continue;
+//                ++i;
+//                String urlString = c.getString(idxUri);
+//                // it is one of the submissions we want to do...
             
-            try {
-                instanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, values[i]);
-            } catch (DocumentNotFoundException e) {
-                Log.w(Collect.LOGTAG, t + "DocumentNotFoundException: " + e.toString());
-                continue;
-            } catch (DbAccessException e) {
-                Log.w(Collect.LOGTAG, t + "DbAccessException: " + e.toString());
-                continue;
-            } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
-                e.printStackTrace();
-                continue;
-            }
-
-            String urlString = instanceDoc.getOdkSubmissionUri();
-            URI u = null;
-
-            try {
-                URL url = new URL(urlString);
-                u = url.toURI();
-            } catch ( MalformedURLException e ) {
-                e.printStackTrace();
-                Log.e(t, "Invalid url: " + urlString + " for submission " + instanceDoc.getId());
-                uploadOutcome.add( new InstanceUploaderListener.UploadOutcome(values[i], urlString, e.getLocalizedMessage()));
-                continue;
-            } catch (URISyntaxException e ) {
-                e.printStackTrace();
-                Log.e(t, "Invalid uri: " + urlString + " for submission " + instanceDoc.getId());
-                uploadOutcome.add( new InstanceUploaderListener.UploadOutcome(values[i], urlString, e.getLocalizedMessage()));
-                continue;
-            }
-
-            boolean openRosaServer = false;
-            if ( uriRemap.containsKey(u) ) {
-                // we already issued a head request and got a response,
-                // so we know the proper URL to send the submission to
-                // and the proper scheme.  We also know that it was an
-                // OpenRosa compliant server.
-                openRosaServer = true;
-                u = uriRemap.get(u);
-            } else {
-                // we need to issue a head request
-                HttpHead httpHead = WebUtils.createOpenRosaHttpHead(u);
-        
-                // prepare response
-                HttpResponse response = null;
+            for (int i = 0; i < values.length; i++) {
+                FormInstanceDocument iDoc = null;
+                String instanceDir = values[i];
+                
                 try {
-                    response = httpclient.execute(httpHead,localContext);
-                    int statusCode = response.getStatusLine().getStatusCode();
-                    if ( statusCode == 204 ) {
-                        Header[] locations = response.getHeaders("Location");
-                        if ( locations != null && locations.length == 1 ) {
-                            try {
-                                URL url = new URL (locations[0].getValue());
-                                URI uNew = url.toURI();
-                                if ( u.getHost().equalsIgnoreCase(uNew.getHost()) ) {
-                                    openRosaServer = true;
-                                    // trust the server to tell us a new location
-                                    // ... and possibly to use https instead.
-                                    uriRemap.put(u, uNew);
-                                    u = uNew;
-                                } else {
-                                    // Don't follow a redirection attempt to a different host.
-                                    // We can't tell if this is a spoof or not.
-                                    Log.e(t, "Unexpected redirection attempt to a different host: " 
-                                            + uNew.toString());
-                                    uploadOutcome.add( new InstanceUploaderListener.UploadOutcome(values[i], u, 
-                                            "Unexpected redirection attempt to a different host: " 
-                                            + uNew.toString()));
+                    iDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceDir);
+                } catch (DocumentNotFoundException e) {
+                    Log.w(Collect.LOGTAG, t + "unable to retrieve instance: " + e.toString());
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir, "", e.getLocalizedMessage()));
+                    continue;
+                } catch (DbAccessException e) {
+                    Log.w(Collect.LOGTAG, t + "unable to access database: " + e.toString());
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir, "", e.getLocalizedMessage()));
+                    continue;
+                } catch (Exception e) {
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir, "", e.getLocalizedMessage()));
+                    Log.e(Collect.LOGTAG, t + "unexpected exception: " + e.toString());                    
+                    e.printStackTrace();
+                    continue;
+                }
+                
+                String urlString = iDoc.getOdkSubmissionUri();                
+
+                URI u = null;
+                try {
+                    URL url = new URL(urlString);
+                    u = url.toURI();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                    Log.e(t, "Invalid url: " + urlString + " for submission " + instanceDir);
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir,
+                            urlString, e.getLocalizedMessage()));
+                    continue;
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                    Log.e(t, "Invalid uri: " + urlString + " for submission " + instanceDir);
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir,
+                            urlString, e.getLocalizedMessage()));
+                    continue;
+                }
+
+                boolean openRosaServer = false;
+                if (uriRemap.containsKey(u)) {
+                    // we already issued a head request and got a response,
+                    // so we know the proper URL to send the submission to
+                    // and the proper scheme. We also know that it was an
+                    // OpenRosa compliant server.
+                    openRosaServer = true;
+                    u = uriRemap.get(u);
+                } else {
+                    // we need to issue a head request
+                    HttpHead httpHead = WebUtils.createOpenRosaHttpHead(u);
+
+                    // prepare response
+                    HttpResponse response = null;
+                    try {
+                        response = httpclient.execute(httpHead, localContext);
+                        int statusCode = response.getStatusLine().getStatusCode();
+                        if (statusCode == 204) {
+                            Header[] locations = response.getHeaders("Location");
+                            if (locations != null && locations.length == 1) {
+                                try {
+                                    URL url = new URL(locations[0].getValue());
+                                    URI uNew = url.toURI();
+                                    if (u.getHost().equalsIgnoreCase(uNew.getHost())) {
+                                        openRosaServer = true;
+                                        // trust the server to tell us a new location
+                                        // ... and possibly to use https instead.
+                                        uriRemap.put(u, uNew);
+                                        u = uNew;
+                                    } else {
+                                        // Don't follow a redirection attempt to a different host.
+                                        // We can't tell if this is a spoof or not.
+                                        Log.e(t,
+                                            "Unexpected redirection attempt to a different host: "
+                                                    + uNew.toString());
+                                        uploadOutcome
+                                                .add(new InstanceUploaderListener.UploadOutcome(
+                                                        instanceDir,
+                                                        u,
+                                                        app
+                                                                .getString(R.string.unexpected_redirection)
+                                                                + uNew.toString()));
+                                        continue;
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(
+                                            instanceDir, u, e.getLocalizedMessage()));
                                     continue;
                                 }
-                            } catch ( Exception e ) {
+                            }
+                        } else {
+                            // may be a server that does not handle HEAD requests
+                            try {
+                                // don't really care about the stream...
+                                InputStream is = response.getEntity().getContent();
+                                // read to end of stream...
+                                final long count = 1024L;
+                                while (is.skip(count) == count)
+                                    ;
+                                is.close();
+                            } catch (IOException e) {
                                 e.printStackTrace();
-                                uploadOutcome.add( new InstanceUploaderListener.UploadOutcome(values[i], u, e.getLocalizedMessage()));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            Log.w(t, "Status code on Head request: " + statusCode);
+                            if (statusCode >= 200 && statusCode <= 299) {
+                                uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(
+                                        instanceDir, u, app
+                                                .getString(R.string.network_login_failure)));
                                 continue;
                             }
                         }
-                    } else {
-                        // may be a server that does not handle HEAD requests
-                        try {
-                            // don't really care about the stream...
-                            InputStream is = response.getEntity().getContent();
-                            // read to end of stream...
-                            final long count = 1024L;
-                            while ( is.skip(count) == count);
-                            is.close();
-                        } catch ( IOException e ) {
-                            e.printStackTrace();
-                        } catch ( Exception e ) {
-                            e.printStackTrace();
-                        }
-                        Log.w(t, "Status code on Head request: " + statusCode );
-                        if ( statusCode >= 200 && statusCode <= 299 ) {
-                            uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(values[i], u,
-                                    "An network login screen may be preventing the submission."));
-                            continue;
-                        }
+                    } catch (ClientProtocolException e) {
+                        e.printStackTrace();
+                        uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir,
+                                u, e.getLocalizedMessage()));
+                        continue;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir,
+                                u, e.getLocalizedMessage()));
+                        continue;
                     }
-                } catch (ClientProtocolException e) {
-                    e.printStackTrace();
-                    uploadOutcome.add( new InstanceUploaderListener.UploadOutcome(values[i], u, e.getLocalizedMessage()));
+                }
+                // At this point, we may have updated the uri to use https.
+                // This occurs only if the Location header keeps the host name
+                // the same. If it specifies a different host name, we error
+                // out.
+                // 
+                // And we may have set authentication cookies in our
+                // cookiestore (referenced by localContext) that will enable
+                // authenticated publication to the server.
+                // 
+                publishProgress(i, instanceCount);                
+                
+                // Temporary location to place files for upload
+                String uploadFolder = FileUtils.ODK_UPLOAD_PATH + File.separator + UUID.randomUUID();
+                FileUtils.createFolder(uploadFolder);
+                
+                try {                    
+                    HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) iDoc.getAttachments();
+                    
+                    // Download files from database
+                    for (Entry<String, Attachment> entry : attachments.entrySet()) {                    
+                        String key = entry.getKey();
+
+                        AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceDir, key);
+
+                        // ODK code below expects the XML instance to have a .xml extension
+                        if (key.equals("xml")) 
+                            key = instanceDir + ".xml";
+
+                        if (key.equals("xml.submit"))
+                            key = instanceDir + ".xml.submit";
+
+                        FileOutputStream file = new FileOutputStream(new File(uploadFolder, key));
+                        byte[] buffer = new byte[8192];
+                        int bytesRead = 0;                    
+
+                        while ((bytesRead = ais.read(buffer)) != -1) {
+                            file.write(buffer, 0, bytesRead);
+                        }
+
+                        ais.close();
+                        file.close();
+                    }
+                } catch (DocumentNotFoundException e) {
+                    Log.w(Collect.LOGTAG, t + "DocumentNotFoundException: " + e.toString());
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir, "", e.getLocalizedMessage()));
+                    continue;
+                } catch (DbAccessException e) {
+                    Log.w(Collect.LOGTAG, t + "DbAccessException: " + e.toString());
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir, "", e.getLocalizedMessage()));
                     continue;
                 } catch (Exception e) {
+                    Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir, "", e.getLocalizedMessage()));
                     e.printStackTrace();
-                    uploadOutcome.add( new InstanceUploaderListener.UploadOutcome(values[i], u, e.getLocalizedMessage()));
                     continue;
                 }
-            }
-            // At this point, we may have updated the uri to use https.
-            // This occurs only if the Location header keeps the host name
-            // the same.  If it specifies a different host name, we error
-            // out.
-            // 
-            // And we may have set authentication cookies in our 
-            // cookiestore (referenced by localContext) that will enable
-            // authenticated publication to the server.
-            publishProgress(i, instanceCount);
+                
+                File instanceFile = new File(uploadFolder, instanceDir + ".xml");
+                File file = new File(uploadFolder, instanceDir + ".xml.submit");                
 
-            try {
-                // Download files from database
-                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instanceDoc.getAttachments();
+                // get instance file
+//                File instanceFile = new File(FileUtils.getInstanceFilePath(instanceDir));
+//                File file = new File(FileUtils.getSubmissionBlobPath(instanceDir));
 
-                for (Entry<String, Attachment> entry : attachments.entrySet()) {                    
-                    String key = entry.getKey();
+                String submissionFile = file.getName();
+                String xmlInstanceFile = instanceFile.getName();
 
-                    AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(values[i], key);
-
-                    // ODK code below expects the XML instance to have a .xml extension
-                    if (key.equals("xml")) 
-                        key = values[i] + ".xml";
-
-                    if (key.equals("xml.submit"))
-                        key = values[i] + ".xml.submit";
-
-                    FileOutputStream file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
-                    byte[] buffer = new byte[8192];
-                    int bytesRead = 0;                    
-
-                    while ((bytesRead = ais.read(buffer)) != -1) {
-                        file.write(buffer, 0, bytesRead);
-                    }
-
-                    ais.close();
-                    file.close();
-                }
-            } catch (DocumentNotFoundException e) {
-                Log.w(Collect.LOGTAG, t + "DocumentNotFoundException: " + e.toString());
-                continue;
-            } catch (DbAccessException e) {
-                Log.w(Collect.LOGTAG, t + "DbAccessException: " + e.toString());
-                continue;
-            } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unhandled exception: " + e.toString());
-                e.printStackTrace();
-                continue;
-            }
-
-            // get instance file
-            File instanceFile = new File(FileUtils.EXTERNAL_CACHE, values[i] + ".xml");
-            File file = new File(FileUtils.EXTERNAL_CACHE, values[i] + ".xml.submit");
-
-            String submissionFile = file.getName();
-            String xmlInstanceFile = instanceFile.getName();
-            
-            if (!file.exists() ) {
-                String msg = "Submission file does not exist: " + file.getAbsolutePath();
-                Log.e(t, msg);
-                uploadOutcome.add( new InstanceUploaderListener.UploadOutcome(values[i], u, msg));
-                continue;
-            }
-
-            // find all files in parent directory
-            // find all files in parent directory
-            File[] allFiles = file.getParentFile().listFiles();
-
-            boolean someFilesNotUploaded = false;
-            // clean up the list, removing anything that is suspicious
-            // or that we won't attempt to upload.  For OpenRosa servers,
-            // we'll upload just about everything...
-            List<File> files = new ArrayList<File>();
-            for ( File f : allFiles ) {
-                String fileName = f.getName();            
-                int idx = fileName.lastIndexOf(".");                    
-                String extension = "";
-
-                if ( idx != -1 ) {
-                    extension = fileName.substring(idx+1);
-                }
-
-                if ( fileName.startsWith(".") ) {
-                    // potential Apple file attributes file -- ignore it
+                if (!file.exists()) {
+                    String msg =
+                        app.getString(R.string.submission_file_not_found) + file.getAbsolutePath();
+                    Log.e(t, msg);
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir, u,
+                            msg));
                     continue;
                 }
-                if ( fileName.equals(submissionFile) ) {
-                    continue; // this is always added
-                } else if ( fileName.equals(xmlInstanceFile) ) {
-                    continue; // omitted
-                } else if (openRosaServer) {
-                    files.add(f);
-                } else if (extension.equals("jpg")) { // legacy 0.9x
-                    files.add(f);
-                } else if (extension.equals("3gpp")) { // legacy 0.9x
-                    files.add(f);
-                } else if (extension.equals("3gp")) { // legacy 0.9x
-                    files.add(f);
-                } else if (extension.equals("mp4")) { // legacy 0.9x
-                    files.add(f);
-                } else {
-                    Log.w(t, "unrecognized file type " + f.getName());
-                    someFilesNotUploaded = true;
-                }
-            }
 
-            boolean successfulAttemptSoFar = true;
-            StringBuilder b = new StringBuilder();
-            boolean first = true;
-            int j = 0;
-            while ( j < files.size() || first ) {
-                first = false;
-                
-                HttpPost httppost = WebUtils.createOpenRosaHttpPost(u);
-            
-                MimeTypeMap m = MimeTypeMap.getSingleton();
+                // find all files in parent directory
+                File[] allFiles = file.getParentFile().listFiles();
 
-                long byteCount = 0L;
-                
-                // mime post
-                MultipartEntity entity = new MultipartEntity();
-                
-                // add the submission file first...
-                FileBody fb = new FileBody(file, "text/xml");
-                entity.addPart("xml_submission_file", fb);
-                Log.i(t, "added xml_submission_file: " + file.getName());
-                byteCount += file.length();
-                
-                for (; j < files.size(); j++) {
-                    File f = files.get(j);
+                boolean someFilesNotUploaded = false;
+                // clean up the list, removing anything that is suspicious
+                // or that we won't attempt to upload. For OpenRosa servers,
+                // we'll upload just about everything...
+                List<File> files = new ArrayList<File>();
+                for (File f : allFiles) {
                     String fileName = f.getName();
                     int idx = fileName.lastIndexOf(".");
                     String extension = "";
-                    if ( idx != -1 ) {
-                        extension = fileName.substring(idx+1);
+                    if (idx != -1) {
+                        extension = fileName.substring(idx + 1);
                     }
-                    String contentType = m.getMimeTypeFromExtension(extension);
-    
-                    // we will be processing every one of these, so 
-                    // we only need to deal with the content type determination...
-                    if (extension.equals("xml")) {
-                        fb = new FileBody(f, "text/xml");
-                        entity.addPart(f.getName(), fb);
-                        byteCount += f.length();
-                        Log.i(t, "added xml file " + f.getName());
-                    } else if (extension.equals("jpg")) {
-                        fb = new FileBody(f, "image/jpeg");
-                        entity.addPart(f.getName(), fb);
-                        byteCount += f.length();
-                        Log.i(t, "added image file " + f.getName());
-                    } else if (extension.equals("3gpp")) {
-                        fb = new FileBody(f, "audio/3gpp");
-                        entity.addPart(f.getName(), fb);
-                        byteCount += f.length();
-                        Log.i(t, "added audio file " + f.getName());
-                    } else if (extension.equals("3gp")) {
-                        fb = new FileBody(f, "video/3gpp");
-                        entity.addPart(f.getName(), fb);
-                        byteCount += f.length();
-                        Log.i(t, "added video file " + f.getName());
-                    } else if (extension.equals("mp4")) {
-                        fb = new FileBody(f, "video/mp4");
-                        entity.addPart(f.getName(), fb);
-                        byteCount += f.length();
-                        Log.i(t, "added video file " + f.getName());
-                    } else if (extension.equals("csv")) {
-                        fb = new FileBody(f, "text/csv");
-                        entity.addPart(f.getName(), fb);
-                        byteCount += f.length();
-                        Log.i(t, "added csv file " + f.getName());
-                    } else if (extension.equals("xls")) {
-                        fb = new FileBody(f, "application/vnd.ms-excel");
-                        entity.addPart(f.getName(), fb);
-                        byteCount += f.length();
-                        Log.i(t, "added xls file " + f.getName());
-                    } else if ( contentType != null ) {
-                        fb = new FileBody(f, contentType );
-                        entity.addPart(f.getName(), fb);
-                        byteCount += f.length();
-                        Log.i(t, "added recognized filetype (" + contentType + ") " + f.getName());
+                    if (fileName.startsWith(".")) {
+                        // potential Apple file attributes file -- ignore it
+                        continue;
+                    }
+                    if (fileName.equals(submissionFile)) {
+                        continue; // this is always added
+                    } else if (fileName.equals(xmlInstanceFile)) {
+                        continue; // omitted
+                    } else if (openRosaServer) {
+                        files.add(f);
+                    } else if (extension.equals("jpg")) { // legacy 0.9x
+                        files.add(f);
+                    } else if (extension.equals("3gpp")) { // legacy 0.9x
+                        files.add(f);
+                    } else if (extension.equals("3gp")) { // legacy 0.9x
+                        files.add(f);
+                    } else if (extension.equals("mp4")) { // legacy 0.9x
+                        files.add(f);
                     } else {
-                        contentType = "application/octet-stream";
-                        fb = new FileBody(f, contentType);
-                        entity.addPart(f.getName(), fb);
-                        byteCount += f.length();
-                        Log.w(t, "added unrecognized file (" + contentType + ") " + f.getName());
-                    }
-                    
-                    // we've added at least one attachment to the request...
-                    if ( byteCount > 10000000L ) {
-                        if ( j+1 < files.size() ) {
-                            Log.i(t, "Extremely long post is being split into multiple posts");
-                            try {
-                                StringBody sb = new StringBody("yes", Charset.forName("UTF-8"));
-                                entity.addPart("*isIncomplete*", sb);
-                            } catch (Exception e) {
-                                e.printStackTrace(); // never happens...
-                            }
-                            ++j; // advance over the last attachment added...
-                            break;
-                        }
+                        Log.w(t, "unrecognized file type " + f.getName());
+                        someFilesNotUploaded = true;
                     }
                 }
-                
-                httppost.setEntity(entity);
-                
-                // prepare response and return uploaded
-                HttpResponse response = null;
-                try {
-                    response = httpclient.execute(httppost,localContext);
-                    int responseCode = response.getStatusLine().getStatusCode();
-                    Log.i(t, "Response code:" + responseCode);
-                    // verify that the response was a 201 or 202.  
-                    // If it wasn't, the submission has failed.
-                    if ( responseCode != 201 && responseCode != 202 ) {
-                        if ( responseCode == 200 ) {
-                            b.append("An network login screen may be preventing the submission.");
-                        } else {
-                            b.append( response.getStatusLine().getReasonPhrase() + " (" + responseCode + ")");
+
+                boolean successfulAttemptSoFar = true;
+                StringBuilder b = new StringBuilder();
+                boolean first = true;
+                int j = 0;
+                while (j < files.size() || first) {
+                    first = false;
+
+                    HttpPost httppost = WebUtils.createOpenRosaHttpPost(u);
+
+                    MimeTypeMap m = MimeTypeMap.getSingleton();
+
+                    long byteCount = 0L;
+
+                    // mime post
+                    MultipartEntity entity = new MultipartEntity();
+
+                    // add the submission file first...
+                    FileBody fb = new FileBody(file, "text/xml");
+                    entity.addPart("xml_submission_file", fb);
+                    Log.i(t, "added xml_submission_file: " + file.getName());
+                    byteCount += file.length();
+
+                    for (; j < files.size(); j++) {
+                        File f = files.get(j);
+                        String fileName = f.getName();
+                        int idx = fileName.lastIndexOf(".");
+                        String extension = "";
+                        if (idx != -1) {
+                            extension = fileName.substring(idx + 1);
                         }
-                        successfulAttemptSoFar = false;
+                        String contentType = m.getMimeTypeFromExtension(extension);
+
+                        // we will be processing every one of these, so
+                        // we only need to deal with the content type determination...
+                        if (extension.equals("xml")) {
+                            fb = new FileBody(f, "text/xml");
+                            entity.addPart(f.getName(), fb);
+                            byteCount += f.length();
+                            Log.i(t, "added xml file " + f.getName());
+                        } else if (extension.equals("jpg")) {
+                            fb = new FileBody(f, "image/jpeg");
+                            entity.addPart(f.getName(), fb);
+                            byteCount += f.length();
+                            Log.i(t, "added image file " + f.getName());
+                        } else if (extension.equals("3gpp")) {
+                            fb = new FileBody(f, "audio/3gpp");
+                            entity.addPart(f.getName(), fb);
+                            byteCount += f.length();
+                            Log.i(t, "added audio file " + f.getName());
+                        } else if (extension.equals("3gp")) {
+                            fb = new FileBody(f, "video/3gpp");
+                            entity.addPart(f.getName(), fb);
+                            byteCount += f.length();
+                            Log.i(t, "added video file " + f.getName());
+                        } else if (extension.equals("mp4")) {
+                            fb = new FileBody(f, "video/mp4");
+                            entity.addPart(f.getName(), fb);
+                            byteCount += f.length();
+                            Log.i(t, "added video file " + f.getName());
+                        } else if (extension.equals("csv")) {
+                            fb = new FileBody(f, "text/csv");
+                            entity.addPart(f.getName(), fb);
+                            byteCount += f.length();
+                            Log.i(t, "added csv file " + f.getName());
+                        } else if (extension.equals("xls")) {
+                            fb = new FileBody(f, "application/vnd.ms-excel");
+                            entity.addPart(f.getName(), fb);
+                            byteCount += f.length();
+                            Log.i(t, "added xls file " + f.getName());
+                        } else if (contentType != null) {
+                            fb = new FileBody(f, contentType);
+                            entity.addPart(f.getName(), fb);
+                            byteCount += f.length();
+                            Log.i(t, "added recognized filetype (" + contentType + ") "
+                                    + f.getName());
+                        } else {
+                            contentType = "application/octet-stream";
+                            fb = new FileBody(f, contentType);
+                            entity.addPart(f.getName(), fb);
+                            byteCount += f.length();
+                            Log
+                                    .w(t, "added unrecognized file (" + contentType + ") "
+                                            + f.getName());
+                        }
+
+                        // we've added at least one attachment to the request...
+                        if (j + 1 < files.size()) {
+                            if (byteCount + files.get(j + 1).length() > 10000000L) {
+                                // the next file would exceed the 10MB threshold...
+                                Log.i(t, "Extremely long post is being split into multiple posts");
+                                try {
+                                    StringBody sb = new StringBody("yes", Charset.forName("UTF-8"));
+                                    entity.addPart("*isIncomplete*", sb);
+                                } catch (Exception e) {
+                                    e.printStackTrace(); // never happens...
+                                }
+                                ++j; // advance over the last attachment added...
+                                break;
+                            }
+                        }
                     }
-                    // read the body of the response (needed before we can reuse connection).
-                    InputStream is = null;
-                    BufferedReader r = null;
+
+                    httppost.setEntity(entity);
+
+                    // prepare response and return uploaded
+                    HttpResponse response = null;
                     try {
-                        is = response.getEntity().getContent();
-                        r = new BufferedReader(new InputStreamReader(is));
-                        String line;
-                        while ( (line = r.readLine()) != null ) {
-                            if ( responseCode == 201 || responseCode == 202) {
-                                Log.i(t, line);
+                        response = httpclient.execute(httppost, localContext);
+                        int responseCode = response.getStatusLine().getStatusCode();
+                        Log.i(t, "Response code:" + responseCode);
+                        // verify that the response was a 201 or 202.
+                        // If it wasn't, the submission has failed.
+                        if (responseCode != 201 && responseCode != 202) {
+                            if (responseCode == 200) {
+                                b.append(app.getString(R.string.network_login_failure));
                             } else {
-                                Log.e(t, line);
+                                b.append(response.getStatusLine().getReasonPhrase() + " ("
+                                        + responseCode + ")");
+                            }
+                            successfulAttemptSoFar = false;
+                        }
+                        // read the body of the response (needed before we can reuse connection).
+                        InputStream is = null;
+                        BufferedReader r = null;
+                        try {
+                            is = response.getEntity().getContent();
+                            r = new BufferedReader(new InputStreamReader(is));
+                            String line;
+                            while ((line = r.readLine()) != null) {
+                                if (responseCode == 201 || responseCode == 202) {
+                                    Log.i(t, line);
+                                } else {
+                                    Log.e(t, line);
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            b.append(e.getLocalizedMessage());
+                            b.append("\n");
+                        } finally {
+                            if (r != null) {
+                                try {
+                                    r.close();
+                                } catch (Exception e) {
+                                } finally {
+                                    r = null;
+                                }
+                            }
+                            if (is != null) {
+                                try {
+                                    is.close();
+                                } catch (Exception e) {
+                                } finally {
+                                    is = null;
+                                }
                             }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        successfulAttemptSoFar = false;
                         b.append(e.getLocalizedMessage());
                         b.append("\n");
-                    } finally {
-                        if ( r != null ) {
-                            try {
-                                r.close();
-                            } catch ( Exception e ) {
-                            } finally {
-                                r = null;
-                            }
-                        }
-                        if ( is != null ) {
-                            try {
-                                is.close();
-                            } catch ( Exception e ) {
-                            } finally {
-                                is = null;
-                            }
-                        }
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    successfulAttemptSoFar = false;
-                    b.append(e.getLocalizedMessage());
-                    b.append("\n");
+                }
+
+                // ok, all the parts of the submission were sent...
+                // If it wasn't, the submission has failed.
+                if (successfulAttemptSoFar && b.length() == 0 && !someFilesNotUploaded) {
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir));
+                } else if (successfulAttemptSoFar && b.length() == 0 && someFilesNotUploaded) {
+                    uploadOutcome
+                            .add(new InstanceUploaderListener.UploadOutcome(instanceDir, false));
+                } else {
+                    uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(instanceDir, u, b
+                            .toString()));
                 }
             }
-            
-            // ok, all the parts of the submission were sent...
-            // If it wasn't, the submission has failed.
-            if (successfulAttemptSoFar && b.length() == 0 && !someFilesNotUploaded) {
-                uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(values[i]));
-            } else if ( successfulAttemptSoFar && b.length() == 0 && someFilesNotUploaded) {
-                uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(values[i], false));
-            } else {
-                if ( someFilesNotUploaded ) {
-                    b.append("Non-OpenRosa server -- some files were not uploaded");
-                    b.append("\n");
-                }
-                uploadOutcome.add(new InstanceUploaderListener.UploadOutcome(values[i], u, b.toString()));
-            }
-            
-            // Remove cache files pertaining to this upload
-            Log.d(Collect.LOGTAG, t + "purging uploaded files");
-            FileUtils.deleteExternalInstanceCacheFiles(values[i]);
+        } finally {
+//            if (c != null) {
+//                c.close();
+//            }
         }
- 
 
         return uploadOutcome;
     }

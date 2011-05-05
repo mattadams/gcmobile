@@ -14,6 +14,8 @@
 
 package com.radicaldynamic.groupinform.views;
 
+import java.io.File;
+
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.form.api.FormEntryCaption;
@@ -50,7 +52,7 @@ public class QuestionView extends AbstractFolioView {
         super(handler, formIndex, context);
     }
 
-	private LinearLayout commonBuildView(String instancePath, FormEntryCaption[] groups) {
+	private LinearLayout commonBuildView(File instanceDir, FormEntryCaption[] groups) {
 		FormEntryPrompt formEntryPrompt = Collect.getInstance().getFormEntryController().getModel().getQuestionPrompt(formIndex);
 
 		LinearLayout mView = new LinearLayout(getContext());
@@ -74,7 +76,7 @@ public class QuestionView extends AbstractFolioView {
         }
 
         // if question or answer type is not supported, use text widget
-        mQuestionWidget = WidgetFactory.createWidgetFromPrompt(handler, formEntryPrompt, getContext(), instancePath);
+        mQuestionWidget = WidgetFactory.createWidgetFromPrompt(handler, formEntryPrompt, getContext(), instanceDir);
         
         return mView;
 	}
@@ -82,9 +84,9 @@ public class QuestionView extends AbstractFolioView {
     /* (non-Javadoc)
 	 * @see org.odk.collect.android.views.IFoliosView#buildView(org.javarosa.form.api.FormEntryCaption[])
 	 */
-    public void buildView(String instancePath, FormEntryCaption[] groups) {
+    public void buildView(File instanceDir, FormEntryCaption[] groups) {
     	// build encapsulating layout
-    	LinearLayout mView = commonBuildView(instancePath, groups);
+    	LinearLayout mView = commonBuildView(instanceDir, groups);
 
         LinearLayout.LayoutParams mLayout =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,

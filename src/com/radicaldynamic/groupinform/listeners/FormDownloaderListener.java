@@ -20,8 +20,15 @@ import java.util.HashMap;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public interface FormDownloaderListener {
-    public static final class FormDetails 
-    {
+
+    /**
+     * Class for returning the details about the forms available for download
+     * and any errors that might be returned during the retrieval attempt.
+     * 
+     * @author mitchellsundt@gmail.com
+     *
+     */
+    public static final class FormDetails {
         public final String stringValue;
 
         public final String formName;
@@ -32,8 +39,13 @@ public interface FormDownloaderListener {
         public final String downloadUrl;
         public final String manifestUrl;
 
-        public FormDetails(String stringValue) 
-        {
+
+        /**
+         * Download error constructor.
+         * 
+         * @param stringValue
+         */
+        public FormDetails(String stringValue) {
             this.stringValue = stringValue;
 
             formName = null;
@@ -45,14 +57,21 @@ public interface FormDownloaderListener {
             manifestUrl = null;
         }
 
-        public FormDetails(String formName,
-                String formId,
-                Integer modelVersion,
-                Integer uiVersion,
-                String description,
-                String downloadUrl,
-                String manifestUrl) 
-        {
+
+        /**
+         * Successful download constructor.  
+         * Only formName and downloadUrl are guaranteed to be non-null.
+         * 
+         * @param formName  not null
+         * @param formId
+         * @param modelVersion
+         * @param uiVersion
+         * @param description
+         * @param downloadUrl
+         * @param manifestUrl
+         */
+        public FormDetails(String formName, String formId, Integer modelVersion, Integer uiVersion,
+                String description, String downloadUrl, String manifestUrl) {
             this.stringValue = null;
             this.formName = formName;
             this.formId = formId;
@@ -63,7 +82,10 @@ public interface FormDownloaderListener {
             this.manifestUrl = manifestUrl;
         }
     }
-    
+
+
     void formDownloadingComplete(HashMap<String, FormDetails> result);
+
+
     void progressUpdate(String currentFile, int progress, int total);
 }

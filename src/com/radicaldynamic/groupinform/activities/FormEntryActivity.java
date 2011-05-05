@@ -294,7 +294,6 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         }        
 
         // Purge cache files that we no longer need
-        Log.d(Collect.LOGTAG, t + "removing cache files for instance " + mInstanceId);
         FileUtils.deleteExternalInstanceCacheFiles(mInstanceId);
     
         super.onDestroy();
@@ -1373,7 +1372,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
         case FormEntryController.EVENT_GROUP:
             GroupView gv = new GroupView(mHandler, mFormEntryModel.getFormIndex(), this);
-            gv.buildView(formInstancePath, getGroupsForCurrentIndex());
+            gv.buildView(new File(formInstancePath), getGroupsForCurrentIndex());
     
             // If we came from a constraint violation, set the focus to the
             // violated field
@@ -1384,7 +1383,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
         case FormEntryController.EVENT_QUESTION:
             QuestionView qv = new QuestionView(mHandler, mFormEntryModel.getFormIndex(), this);
-            qv.buildView(formInstancePath, getGroupsForCurrentIndex());
+            qv.buildView(new File(formInstancePath), getGroupsForCurrentIndex());
             return qv;
 
         default:

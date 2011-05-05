@@ -28,6 +28,8 @@ import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.DateUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FilterUtils;
+import com.radicaldynamic.groupinform.utilities.FilterUtils.FilterCriteria;
 import com.radicaldynamic.groupinform.views.AbstractFolioView;
 import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
 
@@ -56,7 +58,7 @@ import android.widget.TextView;
  */
 public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget {
 
-    private final static String t = "MediaWidget";
+    private final static String t = "ImageWidget: ";
 
     private Button mCaptureButton;
     private ImageView mImageView;
@@ -66,27 +68,27 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
 
     private Uri mExternalUri;
     private String mCaptureIntent;
-    private String mInstanceFolder;
-    private String mInstanceId;
+    private File mInstanceDir;
     private int mRequestCode;
     private int mCaptureText;
     private int mReplaceText;
+    
 
-
-    public ImageWidget(Handler handler, Context context, FormEntryPrompt prompt, String instanceDirPath) {
+    public ImageWidget(Handler handler, Context context, FormEntryPrompt prompt, File instanceDir) {
         super(handler, context, prompt);
-        initialize(instanceDirPath);
+        initialize(instanceDir);
     }
 
 
-    private void initialize(String instanceDirPath) {
-        mInstanceId = instanceDirPath.substring(instanceDirPath.lastIndexOf(File.separator) + 1, instanceDirPath.length());
-        mInstanceFolder = instanceDirPath.substring(0, instanceDirPath.lastIndexOf(File.separator)) + "/";
+    private void initialize(File instanceDir) {
+        mInstanceDir = instanceDir;
         mExternalUri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         mCaptureIntent = android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
         mRequestCode = FormEntryActivity.IMAGE_CAPTURE;
         mCaptureText = R.string.capture_image;
         mReplaceText = R.string.replace_image;
+        
+        Log.d(Collect.LOGTAG, t + "initialized ImageWidget with " + instanceDir.getAbsolutePath());
     }
 
 
@@ -106,9 +108,12 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         String[] projection = {
             Images.ImageColumns._ID
         };
+        File fBinary = new File(mInstanceDir, mBinaryName);
+        FilterCriteria fc = FilterUtils.buildSelectionClause("_data", 
+                                    fBinary.getAbsolutePath());
         Cursor c =
             getContext().getContentResolver().query(mExternalUri, projection,
-                "_data='" + mInstanceFolder + mBinaryName + "'", null, null);
+                                        fc.selection, fc.selectionArgs, null);
         int del = 0;
         if (c.getCount() > 0) {
             c.moveToFirst();
@@ -186,9 +191,11 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
             		if ( mBinaryName == null ) return;
                     Intent i = new Intent("android.intent.action.VIEW");
                     String[] projection = {"_id"};
+                    File fBinary = new File(mInstanceDir, mBinaryName);
+                    FilterCriteria fc = FilterUtils.buildSelectionClause("_data", fBinary.getAbsolutePath());
                     Cursor c =
                         getContext().getContentResolver().query(mExternalUri, projection,
-                            "_data='" + mInstanceFolder + mBinaryName + "'", null, null);
+                                                fc.selection, fc.selectionArgs, null);
                     if (c.getCount() > 0) {
                         c.moveToFirst();
                         String id = c.getString(c.getColumnIndex("_id"));
@@ -223,8 +230,8 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
             int screenWidth = display.getWidth();
             int screenHeight = display.getHeight();
 
-            File f = new File(mInstanceFolder + "/" + mBinaryName);
-            Log.v(Collect.LOGTAG, t + "attempting to getBitmapScaledToDisplay from " + mInstanceFolder + "/" + mBinaryName);
+            File f = new File(mInstanceDir.getParentFile(), mBinaryName);
+            Log.v(Collect.LOGTAG, t + "attempting to getBitmapScaledToDisplay from " + mInstanceDir + "/" + mBinaryName);
             Bitmap bmp = FileUtils.getBitmapScaledToDisplay(f, screenHeight, screenWidth);
             mImageView.setImageBitmap(bmp);
         } else {
@@ -257,7 +264,7 @@ public class ImageWidget extends AbstractQuestionWidget implements IBinaryWidget
         String binarypath = getPathFromUri((Uri) binaryuri);
         File f = new File(binarypath);
         
-        String s = mInstanceFolder + File.separator + mInstanceId + DateUtils.now("yyyyMMdd-HHmmss") + "." + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
+        String s = mInstanceDir + DateUtils.now("yyyyMMdd-HHmmss") + binarypath.substring(binarypath.lastIndexOf('.'));
       
         if (f.renameTo(new File(s))) {
             // Resize image (full sized images are too large for the system)

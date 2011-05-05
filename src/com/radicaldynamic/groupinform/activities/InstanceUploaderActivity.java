@@ -52,6 +52,7 @@ import com.radicaldynamic.groupinform.utilities.PasswordPromptDialogBuilder.OnOk
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class InstanceUploaderActivity extends Activity implements InstanceUploaderListener {
+    
     private static final String t = "InstanceUploaderActivity: ";
 
     private final static int PROGRESS_DIALOG = 1;
@@ -67,43 +68,42 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         String userEmail;
     }
 
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.send_data));
 
-        // Get instances to upload
-        Intent intent = getIntent();        
-        ArrayList<String> instances = intent.getStringArrayListExtra(FormEntryActivity.KEY_INSTANCES);
-        // If nothing to upload
-        if (instances == null) {
+        // get instances to upload
+        Intent i = getIntent();        
+        ArrayList<String> instanceDirs = i.getStringArrayListExtra(FormEntryActivity.KEY_INSTANCES);
+        if (instanceDirs == null) {
+            // nothing to upload
             return;
         }
 
-        // Get the task if we've changed orientations.  If it's null it's a new upload.
-        mInstanceUploaderTask = (InstanceUploaderTask) getLastNonConfigurationInstance();
-        
+        // get the task if we've changed orientations. If it's null it's a new upload.
+        mInstanceUploaderTask = (InstanceUploaderTask) getLastNonConfigurationInstance();        
         if (mInstanceUploaderTask == null) {
-            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+            SharedPreferences settings =
+                PreferenceManager.getDefaultSharedPreferences(getBaseContext());
             
-            String userEmail =
-                settings.getString(ServerPreferences.KEY_USER_EMAIL, null);
+            String userEmail = settings.getString(ServerPreferences.KEY_USER_EMAIL, null);
 
             UploadArgs argSet = new UploadArgs();
-            argSet.instances = instances;
+            argSet.instances = instanceDirs;
             argSet.hosts = new HashSet<String>();
             argSet.userEmail = userEmail;
 
             boolean deferForPassword = false;
-
             if (userEmail != null && userEmail.length() != 0 ) {
-                for (int i = 0; i < instances.size(); i++) {
+                for (int ii = 0; ii < instanceDirs.size(); ii++) {
                     FormInstanceDocument instance = null;
                     String urlString = null;
                     
                     try {
-                        instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instances.get(i));                        
+                        instance = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceDirs.get(ii));                        
                         urlString = instance.getOdkSubmissionUri();
                         
                         URL url = new URL(urlString);
@@ -136,11 +136,12 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
             }
 
             if ( !deferForPassword ) {
-                executeUpload(instances);
+                executeUpload(instanceDirs);
             }
         }
     }
 
+    
     private void launchPasswordDialog( UploadArgs args ) {
         if ( args.hosts.isEmpty() ) {
             executeUpload(args.instances);
@@ -151,11 +152,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         args.hosts.remove(h);
 
         PasswordPromptDialogBuilder b = 
-            new PasswordPromptDialogBuilder(
-                    this, 
-                    args.userEmail, 
-                    h,
-                    new OnOkListener() {
+            new PasswordPromptDialogBuilder(this, args.userEmail, h, new OnOkListener() {
                         @Override
                         public void onOk(Object okListenerContext) {
                             UploadArgs args = (UploadArgs) okListenerContext;
@@ -165,20 +162,22 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         b.show();
     }
     
-    private void executeUpload(ArrayList<String> instances) {
+    
+    private void executeUpload(ArrayList<String> instanceDirs) {
         mInstanceUploaderTask = new InstanceUploaderTask();
         mInstanceUploaderTask.setUploaderListener(this);
         
         // setup dialog and upload task
         showDialog(PROGRESS_DIALOG);
 
-        totalCount = instances.size();
+        totalCount = instanceDirs.size();
 
         // convert array list to an array
-        String[] sa = instances.toArray(new String[totalCount]);
+        String[] sa = instanceDirs.toArray(new String[totalCount]);
         mInstanceUploaderTask.execute(sa);
     }
 
+    
     // TODO: if uploadingComplete() when activity backgrounded, won't work.
     // just check task status in onResume
     @Override
@@ -189,17 +188,19 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
                 ++failureCount;
             }
         }
-        boolean success = false;
-        
+        boolean success = false;        
         if (failureCount == 0) {
-            Toast.makeText(this, getString(R.string.upload_all_successful, totalCount),Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.upload_all_successful, totalCount),
+                    Toast.LENGTH_SHORT).show();
+            
             success = true;
         } else {
-            String s = failureCount + " of " + totalCount;
-            Toast.makeText(this, getString(R.string.upload_some_failed, s),
-                    Toast.LENGTH_LONG).show();
+            String s = getString(R.string.of, failureCount, totalCount);
+            Toast.makeText(this, getString(R.string.upload_some_failed, s), Toast.LENGTH_LONG)
+                    .show();
         }
 
+        // for each path, update the status
         for ( UploadOutcome o : result ) {
             try {
                 FormInstanceDocument iDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, o.instanceDir);
@@ -237,17 +238,18 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         finish();
     }
 
+    
     @Override
 	public void progressUpdate(int progress, int total) {
         mProgressDialog.setMessage(getString(R.string.sending_items, progress, total));
     }
 
+    
     @Override
     protected Dialog onCreateDialog(int id) {
         switch (id) {
             case PROGRESS_DIALOG:
-                mProgressDialog = new ProgressDialog(this);
-                
+                mProgressDialog = new ProgressDialog(this);                
                 DialogInterface.OnClickListener loadingButtonListener =
                     new DialogInterface.OnClickListener() {
                         @Override
@@ -256,20 +258,18 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
                             mInstanceUploaderTask.setUploaderListener(null);
                             finish();
                         }
-                    };
-                    
+                    };                    
                 mProgressDialog.setTitle(getString(R.string.uploading_data));
                 mProgressDialog.setMessage(getString(R.string.please_wait));
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 mProgressDialog.setCancelable(false);
-                mProgressDialog.setButton(getString(R.string.cancel), loadingButtonListener);
-                
+                mProgressDialog.setButton(getString(R.string.cancel), loadingButtonListener);                
                 return mProgressDialog;
-        }
-        
+        }        
         return null;
     }
+    
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
@@ -277,17 +277,20 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         totalCount = savedInstanceState.getInt(KEY_TOTALCOUNT);
     }
 
+    
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_TOTALCOUNT, totalCount);
     }
 
+    
     @Override
     public Object onRetainNonConfigurationInstance() {
         return mInstanceUploaderTask;
     }
 
+    
     @Override
     protected void onDestroy() {
     	if ( mInstanceUploaderTask != null ) {
@@ -296,12 +299,13 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         super.onDestroy();
     }
 
+    
     @Override
     protected void onResume() {
         if (mInstanceUploaderTask != null) {
             mInstanceUploaderTask.setUploaderListener(this);
-        }
-        
+        }        
         super.onResume();
     }
+    
 }
