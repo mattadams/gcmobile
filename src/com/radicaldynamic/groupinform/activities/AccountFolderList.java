@@ -374,8 +374,13 @@ public class AccountFolderList extends ListActivity
 
         @Override
         protected void onPostExecute(Void nothing)
-        {
-            dismissDialog(DIALOG_OPENING);
+        {           
+            // Hack for crash reported to Android Marketplace
+            try {
+                dismissDialog(DIALOG_OPENING);
+            } catch (IllegalArgumentException e) {
+                Log.w(Collect.LOGTAG, t + "DIALOG_OPENING did not exist to be dismissed, race condition?");
+            }
             
             if (folderReady) {
                 if (mCopyToFolder) {
