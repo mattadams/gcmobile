@@ -161,7 +161,9 @@ public class LauncherActivity extends Activity
                 break;
 
             case CouchInstaller.COMPLETE:
-                mProgressDialog.dismiss();
+                // We should only dismiss dialogs that are actually showing
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
                 
                 if (msg.arg1 == 0)
                     restartActivity(true);
