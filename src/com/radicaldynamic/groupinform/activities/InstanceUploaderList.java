@@ -76,6 +76,7 @@ public class InstanceUploaderList extends ListActivity {
 
         mActionButton = (Button) findViewById(R.id.upload_button);
         mActionButton.setOnClickListener(new OnClickListener() {
+            
             @Override
             public void onClick(View arg0) {
                 if (mSelected.size() > 0) {
@@ -89,19 +90,18 @@ public class InstanceUploaderList extends ListActivity {
                             Toast.LENGTH_SHORT).show();
                 }
             }
+            
         });
 
         mToggleButton = (Button) findViewById(R.id.toggle_button);
         mToggleButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Toggle selections of items to all or none
+                // toggle selections of items to all or none
                 ListView ls = getListView();
                 mToggled = !mToggled;
-
-                // Remove all items from selected list
+                // remove all items from selected list
                 mSelected.clear();
-
                 for (int pos = 0; pos < ls.getCount(); pos++) {
                     ls.setItemChecked(pos, mToggled);
 
@@ -120,9 +120,8 @@ public class InstanceUploaderList extends ListActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-
-        menu.add(0, MENU_PREFERENCES, 0, getString(R.string.server_preferences)).setIcon(R.drawable.ic_menu_preferences);
-
+        menu.add(0, MENU_PREFERENCES, 0, getString(R.string.server_preferences)).setIcon(
+                R.drawable.ic_menu_preferences);
         return true;
     }
 

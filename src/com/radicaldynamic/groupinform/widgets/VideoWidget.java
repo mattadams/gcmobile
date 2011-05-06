@@ -20,6 +20,15 @@ import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
 
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
+import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.utilities.DateUtils;
+import com.radicaldynamic.groupinform.utilities.FilterUtils;
+import com.radicaldynamic.groupinform.utilities.FilterUtils.FilterCriteria;
+import com.radicaldynamic.groupinform.views.AbstractFolioView;
+import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -33,12 +42,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.activities.FormEntryActivity;
-import com.radicaldynamic.groupinform.utilities.DateUtils;
-import com.radicaldynamic.groupinform.views.AbstractFolioView;
-import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
-
 /**
  * Widget that allows user to take pictures, sounds or video and add them to the form.
  * 
@@ -47,7 +50,7 @@ import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendan
  */
 public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget {
 
-    private final static String t = "MediaWidget";
+    private final static String t = "VideoWidget: ";
 
     private Button mCaptureButton;
     private Button mPlayButton;
@@ -57,24 +60,21 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
 
     private Uri mExternalUri;
     private String mCaptureIntent;
-    private String mInstanceFolder;
-    private String mInstanceId;
+    private File mInstanceDir;
     private int mRequestCode;
     private int mCaptureText;
     private int mReplaceText;
     private int mPlayText;
+   
 
-//    private FormEntryPrompt mPrompt;
-
-    public VideoWidget(Handler handler, Context context, FormEntryPrompt prompt, String instancePath) {
+    public VideoWidget(Handler handler, Context context, FormEntryPrompt prompt, File instanceDir) {
         super(handler, context, prompt);
-        initialize(instancePath);
-//        mPrompt = prompt;
+        initialize(instanceDir);
     }
 
-    private void initialize(String instancePath) {
-        mInstanceFolder = instancePath.substring(0, instancePath.lastIndexOf(File.separator) + 1);
-        mInstanceId = instancePath.substring(instancePath.lastIndexOf(File.separator) + 1, instancePath.length());
+    private void initialize(File instanceDir) {
+        mInstanceDir = instanceDir;
+
         mExternalUri = Video.Media.EXTERNAL_CONTENT_URI;
         mCaptureIntent = android.provider.MediaStore.ACTION_VIDEO_CAPTURE;
         mRequestCode = FormEntryActivity.VIDEO_CAPTURE;
@@ -82,6 +82,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
         mReplaceText = R.string.replace_video;
         mPlayText = R.string.play_video;
 
+        Log.d(Collect.LOGTAG, t + "initialized VideoWidget with " + instanceDir.getAbsolutePath());
     }
 
     @Override
@@ -128,7 +129,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
 			public void onClick(View v) {
             	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
 	                Intent i = new Intent("android.intent.action.VIEW");
-	                File f = new File(mInstanceFolder + File.separator + mBinaryName);
+	                File f = new File(mInstanceDir.getParentFile(), mBinaryName);
 	                i.setDataAndType(Uri.fromFile(f), "video/*");
 	                ((Activity) getContext()).startActivity(i);
             	}
@@ -147,7 +148,7 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
 
     private void deleteMedia() {
         // get the file path and delete the file
-        File f = new File(mInstanceFolder + File.separator + mBinaryName);
+        File f = new File(mInstanceDir, mBinaryName);
         if (!f.delete()) {
             Log.e(t, "Failed to delete " + f);
         }
@@ -177,13 +178,14 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
 
     private Uri getUriFromPath(String path) {
         // find entry in content provider
+        FilterCriteria fc = FilterUtils.buildSelectionClause("_data", path);
         Cursor c =
-            getContext().getContentResolver().query(mExternalUri, null, "_data='" + path + "'",
-                null, null);
+            getContext().getContentResolver().query(mExternalUri, null,
+                            fc.selection, fc.selectionArgs, null);
         c.moveToFirst();
 
         // create uri from path
-        String newPath = mExternalUri + File.separator + c.getInt(c.getColumnIndex("_id"));
+        String newPath = mExternalUri + "/" + c.getInt(c.getColumnIndex("_id"));
         c.close();
         return Uri.parse(newPath);
     }
@@ -212,16 +214,14 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
         String binarypath = getPathFromUri((Uri) binaryuri);
 
         File f = new File(binarypath);
-        String s = mInstanceFolder + File.separator + mInstanceId
-        + DateUtils.now("yyyyMMdd-HHmmss") + "."
-        + binarypath.substring(binarypath.lastIndexOf('.') + 1);        
-        if (!f.renameTo(new File(s))) {
-            Log.e(t, "Failed to rename " + f.getAbsolutePath());
+        File sub = new File(mInstanceDir.getAbsolutePath() + DateUtils.now("yyyyMMdd-HHmmss") + binarypath.substring(binarypath.lastIndexOf('.')));
+        if (!f.renameTo(sub)) {
+            Log.e(t, "Failed to rename " + f.getAbsolutePath() + " to " + sub.getAbsolutePath());
         }
 
         // remove the database entry and update the name
         getContext().getContentResolver().delete(getUriFromPath(binarypath), null, null);
-        mBinaryName = s.substring(s.lastIndexOf(File.separator) + 1);
+        mBinaryName = sub.getName();
         saveAnswer(true); // and evaluate constraints and trigger UI update...
     }
 

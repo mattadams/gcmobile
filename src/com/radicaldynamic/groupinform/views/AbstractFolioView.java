@@ -1,5 +1,7 @@
 package com.radicaldynamic.groupinform.views;
 
+import java.io.File;
+
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.form.api.FormEntryCaption;
@@ -59,7 +61,7 @@ public abstract class AbstractFolioView extends ScrollView implements OnDescenda
 	 * 
 	 * Otherwise, the UI will never be garbage collected!	
 	 */
-	public abstract void buildView(String instancePath, FormEntryCaption[] groups);
+	public abstract void buildView(File instanceDir, FormEntryCaption[] groups);
 
 	public abstract IAnswerData getAnswer();
 

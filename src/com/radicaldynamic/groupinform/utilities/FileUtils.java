@@ -52,6 +52,10 @@ public final class FileUtils {
     public static final String EXTERNAL_COUCH  = EXTERNAL_PATH + "/couchdb";
     public static final String EXTERNAL_ERLANG = EXTERNAL_PATH + "/erlang";
     
+    // Temporary storage for forms downloaded from ODK Aggregate
+    public static final String ODK_DOWNLOAD_PATH = EXTERNAL_CACHE + "/download";
+    public static final String ODK_UPLOAD_PATH = EXTERNAL_CACHE + "/upload";
+    
     public static final String CAPTURED_IMAGE_FILE = "tmp.jpg";
     public static final String DEVICE_CACHE_FILE   = "devices.json";
     public static final String FOLDER_CACHE_FILE   = "folders.json";
@@ -78,19 +82,26 @@ public final class FileUtils {
         }
     }
 
-    public static void deleteExternalInstanceCacheFiles(String instanceId) 
+    /*
+     * Delete files from the app cache directory on the SD card according to
+     * file names matching a specific CouchDB document ID.  This is usually
+     * a form instance ID.
+     */
+    public static void deleteExternalInstanceCacheFiles(String id) 
     {
+        final String tt = t + "deleteExternalInstanceCacheFiles(): ";
+        
         File cacheDir = new File(FileUtils.EXTERNAL_CACHE);
         String[] fileNames = cacheDir.list();
     
-        for (String file : fileNames) {
-            Log.v(Collect.LOGTAG, t + "evaluating " + file + " for removal");
+        for (String f : fileNames) {
+            Log.v(Collect.LOGTAG, tt + "evaluating " + f + " for removal");
     
-            if (Pattern.matches("^" + instanceId + "[.].*", file)) {
-                if (new File(FileUtils.EXTERNAL_CACHE, file).delete()) {
-                    Log.d(Collect.LOGTAG, t + "removed file " + file);
+            if (Pattern.matches("^" + id + "[.].*", f)) {
+                if (new File(FileUtils.EXTERNAL_CACHE, f).delete()) {
+                    Log.d(Collect.LOGTAG, tt + "removed " + f);
                 } else {
-                    Log.e(Collect.LOGTAG, t + "unable to remove file " + file);
+                    Log.e(Collect.LOGTAG, tt + "unable to remove " + f);
                 }
             }
         }
@@ -262,6 +273,27 @@ public final class FileUtils {
             }
         }
         return mFolderList;
+    }    
+    
+    public static final String getInstanceDirPath(String instanceFilePath) {
+        File instance = new File(instanceFilePath);
+        File instanceDir = instance.getParentFile();
+        if ( !instance.getName().equals(instanceDir.getName() + ".xml")) {
+            return null;
+        }
+        return instanceDir.getAbsolutePath();
+    }
+
+    public static final String getInstanceFilePath(String instanceDirPath) {
+        File instanceDir = new File(instanceDirPath);
+        File instance = new File(instanceDir, instanceDir.getName() + ".xml");
+        return instance.getAbsolutePath();
+    }
+
+    public static final String getSubmissionBlobPath(String instanceDirPath) {
+        File instanceDir = new File(instanceDirPath);
+        File submissionBlob = new File(instanceDir, instanceDir.getName() + ".xml.submit");
+        return submissionBlob.getAbsolutePath();
     }
 
     public static final String getMd5Hash(File file) {
@@ -310,7 +342,7 @@ public final class FileUtils {
             return null;
     
         } catch (FileNotFoundException e) {
-            Log.e("No Cache File", e.getMessage());
+            Log.e("No Xml File", e.getMessage());
             return null;
         } catch (IOException e) {
             Log.e("Problem reading from file", e.getMessage());

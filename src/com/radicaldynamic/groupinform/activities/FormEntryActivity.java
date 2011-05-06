@@ -34,12 +34,14 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -68,6 +70,7 @@ import com.radicaldynamic.groupinform.documents.GenericDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 import com.radicaldynamic.groupinform.logic.PropertyManager;
+import com.radicaldynamic.groupinform.preferences.ServerPreferences;
 import com.radicaldynamic.groupinform.tasks.FormLoaderTask;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
@@ -291,7 +294,6 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         }        
 
         // Purge cache files that we no longer need
-        Log.d(Collect.LOGTAG, t + "removing cache files for instance " + mInstanceId);
         FileUtils.deleteExternalInstanceCacheFiles(mInstanceId);
     
         super.onDestroy();
@@ -1370,7 +1372,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
         case FormEntryController.EVENT_GROUP:
             GroupView gv = new GroupView(mHandler, mFormEntryModel.getFormIndex(), this);
-            gv.buildView(formInstancePath, getGroupsForCurrentIndex());
+            gv.buildView(new File(formInstancePath), getGroupsForCurrentIndex());
     
             // If we came from a constraint violation, set the focus to the
             // violated field
@@ -1381,7 +1383,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
         case FormEntryController.EVENT_QUESTION:
             QuestionView qv = new QuestionView(mHandler, mFormEntryModel.getFormIndex(), this);
-            qv.buildView(formInstancePath, getGroupsForCurrentIndex());
+            qv.buildView(new File(formInstancePath), getGroupsForCurrentIndex());
             return qv;
 
         default:
@@ -1698,12 +1700,15 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             Toast.makeText(getApplicationContext(), getString(R.string.data_saved_error), Toast.LENGTH_SHORT).show();
             return false;
         }
-    
+        
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String url = settings.getString(ServerPreferences.KEY_SERVER, getString(R.string.default_server)) + "/submission";
+
         mSaveToDiskTask = new SaveToDiskTask();
         mSaveToDiskTask.setFormSavedListener(this);
     
         // TODO move to constructor <--? No. the mInstancePath isn't set until the form loads.
-        mSaveToDiskTask.setExportVars(mFormInstanceDoc, exit, complete);
+        mSaveToDiskTask.setExportVars(mFormInstanceDoc, url, exit, complete);
         mSaveToDiskTask.execute();
         showDialog(SAVING_DIALOG);
     

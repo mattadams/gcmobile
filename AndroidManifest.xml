@@ -23,6 +23,8 @@
       android:label="@string/app_name"
       android:name=".application.Collect" 
       android:theme="@style/GroupInformTheme">
+<!--      <provider android:name=".provider.FormsStorage" android:authorities="org.opendatakit.storage.forms"></provider>-->
+<!--      <provider android:name=".provider.SubmissionsStorage" android:authorities="org.opendatakit.storage.submissions"></provider>-->
     <activity 
         android:configChanges="orientation" 
         android:label="@string/app_name" 

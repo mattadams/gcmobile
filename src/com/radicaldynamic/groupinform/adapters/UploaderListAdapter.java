@@ -47,6 +47,8 @@ public class UploaderListAdapter extends ArrayAdapter<FormDefinitionDocument>
                 tt.setText(f.getName());
             }
 
+            // TODO: ODK 1.1.6 or 484 and newer display additional information about failed/partially submitted attempts
+            // as well as where submissions will be sent to ... consider also displaying that information
             if (!mInstanceTallies.isEmpty()) {          
                 if (bt != null) {
                     bt.setText(mInstanceTallies.get(f.getId()).size() + " " + mContext.getText(R.string.tf_forms_ready_to_upload));

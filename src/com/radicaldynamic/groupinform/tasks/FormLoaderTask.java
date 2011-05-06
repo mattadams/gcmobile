@@ -143,6 +143,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         }
         
 //        An alternate method of notifying the parent process would be as follows.  See upstream changeset 475 for source.
+//        Also used in upstream changeset 484 (eaeb6bbbf46b)
 //            
 //        if (formPath == null && instancePath != null) {
 //            String instanceName = (new File(instancePath)).getName();
@@ -342,7 +343,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                     String key = entry.getKey();
 
                     // Do not download XML attachments (these are loaded directly into the form model)
-                    if (!key.equals("xml")) {
+                    if (!key.equals("xml") && !key.equals("xml.submit")) {
                         ais = Collect.getInstance().getDbService().getDb().getAttachment(mFormInstanceDoc.getId(), key);
 
                         FileOutputStream file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
