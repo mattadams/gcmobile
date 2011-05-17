@@ -45,8 +45,8 @@ import com.radicaldynamic.groupinform.activities.AccountFolderList;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.InformOnlineSession;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**
  * 
@@ -392,7 +392,7 @@ public class InformOnlineService extends Service {
     private void restoreSession()
     {        
         // Restore any serialized session information
-        File sessionCache = new File(getCacheDir(), FileUtils.SESSION_CACHE_FILE);
+        File sessionCache = new File(getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE);
         
         if (sessionCache.exists()) {
             Log.d(Collect.LOGTAG, t + "restoring cached session");
@@ -425,7 +425,7 @@ public class InformOnlineService extends Service {
                 e.printStackTrace();
                 
                 // Don't leave a broken file hanging
-                new File(getCacheDir(), FileUtils.SESSION_CACHE_FILE).delete();
+                new File(getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE).delete();
                 
                 // Clear the session
                 Collect.getInstance().getInformOnlineState().setSession(null);
@@ -461,7 +461,7 @@ public class InformOnlineService extends Service {
                     ));
                 }
                 
-                FileOutputStream fos = new FileOutputStream(new File(getCacheDir(), FileUtils.SESSION_CACHE_FILE));
+                FileOutputStream fos = new FileOutputStream(new File(getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE));
                 ObjectOutputStream out = new ObjectOutputStream(fos);
                 out.writeObject(session);
                 out.close();
@@ -471,7 +471,7 @@ public class InformOnlineService extends Service {
                 e.printStackTrace();
                 
                 // Make sure that we don't leave a broken file hanging
-                new File(getCacheDir(), FileUtils.SESSION_CACHE_FILE).delete();
+                new File(getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE).delete();
             }
         } else {
             Log.d(Collect.LOGTAG, t + "no session to serialize");

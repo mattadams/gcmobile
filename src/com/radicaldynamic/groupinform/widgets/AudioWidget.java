@@ -14,32 +14,28 @@
 
 package com.radicaldynamic.groupinform.widgets;
 
-import java.io.File;
-
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
-
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
-import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.utilities.DateUtils;
-import com.radicaldynamic.groupinform.utilities.FilterUtils;
-import com.radicaldynamic.groupinform.utilities.FilterUtils.FilterCriteria;
-import com.radicaldynamic.groupinform.views.AbstractFolioView;
-import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
+import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Handler;
+import android.provider.MediaStore.Audio;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.LinearLayout;
+
+import java.io.File;
 
 /**
  * Widget that allows user to take pictures, sounds or video and add them to the form.
@@ -47,110 +43,112 @@ import android.widget.TextView;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget {
 
-    private final static String t = "AudioWidget: ";
+public class AudioWidget extends QuestionWidget implements IBinaryWidget {
+    private final static String t = "MediaWidget";
 
     private Button mCaptureButton;
     private Button mPlayButton;
+    private Button mChooseButton;
 
     private String mBinaryName;
-    private TextView mDisplayText;
+    private String mInstanceFolder;
 
-    private Uri mExternalUri;
-    private String mCaptureIntent;
-    private File mInstanceDir;
-    private int mRequestCode;
-    private int mCaptureText;
-    private int mReplaceText;
-    private int mPlayText;
-    
+    private boolean mWaitingForData;
 
-    public AudioWidget(Handler handler, Context context, FormEntryPrompt prompt, File instanceDirPath) {
-        super(handler, context, prompt);
-        initialize(instanceDirPath);
-    }
 
-    private void initialize(File instanceDir) {
-        mInstanceDir = instanceDir;
+    public AudioWidget(Context context, FormEntryPrompt prompt) {
+        super(context, prompt);
 
-        mExternalUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        mCaptureIntent = android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION;
-        mRequestCode = FormEntryActivity.AUDIO_CAPTURE;
-        mCaptureText = R.string.capture_audio;
-        mReplaceText = R.string.replace_audio;
-        mPlayText = R.string.play_audio;
-        
-        Log.d(Collect.LOGTAG, t + "initialized AudioWidget with " + instanceDir.getAbsolutePath());        
-    }
+        mWaitingForData = false;
+        mInstanceFolder =
+            FormEntryActivity.InstancePath.substring(0,
+                FormEntryActivity.InstancePath.lastIndexOf("/") + 1);
 
-    @Override
-	public IAnswerData getAnswer() {
-        if (mBinaryName != null) {
-            return new StringData(mBinaryName.toString());
-        } else {
-            return null;
-        }
-    }
+        setOrientation(LinearLayout.VERTICAL);
 
-    @Override
-	protected void buildViewBodyImpl() {
         // setup capture button
         mCaptureButton = new Button(getContext());
-        mCaptureButton.setText(getContext().getString(mCaptureText));
+        mCaptureButton.setText(getContext().getString(R.string.capture_audio));
         mCaptureButton
-                .setTextSize(TypedValue.COMPLEX_UNIT_DIP, AbstractFolioView.APPLICATION_FONTSIZE);
+                .setTextSize(TypedValue.COMPLEX_UNIT_DIP, QuestionWidget.APPLICATION_FONTSIZE);
         mCaptureButton.setPadding(20, 20, 20, 20);
         mCaptureButton.setEnabled(!prompt.isReadOnly());
 
         // launch capture intent on click
         mCaptureButton.setOnClickListener(new View.OnClickListener() {
             @Override
-			public void onClick(View v) {
-            	// focus change for buttons is not fired in touch mode
-            	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
-	                Intent i = new Intent(mCaptureIntent);
-	                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, mExternalUri.toString());
-	                ((Activity) getContext()).startActivityForResult(i, mRequestCode);
-            	}
+            public void onClick(View v) {
+                Intent i = new Intent(android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString());
+                mWaitingForData = true;
+                ((Activity) getContext())
+                        .startActivityForResult(i, FormEntryActivity.AUDIO_CAPTURE);
+
             }
         });
+        // mCaptureButton.setOnLongClickListener(listener);
+
+        // setup capture button
+        mChooseButton = new Button(getContext());
+        // TODO: add to strings.xml
+        mChooseButton.setText("Choose Sound");
+        mChooseButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, QuestionWidget.APPLICATION_FONTSIZE);
+        mChooseButton.setPadding(20, 20, 20, 20);
+        mChooseButton.setEnabled(!prompt.isReadOnly());
+
+        // launch capture intent on click
+        mChooseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                i.setType("audio/*");
+                mWaitingForData = true;
+                ((Activity) getContext())
+                        .startActivityForResult(i, FormEntryActivity.AUDIO_CHOOSER);
+
+            }
+        });
+        // mChooseButton.setOnLongClickListener(listener);
 
         // setup play button
         mPlayButton = new Button(getContext());
-        mPlayButton.setText(getContext().getString(mPlayText));
-        mPlayButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, AbstractFolioView.APPLICATION_FONTSIZE);
+        mPlayButton.setText(getContext().getString(R.string.play_audio));
+        mPlayButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, QuestionWidget.APPLICATION_FONTSIZE);
         mPlayButton.setPadding(20, 20, 20, 20);
 
         // on play, launch the appropriate viewer
         mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
-			public void onClick(View v) {
-            	// focus change for buttons is not fired in touch mode
-            	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
-	                Intent i = new Intent("android.intent.action.VIEW");
-	                File f = new File(mInstanceDir.getParentFile(), mBinaryName);
-	                i.setDataAndType(Uri.fromFile(f), "audio/*");
-	                ((Activity) getContext()).startActivity(i);
-            	}
+            public void onClick(View v) {
+                Intent i = new Intent("android.intent.action.VIEW");
+                File f = new File(mInstanceFolder + "/" + mBinaryName);
+                i.setDataAndType(Uri.fromFile(f), "audio/*");
+                ((Activity) getContext()).startActivity(i);
+
             }
         });
+        // mPlayButton.setOnLongClickListener(listener);
 
         // retrieve answer from data model and update ui
-        mDisplayText = new TextView(getContext());
-        mDisplayText.setPadding(5, 0, 0, 0);
+        mBinaryName = prompt.getAnswerText();
+        if (mBinaryName != null) {
+            mPlayButton.setEnabled(true);
+        } else {
+            mPlayButton.setEnabled(false);
+        }
 
         // finish complex layout
         addView(mCaptureButton);
+        addView(mChooseButton);
         addView(mPlayButton);
     }
 
+
     private void deleteMedia() {
-    	// done?
-    	if ( mBinaryName == null ) return;
-    	
         // get the file path and delete the file
-        File f = new File(mInstanceDir, mBinaryName);
+        File f = new File(mInstanceFolder + "/" + mBinaryName);
         if (!f.delete()) {
             Log.i(t, "Failed to delete " + f);
         }
@@ -159,82 +157,118 @@ public class AudioWidget extends AbstractQuestionWidget implements IBinaryWidget
         mBinaryName = null;
     }
 
-    protected void updateViewAfterAnswer() {
-    	
-    	String newAnswer = prompt.getAnswerText();
-    	if ( mBinaryName != null && !mBinaryName.equals(newAnswer) ) {
-    		deleteMedia();
-    	}
-        mBinaryName = newAnswer;
-        
+
+    @Override
+    public void clearAnswer() {
+        // remove the file
+        deleteMedia();
+
+        // reset buttons
+        mPlayButton.setEnabled(false);
+    }
+
+
+    @Override
+    public IAnswerData getAnswer() {
         if (mBinaryName != null) {
-            mPlayButton.setEnabled(true);
-            mCaptureButton.setText(getContext().getString(mReplaceText));
-            mDisplayText.setText(getContext().getString(R.string.one_capture));
+            return new StringData(mBinaryName.toString());
         } else {
-            mPlayButton.setEnabled(false);
-            mCaptureButton.setText(getContext().getString(mCaptureText));
-            mDisplayText.setText(getContext().getString(R.string.no_capture));
+            return null;
         }
     }
 
+
     private Uri getUriFromPath(String path) {
         // find entry in content provider
-        FilterCriteria fc = FilterUtils.buildSelectionClause("_data", path);
         Cursor c =
-            getContext().getContentResolver().query(mExternalUri, null, 
-                fc.selection, fc.selectionArgs, null);
+            getContext().getContentResolver().query(
+                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null,
+                "_data='" + path + "'", null, null);
         c.moveToFirst();
 
         // create uri from path
-        String newPath = mExternalUri + "/" + c.getInt(c.getColumnIndex("_id"));
+        String newPath =
+            android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI + "/"
+                    + c.getInt(c.getColumnIndex("_id"));
         c.close();
         return Uri.parse(newPath);
     }
 
 
     private String getPathFromUri(Uri uri) {
-        // find entry in content provider
-        Cursor c = getContext().getContentResolver().query(uri, null, null, null, null);
-        c.moveToFirst();
 
-        // get data path
-        String colString = c.getString(c.getColumnIndex("_data"));
-        c.close();
-        return colString;
+        String[] audioProjection = {
+            Audio.Media.DATA
+        };
+        Cursor c = ((Activity) getContext()).managedQuery(uri, audioProjection, null, null, null);
+        ((Activity) getContext()).startManagingCursor(c);
+        int column_index = c.getColumnIndexOrThrow(Audio.Media.DATA);
+        String audioPath = null;
+        if (c.getCount() > 0) {
+            c.moveToFirst();
+            audioPath = c.getString(column_index);
+        }
+        return audioPath;
     }
 
 
     @Override
-	public void setBinaryData(Object binaryuri) {
-        // you are replacing an answer. remove the media.
+    public void setBinaryData(Object binaryuri) {
+        // when replacing an answer. remove the current media.
         if (mBinaryName != null) {
             deleteMedia();
         }
 
-        // get the file path and move the file
-        String binarypath = getPathFromUri((Uri) binaryuri);
-        File f = new File(binarypath);
-        
-        File fSub = new File(mInstanceDir.getAbsolutePath() + DateUtils.now("yyyyMMdd-HHmmss") + binarypath.substring(binarypath.lastIndexOf('.')));
-        if (!f.renameTo(fSub)) {
-            Log.i(t, "Failed to rename " + f.getAbsolutePath());
+        // get the file path and create a copy in the instance folder
+        String binaryPath = getPathFromUri((Uri) binaryuri);
+        String extension = binaryPath.substring(binaryPath.lastIndexOf("."));
+        String destAudioPath = mInstanceFolder + "/" + System.currentTimeMillis() + extension;
+
+        File source = new File(binaryPath);
+        File newAudio = new File(destAudioPath);
+        FileUtils.copyFile(source, newAudio);
+
+        if (newAudio.exists()) {
+            // Add the copy to the content provier
+            ContentValues values = new ContentValues(6);
+            values.put(Audio.Media.TITLE, newAudio.getName());
+            values.put(Audio.Media.DISPLAY_NAME, newAudio.getName());
+            values.put(Audio.Media.DATE_ADDED, System.currentTimeMillis());
+            values.put(Audio.Media.DATA, newAudio.getAbsolutePath());
+
+            Uri AudioURI =
+                getContext().getContentResolver().insert(Audio.Media.EXTERNAL_CONTENT_URI, values);
+            Log.i(t, "Inserting AUDIO returned uri = " + AudioURI.toString());
+        } else {
+            Log.e(t, "Inserting Audio file FAILED");
         }
 
-        // remove the database entry and update the name
-        getContext().getContentResolver().delete(getUriFromPath(binarypath), null, null);
-        mBinaryName = fSub.getName();
-        saveAnswer(true); // and evaluate constraints and trigger UI update...
+        mBinaryName = newAudio.getName();
+        mWaitingForData = false;
     }
+
 
     @Override
-    public void setEnabled(boolean isEnabled) {
-        if (mBinaryName != null) {
-            mPlayButton.setEnabled(isEnabled);
-            mCaptureButton.setEnabled(isEnabled && !prompt.isReadOnly());
-        } else {
-            mPlayButton.setEnabled(false);
-            mCaptureButton.setEnabled(isEnabled && !prompt.isReadOnly());
-        }
+    public void setFocus(Context context) {
+        // Hide the soft keyboard if it's showing.
+        InputMethodManager inputManager =
+            (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputManager.hideSoftInputFromWindow(this.getWindowToken(), 0);
     }
+
+
+    @Override
+    public boolean isWaitingForBinaryData() {
+        return mWaitingForData;
+    }
+
+
+    @Override
+    public void setOnLongClickListener(OnLongClickListener l) {
+        super.setOnLongClickListener(l);
+        mCaptureButton.setOnLongClickListener(l);
+        mChooseButton.setOnLongClickListener(l);
+        mPlayButton.setOnLongClickListener(l);
+    }
+
 }

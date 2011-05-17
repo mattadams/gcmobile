@@ -23,6 +23,7 @@ import com.radicaldynamic.groupinform.couchdb.InformCouchService;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**
  * Stores the state of this device as registered with Inform Online
@@ -423,9 +424,9 @@ public class InformOnlineState
             Collect.getInstance().getInformDependencies().setReminderEnabled(true);
                 
         // Remove cache files
-        new File(mContext.getCacheDir(), FileUtils.DEVICE_CACHE_FILE).delete();
-        new File(mContext.getCacheDir(), FileUtils.FOLDER_CACHE_FILE).delete();
-        new File(mContext.getCacheDir(), FileUtils.SESSION_CACHE_FILE).delete();
+        new File(mContext.getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).delete();
+        new File(mContext.getCacheDir(), FileUtilsExtended.FOLDER_CACHE_FILE).delete();
+        new File(mContext.getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE).delete();
 
         // Shutdown CouchDB and remove databases & log files
         try {
@@ -435,11 +436,11 @@ public class InformOnlineState
                 Collect.getInstance().stopService(new Intent(InformCouchService.class.getName()));
 
                 // Remove DB files & log files
-                if (FileUtils.deleteFolder(FileUtils.EXTERNAL_COUCH + "/var/lib/couchdb"))
-                    FileUtils.createFolder(FileUtils.EXTERNAL_COUCH + "/var/lib/couchdb");    
+                if (FileUtils.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/lib/couchdb"))
+                    FileUtils.createFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/lib/couchdb");    
 
-                if (FileUtils.deleteFolder(FileUtils.EXTERNAL_COUCH + "/var/log/couchdb"))
-                    FileUtils.createFolder(FileUtils.EXTERNAL_COUCH + "/var/log/couchdb");
+                if (FileUtils.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/log/couchdb"))
+                    FileUtils.createFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/log/couchdb");
             }
         } catch (RemoteException e) {
             Log.e(Collect.LOGTAG, t + "unable to quit CouchDB: " + e.toString());

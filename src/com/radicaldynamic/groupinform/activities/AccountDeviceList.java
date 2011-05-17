@@ -47,7 +47,7 @@ import com.radicaldynamic.groupinform.adapters.AccountDeviceListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 /*
@@ -145,7 +145,7 @@ public class AccountDeviceList extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            if (FileUtils.isFileOlderThan(getCacheDir() + File.separator + FileUtils.DEVICE_CACHE_FILE, FileUtils.TIME_TWO_MINUTES))
+            if (FileUtilsExtended.isFileOlderThan(getCacheDir() + File.separator + FileUtilsExtended.DEVICE_CACHE_FILE, FileUtilsExtended.TIME_TWO_MINUTES))
                 fetchDeviceList();
 
             devices = loadDeviceList();
@@ -222,7 +222,7 @@ public class AccountDeviceList extends ListActivity
                     .setAccountPlan(jsonDeviceList.getString("planType"));
                 try {
                     // Write out a device list cache file
-                    FileOutputStream fos = new FileOutputStream(new File(Collect.getInstance().getCacheDir(), FileUtils.DEVICE_CACHE_FILE));
+                    FileOutputStream fos = new FileOutputStream(new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE));
                     fos.write(jsonDevices.toString().getBytes());
                     fos.close();
                 } catch (Exception e) {                    
@@ -249,13 +249,13 @@ public class AccountDeviceList extends ListActivity
         
         ArrayList<AccountDevice> devices = new ArrayList<AccountDevice>();
         
-        if (!new File(Collect.getInstance().getCacheDir(), FileUtils.DEVICE_CACHE_FILE).exists()) {
+        if (!new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).exists()) {
             Log.d(Collect.LOGTAG, t + "device cache file cannot be read: aborting loadDeviceList()");
             return devices;
         }
         
         try {
-            FileInputStream fis = new FileInputStream(new File(Collect.getInstance().getCacheDir(), FileUtils.DEVICE_CACHE_FILE));        
+            FileInputStream fis = new FileInputStream(new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE));        
             InputStreamReader reader = new InputStreamReader(fis);
             BufferedReader buffer = new BufferedReader(reader, 8192);
             StringBuilder sb = new StringBuilder();

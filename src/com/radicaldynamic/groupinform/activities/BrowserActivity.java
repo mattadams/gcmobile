@@ -331,8 +331,7 @@ public class BrowserActivity extends ListActivity
                         
                         // Launch the form builder with the NEWFORM option set to true
                         Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
-                        i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
-                        i.putExtra(FormEntryActivity.NEWFORM, true);
+                        i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
                         startActivity(i);
                     } catch (IOException e) {
                         Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
@@ -619,9 +618,9 @@ public class BrowserActivity extends ListActivity
         switch (s1.getSelectedItemPosition()) {
         // When showing all forms in folder... start a new form
         case 0:
-            i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
+            i = new Intent(this, FormEntryActivity.class);
             i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, new ArrayList<String>());
-            i.putExtra(FormEntryActivity.KEY_FORMID, form.getId());
+            i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
             startActivity(i);
             break;
         // When showing all forms in folder... edit a form
@@ -812,7 +811,7 @@ public class BrowserActivity extends ListActivity
             if (docId.length() > 0) {
                 // Success                
                 Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
-                i.putExtra(FormEntryActivity.KEY_FORMID, docId);
+                i.putExtra(FormEntryActivity.KEY_FORMPATH, docId);
                 startActivity(i);
             } else {
                 // Failure (instances present)
@@ -865,10 +864,10 @@ public class BrowserActivity extends ListActivity
                 showDialog(DIALOG_FOLDER_UNAVAILABLE);
             } else {
                 try {
-                    Intent i = new Intent("com.radicaldynamic.groupinform.action.FormEntry");
+                    Intent i = new Intent(BrowserActivity.this, FormEntryActivity.class);
                     i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstanceIds);
-                    i.putExtra(FormEntryActivity.KEY_INSTANCEID, mInstanceIds.get(0));
-                    i.putExtra(FormEntryActivity.KEY_FORMID, mFormId);            
+                    i.putExtra(FormEntryActivity.KEY_INSTANCEPATH, mInstanceIds.get(0));
+                    i.putExtra(FormEntryActivity.KEY_FORMPATH, mFormId);            
                     startActivity(i);
                 } catch (IndexOutOfBoundsException e) {
                     // There were no mInstanceIds returned (no DB error, per-se but something was missing)

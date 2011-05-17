@@ -1,30 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-    Copyright (C) 2009 University of Washington
+Copyright (C) 2009 University of Washington
 
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not
-    use this file except in compliance with the License. You may obtain a copy of
-    the License at http://www.apache.org/licenses/LICENSE-2.0
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use this file except in compliance with the License. You may obtain a copy of
+the License at http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-    License for the specific language governing permissions and limitations under 
-    the License.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations under 
+the License.
 -->
 <manifest 
     xmlns:android="http://schemas.android.com/apk/res/android" 
-    android:versionCode="2" 
-    android:versionName="1.1.0"
-    package="com.radicaldynamic.groupinform">
-    <!-- android:debuggable="true" -->
+    android:versionCode="3" 
+    android:versionName="1.2.0"
+    package="com.radicaldynamic.groupinform"
+    android:debuggable="true">
   <application       
       android:icon="@drawable/ic_group_complete" 
       android:label="@string/app_name"
       android:name=".application.Collect" 
       android:theme="@style/GroupInformTheme">
-<!--      <provider android:name=".provider.FormsStorage" android:authorities="org.opendatakit.storage.forms"></provider>-->
-<!--      <provider android:name=".provider.SubmissionsStorage" android:authorities="org.opendatakit.storage.submissions"></provider>-->
+
+<!--    <provider-->
+<!--        android:name="org.odk.collect.android.provider.FormsProvider"-->
+<!--        android:authorities="org.odk.collect.android.provider.odk.forms" />-->
+<!--    <provider-->
+<!--        android:name="org.odk.collect.android.provider.InstanceProvider"-->
+<!--        android:authorities="org.odk.collect.android.provider.odk.instances" />-->
+
     <activity 
         android:configChanges="orientation" 
         android:label="@string/app_name" 
@@ -35,26 +41,21 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
+
     <activity 
         android:configChanges="orientation"
         android:label="@string/app_name" 
         android:name=".activities.FormEntryActivity" 
         android:windowSoftInputMode="adjustResize"> 
-      <!-- The intent filter below is a bit of a hack until we create a content provider for forms -->
-      <intent-filter>
-        <action android:name="com.radicaldynamic.groupinform.action.FormEntry" />
-        <category android:name="android.intent.category.DEFAULT" />
-      </intent-filter>
-      <!-- This is what we should be doing once we have the content provider working -->
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />
         <action android:name="android.intent.action.EDIT" />
         <category android:name="android.intent.category.DEFAULT" />
-        <!-- Need to add something like... -->
-        <!-- <data android:mimeType="vnd.android.cursor.item/vnd.google.note" /> -->
-        <!-- ...here once we make a contentProvider for forms -->
-      </intent-filter>   
+        <data android:mimeType="vnd.android.cursor.item/vnd.odk.form" />
+        <data android:mimeType="vnd.android.cursor.item/vnd.odk.instance" />
+      </intent-filter>
     </activity>
+
     <activity 
         android:label="@string/app_name" 
         android:name=".activities.AccountDeviceActivity" 
@@ -74,9 +75,19 @@
     <activity 
         android:label="@string/app_name" 
         android:name=".activities.AccountFolderReplicationList" />
+
     <activity 
         android:name=".activities.BrowserActivity" 
-        android:label="@string/app_name" />
+        android:label="@string/app_name">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <action android:name="android.intent.action.EDIT" />
+        <action android:name="android.intent.action.PICK" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <data android:mimeType="vnd.android.cursor.dir/vnd.godk.form" />
+      </intent-filter>
+    </activity>
+
     <activity 
         android:label="@string/app_name" 
         android:name=".activities.ClientInformationActivity" 
@@ -111,7 +122,7 @@
         android:name=".activities.FormDownloadList" />         
     <activity 
         android:label="@string/app_name"
-        android:name=".activities.FormHierarchyList" />
+        android:name=".activities.FormHierarchyActivity" />
     <activity 
         android:label="@string/app_name" 
         android:name=".activities.InstanceUploaderList" />
@@ -130,13 +141,39 @@
     <activity 
         android:label="@string/app_name"
         android:name=".preferences.ServerPreferences" />
+
+    <activity
+        android:name=".activities.SplashScreenActivity"
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.Dialog">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+
+    <!-- Enable Shortcuts for Command Actions -->
+    <activity
+        android:name=".activities.AndroidShortcuts"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar"
+        android:label="ODK Form">
+      <intent-filter>
+        <action android:name="android.intent.action.CREATE_SHORTCUT" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <uses-library
+        android:name="com.google.android.maps" />
+
     <service 
         android:label="@string/app_name"
         android:name=".services.DatabaseService" />
     <service 
         android:label="@string/app_name"
         android:name=".services.InformOnlineService" />
-    
+
     <!-- CouchDB -->
     <service 
         android:enabled="true" 
@@ -146,7 +183,7 @@
       <intent-filter>
         <action android:name="com.radicaldynamic.groupinform.couchdb.InformCouchService" />
       </intent-filter>
-    </service>        
+    </service>
   </application>
   
   <uses-permission 
@@ -167,17 +204,17 @@
   <uses-permission 
       xmlns:android="http://schemas.android.com/apk/res/android" 
       android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    
+  
   <supports-screens 
       android:anyDensity="true"
       android:largeScreens="true" 
       android:normalScreens="true" 
       android:resizeable="true"
       android:smallScreens="true" />
-   
+  
   <!-- Not available until 2.3/SDK9 -->     
   <!--android:xlargeScreens="true" -->
-    
+  
   <uses-sdk 
       android:minSdkVersion="8" 
       android:maxSdkVersion="8"

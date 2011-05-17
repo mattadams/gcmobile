@@ -38,12 +38,10 @@ public class FormReader
 
     /*
      * Used to read in a form definition for manipulation by the Form Builder.
-     * 
-     * If newForm is true then FormReader will expect that the form template is bare and
-     * requires initialization (add new instance root, etc).
      */
-    public FormReader(InputStream is, boolean newForm)
+    public FormReader(InputStream is)
     {
+        boolean newForm = false;
         mForm = XMLDoc.from(is, false);
         mDefaultPrefix = mForm.getPefix("http://www.w3.org/2002/xforms");
         

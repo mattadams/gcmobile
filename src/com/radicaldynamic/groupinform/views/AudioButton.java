@@ -4,11 +4,9 @@
 
 package com.radicaldynamic.groupinform.views;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.javarosa.core.reference.InvalidReferenceException;
 import org.javarosa.core.reference.ReferenceManager;
+import com.radicaldynamic.groupinform.R;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -21,7 +19,8 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.radicaldynamic.groupinform.R;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author ctsims
@@ -41,14 +40,12 @@ public class AudioButton extends ImageButton implements OnClickListener {
             BitmapFactory.decodeResource(context.getResources(),
                 android.R.drawable.ic_lock_silent_mode_off);
         this.setImageBitmap(b);
-        // The following code only works in 1.6+
-        // this.setMinimumWidth(b.getScaledWidth(context.getResources().getDisplayMetrics()));
         player = null;
     }
 
 
     @Override
-	public void onClick(View v) {
+    public void onClick(View v) {
         if (URI == null) {
             // No audio file specified
             Log.e(t, "No audio file was specified");

@@ -7,7 +7,6 @@ import java.util.Iterator;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
-import org.javarosa.form.api.FormEntryController;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -40,6 +39,7 @@ import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.listeners.FormSavedListener;
+import com.radicaldynamic.groupinform.logic.FormController;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
 import com.radicaldynamic.groupinform.views.TouchListView;
 import com.radicaldynamic.groupinform.xform.Bind;
@@ -60,7 +60,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private static final int REQUEST_TRANSLATIONS = 2;
     
     private static final String INSTANCE_ROOT = "instanceroot";
-    private static final String INSTANCE_ROOT_ID = "instancerootid";    
+    private static final String INSTANCE_ROOT_ID = "instancerootid";
+    
+    private static final String KEY_ACTUALPATH = "actualpath";
     
     private LoadFormDefinitionTask mLoadFormDefinitionTask;
     private SaveFormDefinitionTask mSaveFormDefinitionTask;
@@ -77,7 +79,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private String mInstanceRootId;
     private FormDefinitionDocument mForm;
     private FormReader mFormReader;
-    private boolean mNewForm;
     
     private ArrayList<Field> mFieldState = new ArrayList<Field>();    
     private ArrayList<String> mPath = new ArrayList<String>();          // Human readable location in mFieldState
@@ -258,8 +259,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         
             // Load new form definition from scratch
             if (i != null) {
-                mFormId = i.getStringExtra(FormEntryActivity.KEY_FORMID);
-                mNewForm = i.getBooleanExtra(FormEntryActivity.NEWFORM, false);
+                mFormId = i.getStringExtra(FormEntryActivity.KEY_FORMPATH);
         
                 mLoadFormDefinitionTask = new LoadFormDefinitionTask();
                 mLoadFormDefinitionTask.setFormLoaderListener(this);
@@ -269,17 +269,14 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             }
         } else {          
             // Restore state information provided by this activity
-            if (savedInstanceState.containsKey(FormEntryActivity.KEY_FORMID))
-                mFormId = savedInstanceState.getString(FormEntryActivity.KEY_FORMID);
+            if (savedInstanceState.containsKey(FormEntryActivity.KEY_FORMPATH))
+                mFormId = savedInstanceState.getString(FormEntryActivity.KEY_FORMPATH);
             
             if (savedInstanceState.containsKey(FormEntryActivity.KEY_FORMPATH))
                 mPath = savedInstanceState.getStringArrayList(FormEntryActivity.KEY_FORMPATH);
             
-            if (savedInstanceState.containsKey(FormEntryActivity.KEY_FORMACTUALPATH))
-                mActualPath = savedInstanceState.getStringArrayList(FormEntryActivity.KEY_FORMACTUALPATH);
-            
-            if (savedInstanceState.containsKey(FormEntryActivity.NEWFORM))
-                mNewForm = savedInstanceState.getBoolean(FormEntryActivity.NEWFORM, false);
+            if (savedInstanceState.containsKey(KEY_ACTUALPATH))
+                mActualPath = savedInstanceState.getStringArrayList(KEY_ACTUALPATH);
             
             if (savedInstanceState.containsKey(INSTANCE_ROOT))
                 mInstanceRoot = savedInstanceState.getString(INSTANCE_ROOT);
@@ -491,12 +488,11 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     protected void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
-        outState.putBoolean(FormEntryActivity.NEWFORM, false);
-        outState.putString(FormEntryActivity.KEY_FORMID, mFormId);
+        outState.putString(FormEntryActivity.KEY_FORMPATH, mFormId);
         outState.putString(INSTANCE_ROOT, mInstanceRoot);
         outState.putString(INSTANCE_ROOT_ID, mInstanceRootId);
         outState.putStringArrayList(FormEntryActivity.KEY_FORMPATH, mPath);
-        outState.putStringArrayList(FormEntryActivity.KEY_FORMACTUALPATH, mActualPath);
+        outState.putStringArrayList(KEY_ACTUALPATH, mActualPath);
     }
 
     /*
@@ -522,7 +518,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 
                 Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
                 AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
-                mFormReader = new FormReader(ais, mNewForm);
+                mFormReader = new FormReader(ais);
                 
                 ais.close();
                 
@@ -636,7 +632,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
      * @see com.radicaldynamic.turboform.listeners.FormLoaderListener#loadingComplete
      */
     @Override
-    public void loadingComplete(FormEntryController fec, FormDefinitionDocument fdd, FormInstanceDocument fid)
+    public void loadingComplete(FormController fec, FormDefinitionDocument fdd, FormInstanceDocument fid)
     {
         dismissDialog(LOADING_DIALOG);        
         refreshView(mFieldState);

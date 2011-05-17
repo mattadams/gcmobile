@@ -32,8 +32,8 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 public class AccountFolderReplicationList extends ListActivity
 {    
@@ -246,7 +246,7 @@ public class AccountFolderReplicationList extends ListActivity
                     Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(getCacheDir(), FileUtils.FOLDER_CACHE_FILE).setLastModified(0);
+                    new File(getCacheDir(), FileUtilsExtended.FOLDER_CACHE_FILE).setLastModified(0);
 
                     new PostReplicationsUpdateTask().execute();
                 } else {

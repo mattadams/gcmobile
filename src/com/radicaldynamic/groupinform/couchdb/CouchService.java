@@ -19,7 +19,7 @@ import android.os.RemoteException;
 import com.couchone.libcouch.AeSimpleSHA1;
 import com.couchone.libcouch.AndCouch;
 import com.couchone.libcouch.Base64Coder;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 public class CouchService extends Service 
 {
@@ -46,7 +46,7 @@ public class CouchService extends Service
 	public void onCreate() {
 //		notifyStarting();
 		couch.service = this;
-		couch.start("/system/bin/sh", FileUtils.EXTERNAL_COUCH + "/bin/couchdb", "");
+		couch.start("/system/bin/sh", FileUtilsExtended.EXTERNAL_COUCH + "/bin/couchdb", "");
 	}
 
 	@Override

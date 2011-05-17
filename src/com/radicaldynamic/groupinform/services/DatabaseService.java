@@ -268,24 +268,11 @@ public class DatabaseService extends Service {
             // Local database
             if (mConnectedToLocal) {
                 if (mLocalDbConnector instanceof StdCouchDbConnector && mLocalDbConnector.getDatabaseName().equals("db_" + db)) {
-                    Log.d(Collect.LOGTAG, tt + "local database " + db + " already open");
+//                    Log.d(Collect.LOGTAG, tt + "local database " + db + " already open");
                     return;
                 }
             } else {
                 connectToLocal();
-
-                // Wait for a connection to become available
-                for (int i = 1; i > 0; ++i) {
-                    if (mConnectedToLocal == true) 
-                        break;
-                    
-                    // Ensure that we do not run out of int space too soon
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
             }
             
             openLocalDatabase(db);
@@ -293,24 +280,11 @@ public class DatabaseService extends Service {
             // Remote database
             if (mConnectedToRemote) {
                 if (mRemoteDbConnector instanceof StdCouchDbConnector && mRemoteDbConnector.getDatabaseName().equals("db_" + db)) {
-                    Log.d(Collect.LOGTAG, tt + "remote database " + db + " already open");
+//                    Log.d(Collect.LOGTAG, tt + "remote database " + db + " already open");
                     return;
                 }
             } else {
                 connectToRemote();
-
-                // Wait for a connection to become available
-                for (int i = 1; i > 0; ++i) {
-                    if (mConnectedToRemote == true) 
-                        break;              
-                    
-                    // Ensure that we do not run out of int space too soon
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
             }
             
             openRemoteDatabase(db);

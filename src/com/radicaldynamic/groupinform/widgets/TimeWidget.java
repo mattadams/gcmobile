@@ -14,89 +14,89 @@
 
 package com.radicaldynamic.groupinform.widgets;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.TimeData;
 import org.javarosa.form.api.FormEntryPrompt;
 
 import android.content.Context;
-import android.os.Handler;
 import android.view.Gravity;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TimePicker;
 
-import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
- * Displays a Timepicker widget. TimeWidget 
+ * Displays a TimePicker widget.
  * 
- * @author Aurelio Di Pasquale aurdipas@gmail.com
+ * @author Carl Hartung (carlhartung@gmail.com)
  */
-public class TimeWidget extends AbstractQuestionWidget {
-    
-    private TimePicker mTimePicker;
+public class TimeWidget extends QuestionWidget {
 
-    public TimeWidget(Handler handler, Context context, FormEntryPrompt prompt) {
-        super(handler, context, prompt);
+    private TimePicker mTimePicker;
+    // Tue May 03 08:49:00 PDT 2011
+    private SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+    
+    public TimeWidget(Context context, final FormEntryPrompt prompt) {
+        super(context, prompt);
+
+        mTimePicker = new TimePicker(getContext());
+        mTimePicker.setFocusable(!prompt.isReadOnly());
+        mTimePicker.setEnabled(!prompt.isReadOnly());
+        mTimePicker.setIs24HourView(true);
+
+        // If there's an answer, use it.
+        if (prompt.getAnswerValue() != null) {
+            String time = ((TimeData) prompt.getAnswerValue()).getValue().toString();
+            try {
+                Date d = sdf.parse(time);
+                mTimePicker.setCurrentHour(d.getHours());
+                mTimePicker.setCurrentMinute(d.getMinutes());
+            } catch (ParseException e) {
+                // bad date, clear answer
+                clearAnswer();
+                e.printStackTrace();
+            }
+            
+        } else {
+            // create time widget with current time as of right now
+            clearAnswer();
+        }
+
+        setGravity(Gravity.LEFT);
+        addView(mTimePicker);
+
     }
 
+
+    /**
+     * Resets time to today.
+     */
     @Override
-	public IAnswerData getAnswer() {
-        // clear focus first so the timewidget gets the value in the text box
-        mTimePicker.clearFocus();
+    public void clearAnswer() {
+        Calendar c = Calendar.getInstance();
+        mTimePicker.setCurrentHour(c.get(Calendar.HOUR));
+        mTimePicker.setCurrentMinute(c.get(Calendar.MINUTE));
+    }
+
+
+    @Override
+    public IAnswerData getAnswer() {
         Date d = new Date(0);
         d.setHours(mTimePicker.getCurrentHour());
         d.setMinutes(mTimePicker.getCurrentMinute());
         return new TimeData(d);
     }
 
-    /**
-     * Build view for time answer. Includes retrieving existing answer.
-     */
-    @Override
-    protected void buildViewBodyImpl() {
-        mTimePicker = new TimePicker(getContext());
-        mTimePicker.setFocusable(!prompt.isReadOnly());
-        mTimePicker.setEnabled(!prompt.isReadOnly());
-        mTimePicker.setIs24HourView(true);
-        new TimePicker.OnTimeChangedListener() {
-             @Override
-			public void onTimeChanged(TimePicker view, int hourOfDay, int minute) {
-                if (!prompt.isReadOnly()) {
-                    // http://code.google.com/p/android/issues/detail?id=2081
-                	view.setCurrentHour(hourOfDay);
-                	view.setCurrentMinute(minute);
-            }
-                // gain focus after change because we might have a 
-                // constraint violation somewhere else that will
-                // restore focus elsewhere
-            	signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL);
-            }
-        };
-
-        setGravity(Gravity.LEFT);
-        addView(mTimePicker);
-    }
-
-    protected void updateViewAfterAnswer() {
-    	IAnswerData answer = prompt.getAnswerValue();
-    	if ( answer == null ) {
-            final Calendar c = new GregorianCalendar();
-            mTimePicker.setCurrentHour(c.get(Calendar.HOUR_OF_DAY));
-            mTimePicker.setCurrentMinute(c.get(Calendar.MINUTE));
-    	} else {
-            final Calendar c = new GregorianCalendar();
-            c.setTime((Date) prompt.getAnswerValue().getValue());
-            mTimePicker.setCurrentHour(c.get(Calendar.HOUR_OF_DAY));
-            mTimePicker.setCurrentMinute(c.get(Calendar.MINUTE));
-    	}
-    }
 
     @Override
-    public void setEnabled(boolean isEnabled) {
-    	mTimePicker.setEnabled(isEnabled && !prompt.isReadOnly());
+    public void setFocus(Context context) {
+        // Hide the soft keyboard if it's showing.
+        InputMethodManager inputManager =
+            (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputManager.hideSoftInputFromWindow(this.getWindowToken(), 0);
     }
 
 }

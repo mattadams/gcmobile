@@ -30,7 +30,7 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 public class AccountDeviceActivity extends Activity
@@ -299,7 +299,7 @@ public class AccountDeviceActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mDevice.getDisplayName()), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE).setLastModified(0);
+                    new File(getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).setLastModified(0);
                     
                     // Get out of here
                     finish();
@@ -357,7 +357,7 @@ public class AccountDeviceActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_reset_with_param, mDevice.getDisplayName()), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE).setLastModified(0);
+                    new File(getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).setLastModified(0);
                     
                     // Get out of here
                     finish();                    
@@ -418,7 +418,7 @@ public class AccountDeviceActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
-                    new File(getCacheDir(), FileUtils.DEVICE_CACHE_FILE).setLastModified(0);
+                    new File(getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).setLastModified(0);
                     
                     // Commit changes to the cache-in-memory to avoid running InformOnlineService.loadDeviceHash()
                     Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());

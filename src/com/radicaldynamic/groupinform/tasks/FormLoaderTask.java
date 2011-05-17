@@ -14,7 +14,6 @@
 
 package com.radicaldynamic.groupinform.tasks;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -22,17 +21,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map.Entry;
 
-import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
-import org.ektorp.DbAccessException;
-import org.ektorp.DocumentNotFoundException;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.condition.EvaluationContext;
 import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.core.model.instance.TreeReference;
+import org.javarosa.core.reference.ReferenceManager;
+import org.javarosa.core.reference.RootTranslator;
 import org.javarosa.core.services.PrototypeManager;
 import org.javarosa.core.util.externalizable.DeserializationException;
 import org.javarosa.core.util.externalizable.ExtUtil;
@@ -44,62 +40,67 @@ import org.javarosa.xform.util.XFormUtils;
 
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
+import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
+import com.radicaldynamic.groupinform.logic.FormController;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**
- * Background task for loading a form definition & instance.
+ * Background task for loading a form.
  * 
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FECWrapper> 
-{
-    private static final String t = "FormLoaderTask: ";
-    
+public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FECWrapper> {
+    private final static String t = "FormLoaderTask";
     /**
      * Classes needed to serialize objects. Need to put anything from JR in here.
      */
     public final static String[] SERIALIABLE_CLASSES = {
-        "org.javarosa.core.model.FormDef", "org.javarosa.core.model.GroupDef",
-        "org.javarosa.core.model.QuestionDef", "org.javarosa.core.model.data.DateData",
-        "org.javarosa.core.model.data.DateTimeData",
-        "org.javarosa.core.model.data.DecimalData",
-        "org.javarosa.core.model.data.GeoPointData",
-        "org.javarosa.core.model.data.helper.BasicDataPointer",
-        "org.javarosa.core.model.data.IntegerData",
-        "org.javarosa.core.model.data.MultiPointerAnswerData",
-        "org.javarosa.core.model.data.PointerAnswerData",
-        "org.javarosa.core.model.data.SelectMultiData",
-        "org.javarosa.core.model.data.SelectOneData",
-        "org.javarosa.core.model.data.StringData", "org.javarosa.core.model.data.TimeData",
-        "org.javarosa.core.services.locale.TableLocaleSource",
-        "org.javarosa.xpath.expr.XPathArithExpr", "org.javarosa.xpath.expr.XPathBoolExpr",
-        "org.javarosa.xpath.expr.XPathCmpExpr", "org.javarosa.xpath.expr.XPathEqExpr",
-        "org.javarosa.xpath.expr.XPathFilterExpr", "org.javarosa.xpath.expr.XPathFuncExpr",
-        "org.javarosa.xpath.expr.XPathNumericLiteral",
-        "org.javarosa.xpath.expr.XPathNumNegExpr", "org.javarosa.xpath.expr.XPathPathExpr",
-        "org.javarosa.xpath.expr.XPathStringLiteral",
-        "org.javarosa.xpath.expr.XPathUnionExpr",
-        "org.javarosa.xpath.expr.XPathVariableReference"
+            "org.javarosa.core.model.FormDef", "org.javarosa.core.model.GroupDef",
+            "org.javarosa.core.model.QuestionDef", "org.javarosa.core.model.data.DateData",
+            "org.javarosa.core.model.data.DateTimeData",
+            "org.javarosa.core.model.data.DecimalData",
+            "org.javarosa.core.model.data.GeoPointData",
+            "org.javarosa.core.model.data.helper.BasicDataPointer",
+            "org.javarosa.core.model.data.IntegerData",
+            "org.javarosa.core.model.data.MultiPointerAnswerData",
+            "org.javarosa.core.model.data.PointerAnswerData",
+            "org.javarosa.core.model.data.SelectMultiData",
+            "org.javarosa.core.model.data.SelectOneData",
+            "org.javarosa.core.model.data.StringData", "org.javarosa.core.model.data.TimeData",
+            "org.javarosa.core.services.locale.TableLocaleSource",
+            "org.javarosa.xpath.expr.XPathArithExpr", "org.javarosa.xpath.expr.XPathBoolExpr",
+            "org.javarosa.xpath.expr.XPathCmpExpr", "org.javarosa.xpath.expr.XPathEqExpr",
+            "org.javarosa.xpath.expr.XPathFilterExpr", "org.javarosa.xpath.expr.XPathFuncExpr",
+            "org.javarosa.xpath.expr.XPathNumericLiteral",
+            "org.javarosa.xpath.expr.XPathNumNegExpr", "org.javarosa.xpath.expr.XPathPathExpr",
+            "org.javarosa.xpath.expr.XPathStringLiteral", "org.javarosa.xpath.expr.XPathUnionExpr",
+            "org.javarosa.xpath.expr.XPathVariableReference"
     };
-    
-    protected class FECWrapper {
-        FormEntryController controller;
 
-        protected FECWrapper(FormEntryController controller) {
+    FormLoaderListener mStateListener;
+    String mErrorMsg;
+
+    protected class FECWrapper {
+        FormController controller;
+
+
+        protected FECWrapper(FormController controller) {
             this.controller = controller;
         }
 
-        protected FormEntryController getController() {
+
+        protected FormController getController() {
             return controller;
         }
+
 
         protected void free() {
             controller = null;
@@ -107,272 +108,229 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     }
 
     FECWrapper data;
-
-    FormLoaderListener mStateListener;
-    String mErrorMsg = "unexpected error";
-
+    
+    // BEGIN custom
     FormDefinitionDocument mFormDefinitionDoc = null;
     FormInstanceDocument mFormInstanceDoc = null;
+    // END custom
+
 
     /**
      * Initialize {@link FormEntryController} with {@link FormDef} from binary or from XML. If given
      * an instance, it will be used to fill the {@link FormDef}.
      */
     @Override
-    protected FECWrapper doInBackground(String... ids) 
-    {
-        final String tt = t + "doInBackground(): ";
-        
+    protected FECWrapper doInBackground(String... path) {
         FormEntryController fec = null;
         FormDef fd = null;
+        FileInputStream fis = null;
         
-        String formId = ids[0];
-        String instanceId = ids[1];
-                
+        // BEGIN custom 
+        File formDefinitionFile = new File(path[0]);
+        String formId = formDefinitionFile.getName().substring(0, formDefinitionFile.getName().lastIndexOf("."));
+        
+        // Retrieve form definition from database
         try {
-            mFormDefinitionDoc = Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, formId);
-        } catch (DbAccessException e) {
-            Log.w(Collect.LOGTAG, tt + "while retrieving form definition document " + e.toString());
-            mErrorMsg = "Unable to read form definition from the database.\n\nPlease try again later.";
-            return null;
-        } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "unhandled exception while retrieving form definition document: " + e.toString());
-            mErrorMsg = "Unable to read form definition from the database.\n\nPlease try again later.";
-            e.printStackTrace();
-            return null;
-        }
-        
-//        An alternate method of notifying the parent process would be as follows.  See upstream changeset 475 for source.
-//        Also used in upstream changeset 484 (eaeb6bbbf46b)
-//            
-//        if (formPath == null && instancePath != null) {
-//            String instanceName = (new File(instancePath)).getName();
-//            this.publishProgress(Collect.getInstance().getString(R.string.load_error_no_form, instanceName));
-//            return null;
-//        }
-        
-        Log.i(Collect.LOGTAG, tt + "for " + mFormDefinitionDoc.getId() + ", loading form named " + mFormDefinitionDoc.getName());
-        
-        File formBin = new File(Collect.getInstance().getCacheDir(), mFormDefinitionDoc.getId() + ".formdef");
-
-        if (formBin.exists() && formBin.lastModified() < mFormDefinitionDoc.getDateUpdatedAsCalendar().getTimeInMillis()) {
-            /*
-             * The cache is stale with regards to the XML so delete the cache file.
-             * This is mainly used for development but could be more important going
-             * forward if users are updating or adding IAV features to existing forms.
-             */
-        	Log.d(Collect.LOGTAG, tt + "removing stale form cache file");
-        	formBin.delete();
-        }
+            Log.d(Collect.LOGTAG, t + ": retrieving form definition document " + formId);
             
-        // If we have binary then attempt to deserialize it
-        if (formBin.exists()) {        	
-        	try {
-        	    Log.d(Collect.LOGTAG, tt + "loading serialized form binary");
-        		fd = deserializeFormDef(formBin);
-        	} catch (Exception e) {
-                /*
-                 * If it did not load delete the file and read the XML directly
-                 * 
-                 * The common case here is that the JavaRosa library that serialized the binary is 
-                 * incompatible with the JavaRosa library that is now attempting to deserialize it.
-                 */        	    
-        	    Log.w(Collect.LOGTAG, tt + "serialized form binary failed to load (deleting cache file): " + e.toString());
-        		formBin.delete();
-        	}
+            FileUtils.createFolder(formDefinitionFile.getParent());
+            FileUtils.createFolder(formDefinitionFile.getParent() + File.separator + FileUtilsExtended.MEDIA_DIR); 
+            
+            mFormDefinitionDoc = Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, formId);
+            AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
+             
+            FileOutputStream file = new FileOutputStream(formDefinitionFile);
+            byte [] buffer = new byte[8192];
+            int bytesRead = 0;
+            
+            while ((bytesRead = ais.read(buffer)) != -1) {
+                file.write(buffer, 0, bytesRead);
+            }
+            
+            file.close();
+            ais.close();
+        } catch (Exception e) {
+            Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form definition: " + e.toString());
+            mErrorMsg = e.getMessage();
+            e.printStackTrace();            
         }
+        // END custom 
+
+        String formPath = path[0];
+
+        File formXml = new File(formPath);
+        String formHash = FileUtils.getMd5Hash(formXml);
         
-        // Either a binary wasn't present or didn't load -- read directly from XML
-        if (fd == null) {            
-            try {
-            	Log.d(Collect.LOGTAG, tt + "attempting read of " + mFormDefinitionDoc.getName() + " XML attachment");
-            	
-            	AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(mFormDefinitionDoc.getId(), "xml");
-            	fd = XFormUtils.getFormFromInputStream(ais);
-            	ais.close();            	            	
-            	
-                if (fd == null) {
-                    Log.e(Collect.LOGTAG, tt + "failed to load form definition from XML");
-                    mErrorMsg = "Error reading XForm file";
-                    return null;
-                } else {                
-                    serializeFormDef(fd, mFormDefinitionDoc.getId());
-                }
-            } catch (XFormParseException e) {
-                Log.e(Collect.LOGTAG, tt + "failed to load form definition from XML: " + e.toString());
-                mErrorMsg = e.getMessage();
-                e.printStackTrace();
-                return null;
-            } catch (Exception e) {
-                Log.e(Collect.LOGTAG, tt + "failed to load form definition from XML: " + e.toString());
-                mErrorMsg = e.getMessage();
-                e.printStackTrace();
-                return null;
+        // BEGIN custom 
+//      File formBin = new File(FileUtils.CACHE_PATH + formHash + ".formdef");
+        File formBin = new File(formDefinitionFile.getParent() + File.separator + formHash + ".formdef");
+        // END custom        
+
+        if (formBin.exists()) {
+            // if we have binary, deserialize binary
+            Log.i(
+                t,
+                "Attempting to load " + formXml.getName() + " from cached file: "
+                        + formBin.getAbsolutePath());
+            fd = deserializeFormDef(formBin);
+            if (fd == null) {
+                // some error occured with deserialization. Remove the file, and make a new .formdef
+                // from xml
+                Log.w(t,
+                    "Deserialization FAILED!  Deleting cache file: " + formBin.getAbsolutePath());
+                formBin.delete();
             }
         }
+        if (fd == null) {
+            // no binary, read from xml
+            try {
+                Log.i(t, "Attempting to load from: " + formXml.getAbsolutePath());
+                fis = new FileInputStream(formXml);
+                fd = XFormUtils.getFormFromInputStream(fis);
+                if (fd == null) {
+                    mErrorMsg = "Error reading XForm file";
+                } else {
+                    serializeFormDef(fd, formPath);
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                mErrorMsg = e.getMessage();
+            } catch (XFormParseException e) {
+                mErrorMsg = e.getMessage();
+                e.printStackTrace();
+            } catch (Exception e) {
+                mErrorMsg = e.getMessage();
+                e.printStackTrace();
+            } 
+        }
 
-        // New evaluation context for function handlers
+        // new evaluation context for function handlers
         EvaluationContext ec = new EvaluationContext();
         fd.setEvaluationContext(ec);
 
-        // Create FormEntryController from form definition
+        // create FormEntryController from formdef
         FormEntryModel fem = new FormEntryModel(fd);
         fec = new FormEntryController(fem);
 
-        // Import existing data into form definition
-        try {            
-	        if (instanceId == null) {
-	            Log.d(Collect.LOGTAG, tt + "new instance");
-	            fd.initialize(true);
-	        } else {
-	            // Import data, then initialise (this order is important)
-	            Log.d(Collect.LOGTAG, tt + "existing instance");
-                importData(instanceId, fec);
-                fd.initialize(false);
-	        }
-        } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "failed loading data into form definition: " + e.toString());
-        	e.printStackTrace();
-        	
-            this.publishProgress(Collect.getInstance().getString(R.string.load_error, mFormDefinitionDoc.getName()) + " : " + e.getMessage());
-
-        	return null;
+        // import existing data into formdef
+        if (FormEntryActivity.InstancePath != null) {
+            // This order is important. Import data, then initialize.
+            // BEGIN custom
+            try {
+                String instanceId = FormEntryActivity.InstancePath.substring(FormEntryActivity.InstancePath.lastIndexOf("/") + 1, FormEntryActivity.InstancePath.lastIndexOf("."));
+                
+                Log.d(Collect.LOGTAG, t + ": retrieving form instance document " + instanceId);
+                
+                FileUtils.createFolder(FormEntryActivity.InstancePath.substring(0, FormEntryActivity.InstancePath.lastIndexOf("/")));
+                
+                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceId);
+                AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, "xml");
+                 
+                FileOutputStream file = new FileOutputStream(FormEntryActivity.InstancePath);
+                byte [] buffer = new byte[8192];
+                int bytesRead = 0;
+                
+                while ((bytesRead = ais.read(buffer)) != -1) {
+                    file.write(buffer, 0, bytesRead);
+                }
+                
+                file.close();
+                ais.close();
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form instance: " + e.toString());
+                mErrorMsg = e.getMessage();
+                e.printStackTrace();            
+            }
+            // END custom
+            importData(FormEntryActivity.InstancePath , fec);
+            fd.initialize(false);
+        } else {
+            fd.initialize(true);
         }
 
-        Collect.getInstance().registerMediaPath(FileUtils.EXTERNAL_CACHE + File.separator + mFormDefinitionDoc.getId() + ".");
+        // set paths to /sdcard/odk/forms/formfilename-media/
+        String formFileName = formXml.getName().substring(0, formXml.getName().lastIndexOf("."));
 
+        // Remove previous forms
+        ReferenceManager._().clearSession();
+
+        // This should get moved to the Application Class
+        if (ReferenceManager._().getFactories().length == 0) {
+            // this is /sdcard/odk
+            // BEGIN custom
+//            ReferenceManager._().addReferenceFactory(
+//                    new FileReferenceFactory(Environment.getExternalStorageDirectory() + "/odk"));
+            ReferenceManager._().addReferenceFactory(
+                new FileReferenceFactory(FileUtilsExtended.FORMS_PATH));
+            // END custom
+        }
+
+        // Set jr://... to point to /sdcard/odk/forms/filename-media/
+        // BEGIN custom
+//        ReferenceManager._().addSessionRootTranslator(
+//                new RootTranslator("jr://images/", "jr://file/forms/" + formFileName + "-media/"));
+//            ReferenceManager._().addSessionRootTranslator(
+//                new RootTranslator("jr://audio/", "jr://file/forms/" + formFileName + "-media/"));
+//            ReferenceManager._().addSessionRootTranslator(
+//                new RootTranslator("jr://video/", "jr://file/forms/" + formFileName + "-media/"));
+        ReferenceManager._().addSessionRootTranslator(
+            new RootTranslator("jr://images/", "jr://file/" + formId + "/media/"));
+        ReferenceManager._().addSessionRootTranslator(
+            new RootTranslator("jr://audio/", "jr://file/" + formId + "/media/"));
+        ReferenceManager._().addSessionRootTranslator(
+            new RootTranslator("jr://video/", "jr://file/" + formId + "/media/"));
+        // END custom
+
+        // clean up vars
+        fis = null;
         fd = null;
         formBin = null;
-        formId = null;
-        instanceId = null;
+        formXml = null;
+        formPath = null;
 
-        data = new FECWrapper(fec);
-        
+
+        FormController fc = new FormController(fec);
+        data = new FECWrapper(fc);
         return data;
+
     }
 
-    @Override
-    protected void onPostExecute(FECWrapper wrapper) 
-    {
-        synchronized (this) {
-            if (mStateListener != null) {
-                if (wrapper == null) {
-                    mStateListener.loadingError(mErrorMsg);
-                } else {
-                    mStateListener.loadingComplete(wrapper.getController(), mFormDefinitionDoc, mFormInstanceDoc);
-                    mFormDefinitionDoc = null;
-                    mFormInstanceDoc = null;
-                }
-            }                
-        }
-    }
 
-    @Override
-    protected void onProgressUpdate(String... values) 
-    {
-        Toast.makeText(Collect.getInstance().getApplicationContext(), values[0], Toast.LENGTH_LONG).show();
-    }
+    public boolean importData(String filePath, FormEntryController fec) {
+        // convert files into a byte array
+        byte[] fileBytes = FileUtils.getFileAsBytes(new File(filePath));
 
-    public boolean importData(String instanceId, FormEntryController fec) throws IOException 
-    {        
-        final String tt = t + "importData(): ";
-        
-        Log.d(Collect.LOGTAG, tt + "for " + mFormDefinitionDoc.getId() + ", importing instance " + instanceId);
-        
-        AttachmentInputStream ais = null;
-        ByteArrayOutputStream output = null;
-
-        byte[] buffer = new byte[8192];
-        int bytesRead;
-        
-        // Retrieve instance XML attachment from database
-        try {
-            ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, "xml");
-            output = new ByteArrayOutputStream();
-
-            while ((bytesRead = ais.read(buffer)) != -1) {
-                output.write(buffer, 0, bytesRead);
-            }
-
-            ais.close();
-        } catch (DocumentNotFoundException e) {
-            Log.w(Collect.LOGTAG, tt + "DocumentNotFoundException: " + e.toString());
-            return false;
-        } catch (DbAccessException e) {
-            Log.w(Collect.LOGTAG, tt + "DbAccessException: " + e.toString());
-            return false;
-        } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "unhandled exception: " + e.toString());
-            e.printStackTrace();
-            return false;
-        }
-
-        // Get the root of the saved and template instances
-        TreeElement savedRoot = XFormParser.restoreDataModel(output.toByteArray(), null).getRoot();
+        // get the root of the saved and template instances
+        TreeElement savedRoot = XFormParser.restoreDataModel(fileBytes, null).getRoot();
         TreeElement templateRoot = fec.getModel().getForm().getInstance().getRoot().deepCopy(true);
-        
-        output.close();
 
-        // Weak check for matching forms
+        // weak check for matching forms
         if (!savedRoot.getName().equals(templateRoot.getName()) || savedRoot.getMult() != 0) {
-            Log.e(Collect.LOGTAG, tt + "saved form instance does not match template form definition");
+            Log.e(t, "Saved form instance does not match template form definition");
             return false;
         } else {
-            // Populate the data model
+            // populate the data model
             TreeReference tr = TreeReference.rootRef();
             tr.add(templateRoot.getName(), TreeReference.INDEX_UNBOUND);
             templateRoot.populate(savedRoot, fec.getModel().getForm());
 
-            // Populated model to current form
+            // populated model to current form
             fec.getModel().getForm().getInstance().setRoot(templateRoot);
 
-            /*
-             * Fix any language issues
-             * http://bitbucket.org/javarosa/main/issue/5/itext-n-appearing-in-restored-instances
-             */
+            // fix any language issues
+            // : http://bitbucket.org/javarosa/main/issue/5/itext-n-appearing-in-restored-instances
             if (fec.getModel().getLanguages() != null) {
-                fec.getModel().getForm().localeChanged(fec.getModel().getLanguage(), fec.getModel().getForm().getLocalizer());
-            }
-            
-            // Also download any media attachments
-            try {
-                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceId);
-                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) mFormInstanceDoc.getAttachments();
-
-                for (Entry<String, Attachment> entry : attachments.entrySet()) {
-                    String key = entry.getKey();
-
-                    // Do not download XML attachments (these are loaded directly into the form model)
-                    if (!key.equals("xml") && !key.equals("xml.submit")) {
-                        ais = Collect.getInstance().getDbService().getDb().getAttachment(mFormInstanceDoc.getId(), key);
-
-                        FileOutputStream file = new FileOutputStream(new File(FileUtils.EXTERNAL_CACHE, key));
-                        buffer = new byte[8192];
-                        bytesRead = 0;
-
-                        while ((bytesRead = ais.read(buffer)) != -1) {
-                            file.write(buffer, 0, bytesRead);
-                        }
-
-                        ais.close();
-                        file.close();
-                    }
-                }
-            } catch (DocumentNotFoundException e) {
-                Log.w(Collect.LOGTAG, tt + "DocumentNotFoundException: " + e.toString());
-                return false;
-            } catch (DbAccessException e) {
-                Log.w(Collect.LOGTAG, tt + "DbAccessException: " + e.toString());
-                return false;
-            } catch (Exception e) {
-                Log.e(Collect.LOGTAG, tt + "unhandled exception: " + e.toString());
-                e.printStackTrace();
-                return false;
+                fec.getModel()
+                        .getForm()
+                        .localeChanged(fec.getModel().getLanguage(),
+                            fec.getModel().getForm().getLocalizer());
             }
 
             return true;
+
         }
     }
+
 
     /**
      * Read serialized {@link FormDef} from file and recreate as object.
@@ -380,25 +338,24 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      * @param formDef serialized FormDef file
      * @return {@link FormDef} object
      */
-    public FormDef deserializeFormDef(File formDef) 
-    {
-        // TODO: any way to remove reliance on jrsp?
-    	Log.i(Collect.LOGTAG, t + "deserializing form definition from " + formDef.getAbsolutePath());
+    public FormDef deserializeFormDef(File formDef) {
 
-        // Need a list of classes that formDef uses
+        // TODO: any way to remove reliance on jrsp?
+
+        // need a list of classes that formdef uses
         PrototypeManager.registerPrototypes(SERIALIABLE_CLASSES);
         FileInputStream fis = null;
         FormDef fd = null;
-        DataInputStream dis = null;
-        
         try {
-            // Create new form definition
+            // create new form def
             fd = new FormDef();
             fis = new FileInputStream(formDef);
-            dis = new DataInputStream(fis);
+            DataInputStream dis = new DataInputStream(fis);
 
-            // Read serialised form definition into new form definition
+            // read serialized formdef into new formdef
             fd.readExternal(dis, ExtUtil.defaultPrototypes());
+            dis.close();
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             fd = null;
@@ -408,61 +365,77 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         } catch (DeserializationException e) {
             e.printStackTrace();
             fd = null;
-        } finally {
-        	if (dis != null) {
-        		try {
-        			dis.close();
-        		} catch (IOException e) {
-        			// ignore...
-        		}
-        	}
-        }        
+        }
 
         return fd;
     }
+
 
     /**
      * Write the FormDef to the file system as a binary blog.
      * 
      * @param filepath path to the form file
      */
-    public void serializeFormDef(FormDef fd, String id)
-    {
-        Log.i(Collect.LOGTAG, t + id + ": serializing form definition");
+    public void serializeFormDef(FormDef fd, String filepath) {
+        // if cache folder is missing, create it.
+        if (FileUtils.createFolder(FileUtils.CACHE_PATH)) {
 
-        // Calculate unique md5 identifier            
-        File formDef = new File(Collect.getInstance().getCacheDir(), id + ".formdef");
+            // calculate unique md5 identifier
+            String hash = FileUtils.getMd5Hash(new File(filepath));
+            // BEGIN custom block
+//            File formDef = new File(FileUtils.CACHE_PATH + hash + ".formdef");            
+            String formId = filepath.substring(filepath.lastIndexOf("/") + 1, filepath.lastIndexOf("."));
+            File formDef = new File(FileUtilsExtended.FORMS_PATH + File.separator + formId + File.separator + hash + ".formdef");
+            // END custom block
 
-        // If formDef does not exist, create one
-        if (!formDef.exists()) {
-            FileOutputStream fos;
-
-            try {
-                fos = new FileOutputStream(formDef);
-                DataOutputStream dos = new DataOutputStream(fos);
-                fd.writeExternal(dos);
-                dos.flush();
-                dos.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+            // formdef does not exist, create one.
+            if (!formDef.exists()) {
+                FileOutputStream fos;
+                try {
+                    fos = new FileOutputStream(formDef);
+                    DataOutputStream dos = new DataOutputStream(fos);
+                    fd.writeExternal(dos);
+                    dos.flush();
+                    dos.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
-    public void setFormLoaderListener(FormLoaderListener sl) 
-    {
+
+    @Override
+    protected void onPostExecute(FECWrapper wrapper) {
+        synchronized (this) {
+            if (mStateListener != null) {
+                if (wrapper == null) {
+                    mStateListener.loadingError(mErrorMsg);
+                } else {
+                    // BEGIN custom 
+//                    mStateListener.loadingComplete(wrapper.getController());
+                    mStateListener.loadingComplete(wrapper.getController(), mFormDefinitionDoc, mFormInstanceDoc);
+                    // END custom 
+                }
+            }
+        }
+    }
+
+
+    public void setFormLoaderListener(FormLoaderListener sl) {
         synchronized (this) {
             mStateListener = sl;
         }
     }
 
-    public void destroy() 
-    {
+
+    public void destroy() {
         if (data != null) {
             data.free();
             data = null;
         }
     }
+
 }

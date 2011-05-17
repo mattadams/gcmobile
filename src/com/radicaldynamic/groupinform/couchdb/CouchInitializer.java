@@ -13,7 +13,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 public class CouchInitializer
 {
@@ -44,7 +44,7 @@ public class CouchInitializer
         List<String> index = new ArrayList<String>();
         
         // This method must have the index of installed files as prepared by CouchInstaller
-        if (new File(FileUtils.EXTERNAL_FILES, FILE_INDEX).exists() == false) {
+        if (new File(FileUtilsExtended.EXTERNAL_FILES, FILE_INDEX).exists() == false) {
             Log.e(Collect.LOGTAG, t + "unable to initialize data directory: index of installed files is missing");
             return;   
         }
@@ -72,7 +72,7 @@ public class CouchInitializer
          * compiled version of Couch/Erlang expects to find them). 
          */
         try {
-            index = org.apache.commons.io.FileUtils.readLines(new File(FileUtils.EXTERNAL_FILES, FILE_INDEX));            
+            index = org.apache.commons.io.FileUtils.readLines(new File(FileUtilsExtended.EXTERNAL_FILES, FILE_INDEX));            
             Iterator<String> entries = index.iterator();
             
             float entriesProcessed = 0;
@@ -143,14 +143,14 @@ public class CouchInitializer
         if (info[0].equals(FILE)) {
             if (info[1].equals("420")) {
                 try {
-                    Runtime.getRuntime().exec("/system/bin/ln -s " + FileUtils.EXTERNAL_PATH + neutralPath + " " + DESTINATION_PATH + neutralPath);
+                    Runtime.getRuntime().exec("/system/bin/ln -s " + FileUtilsExtended.EXTERNAL_PATH + neutralPath + " " + DESTINATION_PATH + neutralPath);
                 } catch (IOException e) {
                     Log.e(Collect.LOGTAG, t + "failed to link " + e.toString());
                     e.printStackTrace();
                 }
             } else if (info[1].equals("493")) {
                 try {
-                    org.apache.commons.io.FileUtils.copyFile(new File(FileUtils.EXTERNAL_PATH, neutralPath), new File(DESTINATION_PATH, neutralPath));
+                    org.apache.commons.io.FileUtils.copyFile(new File(FileUtilsExtended.EXTERNAL_PATH, neutralPath), new File(DESTINATION_PATH, neutralPath));
                     Runtime.getRuntime().exec("/system/bin/chmod 755 " + DESTINATION_PATH + neutralPath);
                 } catch (IOException e) {
                     Log.e(Collect.LOGTAG, t + "unable to duplicate " + e.toString());

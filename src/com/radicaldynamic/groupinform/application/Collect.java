@@ -2,13 +2,6 @@ package com.radicaldynamic.groupinform.application;
 
 import java.util.ArrayList;
 
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.SyncBasicHttpContext;
 import org.javarosa.core.reference.ReferenceManager;
 import org.javarosa.core.reference.RootTranslator;
 import org.javarosa.form.api.FormEntryController;
@@ -32,7 +25,6 @@ import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
-import com.radicaldynamic.groupinform.utilities.AgingCredentialsProvider;
 import com.radicaldynamic.groupinform.xform.FormBuilderState;
 
 public class Collect extends Application {
@@ -44,7 +36,6 @@ public class Collect extends Application {
     private FileReferenceFactory factory = null;
     private IBinder viewToken = null;    
     private boolean firstReferenceInitialization = true;
-    private HttpContext localContext = null;
     
     // Service connections
     private InformCouchService couchService = null; 
@@ -182,24 +173,6 @@ public class Collect extends Application {
 		t.setDuration(Toast.LENGTH_SHORT);
 		t.setGravity(Gravity.CENTER, 0, 0);
 		t.show();
-	}
-	
-	public synchronized HttpContext getHttpContext() 
-	{
-	    if (localContext == null) {
-	        // set up one context for all HTTP requests so that authentication and cookies can be retained.
-	        localContext = new SyncBasicHttpContext(new BasicHttpContext());
-
-	        // establish a local cookie store for this attempt at downloading...
-	        CookieStore cookieStore = new BasicCookieStore();
-	        localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
-
-	        // and establish a credentials provider...
-	        CredentialsProvider credsProvider = new AgingCredentialsProvider(7*60*1000);
-	        localContext.setAttribute(ClientContext.CREDS_PROVIDER, credsProvider);
-	    }
-	    
-	    return localContext;
 	}
 
     public void setCouchService(InformCouchService couchService) { this.couchService = couchService; }

@@ -21,4 +21,9 @@ package com.radicaldynamic.groupinform.widgets;
  */
 public interface IBinaryWidget {
     public void setBinaryData(Object answer);
+    public boolean isWaitingForBinaryData();
 }
+
+/*TODO carlhartung:  we might want to move this into the QuestionWidget abstract class? 
+ * 
+ */

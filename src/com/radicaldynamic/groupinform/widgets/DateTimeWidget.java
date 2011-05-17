@@ -14,137 +14,139 @@
 
 package com.radicaldynamic.groupinform.widgets;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 import org.javarosa.core.model.data.DateTimeData;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.form.api.FormEntryPrompt;
 
 import android.content.Context;
-import android.os.Handler;
 import android.view.Gravity;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
 import android.widget.TimePicker;
 
-import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
-
 /**
- * Displays a Timepicker widget. TimeWidget
+ * Displays a DatePicker widget. DateWidget handles leap years and does not allow dates that do not
+ * exist.
  * 
- * @author Aurelio Di Pasquale aurdipas@gmail.com
+ * @author Carl Hartung (carlhartung@gmail.com)
+ * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class DateTimeWidget extends AbstractQuestionWidget {
+public class DateTimeWidget extends QuestionWidget {
 
-	// Holds the current date. Used for determining if day of month is too big.
-	// Not in handler because constructor takes a while...
-	private final Calendar currentDate = new GregorianCalendar(); // now...
+    private DatePicker mDatePicker;
+    private TimePicker mTimePicker;
+    // Tue May 03 08:49:00 PDT 2011
+    private SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
 
-	private TimePicker mTimePicker;
-	private DatePicker mDatePicker;
-	private DatePicker.OnDateChangedListener mDateListener;
+    private DatePicker.OnDateChangedListener mDateListener;
 
-	public DateTimeWidget(Handler handler, Context context,
-			FormEntryPrompt prompt) {
-		super(handler, context, prompt);
-	}
+    // convert from j2me date to android date
+    private final static int YEARSHIFT = 1900;
 
-	@Override
-	public IAnswerData getAnswer() {
-		// clear focus first so the timewidget gets the value in the text box
-		mDatePicker.clearFocus();
-		mTimePicker.clearFocus();
-		GregorianCalendar c = new GregorianCalendar(mDatePicker.getYear(),
-				mDatePicker.getMonth(), mDatePicker.getDayOfMonth());
-		Date d = c.getTime();
-		d.setHours(mTimePicker.getCurrentHour());
-		d.setMinutes(mTimePicker.getCurrentMinute());
-		return new DateTimeData(d);
-	}
 
-	/**
-	 * Build view for time answer. Includes retrieving existing answer.
-	 */
-	@Override
-	protected void buildViewBodyImpl() {
+    public DateTimeWidget(Context context, FormEntryPrompt prompt) {
+        super(context, prompt);
 
-		mDatePicker = new DatePicker(getContext());
-		mDatePicker.setFocusable(!prompt.isReadOnly());
-		mDatePicker.setEnabled(!prompt.isReadOnly());
+        mDatePicker = new DatePicker(getContext());
+        mDatePicker.setFocusable(!prompt.isReadOnly());
+        mDatePicker.setEnabled(!prompt.isReadOnly());
 
-		mDateListener = new DatePicker.OnDateChangedListener() {
-			@Override
-			public void onDateChanged(DatePicker view, int year, int month,
-					int day) {
-				// TODO: MES -- is this broken if calculated date?
-				// TODO: MES -- Or if calculated readonly() field?
-				if (!prompt.isReadOnly()) {
-					// handle leap years and number of days in month
-					// TODO
-					// http://code.google.com/p/android/issues/detail?id=2081
-					currentDate.set(year, month, 1);
-					int max = currentDate
-							.getActualMaximum(Calendar.DAY_OF_MONTH);
-					if (day > max) {
-						view.updateDate(year, month, max);
-					} else {
-						view.updateDate(year, month, day);
-					}
-				}
-				// gain focus after change because we might have a
-				// constraint violation somewhere else that will
-				// restore focus elsewhere
-				signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL);
-			}
-		};
+        mTimePicker = new TimePicker(getContext());
+        mTimePicker.setFocusable(!prompt.isReadOnly());
+        mTimePicker.setEnabled(!prompt.isReadOnly());
+        mTimePicker.setIs24HourView(true);
+        mTimePicker.setPadding(0, 20, 0, 0);
 
-		mTimePicker = new TimePicker(getContext());
-		mTimePicker.setFocusable(!prompt.isReadOnly());
-		mTimePicker.setEnabled(!prompt.isReadOnly());
-		mTimePicker.setIs24HourView(true);
-		new TimePicker.OnTimeChangedListener() {
-			@Override
-			public void onTimeChanged(TimePicker view, int hourOfDay, int minute) {
-				if (!prompt.isReadOnly()) {
-					// http://code.google.com/p/android/issues/detail?id=2081
-					view.setCurrentHour(hourOfDay);
-					view.setCurrentMinute(minute);
-				}
-				// gain focus after change because we might have a
-				// constraint violation somewhere else that will
-				// restore focus elsewhere
-				signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL);
-			}
-		};
+        mDateListener = new DatePicker.OnDateChangedListener() {
+            @Override
+            public void onDateChanged(DatePicker view, int year, int month, int day) {
+                if (mPrompt.isReadOnly()) {
+                    setAnswer();
+                } else {
+                    // handle leap years and number of days in month
+                    // TODO
+                    // http://code.google.com/p/android/issues/detail?id=2081
+                    Calendar c = Calendar.getInstance();
+                    c.set(year, month, 1);
+                    int max = c.getActualMaximum(Calendar.DAY_OF_MONTH);
+                    if (day > max) {
+                        mDatePicker.updateDate(year, month, max);
+                    } else {
+                        mDatePicker.updateDate(year, month, day);
+                    }
+                }
+            }
+        };
 
-		setGravity(Gravity.LEFT);
-		addView(mDatePicker);
-		addView(mTimePicker);
-	}
+        // If there's an answer, use it.
+        setAnswer();
 
-	protected void updateViewAfterAnswer() {
-		IAnswerData answer = prompt.getAnswerValue();
-		if (answer == null) {
-			final Calendar c = new GregorianCalendar();
-			mDatePicker.init(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c
-					.get(Calendar.DAY_OF_MONTH), mDateListener);
-			mTimePicker.setCurrentHour(c.get(Calendar.HOUR_OF_DAY));
-			mTimePicker.setCurrentMinute(c.get(Calendar.MINUTE));
-		} else {
-			final Calendar c = new GregorianCalendar();
-			c.setTime((Date) prompt.getAnswerValue().getValue());
-			mDatePicker.init(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c
-					.get(Calendar.DAY_OF_MONTH), mDateListener);
-			mTimePicker.setCurrentHour(c.get(Calendar.HOUR_OF_DAY));
-			mTimePicker.setCurrentMinute(c.get(Calendar.MINUTE));
-		}
-	}
+        setGravity(Gravity.LEFT);
+        addView(mDatePicker);
+        addView(mTimePicker);
 
-	@Override
-	public void setEnabled(boolean isEnabled) {
-		mDatePicker.setEnabled(isEnabled && !prompt.isReadOnly());
-		mTimePicker.setEnabled(isEnabled && !prompt.isReadOnly());
-	}
+    }
+
+
+    private void setAnswer() {
+
+        if (mPrompt.getAnswerValue() != null) {
+            String date = ((DateTimeData) mPrompt.getAnswerValue()).getValue().toString();
+            try {
+                Date d = sdf.parse(date);
+                mDatePicker.init(d.getYear() + YEARSHIFT, d.getMonth(), d.getDate(), mDateListener);
+                mTimePicker.setCurrentHour(d.getHours());
+                mTimePicker.setCurrentMinute(d.getMinutes());
+
+            } catch (ParseException e) {
+                // bad date, clear answer
+                clearAnswer();
+                e.printStackTrace();
+            }
+
+        } else {
+            // create time widget with current time as of right now
+            clearAnswer();
+        }
+    }
+
+
+    /**
+     * Resets date to today.
+     */
+    @Override
+    public void clearAnswer() {
+        Calendar c = Calendar.getInstance();
+        mDatePicker.init(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH),
+            mDateListener);
+
+        mTimePicker.setCurrentHour(c.get(Calendar.HOUR));
+        mTimePicker.setCurrentMinute(c.get(Calendar.MINUTE));
+    }
+
+
+    @Override
+    public IAnswerData getAnswer() {
+        Date d =
+            new Date(mDatePicker.getYear() - YEARSHIFT, mDatePicker.getMonth(),
+                    mDatePicker.getDayOfMonth(), mTimePicker.getCurrentHour(),
+                    mTimePicker.getCurrentMinute(), 0);
+
+        return new DateTimeData(d);
+    }
+
+
+    @Override
+    public void setFocus(Context context) {
+        // Hide the soft keyboard if it's showing.
+        InputMethodManager inputManager =
+            (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputManager.hideSoftInputFromWindow(this.getWindowToken(), 0);
+    }
 
 }

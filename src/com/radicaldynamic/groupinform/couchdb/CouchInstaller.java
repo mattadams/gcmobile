@@ -26,7 +26,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 public class CouchInstaller {
     final static String baseUrl = "http://groupcomplete.s3.amazonaws.com/releases/android/";
@@ -43,15 +43,15 @@ public class CouchInstaller {
 		// and binaries stored on the sdcard to keep in line with usual 
 		// android app behaviour. However there doesnt look to be a way to protect
 		// ourselves from wiping the entire sdcard with a typo, so just be careful
-		File couchDir = new File(FileUtils.EXTERNAL_COUCH);
+		File couchDir = new File(FileUtilsExtended.EXTERNAL_COUCH);
 		
 		if (couchDir.exists()) {
 			deleteDirectory(couchDir);
-			deleteDirectory(new File(FileUtils.EXTERNAL_ERLANG));
+			deleteDirectory(new File(FileUtilsExtended.EXTERNAL_ERLANG));
 		}
 		
 		for(String pkg : packageSet()) {
-			if (!(new File(FileUtils.EXTERNAL_FILES + "/" + pkg + ".installedfiles")).exists()) {
+			if (!(new File(FileUtilsExtended.EXTERNAL_FILES + "/" + pkg + ".installedfiles")).exists()) {
 				installPackage(pkg, handler);
 			}	
 		}
@@ -153,7 +153,7 @@ public class CouchInstaller {
 			tarstream.close();
 			instream.close();
 			
-			FileWriter iLOWriter = new FileWriter(FileUtils.EXTERNAL_FILES + "/" + pkg + ".installedfiles");
+			FileWriter iLOWriter = new FileWriter(FileUtilsExtended.EXTERNAL_FILES + "/" + pkg + ".installedfiles");
 			
 			for (String file : installedfiles) {
 				iLOWriter.write(file + "\n");
@@ -168,7 +168,7 @@ public class CouchInstaller {
 			}
 			
     		// Write out full list of all installed files + file modes
-    		iLOWriter = new FileWriter(FileUtils.EXTERNAL_FILES + "/installedfiles.index");
+    		iLOWriter = new FileWriter(FileUtilsExtended.EXTERNAL_FILES + "/installedfiles.index");
     		
     		for (String file : allInstalledFiles) {
     		    iLOWriter.write(
@@ -191,14 +191,14 @@ public class CouchInstaller {
 	public static boolean checkInstalled() 
 	{				
 		for (String pkg : packageSet()) {
-			File file = new File(FileUtils.EXTERNAL_FILES + "/" + pkg + ".installedfiles");
+			File file = new File(FileUtilsExtended.EXTERNAL_FILES + "/" + pkg + ".installedfiles");
 			
 			if (!file.exists()) {
 				return false;
 			}
 		}
 		
-		return new File(FileUtils.EXTERNAL_COUCH).exists();
+		return new File(FileUtilsExtended.EXTERNAL_COUCH).exists();
 	}
 
 	/*

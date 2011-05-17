@@ -55,6 +55,7 @@ import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**
  * Application initialization: registration, login, database installation & init 
@@ -506,9 +507,10 @@ public class LauncherActivity extends Activity
             // Timer
             int seconds = 0;
             
-            // Create necessary directories
-            FileUtils.createFolder(FileUtils.EXTERNAL_FILES);
-            FileUtils.createFolder(FileUtils.EXTERNAL_CACHE);
+            // Reset & create directories
+            FileUtils.createFolder(FileUtilsExtended.EXTERNAL_CACHE);
+            FileUtils.createFolder(FileUtilsExtended.EXTERNAL_DB);
+            FileUtils.createFolder(FileUtilsExtended.EXTERNAL_FILES);            
             
             // The InformOnlineService will perform ping and check-in immediately (no need to duplicate here)
             while (true) {
@@ -638,7 +640,7 @@ public class LauncherActivity extends Activity
             // Attempt to load the configured default splash screen
             // The following code only works in 1.6+
             // BitmapDrawable bitImage = new BitmapDrawable(getResources(), FileUtils.SPLASH_SCREEN_FILE_PATH);
-            BitmapDrawable bitImage = new BitmapDrawable(FileUtils.EXTERNAL_FILES + File.separator + FileUtils.SPLASH_SCREEN_FILE);
+            BitmapDrawable bitImage = new BitmapDrawable(FileUtilsExtended.EXTERNAL_FILES + File.separator + FileUtilsExtended.SPLASH_SCREEN_FILE);
     
             if (bitImage.getBitmap() != null
                     && bitImage.getIntrinsicHeight() > 0

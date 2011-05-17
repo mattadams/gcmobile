@@ -29,7 +29,7 @@ public class FormInstanceDocument extends GenericDocument
     public static enum OdkSubmissionStatus { complete, partial, failed }; 
     
     private String formId;
-    private Status status;
+    private Status status;    
     
     // Entirely for compatibility with ODK Aggregate
     private String odkSubmissionDate;          // Last submission attempted
@@ -41,9 +41,6 @@ public class FormInstanceDocument extends GenericDocument
     public FormInstanceDocument() 
     {
         super("instance");
-        
-        if (isNew())
-            setStatus(Status.placeholder);
     }
 
     public void setFormId(String form)

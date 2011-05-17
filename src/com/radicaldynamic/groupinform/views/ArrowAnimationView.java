@@ -14,6 +14,8 @@
 
 package com.radicaldynamic.groupinform.views;
 
+import com.radicaldynamic.groupinform.R;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,8 +25,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-
-import com.radicaldynamic.groupinform.R;
 
 /**
  * Builds view for arrow animation

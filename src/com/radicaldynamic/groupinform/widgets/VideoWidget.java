@@ -14,33 +14,28 @@
 
 package com.radicaldynamic.groupinform.widgets;
 
-import java.io.File;
-
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
-
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
-import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.utilities.DateUtils;
-import com.radicaldynamic.groupinform.utilities.FilterUtils;
-import com.radicaldynamic.groupinform.utilities.FilterUtils.FilterCriteria;
-import com.radicaldynamic.groupinform.views.AbstractFolioView;
-import com.radicaldynamic.groupinform.widgets.AbstractQuestionWidget.OnDescendantRequestFocusChangeListener.FocusChangeState;
+import com.radicaldynamic.groupinform.utilities.FileUtils;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Handler;
 import android.provider.MediaStore.Video;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.LinearLayout;
+
+import java.io.File;
 
 /**
  * Widget that allows user to take pictures, sounds or video and add them to the form.
@@ -48,107 +43,111 @@ import android.widget.TextView;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget {
-
-    private final static String t = "VideoWidget: ";
+public class VideoWidget extends QuestionWidget implements IBinaryWidget {
+    private final static String t = "MediaWidget";
 
     private Button mCaptureButton;
     private Button mPlayButton;
+    private Button mChooseButton;
 
     private String mBinaryName;
-    private TextView mDisplayText;
 
-    private Uri mExternalUri;
-    private String mCaptureIntent;
-    private File mInstanceDir;
-    private int mRequestCode;
-    private int mCaptureText;
-    private int mReplaceText;
-    private int mPlayText;
-   
+    private String mInstanceFolder;
 
-    public VideoWidget(Handler handler, Context context, FormEntryPrompt prompt, File instanceDir) {
-        super(handler, context, prompt);
-        initialize(instanceDir);
-    }
+    private boolean mWaitingForData;
 
-    private void initialize(File instanceDir) {
-        mInstanceDir = instanceDir;
 
-        mExternalUri = Video.Media.EXTERNAL_CONTENT_URI;
-        mCaptureIntent = android.provider.MediaStore.ACTION_VIDEO_CAPTURE;
-        mRequestCode = FormEntryActivity.VIDEO_CAPTURE;
-        mCaptureText = R.string.capture_video;
-        mReplaceText = R.string.replace_video;
-        mPlayText = R.string.play_video;
+    public VideoWidget(Context context, FormEntryPrompt prompt) {
+        super(context, prompt);
 
-        Log.d(Collect.LOGTAG, t + "initialized VideoWidget with " + instanceDir.getAbsolutePath());
-    }
+        mWaitingForData = false;
+        mInstanceFolder =
+            FormEntryActivity.InstancePath.substring(0,
+                FormEntryActivity.InstancePath.lastIndexOf("/") + 1);
 
-    @Override
-	public IAnswerData getAnswer() {
-        if (mBinaryName != null) {
-            return new StringData(mBinaryName.toString());
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    protected void buildViewBodyImpl() {
+        setOrientation(LinearLayout.VERTICAL);
 
         // setup capture button
         mCaptureButton = new Button(getContext());
-        mCaptureButton.setText(getContext().getString(mCaptureText));
+        mCaptureButton.setText(getContext().getString(R.string.capture_video));
         mCaptureButton
-                .setTextSize(TypedValue.COMPLEX_UNIT_DIP, AbstractFolioView.APPLICATION_FONTSIZE);
+                .setTextSize(TypedValue.COMPLEX_UNIT_DIP, QuestionWidget.APPLICATION_FONTSIZE);
         mCaptureButton.setPadding(20, 20, 20, 20);
         mCaptureButton.setEnabled(!prompt.isReadOnly());
 
         // launch capture intent on click
         mCaptureButton.setOnClickListener(new View.OnClickListener() {
             @Override
-			public void onClick(View v) {
-            	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
-	                Intent i = new Intent(mCaptureIntent);
-	                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, mExternalUri.toString());
-	                ((Activity) getContext()).startActivityForResult(i, mRequestCode);
-            	}
+            public void onClick(View v) {
+                Intent i = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
+                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Video.Media.EXTERNAL_CONTENT_URI.toString());
+                ((Activity) getContext()).startActivityForResult(i, FormEntryActivity.VIDEO_CAPTURE);
+                mWaitingForData = true;
+
+            }
+        });
+
+        // setup capture button
+        mChooseButton = new Button(getContext());
+        // TODO: add to strings.xml
+        mChooseButton.setText("Choose Video");
+        mChooseButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, QuestionWidget.APPLICATION_FONTSIZE);
+        mChooseButton.setPadding(20, 20, 20, 20);
+        mChooseButton.setEnabled(!prompt.isReadOnly());
+
+        // launch capture intent on click
+        mChooseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                i.setType("video/*");
+                // Intent i =
+                // new Intent(Intent.ACTION_PICK,
+                // android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+                mWaitingForData = true;
+                ((Activity) getContext())
+                        .startActivityForResult(i, FormEntryActivity.VIDEO_CHOOSER);
+
             }
         });
 
         // setup play button
         mPlayButton = new Button(getContext());
-        mPlayButton.setText(getContext().getString(mPlayText));
-        mPlayButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, AbstractFolioView.APPLICATION_FONTSIZE);
+        mPlayButton.setText(getContext().getString(R.string.play_video));
+        mPlayButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, QuestionWidget.APPLICATION_FONTSIZE);
         mPlayButton.setPadding(20, 20, 20, 20);
 
         // on play, launch the appropriate viewer
         mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
-			public void onClick(View v) {
-            	if ( signalDescendant(FocusChangeState.DIVERGE_VIEW_FROM_MODEL) ) {
-	                Intent i = new Intent("android.intent.action.VIEW");
-	                File f = new File(mInstanceDir.getParentFile(), mBinaryName);
-	                i.setDataAndType(Uri.fromFile(f), "video/*");
-	                ((Activity) getContext()).startActivity(i);
-            	}
+            public void onClick(View v) {
+                Intent i = new Intent("android.intent.action.VIEW");
+                File f = new File(mInstanceFolder + "/" + mBinaryName);
+                i.setDataAndType(Uri.fromFile(f), "video/*");
+                ((Activity) getContext()).startActivity(i);
+
             }
         });
 
         // retrieve answer from data model and update ui
-        mDisplayText = new TextView(getContext());
-        mDisplayText.setPadding(5, 0, 0, 0);
+        mBinaryName = prompt.getAnswerText();
+        if (mBinaryName != null) {
+            mPlayButton.setEnabled(true);
+        } else {
+            mPlayButton.setEnabled(false);
+        }
 
         // finish complex layout
         addView(mCaptureButton);
+        addView(mChooseButton);
         addView(mPlayButton);
+
     }
 
 
     private void deleteMedia() {
         // get the file path and delete the file
-        File f = new File(mInstanceDir, mBinaryName);
+        File f = new File(mInstanceFolder + "/" + mBinaryName);
         if (!f.delete()) {
             Log.e(t, "Failed to delete " + f);
         }
@@ -157,82 +156,100 @@ public class VideoWidget extends AbstractQuestionWidget implements IBinaryWidget
         mBinaryName = null;
     }
 
-    protected void updateViewAfterAnswer() {
-    	
-    	String newAnswer = prompt.getAnswerText();
-    	if ( mBinaryName != null && !mBinaryName.equals(newAnswer)) {
-    		deleteMedia();
-    	}
-        mBinaryName = newAnswer;
-        
-        if (mBinaryName != null) {
-            mPlayButton.setEnabled(true);
-            mCaptureButton.setText(getContext().getString(mReplaceText));
-            mDisplayText.setText(getContext().getString(R.string.one_capture));
-        } else {
-            mPlayButton.setEnabled(false);
-            mCaptureButton.setText(getContext().getString(mCaptureText));
-            mDisplayText.setText(getContext().getString(R.string.no_capture));
-        }
-    }
 
-    private Uri getUriFromPath(String path) {
-        // find entry in content provider
-        FilterCriteria fc = FilterUtils.buildSelectionClause("_data", path);
-        Cursor c =
-            getContext().getContentResolver().query(mExternalUri, null,
-                            fc.selection, fc.selectionArgs, null);
-        c.moveToFirst();
+    @Override
+    public void clearAnswer() {
+        // remove the file
+        deleteMedia();
 
-        // create uri from path
-        String newPath = mExternalUri + "/" + c.getInt(c.getColumnIndex("_id"));
-        c.close();
-        return Uri.parse(newPath);
-    }
-
-
-    private String getPathFromUri(Uri uri) {
-        // find entry in content provider
-        Cursor c = getContext().getContentResolver().query(uri, null, null, null, null);
-        c.moveToFirst();
-
-        // get data path
-        String colString = c.getString(c.getColumnIndex("_data"));
-        c.close();
-        return colString;
+        // reset buttons
+        mPlayButton.setEnabled(false);
     }
 
 
     @Override
-	public void setBinaryData(Object binaryuri) {
+    public IAnswerData getAnswer() {
+        if (mBinaryName != null) {
+            return new StringData(mBinaryName.toString());
+        } else {
+            return null;
+        }
+    }
+
+
+    private String getPathFromUri(Uri uri) {
+        String[] videoProjection = {
+            Video.Media.DATA
+        };
+        Cursor c = ((Activity) getContext()).managedQuery(uri, videoProjection, null, null, null);
+        ((Activity) getContext()).startManagingCursor(c);
+        int column_index = c.getColumnIndexOrThrow(Video.Media.DATA);
+        String videoPath = null;
+        if (c.getCount() > 0) {
+            c.moveToFirst();
+            videoPath = c.getString(column_index);
+        }
+        return videoPath;
+    }
+
+
+    @Override
+    public void setBinaryData(Object binaryuri) {
         // you are replacing an answer. remove the media.
         if (mBinaryName != null) {
             deleteMedia();
         }
 
-        // get the file path and move the file
-        String binarypath = getPathFromUri((Uri) binaryuri);
+        // get the file path and create a copy in the instance folder
+        String binaryPath = getPathFromUri((Uri) binaryuri);
+        String extension = binaryPath.substring(binaryPath.lastIndexOf("."));
+        String destVideoPath = mInstanceFolder + "/" + System.currentTimeMillis() + extension;
 
-        File f = new File(binarypath);
-        File sub = new File(mInstanceDir.getAbsolutePath() + DateUtils.now("yyyyMMdd-HHmmss") + binarypath.substring(binarypath.lastIndexOf('.')));
-        if (!f.renameTo(sub)) {
-            Log.e(t, "Failed to rename " + f.getAbsolutePath() + " to " + sub.getAbsolutePath());
+        File source = new File(binaryPath);
+        File newVideo = new File(destVideoPath);
+        FileUtils.copyFile(source, newVideo);
+
+        if (newVideo.exists()) {
+            // Add the copy to the content provier
+            ContentValues values = new ContentValues(6);
+            values.put(Video.Media.TITLE, newVideo.getName());
+            values.put(Video.Media.DISPLAY_NAME, newVideo.getName());
+            values.put(Video.Media.DATE_ADDED, System.currentTimeMillis());
+            values.put(Video.Media.DATA, newVideo.getAbsolutePath());
+
+            Uri VideoURI =
+                getContext().getContentResolver().insert(Video.Media.EXTERNAL_CONTENT_URI, values);
+            Log.i(t, "Inserting VIDEO returned uri = " + VideoURI.toString());
+        } else {
+            Log.e(t, "Inserting Video file FAILED");
         }
 
-        // remove the database entry and update the name
-        getContext().getContentResolver().delete(getUriFromPath(binarypath), null, null);
-        mBinaryName = sub.getName();
-        saveAnswer(true); // and evaluate constraints and trigger UI update...
+        mBinaryName = newVideo.getName();
+        mWaitingForData = false;
     }
+
 
     @Override
-    public void setEnabled(boolean isEnabled) {
-        if (mBinaryName != null) {
-            mPlayButton.setEnabled(isEnabled);
-            mCaptureButton.setEnabled(isEnabled && !prompt.isReadOnly());
-        } else {
-            mPlayButton.setEnabled(false);
-            mCaptureButton.setEnabled(isEnabled && !prompt.isReadOnly());
-        }
+    public void setFocus(Context context) {
+        // Hide the soft keyboard if it's showing.
+        InputMethodManager inputManager =
+            (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputManager.hideSoftInputFromWindow(this.getWindowToken(), 0);
     }
+
+
+    @Override
+    public boolean isWaitingForBinaryData() {
+        return mWaitingForData;
+    }
+    
+    
+    @Override
+    public void setOnLongClickListener(OnLongClickListener l) {
+        super.setOnLongClickListener(l);
+        mCaptureButton.setOnLongClickListener(l);
+        mChooseButton.setOnLongClickListener(l);
+        mPlayButton.setOnLongClickListener(l);
+    }
+
 }

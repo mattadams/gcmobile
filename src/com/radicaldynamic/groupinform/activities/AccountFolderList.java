@@ -51,8 +51,8 @@ import com.radicaldynamic.groupinform.adapters.AccountFolderListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /*
  * Interface used to switch between folders and select destination
@@ -311,7 +311,7 @@ public class AccountFolderList extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            if (FileUtils.isFileOlderThan(getCacheDir() + File.separator + FileUtils.FOLDER_CACHE_FILE, FileUtils.TIME_TWO_MINUTES))                    
+            if (FileUtilsExtended.isFileOlderThan(getCacheDir() + File.separator + FileUtilsExtended.FOLDER_CACHE_FILE, FileUtilsExtended.TIME_TWO_MINUTES))                    
                 fetchFolderList();
 
             folders = loadFolderList();
@@ -426,7 +426,7 @@ public class AccountFolderList extends ListActivity
 
                 try {
                     // Write out a folder list cache file
-                    FileOutputStream fos = new FileOutputStream(new File(Collect.getInstance().getCacheDir(), FileUtils.FOLDER_CACHE_FILE));
+                    FileOutputStream fos = new FileOutputStream(new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.FOLDER_CACHE_FILE));
                     fos.write(jsonFolders.toString().getBytes());
                     fos.close();
                 } catch (Exception e) {
@@ -453,13 +453,13 @@ public class AccountFolderList extends ListActivity
         
         ArrayList<AccountFolder> folders = new ArrayList<AccountFolder>();
         
-        if (!new File(Collect.getInstance().getCacheDir(), FileUtils.FOLDER_CACHE_FILE).exists()) {
+        if (!new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.FOLDER_CACHE_FILE).exists()) {
             Log.d(Collect.LOGTAG, t + "folder cache file cannot be read: aborting loadFolderList()");
             return folders;
         }
         
         try {
-            FileInputStream fis = new FileInputStream(new File(Collect.getInstance().getCacheDir(), FileUtils.FOLDER_CACHE_FILE));
+            FileInputStream fis = new FileInputStream(new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.FOLDER_CACHE_FILE));
             InputStreamReader reader = new InputStreamReader(fis);
             BufferedReader buffer = new BufferedReader(reader, 8192);
             StringBuilder sb = new StringBuilder();

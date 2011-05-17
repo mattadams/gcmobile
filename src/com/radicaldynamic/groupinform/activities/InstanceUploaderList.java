@@ -14,14 +14,14 @@
 
 package com.radicaldynamic.groupinform.activities;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.preferences.PreferencesActivity;
+import com.radicaldynamic.groupinform.provider.InstanceProviderAPI;
+import com.radicaldynamic.groupinform.provider.InstanceProviderAPI.InstanceColumns;
 
 import android.app.ListActivity;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,15 +29,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
-import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.adapters.UploaderListAdapter;
-import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
-import com.radicaldynamic.groupinform.preferences.ServerPreferences;
-import com.radicaldynamic.groupinform.repository.FormDefinitionRepository;
-import com.radicaldynamic.groupinform.utilities.DocumentUtils;
+import java.util.ArrayList;
 
 /**
  * Responsible for displaying all the valid forms in the forms directory. Stores the path to
@@ -49,7 +44,6 @@ import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 
 // TODO long click form for submission log
 public class InstanceUploaderList extends ListActivity {
-    //private static final String t = "InstanceUploaderList: ";
 
     private static final String BUNDLE_SELECTED_ITEMS_KEY = "selected_items";
     private static final String BUNDLE_TOGGLED_KEY = "toggled";
@@ -60,37 +54,33 @@ public class InstanceUploaderList extends ListActivity {
     private Button mActionButton;
     private Button mToggleButton;
 
-    private Map<String, List<String>> mInstanceTallies = new HashMap<String, List<String>>();
-    private ArrayList<String> mSelected = new ArrayList<String>();
-    
+    private SimpleCursorAdapter mInstances;
+    private ArrayList<Long> mSelected = new ArrayList<Long>();
     private boolean mRestored = false;
     private boolean mToggled = false;
 
-    private RefreshViewTask mRefreshViewTask;
-    
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.instance_uploader_list);
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_odk_aggregate));
 
         mActionButton = (Button) findViewById(R.id.upload_button);
         mActionButton.setOnClickListener(new OnClickListener() {
-            
+
             @Override
             public void onClick(View arg0) {
                 if (mSelected.size() > 0) {
                     // items selected
                     uploadSelectedFiles();
-                    refreshData();
                     mToggled = false;
                 } else {
                     // no items selected
                     Toast.makeText(getApplicationContext(), getString(R.string.noselect_error),
-                            Toast.LENGTH_SHORT).show();
+                        Toast.LENGTH_SHORT).show();
                 }
             }
-            
+
         });
 
         mToggleButton = (Button) findViewById(R.id.toggle_button);
@@ -104,181 +94,181 @@ public class InstanceUploaderList extends ListActivity {
                 mSelected.clear();
                 for (int pos = 0; pos < ls.getCount(); pos++) {
                     ls.setItemChecked(pos, mToggled);
+                    // add all items if mToggled sets to select all
+                    if (mToggled)
+                        mSelected.add(ls.getItemIdAtPosition(pos));
+                }
+                mActionButton.setEnabled(!(mSelected.size() == 0));
 
-                    // Add all items if mToggled sets to select all
-                    if (mToggled) {
-                        FormDefinitionDocument form = (FormDefinitionDocument) ls.getItemAtPosition(pos);
-                        mSelected.add(form.getId());                         
+            }
+        });
+
+        // get all mInstances that match the status.
+
+        String selection = InstanceColumns.STATUS + "=?";
+        String selectionArgs[] = {
+            InstanceProviderAPI.STATUS_COMPLETE
+        };
+
+        Cursor c = managedQuery(InstanceColumns.CONTENT_URI, null, selection, selectionArgs, null);
+        startManagingCursor(c);
+
+        String[] data = new String[] {
+                InstanceColumns.DISPLAY_NAME, InstanceColumns.DISPLAY_SUBTEXT
+        };
+        int[] view = new int[] {
+                R.id.text1, R.id.text2
+        };
+
+        // render total instance view
+        mInstances =
+            new SimpleCursorAdapter(this, R.layout.two_item_multiple_choice, c, data, view);
+        setListAdapter(mInstances);
+        getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+        getListView().setItemsCanFocus(false);
+        mActionButton.setEnabled(!(mSelected.size() == 0));
+
+        // set title
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.send_data));
+
+        // if current activity is being reinitialized due to changing orientation restore all check
+        // marks for ones selected
+        if (mRestored) {
+            ListView ls = getListView();
+            for (long id : mSelected) {
+                for (int pos = 0; pos < ls.getCount(); pos++) {
+                    if (id == ls.getItemIdAtPosition(pos)) {
+                        ls.setItemChecked(pos, true);
+                        break;
                     }
                 }
 
-                mActionButton.setEnabled(!(mSelected.size() == 0));
             }
-        });
+            mRestored = false;
+        }
+
     }
+
+
+    private void uploadSelectedFiles() {
+        ArrayList<String> selectedInstances = new ArrayList<String>();
+
+        String selection = "";
+        String[] selectionArgs = new String[mSelected.size()];
+        for (int i = 0; i < mSelected.size(); i++) {
+            selection += InstanceColumns._ID + "=?";
+            if (i != mSelected.size() - 1) {
+                selection += " or ";
+            }
+            selectionArgs[i] = mSelected.get(i).toString();
+        }
+
+        Cursor c = managedQuery(InstanceColumns.CONTENT_URI, null, selection, selectionArgs, null);
+        if (c.getCount() > 0) {
+            c.moveToPosition(-1);
+            while (c.moveToNext()) {
+                String s = c.getString(c.getColumnIndex(InstanceColumns.INSTANCE_DIRECTORY_PATH));
+                selectedInstances.add(s);
+            }
+
+            // bundle intent with upload files
+            Intent i = new Intent(this, InstanceUploaderActivity.class);
+            i.putExtra(FormEntryActivity.KEY_INSTANCES, selectedInstances);
+            startActivityForResult(i, INSTANCE_UPLOADER);
+        } else {
+            Toast.makeText(this, "nothing there?", Toast.LENGTH_LONG).show();
+        }
+
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_PREFERENCES, 0, getString(R.string.server_preferences)).setIcon(
-                R.drawable.ic_menu_preferences);
+        menu.add(0, MENU_PREFERENCES, 0, getString(R.string.general_preferences)).setIcon(
+            android.R.drawable.ic_menu_preferences);
         return true;
     }
+
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch (item.getItemId()) {
-        case MENU_PREFERENCES:
-            createPreferencesMenu();
-            return true;
+            case MENU_PREFERENCES:
+                createPreferencesMenu();
+                return true;
         }
-
         return super.onMenuItemSelected(featureId, item);
     }
+
+
+    private void createPreferencesMenu() {
+        Intent i = new Intent(this, PreferencesActivity.class);
+        startActivity(i);
+    }
+
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+
+        // get row id from db
+        Cursor c = (Cursor) getListAdapter().getItem(position);
+        long k = c.getLong(c.getColumnIndex(InstanceColumns._ID));
+
+        // add/remove from selected list
+        if (mSelected.contains(k))
+            mSelected.remove(k);
+        else
+            mSelected.add(k);
+
+        mActionButton.setEnabled(!(mSelected.size() == 0));
+
+    }
+
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        long[] selectedArray = savedInstanceState.getLongArray(BUNDLE_SELECTED_ITEMS_KEY);
+        for (int i = 0; i < selectedArray.length; i++)
+            mSelected.add(selectedArray[i]);
+        mToggled = savedInstanceState.getBoolean(BUNDLE_TOGGLED_KEY);
+        mRestored = true;
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        long[] selectedArray = new long[mSelected.size()];
+        for (int i = 0; i < mSelected.size(); i++)
+            selectedArray[i] = mSelected.get(i);
+        outState.putLongArray(BUNDLE_SELECTED_ITEMS_KEY, selectedArray);
+        outState.putBoolean(BUNDLE_TOGGLED_KEY, mToggled);
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (resultCode == RESULT_CANCELED) {
             return;
         }
-
         switch (requestCode) {
-        // Returns with a form path, start entry
-        case INSTANCE_UPLOADER:
-            if (intent.getBooleanExtra(FormEntryActivity.KEY_SUCCESS, false)) {
-                refreshData();
-                
-                if (mInstanceTallies.isEmpty())
-                    finish();
-            }
-            
-            break;
-            
-        default:
-            break;
+            // returns with a form path, start entry
+            case INSTANCE_UPLOADER:
+                if (intent.getBooleanExtra(FormEntryActivity.KEY_SUCCESS, false)) {
+                    mSelected.clear();
+                    getListView().clearChoices();
+                    if (mInstances.isEmpty()) {
+                        finish();
+                    }
+                }
+                break;
+            default:
+                break;
         }
-
         super.onActivityResult(requestCode, resultCode, intent);
     }
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);        
-        
-        FormDefinitionDocument form = (FormDefinitionDocument) getListAdapter().getItem(position);
-
-        // Add/remove from selected list
-        if (mSelected.contains(form.getId()))
-            mSelected.remove(form.getId());
-        else
-            mSelected.add(form.getId());
-
-        mActionButton.setEnabled(!(mSelected.size() == 0));
-    }
-
-    @Override
-    protected void onResume() {
-        refreshData();
-        super.onResume();
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-
-        mSelected = savedInstanceState.getStringArrayList(BUNDLE_SELECTED_ITEMS_KEY);
-        mToggled = savedInstanceState.getBoolean(BUNDLE_TOGGLED_KEY);
-        mRestored = true;
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
-        outState.putStringArrayList(BUNDLE_SELECTED_ITEMS_KEY, mSelected);
-        outState.putBoolean(BUNDLE_TOGGLED_KEY, mToggled);
-    }
-
-    /*
-     * Refresh the main form browser view as requested by the user
-     */
-    private class RefreshViewTask extends AsyncTask<Void, Void, Void>
-    {
-        private ArrayList<FormDefinitionDocument> documents = new ArrayList<FormDefinitionDocument>();
-    
-        @Override
-        protected Void doInBackground(Void... nothing)
-        {
-            mInstanceTallies = new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getFormsByAggregateReadiness();
-            
-            if (!mInstanceTallies.isEmpty()) {
-                documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).
-                    getAllByKeys(new ArrayList<Object>(mInstanceTallies.keySet()));
-            
-                DocumentUtils.sortByName(documents);
-            }
-            
-            return null;
-        }
-    
-        @Override
-        protected void onPreExecute()
-        {
-            setProgressBarIndeterminateVisibility(true);
-        }
-    
-        @Override
-        protected void onPostExecute(Void nothing)
-        {
-            UploaderListAdapter adapter = new UploaderListAdapter(getApplicationContext(), 
-                    R.layout.two_item_multiple_choice, documents, mInstanceTallies);
-            setListAdapter(adapter);
-            
-            getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-            getListView().setItemsCanFocus(false);
-    
-            mActionButton.setEnabled(!(mSelected.size() == 0));
-    
-            // If current activity is being reinitialised due to changing orientation restore selected checkmarks
-            if (mRestored) {
-                ListView ls = getListView();
-                
-                for (int pos = 0; pos < ls.getCount(); pos++) {
-                    FormDefinitionDocument form = (FormDefinitionDocument) ls.getItemAtPosition(pos);
-                    
-                    if (mSelected.contains(form.getId()))                    
-                        ls.setItemChecked(pos, true);
-                }   
-    
-                mRestored = false;
-            }
-    
-            setProgressBarIndeterminateVisibility(false);
-        }
-    }
-
-    private void createPreferencesMenu() {
-        Intent i = new Intent(this, ServerPreferences.class);
-        startActivity(i);
-    }
-
-    private void refreshData() {
-        if (!mRestored)
-            mSelected.clear();
-
-        mRefreshViewTask = new RefreshViewTask();
-        mRefreshViewTask.execute();
-    }
-
-    private void uploadSelectedFiles() {
-        ArrayList<String> selectedInstances = new ArrayList<String>();
-        
-        for (String formId : mSelected) {
-            selectedInstances.addAll(mInstanceTallies.get(formId));            
-        }
-        
-        Intent i = new Intent(this, InstanceUploaderActivity.class);
-        i.putExtra(FormEntryActivity.KEY_INSTANCES, selectedInstances);
-        startActivityForResult(i, INSTANCE_UPLOADER);
-    }
 }
