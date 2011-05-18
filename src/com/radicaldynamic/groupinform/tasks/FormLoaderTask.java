@@ -21,7 +21,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
+import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.condition.EvaluationContext;
@@ -221,21 +224,35 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 
                 Log.d(Collect.LOGTAG, t + ": retrieving form instance document " + instanceId);
                 
-                FileUtils.createFolder(FormEntryActivity.InstancePath.substring(0, FormEntryActivity.InstancePath.lastIndexOf("/")));
+                String instanceFolder = FormEntryActivity.InstancePath.substring(0, FormEntryActivity.InstancePath.lastIndexOf("/")); 
+                FileUtils.createFolder(instanceFolder);
                 
                 mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceId);
-                AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, "xml");
-                 
-                FileOutputStream file = new FileOutputStream(FormEntryActivity.InstancePath);
-                byte [] buffer = new byte[8192];
-                int bytesRead = 0;
+                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) mFormInstanceDoc.getAttachments();
                 
-                while ((bytesRead = ais.read(buffer)) != -1) {
-                    file.write(buffer, 0, bytesRead);
+                // Download attachments (form instance XML & other media)
+                for (Entry<String, Attachment> entry : attachments.entrySet()) {
+                    String key = entry.getKey();
+                    FileOutputStream file;
+                    
+                    AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, key);
+                    
+                    if (key.equals("xml")) {
+                        file = new FileOutputStream(FormEntryActivity.InstancePath);
+                    } else {
+                        file = new FileOutputStream(instanceFolder + File.separator + key);
+                    }
+                    
+                    byte [] buffer = new byte[8192];
+                    int bytesRead = 0;
+                    
+                    while ((bytesRead = ais.read(buffer)) != -1) {
+                        file.write(buffer, 0, bytesRead);
+                    }
+                    
+                    file.close();
+                    ais.close();
                 }
-                
-                file.close();
-                ais.close();
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form instance: " + e.toString());
                 mErrorMsg = e.getMessage();

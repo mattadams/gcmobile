@@ -15,13 +15,15 @@ the License.
 <RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
+	android:layout_height="fill_parent"
+    android:id="@+id/rl">
 
 	<TextView
 		android:id="@+id/pathtext"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:layout_margin="4dp"
+        android:layout_below="@id/pager"
 		/>
 
 	<!--

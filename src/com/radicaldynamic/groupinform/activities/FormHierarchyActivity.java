@@ -87,22 +87,21 @@ public class FormHierarchyActivity extends ListActivity {
         
         if (Collect.getInstance().getInstanceBrowseList().size() > 1) {            
             String instanceId = FormEntryActivity.InstancePath.substring(FormEntryActivity.InstancePath.lastIndexOf("/") + 1, FormEntryActivity.InstancePath.lastIndexOf("."));
-            Log.d(Collect.LOGTAG, t + ": current instance is " + instanceId);
             
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             RelativeLayout rl = (RelativeLayout) findViewById(R.id.rl);                        
-            View bb = inflater.inflate(R.layout.form_browser_buttons, rl, false);
+            View pager = inflater.inflate(R.layout.form_pager, rl, false);
             
-            TextView positionText = (TextView) bb.findViewById(R.id.position);
+            TextView positionText = (TextView) pager.findViewById(R.id.position);
             
             // Set current position relative to the number of instances in the index
             Integer currentPosition = Collect.getInstance().getInstanceBrowseList().indexOf(instanceId) + 1;            
             positionText.setText(currentPosition + "/" + Collect.getInstance().getInstanceBrowseList().size());
             
-            rl.addView(bb);
+            rl.addView(pager);
             rl.invalidate();            
             
-            ((Button) bb.findViewById(R.id.next_instance)).setOnClickListener(
+            ((Button) pager.findViewById(R.id.next)).setOnClickListener(
                     new Button.OnClickListener() {
                         @Override
                         public void onClick(View arg0) {
@@ -111,7 +110,7 @@ public class FormHierarchyActivity extends ListActivity {
                         }                        
                     });
             
-            ((Button) bb.findViewById(R.id.previous_instance)).setOnClickListener(
+            ((Button) pager.findViewById(R.id.previous)).setOnClickListener(
                     new Button.OnClickListener() {
                         @Override
                         public void onClick(View arg0) {

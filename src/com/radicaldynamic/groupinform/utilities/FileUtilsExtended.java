@@ -106,7 +106,7 @@ public final class FileUtilsExtended
                 BitmapFactory.decodeFile(f.getAbsolutePath(), new Options()), 
                 newWidth, 
                 newHeight, 
-                false);
+                true);
     }    
     
     /*

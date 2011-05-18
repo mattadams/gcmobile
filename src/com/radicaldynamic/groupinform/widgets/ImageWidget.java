@@ -19,7 +19,9 @@ import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
+import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.FileUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 import android.app.Activity;
 import android.content.Context;
@@ -39,6 +41,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * Widget that allows user to take pictures, sounds or video and add them to the form.
@@ -269,6 +274,23 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
         File f = new File(binarypath);
         mBinaryName = f.getName();
         Log.i(t, "Setting current answer to " + f.getName());
+        
+        // BEGIN custom
+        // Resize image (full sized images are too large for the system)
+        try {                                
+            Bitmap bmp = FileUtilsExtended.getBitmapResizedToStore(f, FileUtilsExtended.IMAGE_WIDGET_MAX_WIDTH, FileUtilsExtended.IMAGE_WIDGET_MAX_HEIGHT);                
+            FileOutputStream out = new FileOutputStream(new File(binarypath));
+            bmp.compress(Bitmap.CompressFormat.JPEG, FileUtilsExtended.IMAGE_WIDGET_QUALITY, out);
+            out.close();
+            bmp.recycle();
+        } catch (FileNotFoundException e) {
+            Log.e(Collect.LOGTAG, t + "failed to find file " + e.toString());  
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.e(Collect.LOGTAG, t + "failed to close output stream " + e.toString());
+            e.printStackTrace();
+        }
+        // END custom
 
         mWaitingForData = false;
     }
