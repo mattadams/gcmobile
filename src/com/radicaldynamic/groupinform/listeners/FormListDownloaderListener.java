@@ -15,10 +15,14 @@
 package com.radicaldynamic.groupinform.listeners;
 
 
+import java.util.HashMap;
+
+import com.radicaldynamic.groupinform.logic.FormDetails;
+
 /**
  * @author Carl Hartung (carlhartung@gmail.com)
  */
-public interface FormDownloaderListener {
-    void formsDownloadingComplete(String result);
-    void progressUpdate(String currentFile, int progress, int total);
+public interface FormListDownloaderListener {
+    void formListDownloadingComplete(HashMap<String, FormDetails> value);
+    void formListDownloadingError(int errorCode, String msg);
 }

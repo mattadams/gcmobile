@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
+import org.ektorp.DocumentNotFoundException;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.condition.EvaluationContext;
 import org.javarosa.core.model.instance.TreeElement;
@@ -108,7 +109,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         protected void free() {
             controller = null;
         }
-    }
+    } 
 
     FECWrapper data;
     
@@ -152,10 +153,15 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             
             file.close();
             ais.close();
+        } catch (DocumentNotFoundException e) {
+            Log.w(Collect.LOGTAG, t + ": " + e.toString());
+            mErrorMsg = "The form that you requested could not be found.  It may have been removed by one of your team members.\n\nSelect OK to refresh the screen and try again.";
+            return null;
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form definition: " + e.toString());
             mErrorMsg = e.getMessage();
-            e.printStackTrace();            
+            e.printStackTrace();
+            return null;
         }
         // END custom 
 
