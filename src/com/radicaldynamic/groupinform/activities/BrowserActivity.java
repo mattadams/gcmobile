@@ -333,7 +333,7 @@ public class BrowserActivity extends ListActivity
                         Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
                         i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
                         startActivity(i);
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
                         e.printStackTrace();
                     }
@@ -791,12 +791,19 @@ public class BrowserActivity extends ListActivity
         {
             String docId = arg0[0];
             List<FormInstanceDocument> instanceIds = new ArrayList<FormInstanceDocument>();
-            instanceIds = new FormInstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormId(docId);
+            String result = "";
             
-            if (instanceIds.isEmpty())
-                return docId;
-            else 
-                return "";
+            try {
+                instanceIds = new FormInstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormId(docId);
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unexpected exception " + e.toString());
+                e.printStackTrace();
+            } finally {                
+                if (instanceIds.isEmpty())
+                    result = docId;
+            }
+            
+            return result;
         }
         
         @Override
@@ -840,8 +847,6 @@ public class BrowserActivity extends ListActivity
                 FormInstanceDocument.Status status = (FormInstanceDocument.Status) params[1];
                 mInstanceIds = new FormInstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);                
                 caughtExceptionInBackground = false;
-            } catch (DbAccessException e) {
-                Log.w(Collect.LOGTAG, t + "unable to access database while processing InstanceLoadPathTask.doInBackground(): " + e.toString());
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "unhandled exception while processing InstanceLoadPathTask.doInBackground(): " + e.toString());
                 e.printStackTrace();
@@ -907,8 +912,8 @@ public class BrowserActivity extends ListActivity
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
                 Log.w(Collect.LOGTAG, t + e.toString());
-            } catch (DbAccessException e) {
-                Log.w(Collect.LOGTAG, t + e.toString());
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unexpected exception " + e.toString());
                 folderUnavailable = true;
             }
 

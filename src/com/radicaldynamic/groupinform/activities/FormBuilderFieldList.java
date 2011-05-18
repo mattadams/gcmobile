@@ -532,9 +532,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 Collect.getInstance().getFormBuilderState().setFields(mFieldState);
                 Collect.getInstance().getFormBuilderState().setInstance(mFormReader.getInstance());
                 Collect.getInstance().getFormBuilderState().setTranslations(mFormReader.getTranslations());
-            } catch (IOException e) {
-                e.printStackTrace();
-                mError = e.toString();
             } catch (Exception e) {
                 e.printStackTrace();
                 mError = e.toString();
@@ -591,12 +588,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             
             try {
                 // Write out XML to database
-                mForm.addInlineAttachment(
-                        new Attachment(
-                                "xml", 
-                                new String(Base64Coder.encode(FormWriter.writeXml(mInstanceRoot, mInstanceRootId))).toString(),
-                                "text/xml"));
-                
+                mForm.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(FormWriter.writeXml(mInstanceRoot, mInstanceRootId))).toString(), "text/xml"));                
                 mForm.setStatus(FormDefinitionDocument.Status.inactive);
                 Collect.getInstance().getDbService().getDb().update(mForm);
             } catch (Exception e) {
@@ -834,8 +826,13 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                         switch (which) {
                         case 0:
                             // Discard any changes and exit
-                            if (mForm.getStatus() == FormDefinitionDocument.Status.temporary)
-                                Collect.getInstance().getDbService().getDb().delete(mForm);
+                            try {
+                                if (mForm.getStatus() == FormDefinitionDocument.Status.temporary)
+                                    Collect.getInstance().getDbService().getDb().delete(mForm);
+                            } catch (Exception e) {
+                                Log.e(Collect.LOGTAG, t + "unable to remove temporary document");
+                                e.printStackTrace();
+                            }
                             
                             finish();
                             break;

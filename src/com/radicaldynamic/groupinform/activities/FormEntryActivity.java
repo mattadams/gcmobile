@@ -1509,7 +1509,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, tt + "failed to create temporary instance and/or folder");
                 e.printStackTrace();
-                createErrorDialog("Unable to create new form placeholder and/or folder. Please try again and report this problem.", EXIT);
+                createErrorDialog("Unable to create new form placeholder and/or folder. Please report this problem and try again.", EXIT);
             }
             // END custom
         } else {
