@@ -14,6 +14,10 @@
 
 package com.radicaldynamic.groupinform.tasks;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -25,14 +29,10 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-import com.radicaldynamic.groupinform.listeners.InstanceUploaderListener;
+import org.odk.collect.android.listeners.InstanceUploaderListener;
 
 import android.os.AsyncTask;
 import android.util.Log;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * Background task for uploading completed forms.

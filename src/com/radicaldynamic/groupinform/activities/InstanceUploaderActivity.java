@@ -15,10 +15,12 @@
 package com.radicaldynamic.groupinform.activities;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.listeners.InstanceUploaderListener;
-import com.radicaldynamic.groupinform.preferences.PreferencesActivity;
-import com.radicaldynamic.groupinform.provider.InstanceProviderAPI;
-import com.radicaldynamic.groupinform.provider.InstanceProviderAPI.InstanceColumns;
+import org.odk.collect.android.listeners.InstanceUploaderListener;
+import org.odk.collect.android.preferences.PreferencesActivity;
+import org.odk.collect.android.provider.InstanceProviderAPI;
+import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.tasks.InstanceUploaderTask;
 
 import android.app.Activity;
@@ -30,6 +32,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;

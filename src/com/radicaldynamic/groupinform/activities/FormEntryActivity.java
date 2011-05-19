@@ -22,6 +22,13 @@ import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.model.xform.XFormsModule;
+import org.odk.collect.android.listeners.FormSavedListener;
+import org.odk.collect.android.logic.FormController;
+import org.odk.collect.android.logic.PropertyManager;
+import org.odk.collect.android.utilities.FileUtils;
+import org.odk.collect.android.utilities.GestureDetector;
+import org.odk.collect.android.views.ODKView;
+import org.odk.collect.android.widgets.QuestionWidget;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -66,16 +73,9 @@ import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.documents.GenericDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
-import com.radicaldynamic.groupinform.listeners.FormSavedListener;
-import com.radicaldynamic.groupinform.logic.FormController;
-import com.radicaldynamic.groupinform.logic.PropertyManager;
 import com.radicaldynamic.groupinform.tasks.FormLoaderTask;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
-import com.radicaldynamic.groupinform.utilities.GestureDetector;
-import com.radicaldynamic.groupinform.views.ODKView;
-import com.radicaldynamic.groupinform.widgets.QuestionWidget;
 
 /**
  * FormEntryActivity is responsible for displaying questions, animating transitions between

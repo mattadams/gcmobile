@@ -15,9 +15,11 @@
 package com.radicaldynamic.groupinform.activities;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.preferences.PreferencesActivity;
-import com.radicaldynamic.groupinform.provider.InstanceProviderAPI;
-import com.radicaldynamic.groupinform.provider.InstanceProviderAPI.InstanceColumns;
+import org.odk.collect.android.preferences.PreferencesActivity;
+import org.odk.collect.android.provider.InstanceProviderAPI;
+import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 
 import android.app.ListActivity;
 import android.content.Intent;

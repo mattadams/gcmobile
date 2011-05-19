@@ -16,6 +16,8 @@ package com.radicaldynamic.groupinform.activities;
 
 import java.io.File;
 
+import org.odk.collect.android.utilities.FileUtils;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -54,7 +56,6 @@ import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**

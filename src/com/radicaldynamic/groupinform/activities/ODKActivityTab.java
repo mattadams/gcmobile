@@ -1,5 +1,7 @@
 package com.radicaldynamic.groupinform.activities;
 
+import org.odk.collect.android.activities.FormDownloadList;
+
 import android.app.TabActivity;
 import android.content.Intent;
 import android.content.res.Resources;

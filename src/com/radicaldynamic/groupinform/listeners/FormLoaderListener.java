@@ -14,9 +14,10 @@
 
 package com.radicaldynamic.groupinform.listeners;
 
+import org.odk.collect.android.logic.FormController;
+
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
-import com.radicaldynamic.groupinform.logic.FormController;
 
 /**
  * @author Carl Hartung (carlhartung@gmail.com)

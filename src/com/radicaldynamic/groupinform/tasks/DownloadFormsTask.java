@@ -39,6 +39,10 @@ import org.javarosa.xform.parse.XFormParser;
 import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Document;
 import org.kxml2.kdom.Element;
+import org.odk.collect.android.listeners.FormDownloaderListener;
+import org.odk.collect.android.logic.FormDetails;
+import org.odk.collect.android.utilities.FileUtils;
+import org.odk.collect.android.utilities.WebUtils;
 import org.xmlpull.v1.XmlPullParser;
 
 import android.os.AsyncTask;
@@ -48,11 +52,7 @@ import android.webkit.MimeTypeMap;
 import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
-import com.radicaldynamic.groupinform.listeners.FormDownloaderListener;
-import com.radicaldynamic.groupinform.logic.FormDetails;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
-import com.radicaldynamic.groupinform.utilities.WebUtils;
 
 /**
  * Background task for downloading forms from urls or a formlist from a url. We overload this task a

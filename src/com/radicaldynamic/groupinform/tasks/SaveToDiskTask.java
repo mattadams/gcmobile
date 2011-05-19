@@ -28,6 +28,8 @@ import org.javarosa.core.model.instance.FormInstance;
 import org.javarosa.core.services.transport.payload.ByteArrayPayload;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.model.xform.XFormSerializingVisitor;
+import org.odk.collect.android.listeners.FormSavedListener;
+import org.odk.collect.android.logic.FormController;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -39,8 +41,6 @@ import android.webkit.MimeTypeMap;
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
-import com.radicaldynamic.groupinform.listeners.FormSavedListener;
-import com.radicaldynamic.groupinform.logic.FormController;
 
 /**
  * Background task for loading a form.

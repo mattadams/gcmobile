@@ -6,6 +6,8 @@ import java.util.Iterator;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
+import org.odk.collect.android.listeners.FormSavedListener;
+import org.odk.collect.android.logic.FormController;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -37,8 +39,6 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
-import com.radicaldynamic.groupinform.listeners.FormSavedListener;
-import com.radicaldynamic.groupinform.logic.FormController;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
 import com.radicaldynamic.groupinform.views.TouchListView;
 import com.radicaldynamic.groupinform.xform.Bind;

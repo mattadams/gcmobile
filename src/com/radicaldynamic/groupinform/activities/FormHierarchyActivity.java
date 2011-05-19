@@ -21,6 +21,9 @@ import org.javarosa.core.model.FormIndex;
 import org.javarosa.form.api.FormEntryCaption;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryPrompt;
+import org.odk.collect.android.adapters.HierarchyListAdapter;
+import org.odk.collect.android.logic.FormController;
+import org.odk.collect.android.logic.HierarchyElement;
 
 import android.app.ListActivity;
 import android.content.Context;
@@ -38,10 +41,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.adapters.HierarchyListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.logic.FormController;
-import com.radicaldynamic.groupinform.logic.HierarchyElement;
 
 public class FormHierarchyActivity extends ListActivity {
 

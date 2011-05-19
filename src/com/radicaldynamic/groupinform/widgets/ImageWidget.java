@@ -17,10 +17,13 @@ package com.radicaldynamic.groupinform.widgets;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
+import org.odk.collect.android.utilities.FileUtils;
+import org.odk.collect.android.widgets.IBinaryWidget;
+import org.odk.collect.android.widgets.QuestionWidget;
+
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 import android.app.Activity;

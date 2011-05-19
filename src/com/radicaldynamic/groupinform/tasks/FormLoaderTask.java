@@ -41,6 +41,9 @@ import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.xform.parse.XFormParseException;
 import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xform.util.XFormUtils;
+import org.odk.collect.android.logic.FileReferenceFactory;
+import org.odk.collect.android.logic.FormController;
+import org.odk.collect.android.utilities.FileUtils;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -50,9 +53,6 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
 import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
-import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
-import com.radicaldynamic.groupinform.logic.FormController;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**

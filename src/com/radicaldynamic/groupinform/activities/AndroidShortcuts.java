@@ -14,19 +14,21 @@
 
 package com.radicaldynamic.groupinform.activities;
 
-import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.provider.FormsProviderAPI.FormsColumns;
+import java.util.ArrayList;
+
+import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
+import android.content.DialogInterface.OnCancelListener;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
-import java.util.ArrayList;
+
+import com.radicaldynamic.groupinform.R;
 
 /**
  * @author ctsims

@@ -12,6 +12,8 @@ import org.apache.http.protocol.SyncBasicHttpContext;
 import org.javarosa.core.reference.ReferenceManager;
 import org.javarosa.core.reference.RootTranslator;
 import org.javarosa.form.api.FormEntryController;
+import org.odk.collect.android.logic.FileReferenceFactory;
+import org.odk.collect.android.utilities.AgingCredentialsProvider;
 
 import android.app.Application;
 import android.content.Context;
@@ -27,12 +29,10 @@ import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.couchdb.InformCouchService;
-import com.radicaldynamic.groupinform.logic.FileReferenceFactory;
 import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
-import com.radicaldynamic.groupinform.utilities.AgingCredentialsProvider;
 import com.radicaldynamic.groupinform.xform.FormBuilderState;
 
 public class Collect extends Application {

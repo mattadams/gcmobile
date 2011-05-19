@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.client.CookieStore;
+import org.odk.collect.android.utilities.FileUtils;
 
 import android.content.Context;
 import android.content.Intent;
@@ -22,7 +23,6 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.couchdb.InformCouchService;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
-import com.radicaldynamic.groupinform.utilities.FileUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**
