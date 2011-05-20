@@ -156,6 +156,10 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     }
     
     // BEGIN custom
+    private static final int REMOVE_DIALOG = 3;
+    
+    private static final int MENU_REMOVE = Menu.FIRST + 4;
+    
     // See onRetainNonConfigurationInstance()
     private static final String KEY_FORM_DEFINITION = "formdefinition";
     private static final String KEY_FORM_INSTANCE = "forminstance";
@@ -513,6 +517,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         menu.removeItem(MENU_LANGUAGES);
         menu.removeItem(MENU_HIERARCHY_VIEW);
         menu.removeItem(MENU_SAVE);
+        // BEGIN custom
+        menu.removeItem(MENU_REMOVE);
+        // END custom
 
         menu.add(0, MENU_SAVE, 0, R.string.save_all_answers).setIcon(
             android.R.drawable.ic_menu_save);
@@ -526,6 +533,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 .setEnabled(
                     (mFormController.getLanguages() == null || mFormController.getLanguages().length == 1) ? false
                             : true);
+        // BEGIN custom
+        menu.add(0, MENU_REMOVE, 0, getString(R.string.tf_remove_form)).setIcon(R.drawable.ic_menu_delete);
+        // END custom
         return true;
     }
 
@@ -554,6 +564,12 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 }
                 Intent i = new Intent(this, FormHierarchyActivity.class);
                 startActivityForResult(i, HIERARCHY_ACTIVITY);
+            // BEGIN custom
+                return true;
+            case MENU_REMOVE:
+                showDialog(REMOVE_DIALOG);
+                return true;
+            // END custom
         }
         return super.onOptionsItemSelected(item);
     }
@@ -1312,6 +1328,54 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 mProgressDialog.setButton(getString(R.string.cancel_saving_form),
                     savingButtonListener);
                 return mProgressDialog;
+                
+            // BEGIN custom
+            case REMOVE_DIALOG:
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                Dialog dialog = null;
+                String message;
+                
+                if (isInstanceComplete()) 
+                    message = getString(R.string.tf_confirm_complete_instance_removal_dialog_msg);
+                else
+                    message = getString(R.string.tf_confirm_instance_removal_dialog_msg);
+                
+                builder
+                    .setCancelable(false)
+                    .setIcon(R.drawable.ic_dialog_info)
+                    .setMessage(message);
+                
+                builder.setPositiveButton(getString(R.string.tf_remove), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        try {
+                            mFormInstanceDoc.setStatus(FormInstanceDocument.Status.removed);
+                            Collect.getInstance().getDbService().getDb().update(mFormInstanceDoc);
+                            
+                            removeDialog(REMOVE_DIALOG);
+                            
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mFormDefinitionDoc.getName()), Toast.LENGTH_SHORT).show();
+
+                            if (Collect.getInstance().getInstanceBrowseList().size() > 1) {
+                                browseToNextInstance(true);
+                            } else {
+                                finish();
+                            }
+                        } catch (Exception e) {
+                            Log.w(Collect.LOGTAG, t + "problem marking form instance document as removed " + e.toString());
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_form_instance), Toast.LENGTH_LONG).show();                        
+                        }
+                    }
+                });
+                
+                builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        removeDialog(REMOVE_DIALOG);
+                    }
+                });
+                
+                dialog = builder.create();
+                return dialog;
+            // END custom
         }
         return null;
     }
