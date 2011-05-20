@@ -68,12 +68,12 @@ import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.couchdb.CouchInitializer;
 import com.radicaldynamic.groupinform.couchdb.CouchInstaller;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
-import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
-import com.radicaldynamic.groupinform.documents.GenericDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
+import com.radicaldynamic.groupinform.documents.FormInstanceDoc;
+import com.radicaldynamic.groupinform.documents.GenericDoc;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
-import com.radicaldynamic.groupinform.repository.FormDefinitionRepository;
-import com.radicaldynamic.groupinform.repository.FormInstanceRepository;
+import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
+import com.radicaldynamic.groupinform.repositories.FormInstanceRepo;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 
@@ -119,7 +119,7 @@ public class BrowserActivity extends ListActivity
     private static final int RESULT_ABOUT_INFORM = 1;
     private static final int RESULT_COPY_TO_FOLDER = 2;    
 
-    private FormDefinitionDocument mFormDefinitionDoc;    // Stash for a selected form definition
+    private FormDefinitionDoc mFormDefinitionDoc;    // Stash for a selected form definition
     
     private String mCopyToFolderId;             // Data passed back from user selection on AccountFolderList
     private String mCopyToFolderName;           // Same
@@ -166,7 +166,7 @@ public class BrowserActivity extends ListActivity
             Object data = getLastNonConfigurationInstance();
             
             if (data instanceof HashMap<?, ?>) {
-                mFormDefinitionDoc = (FormDefinitionDocument) ((HashMap<String, GenericDocument>) data).get(KEY_FORM_DEFINITION);
+                mFormDefinitionDoc = (FormDefinitionDoc) ((HashMap<String, GenericDoc>) data).get(KEY_FORM_DEFINITION);
             }
         }
 
@@ -254,7 +254,7 @@ public class BrowserActivity extends ListActivity
     public boolean onContextItemSelected(MenuItem item) 
     {
         AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-        FormDefinitionDocument form = (FormDefinitionDocument) getListAdapter().getItem((int) info.id);
+        FormDefinitionDoc form = (FormDefinitionDoc) getListAdapter().getItem((int) info.id);
         Intent i;
         
         switch (item.getItemId()) {
@@ -305,9 +305,9 @@ public class BrowserActivity extends ListActivity
             
             builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {                
-                    FormDefinitionDocument form = new FormDefinitionDocument();
+                    FormDefinitionDoc form = new FormDefinitionDoc();
                     form.setName(inputNewFormName.getText().toString());
-                    form.setStatus(FormDefinitionDocument.Status.temporary);
+                    form.setStatus(FormDefinitionDoc.Status.temporary);
         
                     // Create a new form document and use an XForm template as the "xml" attachment
                     try {
@@ -606,7 +606,7 @@ public class BrowserActivity extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-        FormDefinitionDocument form = (FormDefinitionDocument) getListAdapter().getItem(position);
+        FormDefinitionDoc form = (FormDefinitionDoc) getListAdapter().getItem(position);
         InstanceLoadPathTask ilp;
         Intent i;
 
@@ -630,12 +630,12 @@ public class BrowserActivity extends ListActivity
         // When showing all draft forms in folder... browse selected form instances
         case 2:
             ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), FormInstanceDocument.Status.draft);
+            ilp.execute(form.getId(), FormInstanceDoc.Status.draft);
             break;
         // When showing all completed forms in folder... browse selected form instances
         case 3:
             ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), FormInstanceDocument.Status.complete);
+            ilp.execute(form.getId(), FormInstanceDoc.Status.complete);
             break;
         }
     }
@@ -668,7 +668,7 @@ public class BrowserActivity extends ListActivity
     public Object onRetainNonConfigurationInstance()
     {
         // Avoid refetching documents from database by preserving them
-        HashMap<String, GenericDocument> persistentData = new HashMap<String, GenericDocument>();
+        HashMap<String, GenericDoc> persistentData = new HashMap<String, GenericDoc>();
         persistentData.put(KEY_FORM_DEFINITION, mFormDefinitionDoc);
         
         return persistentData;
@@ -737,9 +737,9 @@ public class BrowserActivity extends ListActivity
 
                 ais.close();
                 
-                FormDefinitionDocument formDefDoc = new FormDefinitionDocument();
+                FormDefinitionDoc formDefDoc = new FormDefinitionDoc();
                 formDefDoc.setName(mCopyFormAsName);
-                formDefDoc.setStatus(FormDefinitionDocument.Status.active);
+                formDefDoc.setStatus(FormDefinitionDoc.Status.active);
                 formDefDoc.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(output.toByteArray())).toString(), "text/xml"));
                 output.close();
                 
@@ -789,11 +789,11 @@ public class BrowserActivity extends ListActivity
         protected String doInBackground(String... arg0)
         {
             String docId = arg0[0];
-            List<FormInstanceDocument> instanceIds = new ArrayList<FormInstanceDocument>();
+            List<FormInstanceDoc> instanceIds = new ArrayList<FormInstanceDoc>();
             String result = "";
             
             try {
-                instanceIds = new FormInstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormId(docId);
+                instanceIds = new FormInstanceRepo(Collect.getInstance().getDbService().getDb()).findByFormId(docId);
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "unexpected exception " + e.toString());
                 e.printStackTrace();
@@ -843,8 +843,8 @@ public class BrowserActivity extends ListActivity
         {
             try {
                 mFormId = (String) params[0];
-                FormInstanceDocument.Status status = (FormInstanceDocument.Status) params[1];
-                mInstanceIds = new FormInstanceRepository(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);                
+                FormInstanceDoc.Status status = (FormInstanceDoc.Status) params[1];
+                mInstanceIds = new FormInstanceRepo(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);                
                 caughtExceptionInBackground = false;
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "unhandled exception while processing InstanceLoadPathTask.doInBackground(): " + e.toString());
@@ -886,25 +886,25 @@ public class BrowserActivity extends ListActivity
     /*
      * Refresh the main form browser view as requested by the user
      */
-    private class RefreshViewTask extends AsyncTask<FormInstanceDocument.Status, Integer, FormInstanceDocument.Status>
+    private class RefreshViewTask extends AsyncTask<FormInstanceDoc.Status, Integer, FormInstanceDoc.Status>
     {
-        private ArrayList<FormDefinitionDocument> documents = new ArrayList<FormDefinitionDocument>();
+        private ArrayList<FormDefinitionDoc> documents = new ArrayList<FormDefinitionDoc>();
         private HashMap<String, HashMap<String, String>> tallies = new HashMap<String, HashMap<String, String>>();
         private boolean folderUnavailable = false;
 
         @Override
-        protected FormInstanceDocument.Status doInBackground(FormInstanceDocument.Status... status)
+        protected FormInstanceDoc.Status doInBackground(FormInstanceDoc.Status... status)
         {
             try {
-                if (status[0] == FormInstanceDocument.Status.nothing) {
-                    tallies = new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();
-                    documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getAll();
+                if (status[0] == FormInstanceDoc.Status.nothing) {
+                    tallies = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();
+                    documents = (ArrayList<FormDefinitionDoc>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAll();
                     DocumentUtils.sortByName(documents);                    
                 } else {
-                    tallies = new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
+                    tallies = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
 
                     if (!tallies.isEmpty()) {
-                        documents = (ArrayList<FormDefinitionDocument>) new FormDefinitionRepository(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(tallies.keySet()));                    
+                        documents = (ArrayList<FormDefinitionDoc>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(tallies.keySet()));                    
                         DocumentUtils.sortByName(documents);
                     }                 
                 }
@@ -926,7 +926,7 @@ public class BrowserActivity extends ListActivity
         }
 
         @Override
-        protected void onPostExecute(FormInstanceDocument.Status status)
+        protected void onPostExecute(FormInstanceDoc.Status status)
         {
             RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
             onscreenProgress.setVisibility(View.GONE);
@@ -949,7 +949,7 @@ public class BrowserActivity extends ListActivity
                 mDialogMessage = getString(R.string.tf_unable_to_open_folder, getSelectedFolderName());
                 showDialog(DIALOG_FOLDER_UNAVAILABLE);
             } else {
-                if (status == FormInstanceDocument.Status.nothing) {
+                if (status == FormInstanceDoc.Status.nothing) {
                     // Provide hints to user
                     if (documents.isEmpty()) {
                         TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
@@ -1209,15 +1209,15 @@ public class BrowserActivity extends ListActivity
             // Show all forms (in folder)
             case 0:
             case 1:
-                mRefreshViewTask.execute(FormInstanceDocument.Status.nothing);
+                mRefreshViewTask.execute(FormInstanceDoc.Status.nothing);
                 break;
                 // Show all draft forms
             case 2:
-                mRefreshViewTask.execute(FormInstanceDocument.Status.draft);
+                mRefreshViewTask.execute(FormInstanceDoc.Status.draft);
                 break;
                 // Show all completed forms
             case 3:
-                mRefreshViewTask.execute(FormInstanceDocument.Status.complete);
+                mRefreshViewTask.execute(FormInstanceDoc.Status.complete);
                 break;
             }
         } catch (DatabaseService.DbUnavailableDueToMetadataException e) {            

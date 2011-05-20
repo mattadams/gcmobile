@@ -1,6 +1,6 @@
 package com.radicaldynamic.groupinform.documents;
 
-public class FormDefinitionDocument extends GenericDocument
+public class FormDefinitionDoc extends GenericDoc
 {
     @SuppressWarnings("unused")
     private static final String t = "FormDefinitionDocument: ";
@@ -14,7 +14,7 @@ public class FormDefinitionDocument extends GenericDocument
     private Status status;
     private String uiVersion;
 
-    public FormDefinitionDocument() {
+    public FormDefinitionDoc() {
         super("form");
     }
 

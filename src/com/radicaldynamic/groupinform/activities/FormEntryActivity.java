@@ -69,9 +69,9 @@ import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
-import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
-import com.radicaldynamic.groupinform.documents.GenericDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
+import com.radicaldynamic.groupinform.documents.FormInstanceDoc;
+import com.radicaldynamic.groupinform.documents.GenericDoc;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.tasks.FormLoaderTask;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
@@ -169,8 +169,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     
     public static final String KEY_FINISH_ACTIVITY = "finishactivity";
 
-    private FormDefinitionDocument mFormDefinitionDoc = null;
-    private FormInstanceDocument mFormInstanceDoc = null;
+    private FormDefinitionDoc mFormDefinitionDoc = null;
+    private FormInstanceDoc mFormInstanceDoc = null;
     // END custom
     
 
@@ -226,8 +226,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             mSaveToDiskTask = (SaveToDiskTask) data;
             // BEGIN custom
         } else if (data instanceof HashMap<?, ?>) {
-            mFormDefinitionDoc = (FormDefinitionDocument) ((HashMap<String, GenericDocument>) data).get(KEY_FORM_DEFINITION);
-            mFormInstanceDoc = (FormInstanceDocument) ((HashMap<String, GenericDocument>) data).get(KEY_FORM_INSTANCE);
+            mFormDefinitionDoc = (FormDefinitionDoc) ((HashMap<String, GenericDoc>) data).get(KEY_FORM_DEFINITION);
+            mFormInstanceDoc = (FormInstanceDoc) ((HashMap<String, GenericDoc>) data).get(KEY_FORM_INSTANCE);
             // END custom
         } else if (data == null) {
             if (!newForm) {
@@ -680,7 +680,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 //        return null;
         
         // Avoid refetching documents from database by preserving them
-        HashMap<String, GenericDocument> persistentData = new HashMap<String, GenericDocument>();
+        HashMap<String, GenericDoc> persistentData = new HashMap<String, GenericDoc>();
         persistentData.put(KEY_FORM_DEFINITION, mFormDefinitionDoc);
         persistentData.put(KEY_FORM_INSTANCE, mFormInstanceDoc);
 
@@ -1348,7 +1348,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 builder.setPositiveButton(getString(R.string.tf_remove), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         try {
-                            mFormInstanceDoc.setStatus(FormInstanceDocument.Status.removed);
+                            mFormInstanceDoc.setStatus(FormInstanceDoc.Status.removed);
                             Collect.getInstance().getDbService().getDb().update(mFormInstanceDoc);
                             
                             removeDialog(REMOVE_DIALOG);
@@ -1532,7 +1532,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     @Override
     // BEGIN custom
 //    public void loadingComplete(FormController fc) {
-    public void loadingComplete(FormController fc, FormDefinitionDocument fdd, FormInstanceDocument fid) {
+    public void loadingComplete(FormController fc, FormDefinitionDoc fdd, FormInstanceDoc fid) {
         final String tt = t + ": loadingComplete(): ";
         // END custom
         dismissDialog(PROGRESS_DIALOG);
@@ -1561,9 +1561,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             
             // Create temporary instance & folder
             try {
-                fid = new FormInstanceDocument();
+                fid = new FormInstanceDoc();
                 fid.setFormId(fdd.getId());
-                fid.setStatus(FormInstanceDocument.Status.placeholder);
+                fid.setStatus(FormInstanceDoc.Status.placeholder);
                 Collect.getInstance().getDbService().getDb().create(fid);
 
                 String instanceFolder = FileUtilsExtended.INSTANCES_PATH + File.separator + fid.getId();
@@ -1691,7 +1691,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 //        return complete;
         
         if (mFormInstanceDoc != null)
-            return mFormInstanceDoc.getStatus().equals(FormInstanceDocument.Status.complete);
+            return mFormInstanceDoc.getStatus().equals(FormInstanceDoc.Status.complete);
         else
             return false;
         // END custom
@@ -1750,11 +1750,11 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     private void tidyBeforeFinish()
     { 
         // Check to see if we need to remove the placeholder document
-        if (mFormInstanceDoc != null && mFormInstanceDoc.getStatus() == FormInstanceDocument.Status.placeholder) {
+        if (mFormInstanceDoc != null && mFormInstanceDoc.getStatus() == FormInstanceDoc.Status.placeholder) {
             try {
-                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, mFormInstanceDoc.getId());
+                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDoc.class, mFormInstanceDoc.getId());
 
-                if (mFormInstanceDoc.getStatus() == FormInstanceDocument.Status.placeholder) {
+                if (mFormInstanceDoc.getStatus() == FormInstanceDoc.Status.placeholder) {
                     Log.d(Collect.LOGTAG, t + ": removing placeholder " + mFormInstanceDoc.getId());
                     Collect.getInstance().getDbService().getDb().delete(mFormInstanceDoc);
                 }

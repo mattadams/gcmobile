@@ -19,7 +19,7 @@ import android.widget.TextView;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.FormBuilderInstanceListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
 import com.radicaldynamic.groupinform.views.TouchListView;
 import com.radicaldynamic.groupinform.xform.Instance;
 
@@ -31,7 +31,7 @@ public class FormBuilderInstanceList extends ListActivity
     private Button jumpPreviousButton;
     private TextView mPathText;
    
-    private FormDefinitionDocument mForm;
+    private FormDefinitionDoc mForm;
     private ArrayList<Instance> mInstanceState;
     private ArrayList<String> mPath = new ArrayList<String>();          // Human readable location in mInstanceState
     

@@ -251,9 +251,7 @@ public class DatabaseService extends Service {
      * @throws DbUnavailableException 
      */
     public void open(String db) throws DbUnavailableException 
-    {
-        final String tt = t + "open(): ";
-        
+    {        
         // If database metadata is not yet available then abort here
         if (db == null || Collect.getInstance().getInformOnlineState().getAccountFolders().get(db) == null) {
             throw new DbUnavailableDueToMetadataException(db);

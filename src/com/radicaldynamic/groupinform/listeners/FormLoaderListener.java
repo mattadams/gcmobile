@@ -16,8 +16,8 @@ package com.radicaldynamic.groupinform.listeners;
 
 import org.odk.collect.android.logic.FormController;
 
-import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
-import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
+import com.radicaldynamic.groupinform.documents.FormInstanceDoc;
 
 /**
  * @author Carl Hartung (carlhartung@gmail.com)
@@ -25,7 +25,7 @@ import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
 public interface FormLoaderListener {
     // BEGIN custom
 //    void loadingComplete(FormController fc);
-    void loadingComplete(FormController fc, FormDefinitionDocument fdd, FormInstanceDocument fid);
+    void loadingComplete(FormController fc, FormDefinitionDoc fdd, FormInstanceDoc fid);
     // END custom
     void loadingError(String errorMsg);
 }

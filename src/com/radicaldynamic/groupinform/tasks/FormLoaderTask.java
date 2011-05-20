@@ -50,8 +50,8 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
-import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
+import com.radicaldynamic.groupinform.documents.FormInstanceDoc;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
@@ -114,8 +114,8 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     FECWrapper data;
     
     // BEGIN custom
-    FormDefinitionDocument mFormDefinitionDoc = null;
-    FormInstanceDocument mFormInstanceDoc = null;
+    FormDefinitionDoc mFormDefinitionDoc = null;
+    FormInstanceDoc mFormInstanceDoc = null;
     // END custom
 
 
@@ -140,7 +140,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             FileUtils.createFolder(formDefinitionFile.getParent());
             FileUtils.createFolder(formDefinitionFile.getParent() + File.separator + FileUtilsExtended.MEDIA_DIR); 
             
-            mFormDefinitionDoc = Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, formId);
+            mFormDefinitionDoc = Collect.getInstance().getDbService().getDb().get(FormDefinitionDoc.class, formId);
             AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
              
             FileOutputStream file = new FileOutputStream(formDefinitionFile);
@@ -233,7 +233,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 String instanceFolder = FormEntryActivity.InstancePath.substring(0, FormEntryActivity.InstancePath.lastIndexOf("/")); 
                 FileUtils.createFolder(instanceFolder);
                 
-                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceId);
+                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstanceDoc.class, instanceId);
                 HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) mFormInstanceDoc.getAttachments();
                 
                 // Download attachments (form instance XML & other media)

@@ -2,7 +2,7 @@ package com.radicaldynamic.groupinform.xform;
 
 import java.util.ArrayList;
 
-import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
 
 /*
  * An instance of a FormBuilder should be thought of as a "form being edited."
@@ -12,7 +12,7 @@ import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
  */
 public class FormBuilderState 
 {
-    private FormDefinitionDocument  formDefDoc  = null;         // The form definition document from the DB for reference
+    private FormDefinitionDoc  formDefDoc  = null;         // The form definition document from the DB for reference
     private Field                   field       = null;         // For passing a form "field" between activities
     private Field                   item        = null;         // For passing a select list item to the translation screen
     
@@ -29,8 +29,8 @@ public class FormBuilderState
     public void setItem(Field item) { this.item = item; }
     public Field getItem() { return item; }
 
-    public void setFormDefDoc(FormDefinitionDocument formDefDoc) { this.formDefDoc = formDefDoc; }
-    public FormDefinitionDocument getFormDefDoc() { return formDefDoc; }
+    public void setFormDefDoc(FormDefinitionDoc formDefDoc) { this.formDefDoc = formDefDoc; }
+    public FormDefinitionDoc getFormDefDoc() { return formDefDoc; }
 
     public void setBinds(ArrayList<Bind> binds) { this.binds = binds; }
     public ArrayList<Bind> getBinds() { return binds; }

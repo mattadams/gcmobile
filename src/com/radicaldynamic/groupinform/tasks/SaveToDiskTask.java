@@ -40,7 +40,7 @@ import android.webkit.MimeTypeMap;
 
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormInstanceDoc;
 
 /**
  * Background task for loading a form.
@@ -152,14 +152,14 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         String instanceId = instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.lastIndexOf("."));
         
         try {
-            FormInstanceDocument fid = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceId);
+            FormInstanceDoc fid = Collect.getInstance().getDbService().getDb().get(FormInstanceDoc.class, instanceId);
 
             fid.setOdkSubmissionUri("submission");
 
             if (mMarkCompleted) 
-                fid.setStatus(FormInstanceDocument.Status.complete);
+                fid.setStatus(FormInstanceDoc.Status.complete);
             else
-                fid.setStatus(FormInstanceDocument.Status.draft);
+                fid.setStatus(FormInstanceDoc.Status.draft);
 
             Collect.getInstance().getDbService().getDb().update(fid);
 
@@ -170,7 +170,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 Log.v(Collect.LOGTAG, t + "attaching " + attachmentFilename + " to " + instanceId);
 
                 // Make sure that we have the most current revision number
-                fid = Collect.getInstance().getDbService().getDb().get(FormInstanceDocument.class, instanceId);
+                fid = Collect.getInstance().getDbService().getDb().get(FormInstanceDoc.class, instanceId);
                 
                 File f = new File(new File(instancePath).getParentFile(), attachmentFilename);
                 FileInputStream fis = new FileInputStream(f);

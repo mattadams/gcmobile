@@ -36,8 +36,8 @@ import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.FormBuilderFieldListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDocument;
-import com.radicaldynamic.groupinform.documents.FormInstanceDocument;
+import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
+import com.radicaldynamic.groupinform.documents.FormInstanceDoc;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
 import com.radicaldynamic.groupinform.views.TouchListView;
@@ -76,7 +76,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private String mFormId;
     private String mInstanceRoot;
     private String mInstanceRootId;
-    private FormDefinitionDocument mForm;
+    private FormDefinitionDoc mForm;
     private FormReader mFormReader;
     
     private ArrayList<Field> mFieldState = new ArrayList<Field>();    
@@ -511,7 +511,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             resetStates();
             
             try {
-                mForm = Collect.getInstance().getDbService().getDb().get(FormDefinitionDocument.class, formId);
+                mForm = Collect.getInstance().getDbService().getDb().get(FormDefinitionDoc.class, formId);
                 Collect.getInstance().getFormBuilderState().setFormDefDoc(mForm);
                 Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
                 
@@ -588,7 +588,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             try {
                 // Write out XML to database
                 mForm.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(FormWriter.writeXml(mInstanceRoot, mInstanceRootId))).toString(), "text/xml"));                
-                mForm.setStatus(FormDefinitionDocument.Status.inactive);
+                mForm.setStatus(FormDefinitionDoc.Status.inactive);
                 Collect.getInstance().getDbService().getDb().update(mForm);
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "failed writing XForm to XML: " + e.toString());
@@ -623,7 +623,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
      * @see com.radicaldynamic.turboform.listeners.FormLoaderListener#loadingComplete
      */
     @Override
-    public void loadingComplete(FormController fec, FormDefinitionDocument fdd, FormInstanceDocument fid)
+    public void loadingComplete(FormController fec, FormDefinitionDoc fdd, FormInstanceDoc fid)
     {
         dismissDialog(LOADING_DIALOG);        
         refreshView(mFieldState);
@@ -826,7 +826,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                         case 0:
                             // Discard any changes and exit
                             try {
-                                if (mForm.getStatus() == FormDefinitionDocument.Status.temporary)
+                                if (mForm.getStatus() == FormDefinitionDoc.Status.temporary)
                                     Collect.getInstance().getDbService().getDb().delete(mForm);
                             } catch (Exception e) {
                                 Log.e(Collect.LOGTAG, t + "unable to remove temporary document");

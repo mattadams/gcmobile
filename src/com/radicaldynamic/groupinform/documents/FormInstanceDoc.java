@@ -10,7 +10,7 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.application.Collect;
 
-public class FormInstanceDocument extends GenericDocument
+public class FormInstanceDoc extends GenericDoc
 {    
     private static final String t = "FormInstanceDocument: ";
     private static final long serialVersionUID = -2924171490521236262L;
@@ -38,7 +38,7 @@ public class FormInstanceDocument extends GenericDocument
     private OdkSubmissionStatus odkSubmissionStatus;
     private String odkSubmissionUri;           // Compatibility with ODK Collect 1.1.6 or r479+    
     
-    public FormInstanceDocument() 
+    public FormInstanceDoc() 
     {
         super("instance");
     }
@@ -76,7 +76,7 @@ public class FormInstanceDocument extends GenericDocument
     @JsonIgnore
     public Calendar getOdkSubmissionDateAsCalendar() 
     {
-        SimpleDateFormat sdf = new SimpleDateFormat(GenericDocument.DATETIME);
+        SimpleDateFormat sdf = new SimpleDateFormat(GenericDoc.DATETIME);
         Calendar calendar = Calendar.getInstance();
         
         try {
