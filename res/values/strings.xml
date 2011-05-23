@@ -175,6 +175,11 @@
 <string name="font_size">Font size</string>
 <string name="change_font_size">Change font size</string>
 
+    <!-- Temporary fixes -->
+    <string name="server">server</string>
+    <string name="change_server">change_server</string>
+    <string name="default_server">default_server</string>
+
 	<!-- Inform string resources below -->
 	<string name="tf_about_inform_account_header">This screen displays information about your Inform installation. Certain details are only available to the account owner.</string>
 	<string name="tf_about_inform_device_header">Information about the device you are currently using.</string>

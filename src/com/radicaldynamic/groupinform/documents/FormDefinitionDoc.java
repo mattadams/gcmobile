@@ -3,7 +3,7 @@ package com.radicaldynamic.groupinform.documents;
 public class FormDefinitionDoc extends GenericDoc
 {
     @SuppressWarnings("unused")
-    private static final String t = "FormDefinitionDocument: ";
+    private static final String t = "FormDefinitionDoc: ";
     private static final long serialVersionUID = 8292491291779289389L;   
     
     public static enum Status {active, inactive, temporary};
@@ -12,7 +12,8 @@ public class FormDefinitionDoc extends GenericDoc
     private String modelVersion;
     private String name;
     private Status status;
-    private String uiVersion;
+    private String submissionUri;
+    private String uiVersion;    
 
     public FormDefinitionDoc() {
         super("form");
@@ -52,6 +53,14 @@ public class FormDefinitionDoc extends GenericDoc
     public Status getStatus()
     {
         return status;
+    }
+
+    public void setSubmissionUri(String submissionUri) {
+        this.submissionUri = submissionUri;
+    }
+
+    public String getSubmissionUri() {
+        return submissionUri;
     }
 
     public void setUiVersion(String uiVersion) {

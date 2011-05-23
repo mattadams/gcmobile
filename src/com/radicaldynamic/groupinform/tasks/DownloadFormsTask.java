@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -275,6 +276,7 @@ public class DownloadFormsTask extends AsyncTask<ArrayList<FormDetails>, String,
                     .toString());
             try {
                 // get the xml file
+                // if we've downloaded a duplicate, this gives us the file
                 File dl = downloadXform(fd.formName, fd.downloadUrl);
 
                 // BEGIN custom
@@ -297,8 +299,13 @@ public class DownloadFormsTask extends AsyncTask<ArrayList<FormDetails>, String,
 //
 //                    ContentValues v = new ContentValues();
 //                    v.put(FormsColumns.FORM_FILE_PATH, dl.getAbsolutePath());
-//                    v.put(FormsColumns.DISPLAY_NAME, fd.formName);
-//                    v.put(FormsColumns.JR_FORM_ID, fd.formID);
+//
+//                    HashMap<String, String> formInfo = FileUtils.parseXML(dl);                    
+//                    v.put(FormsColumns.DISPLAY_NAME, FileUtils.TITLE);
+//                    v.put(FormsColumns.MODEL_VERSION, FileUtils.MODEL);
+//                    v.put(FormsColumns.UI_VERSION, FileUtils.UI);
+//                    v.put(FormsColumns.JR_FORM_ID, formInfo.get(FileUtils.FORMID));
+//                    v.put(FormsColumns.SUBMISSION_URI, FileUtils.SUBMISSIONURI);
 //                    uri =
 //                        Collect.getInstance().getContentResolver()
 //                                .insert(FormsColumns.CONTENT_URI, v);
@@ -338,10 +345,15 @@ public class DownloadFormsTask extends AsyncTask<ArrayList<FormDetails>, String,
                 }
                 
                 // BEGIN custom
+                HashMap<String, String> formInfo = FileUtils.parseXML(dl);
+                
                 // Create form document and add attachments; commit to database
                 FormDefinitionDoc fDoc = new FormDefinitionDoc();
-                fDoc.setName(fd.formName);
-                fDoc.setJavaRosaId(fd.formID);
+                fDoc.setName(formInfo.get(FileUtils.TITLE));
+                fDoc.setModelVersion(formInfo.get(FileUtils.MODEL));
+                fDoc.setUiVersion(formInfo.get(FileUtils.UI));
+                fDoc.setJavaRosaId(formInfo.get(FileUtils.FORMID));
+                fDoc.setSubmissionUri(formInfo.get(FileUtils.SUBMISSIONURI));
                 
                 File[] allFiles = dl.getParentFile().listFiles();
                 
