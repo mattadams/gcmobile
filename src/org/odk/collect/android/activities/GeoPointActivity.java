@@ -14,6 +14,8 @@
 
 package org.odk.collect.android.activities;
 
+import java.text.DecimalFormat;
+
 import com.radicaldynamic.groupinform.R;
 
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
@@ -148,10 +150,17 @@ public class GeoPointActivity extends Activity implements LocationListener {
     @Override
     public void onLocationChanged(Location location) {
         mLocation = location;
-        mLocationDialog.setMessage(getString(R.string.location_accuracy, mLocation.getAccuracy()));
+        mLocationDialog.setMessage(getString(R.string.location_provider_accuracy,
+            mLocation.getProvider(), truncateDouble(mLocation.getAccuracy())));
+        
         if (mLocation.getAccuracy() <= LOCATION_ACCURACY) {
             returnLocation();
         }
+    }
+
+    private String truncateDouble(float number) {
+        DecimalFormat df = new DecimalFormat("#.##");
+        return df.format(number);
     }
 
 

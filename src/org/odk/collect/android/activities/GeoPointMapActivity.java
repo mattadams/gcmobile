@@ -39,6 +39,8 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
     private MapController mMapController;
     private LocationManager mLocationManager;
     private Overlay mLocationOverlay;
+    private Overlay mGeoPointOverlay;
+
     private GeoPoint mGeoPoint;
     private Location mLocation;
     private Button mAcceptLocation;
@@ -99,6 +101,10 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
             finish();
         }
 
+        mLocationOverlay = new MyLocationOverlay(this, mMapView);
+        mMapView.getOverlays().add(mLocationOverlay);
+
+
         if (mCaptureLocation) {
             mLocationStatus = (TextView) findViewById(R.id.location_status);
             mAcceptLocation = (Button) findViewById(R.id.accept_location);
@@ -110,14 +116,11 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
                 }
             });
 
-            mLocationOverlay = new MyLocationOverlay(this, mMapView);
-            mMapView.getOverlays().add(mLocationOverlay);
 
         } else {
 
-            mLocationOverlay = new Marker(mGeoPoint);
-
-            mMapView.getOverlays().add(mLocationOverlay);
+            mGeoPointOverlay = new Marker(mGeoPoint);
+            mMapView.getOverlays().add(mGeoPointOverlay);
 
             ((Button) findViewById(R.id.accept_location)).setVisibility(View.GONE);
             ((TextView) findViewById(R.id.location_status)).setVisibility(View.GONE);
@@ -157,10 +160,7 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
     protected void onPause() {
         super.onPause();
         mLocationManager.removeUpdates(this);
-        if (mCaptureLocation) {
-
-            ((MyLocationOverlay) mLocationOverlay).disableMyLocation();
-        }
+        ((MyLocationOverlay) mLocationOverlay).disableMyLocation();
 
     }
 
@@ -169,18 +169,9 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
     protected void onResume() {
         super.onResume();
 
-        if (mCaptureLocation) {
-            ((MyLocationOverlay) mLocationOverlay).enableMyLocation();
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        } else {
-            // no need to update too quickly, so save batteries
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 120000, 1000,
-                this);
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 120000, 1000,
-                this);
-
-        }
+        ((MyLocationOverlay) mLocationOverlay).enableMyLocation();
+        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
     }
 
 
