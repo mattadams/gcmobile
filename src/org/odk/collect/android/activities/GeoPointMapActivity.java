@@ -5,8 +5,6 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.activities.FormEntryActivity;
-
 import org.odk.collect.android.widgets.GeoPointWidget;
 
 import android.content.Context;
@@ -31,8 +29,9 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 
-public class GeoPointActivity extends MapActivity implements LocationListener {
+public class GeoPointMapActivity extends MapActivity implements LocationListener {
 
     private MapView mMapView;
     private TextView mLocationStatus;
