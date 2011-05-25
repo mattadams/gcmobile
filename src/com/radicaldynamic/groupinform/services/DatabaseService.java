@@ -208,7 +208,7 @@ public class DatabaseService extends Service {
         final String tt = t + "initLocalDb(): ";
         
         try {
-            ReplicationStatus status = replicate(db, REPLICATE_PULL);
+            ReplicationStatus status = replicateUnlessOffline(db, REPLICATE_PULL);
 
             if (status == null)
                 return false;
@@ -266,7 +266,6 @@ public class DatabaseService extends Service {
             // Local database
             if (mConnectedToLocal) {
                 if (mLocalDbConnector instanceof StdCouchDbConnector && mLocalDbConnector.getDatabaseName().equals("db_" + db)) {
-//                    Log.d(Collect.LOGTAG, tt + "local database " + db + " already open");
                     return;
                 }
             } else {
@@ -278,7 +277,6 @@ public class DatabaseService extends Service {
             // Remote database
             if (mConnectedToRemote) {
                 if (mRemoteDbConnector instanceof StdCouchDbConnector && mRemoteDbConnector.getDatabaseName().equals("db_" + db)) {
-//                    Log.d(Collect.LOGTAG, tt + "remote database " + db + " already open");
                     return;
                 }
             } else {
@@ -295,7 +293,7 @@ public class DatabaseService extends Service {
         final String tt = t + "removeLocalDb(): ";
         
         try {
-            ReplicationStatus status = replicate(db, REPLICATE_PUSH);
+            ReplicationStatus status = replicateUnlessOffline(db, REPLICATE_PUSH);
 
             if (status == null)
                 return false;
@@ -466,16 +464,10 @@ public class DatabaseService extends Service {
             e.printStackTrace();
         }
     }
-
+    
     synchronized public ReplicationStatus replicate(String db, int mode)
-    {
+    {        
         final String tt = t + "replicate(): ";
-        
-        // Will not replicate while offline
-        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
-            Log.d(Collect.LOGTAG, tt + "aborting replication of " + db + " (offline mode is enabled)");
-            return null;
-        }
         
         // Will not replicate unless signed in
         if (!Collect.getInstance().getIoService().isSignedIn()) {
@@ -519,7 +511,7 @@ public class DatabaseService extends Service {
             source = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db; 
             target = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
             break;
-
+    
         case REPLICATE_PULL:
             source = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
             target = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db;
@@ -555,13 +547,26 @@ public class DatabaseService extends Service {
                 Log.i(Collect.LOGTAG, tt + "about to begin scheduled replication of " + folder.getName());
                 
                 try {
-                    replicate(folder.getId(), REPLICATE_PUSH);
-                    replicate(folder.getId(), REPLICATE_PULL);
+                    replicateUnlessOffline(folder.getId(), REPLICATE_PUSH);
+                    replicateUnlessOffline(folder.getId(), REPLICATE_PULL);
                 } catch (Exception e) {
                     Log.w(Collect.LOGTAG, tt + "problem replicating " + folder.getId() + ": " + e.toString());
                     e.printStackTrace();
                 }
             }
         }
+    }
+
+    synchronized public ReplicationStatus replicateUnlessOffline(String db, int mode)
+    {
+        final String tt = t + "replicateUnlessOffline(): ";
+        
+        // Will not replicate while offline
+        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
+            Log.d(Collect.LOGTAG, tt + "aborting replication of " + db + " (offline mode is enabled)");
+            return null;
+        }
+
+        return replicate(db, mode);
     }
 }

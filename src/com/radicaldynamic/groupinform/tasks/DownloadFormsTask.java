@@ -52,7 +52,7 @@ import android.webkit.MimeTypeMap;
 
 import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
+import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**
@@ -348,7 +348,7 @@ public class DownloadFormsTask extends AsyncTask<ArrayList<FormDetails>, String,
                 HashMap<String, String> formInfo = FileUtils.parseXML(dl);
                 
                 // Create form document and add attachments; commit to database
-                FormDefinitionDoc fDoc = new FormDefinitionDoc();
+                FormDefinition fDoc = new FormDefinition();
                 fDoc.setName(formInfo.get(FileUtils.TITLE));
                 fDoc.setModelVersion(formInfo.get(FileUtils.MODEL));
                 fDoc.setUiVersion(formInfo.get(FileUtils.UI));

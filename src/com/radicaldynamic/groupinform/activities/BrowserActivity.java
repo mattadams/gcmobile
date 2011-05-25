@@ -26,6 +26,7 @@ import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
 import org.ektorp.DbAccessException;
 import org.ektorp.DocumentNotFoundException;
+import org.ektorp.ReplicationStatus;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -68,9 +69,9 @@ import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.couchdb.CouchInitializer;
 import com.radicaldynamic.groupinform.couchdb.CouchInstaller;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
-import com.radicaldynamic.groupinform.documents.FormInstanceDoc;
-import com.radicaldynamic.groupinform.documents.GenericDoc;
+import com.radicaldynamic.groupinform.documents.FormDefinition;
+import com.radicaldynamic.groupinform.documents.FormInstance;
+import com.radicaldynamic.groupinform.documents.Generic;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
 import com.radicaldynamic.groupinform.repositories.FormInstanceRepo;
@@ -91,15 +92,17 @@ public class BrowserActivity extends ListActivity
     // Dialog status codes
     private static final int DIALOG_CREATE_FORM = 0;
     private static final int DIALOG_COPY_TO_FOLDER = 1;
-    private static final int DIALOG_FOLDER_UNAVAILABLE = 2;
-    private static final int DIALOG_FORM_BUILDER_LAUNCH_ERROR = 3;
-    private static final int DIALOG_INSTANCES_UNAVAILABLE = 4;
-    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 5;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 6;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 7;    
-    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 8;
-    private static final int DIALOG_ONLINE_STATE_CHANGING = 9;
-    private static final int DIALOG_TOGGLE_ONLINE_STATE = 10;
+    private static final int DIALOG_FOLDER_OUTDATED = 2;
+    private static final int DIALOG_FOLDER_UNAVAILABLE = 3;
+    private static final int DIALOG_FORM_BUILDER_LAUNCH_ERROR = 4;
+    private static final int DIALOG_INSTANCES_UNAVAILABLE = 5;
+    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 6;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 7;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 8;    
+    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 9;
+    private static final int DIALOG_ONLINE_STATE_CHANGING = 10;
+    private static final int DIALOG_TOGGLE_ONLINE_STATE = 11;
+    private static final int DIALOG_UPDATING_FOLDER = 12;
     
     // Keys for option menu items
     private static final int MENU_OPTION_REFRESH = 0;
@@ -119,7 +122,7 @@ public class BrowserActivity extends ListActivity
     private static final int RESULT_ABOUT_INFORM = 1;
     private static final int RESULT_COPY_TO_FOLDER = 2;    
 
-    private FormDefinitionDoc mFormDefinitionDoc;    // Stash for a selected form definition
+    private FormDefinition mFormDefinitionDoc;    // Stash for a selected form definition
     
     private String mCopyToFolderId;             // Data passed back from user selection on AccountFolderList
     private String mCopyToFolderName;           // Same
@@ -129,6 +132,7 @@ public class BrowserActivity extends ListActivity
     
     private CopyToFolderTask mCopyToFolderTask;
     private RefreshViewTask mRefreshViewTask;
+    private UpdateFolderTask mUpdateFolderTask;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -166,7 +170,7 @@ public class BrowserActivity extends ListActivity
             Object data = getLastNonConfigurationInstance();
             
             if (data instanceof HashMap<?, ?>) {
-                mFormDefinitionDoc = (FormDefinitionDoc) ((HashMap<String, GenericDoc>) data).get(KEY_FORM_DEFINITION);
+                mFormDefinitionDoc = (FormDefinition) ((HashMap<String, Generic>) data).get(KEY_FORM_DEFINITION);
             }
         }
 
@@ -254,7 +258,7 @@ public class BrowserActivity extends ListActivity
     public boolean onContextItemSelected(MenuItem item) 
     {
         AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-        FormDefinitionDoc form = (FormDefinitionDoc) getListAdapter().getItem((int) info.id);
+        FormDefinition form = (FormDefinition) getListAdapter().getItem((int) info.id);
         Intent i;
         
         switch (item.getItemId()) {
@@ -305,9 +309,9 @@ public class BrowserActivity extends ListActivity
             
             builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {                
-                    FormDefinitionDoc form = new FormDefinitionDoc();
+                    FormDefinition form = new FormDefinition();
                     form.setName(inputNewFormName.getText().toString());
-                    form.setStatus(FormDefinitionDoc.Status.temporary);
+                    form.setStatus(FormDefinition.Status.temporary);
         
                     // Create a new form document and use an XForm template as the "xml" attachment
                     try {
@@ -382,6 +386,32 @@ public class BrowserActivity extends ListActivity
             builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     removeDialog(DIALOG_COPY_TO_FOLDER);
+                }
+            });
+            
+            dialog = builder.create();
+            break;
+            
+        // Local folder is most likely out-of-date
+        case DIALOG_FOLDER_OUTDATED:
+            builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_info)
+                .setTitle(R.string.tf_folder_outdated_dialog)
+                .setMessage(getString(R.string.tf_folder_outdated_dialog_msg, getSelectedFolderName()));
+            
+            builder.setPositiveButton(getString(R.string.tf_update), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {                    
+                    removeDialog(DIALOG_FOLDER_OUTDATED);
+                    mUpdateFolderTask = new UpdateFolderTask();
+                    mUpdateFolderTask.execute();
+                }
+            });
+            
+            builder.setNeutralButton(getString(R.string.tf_form_folders), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    startActivity(new Intent(BrowserActivity.this, AccountFolderList.class));
+                    removeDialog(DIALOG_FOLDER_OUTDATED);
                 }
             });
             
@@ -567,6 +597,10 @@ public class BrowserActivity extends ListActivity
 
             dialog = builder.create();
             break;
+
+        case DIALOG_UPDATING_FOLDER:
+            dialog = ProgressDialog.show(this, "", getString(R.string.tf_updating_with_param, getSelectedFolderName()));            
+            break;
         }
         
         return dialog;        
@@ -606,7 +640,7 @@ public class BrowserActivity extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-        FormDefinitionDoc form = (FormDefinitionDoc) getListAdapter().getItem(position);
+        FormDefinition form = (FormDefinition) getListAdapter().getItem(position);
         InstanceLoadPathTask ilp;
         Intent i;
 
@@ -630,12 +664,12 @@ public class BrowserActivity extends ListActivity
         // When showing all draft forms in folder... browse selected form instances
         case 2:
             ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), FormInstanceDoc.Status.draft);
+            ilp.execute(form.getId(), FormInstance.Status.draft);
             break;
         // When showing all completed forms in folder... browse selected form instances
         case 3:
             ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), FormInstanceDoc.Status.complete);
+            ilp.execute(form.getId(), FormInstance.Status.complete);
             break;
         }
     }
@@ -668,7 +702,7 @@ public class BrowserActivity extends ListActivity
     public Object onRetainNonConfigurationInstance()
     {
         // Avoid refetching documents from database by preserving them
-        HashMap<String, GenericDoc> persistentData = new HashMap<String, GenericDoc>();
+        HashMap<String, Generic> persistentData = new HashMap<String, Generic>();
         persistentData.put(KEY_FORM_DEFINITION, mFormDefinitionDoc);
         
         return persistentData;
@@ -737,9 +771,9 @@ public class BrowserActivity extends ListActivity
 
                 ais.close();
                 
-                FormDefinitionDoc formDefDoc = new FormDefinitionDoc();
+                FormDefinition formDefDoc = new FormDefinition();
                 formDefDoc.setName(mCopyFormAsName);
-                formDefDoc.setStatus(FormDefinitionDoc.Status.active);
+                formDefDoc.setStatus(FormDefinition.Status.active);
                 formDefDoc.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(output.toByteArray())).toString(), "text/xml"));
                 output.close();
                 
@@ -789,7 +823,7 @@ public class BrowserActivity extends ListActivity
         protected String doInBackground(String... arg0)
         {
             String docId = arg0[0];
-            List<FormInstanceDoc> instanceIds = new ArrayList<FormInstanceDoc>();
+            List<FormInstance> instanceIds = new ArrayList<FormInstance>();
             String result = "";
             
             try {
@@ -843,7 +877,7 @@ public class BrowserActivity extends ListActivity
         {
             try {
                 mFormId = (String) params[0];
-                FormInstanceDoc.Status status = (FormInstanceDoc.Status) params[1];
+                FormInstance.Status status = (FormInstance.Status) params[1];
                 mInstanceIds = new FormInstanceRepo(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);                
                 caughtExceptionInBackground = false;
             } catch (Exception e) {
@@ -886,31 +920,41 @@ public class BrowserActivity extends ListActivity
     /*
      * Refresh the main form browser view as requested by the user
      */
-    private class RefreshViewTask extends AsyncTask<FormInstanceDoc.Status, Integer, FormInstanceDoc.Status>
+    private class RefreshViewTask extends AsyncTask<FormInstance.Status, Integer, FormInstance.Status>
     {
-        private ArrayList<FormDefinitionDoc> documents = new ArrayList<FormDefinitionDoc>();
+        private ArrayList<FormDefinition> documents = new ArrayList<FormDefinition>();
         private HashMap<String, HashMap<String, String>> tallies = new HashMap<String, HashMap<String, String>>();
-        private boolean folderUnavailable = false;
+        private boolean folderOutdated = false;
+        private boolean folderUnavailable = false;        
 
         @Override
-        protected FormInstanceDoc.Status doInBackground(FormInstanceDoc.Status... status)
+        protected FormInstance.Status doInBackground(FormInstance.Status... status)
         {
             try {
-                if (status[0] == FormInstanceDoc.Status.nothing) {
+                if (status[0] == FormInstance.Status.nothing) {
                     tallies = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();
-                    documents = (ArrayList<FormDefinitionDoc>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAll();
+                    documents = (ArrayList<FormDefinition>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAll();
                     DocumentUtils.sortByName(documents);                    
                 } else {
                     tallies = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
 
                     if (!tallies.isEmpty()) {
-                        documents = (ArrayList<FormDefinitionDoc>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(tallies.keySet()));                    
+                        documents = (ArrayList<FormDefinition>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(tallies.keySet()));                    
                         DocumentUtils.sortByName(documents);
                     }                 
                 }
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
                 Log.w(Collect.LOGTAG, t + e.toString());
+            } catch (DocumentNotFoundException e) {
+                /*
+                 * This most likely cause of this exception is that a design document could not be found.  This will happen if we are
+                 * running a version of Inform that expects a design document by a certain name but the local folder does not have
+                 * the most recent design documents.
+                 */
+                Log.w(Collect.LOGTAG, t + e.toString());
+                folderOutdated = true;
+                folderUnavailable = true;
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "unexpected exception " + e.toString());
                 folderUnavailable = true;
@@ -926,7 +970,7 @@ public class BrowserActivity extends ListActivity
         }
 
         @Override
-        protected void onPostExecute(FormInstanceDoc.Status status)
+        protected void onPostExecute(FormInstance.Status status)
         {
             RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
             onscreenProgress.setVisibility(View.GONE);
@@ -946,10 +990,17 @@ public class BrowserActivity extends ListActivity
             setListAdapter(adapter);
 
             if (folderUnavailable) {
-                mDialogMessage = getString(R.string.tf_unable_to_open_folder, getSelectedFolderName());
-                showDialog(DIALOG_FOLDER_UNAVAILABLE);
+                String db = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
+                boolean isReplicated = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated();
+                
+                if (folderOutdated && isReplicated) {
+                    showDialog(DIALOG_FOLDER_OUTDATED);
+                } else {
+                    mDialogMessage = getString(R.string.tf_unable_to_open_folder, getSelectedFolderName());
+                    showDialog(DIALOG_FOLDER_UNAVAILABLE);
+                }
             } else {
-                if (status == FormInstanceDoc.Status.nothing) {
+                if (status == FormInstance.Status.nothing) {
                     // Provide hints to user
                     if (documents.isEmpty()) {
                         TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
@@ -1106,8 +1157,8 @@ public class BrowserActivity extends ListActivity
                     progressHandler.sendMessage(msg);
                     
                     try {                        
-                        Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PUSH);
-                        Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL);
+                        Collect.getInstance().getDbService().replicateUnlessOffline(folder.getId(), DatabaseService.REPLICATE_PUSH);
+                        Collect.getInstance().getDbService().replicateUnlessOffline(folder.getId(), DatabaseService.REPLICATE_PULL);
                     } catch (Exception e) {
                         Log.w(Collect.LOGTAG, t + "problem replicating " + folder.getId() + ": " + e.toString());
                         e.printStackTrace();
@@ -1117,6 +1168,44 @@ public class BrowserActivity extends ListActivity
         }
     }
     
+    /*
+     * Update (synchronize) a local database by pulling from the remote database.
+     * Needed if the local database becomes outdated.
+     */
+    private class UpdateFolderTask extends AsyncTask<Void, Void, Void>
+    {
+        String db = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
+        AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db);
+        ReplicationStatus status = null;
+        
+        @Override
+        protected Void doInBackground(Void... nothing)
+        {
+            status = Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL);
+            return null;
+        }
+    
+        @Override
+        protected void onPreExecute()
+        {
+            showDialog(DIALOG_UPDATING_FOLDER);
+        }
+    
+        @Override
+        protected void onPostExecute(Void nothing)
+        {   
+            removeDialog(DIALOG_UPDATING_FOLDER);
+            
+            // No changes is the same as "unable to update" because chances are it will lead to the same problem
+            if (status == null || !status.isOk() || status.isNoChanges())
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_update_folder, getSelectedFolderName()), Toast.LENGTH_LONG).show();
+            else
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_folder_updated, getSelectedFolderName()), Toast.LENGTH_SHORT).show();
+            
+            loadScreen();
+        }
+    }
+
     // Attempt to return the current folder name (shortened to an appropriate length)
     public static String getSelectedFolderName()
     {
@@ -1209,15 +1298,15 @@ public class BrowserActivity extends ListActivity
             // Show all forms (in folder)
             case 0:
             case 1:
-                mRefreshViewTask.execute(FormInstanceDoc.Status.nothing);
+                mRefreshViewTask.execute(FormInstance.Status.nothing);
                 break;
                 // Show all draft forms
             case 2:
-                mRefreshViewTask.execute(FormInstanceDoc.Status.draft);
+                mRefreshViewTask.execute(FormInstance.Status.draft);
                 break;
                 // Show all completed forms
             case 3:
-                mRefreshViewTask.execute(FormInstanceDoc.Status.complete);
+                mRefreshViewTask.execute(FormInstance.Status.complete);
                 break;
             }
         } catch (DatabaseService.DbUnavailableDueToMetadataException e) {            

@@ -24,7 +24,6 @@ import java.io.InputStream;
 import org.ektorp.AttachmentInputStream;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
-import org.javarosa.core.model.instance.FormInstance;
 import org.javarosa.core.services.transport.payload.ByteArrayPayload;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.model.xform.XFormSerializingVisitor;
@@ -40,7 +39,7 @@ import android.webkit.MimeTypeMap;
 
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormInstanceDoc;
+import com.radicaldynamic.groupinform.documents.FormInstance;
 
 /**
  * Background task for loading a form.
@@ -101,8 +100,12 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         try {
 
             // assume no binary data inside the model.
-            FormInstance datamodel =
+            // BEGIN custom
+//            FormInstance datamodel =
+//                FormEntryActivity.mFormController.getInstance();
+            org.javarosa.core.model.instance.FormInstance datamodel =
                 FormEntryActivity.mFormController.getInstance();
+            // END custom
             XFormSerializingVisitor serializer = new XFormSerializingVisitor();
             payload = (ByteArrayPayload) serializer.createSerializedPayload(datamodel);
 
@@ -152,14 +155,14 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         String instanceId = instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.lastIndexOf("."));
         
         try {
-            FormInstanceDoc fid = Collect.getInstance().getDbService().getDb().get(FormInstanceDoc.class, instanceId);
+            FormInstance fid = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
 
-            fid.setOdkSubmissionUri("submission");
+            fid.getOdk().setUploadUri("submission");
 
             if (mMarkCompleted) 
-                fid.setStatus(FormInstanceDoc.Status.complete);
+                fid.setStatus(FormInstance.Status.complete);
             else
-                fid.setStatus(FormInstanceDoc.Status.draft);
+                fid.setStatus(FormInstance.Status.draft);
 
             Collect.getInstance().getDbService().getDb().update(fid);
 
@@ -170,7 +173,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 Log.v(Collect.LOGTAG, t + "attaching " + attachmentFilename + " to " + instanceId);
 
                 // Make sure that we have the most current revision number
-                fid = Collect.getInstance().getDbService().getDb().get(FormInstanceDoc.class, instanceId);
+                fid = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
                 
                 File f = new File(new File(instancePath).getParentFile(), attachmentFilename);
                 FileInputStream fis = new FileInputStream(f);

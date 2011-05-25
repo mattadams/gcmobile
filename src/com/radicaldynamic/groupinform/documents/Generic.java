@@ -16,7 +16,7 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.StringUtils;
 
 @SuppressWarnings("serial")
-public class GenericDoc extends CouchDbDocument
+public class Generic extends CouchDbDocument
 {
     private static final String t = "GenericDocument: ";
 
@@ -41,7 +41,7 @@ public class GenericDoc extends CouchDbDocument
      */
     private String xmlHash;
     
-    GenericDoc(String type) {
+    Generic(String type) {
         setType(type);
     }
     

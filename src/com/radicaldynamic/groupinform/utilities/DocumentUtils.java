@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
+import com.radicaldynamic.groupinform.documents.FormDefinition;
 
 public class DocumentUtils
 {
@@ -16,8 +16,8 @@ public class DocumentUtils
             @Override
             public int compare(T o1, T o2)
             {
-                FormDefinitionDoc f1 = (FormDefinitionDoc) o1;
-                FormDefinitionDoc f2 = (FormDefinitionDoc) o2;
+                FormDefinition f1 = (FormDefinition) o1;
+                FormDefinition f2 = (FormDefinition) o2;
                 return f1.getName().compareToIgnoreCase(f2.getName());
             }
         });    

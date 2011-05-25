@@ -14,17 +14,17 @@ import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
-import com.radicaldynamic.groupinform.documents.FormInstanceDoc;
+import com.radicaldynamic.groupinform.documents.FormDefinition;
+import com.radicaldynamic.groupinform.documents.FormInstance;
 
-public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDoc>
+public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
 {       
     private Context mContext;
-    private ArrayList<FormDefinitionDoc> mItems;
+    private ArrayList<FormDefinition> mItems;
     private HashMap<String, HashMap<String, String>> mTallies;
     private Spinner mSpinner;
 
-    public BrowserListAdapter(Context context, int textViewResourceId, ArrayList<FormDefinitionDoc> items, HashMap<String, HashMap<String, String>> tallies, Spinner spinner) {
+    public BrowserListAdapter(Context context, int textViewResourceId, ArrayList<FormDefinition> items, HashMap<String, HashMap<String, String>> tallies, Spinner spinner) {
         super(context, textViewResourceId, items);
         mContext = context;
         mItems = items;           
@@ -42,7 +42,7 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDoc>
             v = vi.inflate(R.layout.browser_list_item, null);
         } 
 
-        FormDefinitionDoc f = mItems.get(position);
+        FormDefinition f = mItems.get(position);
 
         if (f != null) {
             ImageView fi = (ImageView) v.findViewById(R.id.icon);
@@ -67,8 +67,8 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDoc>
                         fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_edit));
                     
                     if (mTallies.containsKey(f.getId())) {
-                        draft    = mTallies.get(f.getId()).get(FormInstanceDoc.Status.draft.toString());
-                        complete = mTallies.get(f.getId()).get(FormInstanceDoc.Status.complete.toString());
+                        draft    = mTallies.get(f.getId()).get(FormInstance.Status.draft.toString());
+                        complete = mTallies.get(f.getId()).get(FormInstance.Status.complete.toString());
                     }
                     
                     if (draft == null) 
@@ -81,7 +81,7 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDoc>
                     break;
                     
                 case 2:
-                    draft = mTallies.get(f.getId()).get(FormInstanceDoc.Status.draft.toString());
+                    draft = mTallies.get(f.getId()).get(FormInstance.Status.draft.toString());
                     
                     if (draft == null)
                         draft = "0";
@@ -89,12 +89,12 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDoc>
                     fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked1));
                     tallies = draft + " drafts";
                     
-                    if (mTallies.get(f.getId()).get(FormInstanceDoc.Status.draft.toString()).equals("1"))
+                    if (mTallies.get(f.getId()).get(FormInstance.Status.draft.toString()).equals("1"))
                         tallies = tallies.substring(0, tallies.length() - 1);
                     break;
                     
                 case 3:
-                    complete = mTallies.get(f.getId()).get(FormInstanceDoc.Status.complete.toString());
+                    complete = mTallies.get(f.getId()).get(FormInstance.Status.complete.toString());
                     
                     if (complete == null)
                         complete = "0";
@@ -102,7 +102,7 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinitionDoc>
                     fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked3));
                     tallies = complete + " completed forms";
                     
-                    if (mTallies.get(f.getId()).get(FormInstanceDoc.Status.complete.toString()).equals("1"))
+                    if (mTallies.get(f.getId()).get(FormInstance.Status.complete.toString()).equals("1"))
                         tallies = tallies.substring(0, tallies.length() - 1);
                     break;
                 }                

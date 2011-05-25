@@ -10,14 +10,14 @@ import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinitionDoc;
+import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.utilities.TranslationSortByDefault;
 
 public final class FormWriter
 {
     private static final String t = "FormWriter: ";
     
-    private static FormDefinitionDoc mFormDoc;
+    private static FormDefinition mFormDoc;
     private static XMLTag mFormTag;
     private static String mDefaultPrefix;
     private static String mInstanceRoot;
