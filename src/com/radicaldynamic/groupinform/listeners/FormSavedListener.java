@@ -12,11 +12,16 @@
  * the License.
  */
 
-package org.odk.collect.android.listeners;
+package com.radicaldynamic.groupinform.listeners;
+
+import com.radicaldynamic.groupinform.documents.FormInstance;
 
 /**
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public interface FormSavedListener {
-    void savingComplete(int saveStatus);
+    // BEGIN custom
+//    void savingComplete(int saveStatus);
+    void savingComplete(int saveStatus, FormInstance fi);
+    // END custom
 }

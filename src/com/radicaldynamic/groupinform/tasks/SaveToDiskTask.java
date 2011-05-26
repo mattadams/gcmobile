@@ -27,7 +27,6 @@ import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.services.transport.payload.ByteArrayPayload;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.model.xform.XFormSerializingVisitor;
-import org.odk.collect.android.listeners.FormSavedListener;
 import org.odk.collect.android.logic.FormController;
 import org.odk.collect.android.utilities.FileUtils;
 
@@ -41,6 +40,7 @@ import android.webkit.MimeTypeMap;
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormInstance;
+import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 
 /**
  * Background task for loading a form.
@@ -63,6 +63,10 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     public static final int VALIDATE_ERROR = 502;
     public static final int VALIDATED = 503;
     public static final int SAVED_AND_EXIT = 504;
+    
+    // BEGIN custom
+    FormInstance mFormInstance;
+    // END custom
 
     public SaveToDiskTask(ContentResolver cr, Uri uri) {
         mContentResolver = cr;
@@ -189,7 +193,10 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 AttachmentInputStream a = new AttachmentInputStream(attachmentFilename, fis, contentType, f.length());
                 
                 Collect.getInstance().getDbService().getDb().createAttachment(instanceId, fid.getRevision(), a);
-            }        
+            }
+            
+            // Retrieve last revision object to return to form editor
+            mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + "error while attaching files to instance document " + instanceId);
             e.printStackTrace();
@@ -243,8 +250,12 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     @Override
     protected void onPostExecute(Integer result) {
         synchronized (this) {
+            // BEGIN custom
+//            if (mSavedListener != null)
+//                mSavedListener.savingComplete(result);
             if (mSavedListener != null)
-                mSavedListener.savingComplete(result);
+                mSavedListener.savingComplete(result, mFormInstance);
+            // END custom
         }
     }
 

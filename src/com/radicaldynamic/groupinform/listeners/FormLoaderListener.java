@@ -25,7 +25,7 @@ import com.radicaldynamic.groupinform.documents.FormInstance;
 public interface FormLoaderListener {
     // BEGIN custom
 //    void loadingComplete(FormController fc);
-    void loadingComplete(FormController fc, FormDefinition fdd, FormInstance fid);
+    void loadingComplete(FormController fc, FormDefinition fd, FormInstance fi);
     // END custom
     void loadingError(String errorMsg);
 }

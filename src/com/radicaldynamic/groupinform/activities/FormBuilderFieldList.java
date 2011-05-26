@@ -1,6 +1,5 @@
 package com.radicaldynamic.groupinform.activities;
 
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
@@ -8,7 +7,6 @@ import java.util.Iterator;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
-import org.odk.collect.android.listeners.FormSavedListener;
 import org.odk.collect.android.logic.FormController;
 import org.odk.collect.android.utilities.FileUtils;
 
@@ -42,6 +40,7 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
+import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 import com.radicaldynamic.groupinform.views.TouchListView;
@@ -618,7 +617,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         protected void onPostExecute(Integer result) {
             synchronized (this) {
                 if (mSavedListener != null)
-                    mSavedListener.savingComplete(result);
+                    mSavedListener.savingComplete(result, null);
             }
         }
         
@@ -664,7 +663,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     }
 
     @Override
-    public void savingComplete(int saveStatus)
+    public void savingComplete(int saveStatus, FormInstance fi)
     {
         dismissDialog(SAVING_DIALOG);
 

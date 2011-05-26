@@ -22,7 +22,6 @@ import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.model.xform.XFormsModule;
-import org.odk.collect.android.listeners.FormSavedListener;
 import org.odk.collect.android.logic.FormController;
 import org.odk.collect.android.logic.PropertyManager;
 import org.odk.collect.android.utilities.FileUtils;
@@ -73,6 +72,7 @@ import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
 import com.radicaldynamic.groupinform.documents.Generic;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
+import com.radicaldynamic.groupinform.listeners.FormSavedListener;
 import com.radicaldynamic.groupinform.tasks.FormLoaderTask;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
@@ -169,8 +169,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     
     public static final String KEY_FINISH_ACTIVITY = "finishactivity";
 
-    private FormDefinition mFormDefinitionDoc = null;
-    private FormInstance mFormInstanceDoc = null;
+    private FormDefinition mFormDefinition = null;
+    private FormInstance mFormInstance = null;
     // END custom
     
 
@@ -237,8 +237,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             mSaveToDiskTask = (SaveToDiskTask) data;
             // BEGIN custom
         } else if (data instanceof HashMap<?, ?>) {
-            mFormDefinitionDoc = (FormDefinition) ((HashMap<String, Generic>) data).get(KEY_FORM_DEFINITION);
-            mFormInstanceDoc = (FormInstance) ((HashMap<String, Generic>) data).get(KEY_FORM_INSTANCE);
+            mFormDefinition = (FormDefinition) ((HashMap<String, Generic>) data).get(KEY_FORM_DEFINITION);
+            mFormInstance = (FormInstance) ((HashMap<String, Generic>) data).get(KEY_FORM_INSTANCE);
             // END custom
         } else if (data == null) {
             if (!newForm) {
@@ -695,8 +695,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         
         // Avoid refetching documents from database by preserving them
         HashMap<String, Generic> persistentData = new HashMap<String, Generic>();
-        persistentData.put(KEY_FORM_DEFINITION, mFormDefinitionDoc);
-        persistentData.put(KEY_FORM_INSTANCE, mFormInstanceDoc);
+        persistentData.put(KEY_FORM_DEFINITION, mFormDefinition);
+        persistentData.put(KEY_FORM_INSTANCE, mFormInstance);
 
         return persistentData;
         // END custom        
@@ -1362,12 +1362,12 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 builder.setPositiveButton(getString(R.string.tf_remove), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         try {
-                            mFormInstanceDoc.setStatus(FormInstance.Status.removed);
-                            Collect.getInstance().getDbService().getDb().update(mFormInstanceDoc);
+                            mFormInstance.setStatus(FormInstance.Status.removed);
+                            Collect.getInstance().getDbService().getDb().update(mFormInstance);
                             
                             removeDialog(REMOVE_DIALOG);
                             
-                            Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mFormDefinitionDoc.getName()), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mFormDefinition.getName()), Toast.LENGTH_SHORT).show();
 
                             if (Collect.getInstance().getInstanceBrowseList().size() > 1) {
                                 browseToNextInstance(true);
@@ -1554,8 +1554,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         mFormController = fc;
                 
         // BEGIN custom
-        mFormDefinitionDoc = fdd;
-        mFormInstanceDoc = fid;
+        mFormDefinition = fdd;
+        mFormInstance = fid;
         // END custom
 
         // Set saved answer path
@@ -1583,7 +1583,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 String instanceFolder = FileUtilsExtended.INSTANCES_PATH + File.separator + fid.getId();
                 FileUtils.createFolder(instanceFolder); 
                 InstancePath = instanceFolder + File.separator + fid.getId() + ".xml";
-                mFormInstanceDoc = fid;
+                mFormInstance = fid;
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, tt + "failed to create temporary instance and/or folder");
                 e.printStackTrace();
@@ -1632,12 +1632,18 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      * Called by the FormLoaderTask if everything loads correctly.
      */
     @Override
-    public void savingComplete(int saveStatus) {
+    // BEGIN custom
+//    public void savingComplete(int saveStatus) {
+    public void savingComplete(int saveStatus, FormInstance fi) {
+    // END custom
         dismissDialog(SAVING_DIALOG);
         switch (saveStatus) {
             case SaveToDiskTask.SAVED:
                 Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok),
                     Toast.LENGTH_SHORT).show();
+                // BEGIN custom
+                mFormInstance = fi;
+                // END custom
                 break;
             case SaveToDiskTask.SAVED_AND_EXIT:
                 Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok),
@@ -1704,8 +1710,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 //        }
 //        return complete;
         
-        if (mFormInstanceDoc != null)
-            return mFormInstanceDoc.getStatus().equals(FormInstance.Status.complete);
+        if (mFormInstance != null)
+            return mFormInstance.getStatus().equals(FormInstance.Status.complete);
         else
             return false;
         // END custom
@@ -1715,14 +1721,14 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     // BEGIN custom
     private void browseToInstance(String instanceId) 
     {
-        Log.v(Collect.LOGTAG, t + ": about to browse to " + instanceId + " using form " + mFormDefinitionDoc.getId() + " with list " + Collect.getInstance().getInstanceBrowseList().toString());
+        Log.v(Collect.LOGTAG, t + ": about to browse to " + instanceId + " using form " + mFormDefinition.getId() + " with list " + Collect.getInstance().getInstanceBrowseList().toString());
         
         tidyBeforeFinish();
         finish();
         
         Intent i = new Intent(this, FormEntryActivity.class);
         i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
-        i.putExtra(FormEntryActivity.KEY_FORMPATH, mFormDefinitionDoc.getId());        
+        i.putExtra(FormEntryActivity.KEY_FORMPATH, mFormDefinition.getId());        
         i.putExtra(FormEntryActivity.KEY_INSTANCEPATH, instanceId);
         startActivity(i);
     }
@@ -1732,15 +1738,15 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     {
         String nextInstanceId;       
         
-        if (Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstanceDoc.getId()) < Collect.getInstance().getInstanceBrowseList().size() - 1) {                                                                    
-            nextInstanceId = Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstanceDoc.getId()) + 1).next();
+        if (Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstance.getId()) < Collect.getInstance().getInstanceBrowseList().size() - 1) {                                                                    
+            nextInstanceId = Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstance.getId()) + 1).next();
         } else {
             nextInstanceId = Collect.getInstance().getInstanceBrowseList().get(0);
         }
         
         // For when a user "removes" a form instance
         if (removeCurrentInstance)
-            Collect.getInstance().getInstanceBrowseList().remove(mFormInstanceDoc.getId());
+            Collect.getInstance().getInstanceBrowseList().remove(mFormInstance.getId());
         
         browseToInstance(nextInstanceId);
     }
@@ -1750,8 +1756,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     {
         String previousInstanceId;
         
-        if (Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstanceDoc.getId())).hasPrevious()) {
-            previousInstanceId = Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstanceDoc.getId())).previous();
+        if (Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstance.getId())).hasPrevious()) {
+            previousInstanceId = Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstance.getId())).previous();
         } else {
             previousInstanceId = Collect.getInstance().getInstanceBrowseList().
             get(Collect.getInstance().getInstanceBrowseList().size() - 1);
@@ -1764,13 +1770,13 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     private void tidyBeforeFinish()
     { 
         // Check to see if we need to remove the placeholder document
-        if (mFormInstanceDoc != null && mFormInstanceDoc.getStatus() == FormInstance.Status.placeholder) {
+        if (mFormInstance != null && mFormInstance.getStatus() == FormInstance.Status.placeholder) {
             try {
-                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstance.class, mFormInstanceDoc.getId());
+                mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, mFormInstance.getId());
 
-                if (mFormInstanceDoc.getStatus() == FormInstance.Status.placeholder) {
-                    Log.d(Collect.LOGTAG, t + ": removing placeholder " + mFormInstanceDoc.getId());
-                    Collect.getInstance().getDbService().getDb().delete(mFormInstanceDoc);
+                if (mFormInstance.getStatus() == FormInstance.Status.placeholder) {
+                    Log.d(Collect.LOGTAG, t + ": removing placeholder " + mFormInstance.getId());
+                    Collect.getInstance().getDbService().getDb().delete(mFormInstance);
                 }
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + ": unexpected exception while running tidyBeforeFinish()");
