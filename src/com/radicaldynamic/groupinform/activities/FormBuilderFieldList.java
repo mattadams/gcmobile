@@ -1,6 +1,8 @@
 package com.radicaldynamic.groupinform.activities;
 
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -8,6 +10,7 @@ import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
 import org.odk.collect.android.listeners.FormSavedListener;
 import org.odk.collect.android.logic.FormController;
+import org.odk.collect.android.utilities.FileUtils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -40,6 +43,7 @@ import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
 import com.radicaldynamic.groupinform.listeners.FormLoaderListener;
 import com.radicaldynamic.groupinform.tasks.SaveToDiskTask;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 import com.radicaldynamic.groupinform.views.TouchListView;
 import com.radicaldynamic.groupinform.xform.Bind;
 import com.radicaldynamic.groupinform.xform.Field;
@@ -586,10 +590,20 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             Integer result = resultCode[0];
             
             try {
+                // Save to file first so we can get md5 hash
+                byte[] xml = FormWriter.writeXml(mInstanceRoot, mInstanceRootId);
+                
+                File f = new File(FileUtilsExtended.EXTERNAL_CACHE + File.separator + mForm.getId() + ".xml");
+                FileOutputStream fos = new FileOutputStream(f);
+                fos.write(xml);
+                fos.close();                
+                                
                 // Write out XML to database
-                mForm.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(FormWriter.writeXml(mInstanceRoot, mInstanceRootId))).toString(), "text/xml"));                
-                mForm.setStatus(FormDefinition.Status.inactive);
+                mForm.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(xml)).toString(), "text/xml"));
+                mForm.setXmlHash(FileUtils.getMd5Hash(f));
+                
                 Collect.getInstance().getDbService().getDb().update(mForm);
+                f.delete();
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "failed writing XForm to XML: " + e.toString());
                 e.printStackTrace();

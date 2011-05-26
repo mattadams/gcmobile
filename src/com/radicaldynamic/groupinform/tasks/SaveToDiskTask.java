@@ -29,6 +29,7 @@ import org.javarosa.form.api.FormEntryController;
 import org.javarosa.model.xform.XFormSerializingVisitor;
 import org.odk.collect.android.listeners.FormSavedListener;
 import org.odk.collect.android.logic.FormController;
+import org.odk.collect.android.utilities.FileUtils;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -156,7 +157,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         
         try {
             FormInstance fid = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
-
+            fid.setXmlHash(FileUtils.getMd5Hash(new File(instancePath)));
             fid.getOdk().setUploadUri("submission");
 
             if (mMarkCompleted) 

@@ -25,18 +25,15 @@ import org.kxml2.kdom.Element;
 import com.couchone.libcouch.Base64Coder;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
+import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 import org.odk.collect.android.listeners.FormDownloaderListener;
 import org.odk.collect.android.logic.FormDetails;
-import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;
 import org.odk.collect.android.utilities.DocumentFetchResult;
 import org.odk.collect.android.utilities.FileUtils;
 import org.odk.collect.android.utilities.WebUtils;
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -185,7 +182,9 @@ public class DownloadFormsTask extends
                     String attachmentName = fileName;
 
                     if (fileName.equals(dl.getName())) {
-                        attachmentName = "xml";
+                        // Store a hash of the XML file for deduplication
+                        fDoc.setXmlHash(FileUtils.getMd5Hash(f));
+                        attachmentName = "xml";                        
                     }
 
                     String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
@@ -205,13 +204,15 @@ public class DownloadFormsTask extends
             } catch (SocketTimeoutException se) {
                 se.printStackTrace();
                 message += se.getMessage();
+            } catch (DuplicateXFormFile e) {
+                message = " SKIPPED (duplicate)";
             } catch (Exception e) {
                 e.printStackTrace();
                 message += e.getMessage();
             }
             count++;
             if (message.equalsIgnoreCase("")) {
-                message = "SUCCESS";
+                message = " SUCCESS";
             }
             result.put(fd.formName, message);
         }
@@ -280,6 +281,15 @@ public class DownloadFormsTask extends
 //            f = new File(c.getString(c.getColumnIndex(FormsColumns.FORM_FILE_PATH)));
 //        }
 //        c.close();
+        
+        // Don't duplicate existing (identical) XForms
+        String md5Hash = FileUtils.getMd5Hash(f);        
+        FormDefinitionRepo fdr = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());
+        List<FormDefinition> fdl = fdr.findByXmlHash(md5Hash);
+        
+        if (!fdl.isEmpty()) {
+            throw new DuplicateXFormFile();
+        }
         // END custom
 
         return f;
@@ -544,4 +554,12 @@ public class DownloadFormsTask extends
         }
     }
 
+    @SuppressWarnings("serial")
+    public class DuplicateXFormFile extends Exception
+    {
+        DuplicateXFormFile()
+        {
+            super();
+        }
+    }
 }

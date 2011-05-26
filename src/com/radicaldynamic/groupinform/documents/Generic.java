@@ -13,7 +13,6 @@ import org.ektorp.support.CouchDbDocument;
 import android.util.Log;
 
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.utilities.StringUtils;
 
 @SuppressWarnings("serial")
 public class Generic extends CouchDbDocument
@@ -125,16 +124,6 @@ public class Generic extends CouchDbDocument
     
     public void addInlineAttachment(Attachment a) {
         super.addInlineAttachment(a);
-        
-        /*
-         *  Store a hash of the Base64 encoded data whenever we attach a file.  
-         *  This will be used later on to determine the uniqueness of files.   
-         */
-        if (a.getId() == "xml") {
-            if (a.getDataBase64().length() > 0) {
-                setXmlHash(StringUtils.getMD5(a.getDataBase64()));                
-            }
-        }
     }
 
     public void setXmlHash(String hash)

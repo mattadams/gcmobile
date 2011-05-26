@@ -28,6 +28,11 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
     {
         super(FormDefinition.class, db, "FormDefinitionRepoR1");
         initStandardDesignDocument();
+    }    
+    
+    public List<FormDefinition> findByXmlHash(String xmlHash) 
+    {
+        return queryView("byXmlHash", xmlHash);
     }
 
     public List<FormDefinition> getAllByKeys(Collection<Object> keys) 

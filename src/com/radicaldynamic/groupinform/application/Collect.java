@@ -23,17 +23,13 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.SyncBasicHttpContext;
-import org.javarosa.core.reference.ReferenceManager;
-import org.javarosa.core.reference.RootTranslator;
 import org.javarosa.form.api.FormEntryController;
-import org.odk.collect.android.logic.FileReferenceFactory;
 import org.odk.collect.android.utilities.AgingCredentialsProvider;
 
 import android.app.Application;
 import android.content.Context;
 import android.os.Environment;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -70,9 +66,7 @@ public class Collect extends Application {
 	private static Collect singleton = null;
 	
 	private FormEntryController formEntryController = null;
-    private FileReferenceFactory factory = null;
     private IBinder viewToken = null;    
-    private boolean firstReferenceInitialization = true;
     
     // Service connections
     private InformCouchService couchService = null; 
@@ -182,25 +176,6 @@ public class Collect extends Application {
 		return formEntryController;
 	}	
 
-	public void registerMediaPath(String mediaPath)
-	{
-	    Log.d(LOGTAG, "Registering media path " + mediaPath);
-	    
-	    if (factory != null) {
-    		ReferenceManager._().removeReferenceFactory(factory);
-        }               
-        
-    	factory = new FileReferenceFactory(mediaPath);
-        ReferenceManager._().addReferenceFactory(factory);
-        
-    	if (firstReferenceInitialization) {
-    		firstReferenceInitialization = false;
-            ReferenceManager._().addRootTranslator(new RootTranslator("jr://images/", "jr://file/"));
-            ReferenceManager._().addRootTranslator(new RootTranslator("jr://audio/", "jr://file/"));
-            ReferenceManager._().addRootTranslator(new RootTranslator("jr://video/", "jr://file/"));
-        }
-	}
-	
     /**
      * Creates and displays a dialog displaying the violated constraint.
      */
