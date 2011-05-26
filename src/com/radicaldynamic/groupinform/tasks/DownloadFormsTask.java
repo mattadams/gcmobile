@@ -377,7 +377,7 @@ public class DownloadFormsTask extends AsyncTask<ArrayList<FormDetails>, String,
                 Collect.getInstance().getDbService().getDb().create(fDoc);
                 
                 // Remove temporary download directory
-                FileUtils.deleteFolder(dl.getParent());
+                FileUtilsExtended.deleteFolder(dl.getParent());
                 // END custom
             } catch (SocketTimeoutException se) {
                 se.printStackTrace();
@@ -421,13 +421,13 @@ public class DownloadFormsTask extends AsyncTask<ArrayList<FormDetails>, String,
         rootName = rootName.replaceAll("\\p{javaWhitespace}+", " ");
         rootName = rootName.trim();
         // BEGIN custom
-//        FileUtils.createFolder(FileUtils.FORMS_PATH);
+
 //        // proposed name of xml file...
-//        String path = FileUtils.FORMS_PATH + rootName + ".xml";
+//        String path = Collect.FORMS_PATH + "/" + rootName + ".xml";
 //        int i = 2;
 //        f = new File(path);
 //        while (f.exists()) {
-//            path = FileUtils.FORMS_PATH + rootName + "_" + i + ".xml";
+//            path = Collect.FORMS_PATH + "/" + rootName + "_" + i + ".xml";
 //            f = new File(path);
 //            i++;
 //        }

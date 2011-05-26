@@ -72,6 +72,27 @@ public final class FileUtilsExtended
     }
     
     /*
+     * Removed from ODK FileUtils but we still use it
+     */
+    public static boolean deleteFolder(String path) {
+        // not recursive
+        if (path != null && storageReady()) {
+            File dir = new File(path);
+            if (dir.exists() && dir.isDirectory()) {
+                File[] files = dir.listFiles();
+                for (File file : files) {
+                    if (!file.delete()) {
+                        Log.i(t, "Failed to delete " + file);
+                    }
+                }
+            }
+            return dir.delete();
+        } else {
+            return false;
+        }
+    }
+    
+    /*
      * Used by ImageWidget to resize a captured bitmap to equal to or less than maxWidth x maxHeight
      */
     public static Bitmap getBitmapResizedToStore(File f, int maxWidth, int maxHeight)
@@ -120,5 +141,20 @@ public final class FileUtilsExtended
             return true;
         else 
             return false;            
+    }
+    
+    /*
+     * Removed from ODK FileUtils but we still use it
+     */
+    public static boolean storageReady() {
+        String cardstatus = Environment.getExternalStorageState();
+        if (cardstatus.equals(Environment.MEDIA_REMOVED)
+                || cardstatus.equals(Environment.MEDIA_UNMOUNTABLE)
+                || cardstatus.equals(Environment.MEDIA_UNMOUNTED)
+                || cardstatus.equals(Environment.MEDIA_MOUNTED_READ_ONLY)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 }

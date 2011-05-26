@@ -179,6 +179,17 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // must be at the beginning of any activity that can be called from an external intent
+        // BEGIN custom
+//        try {
+//            Collect.createODKDirs();
+//        } catch (RuntimeException e) {
+//            createErrorDialog(e.getMessage(), EXIT);
+//            return;
+//        }
+        // END custom
+        
         setContentView(R.layout.form_entry);
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.loading_form));
 
@@ -359,7 +370,10 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                  * audio and video
                  */
                 // The intent is empty, but we know we saved the image to the temp file
-                File fi = new File(FileUtils.TMPFILE_PATH);
+                // BEGIN custom
+//                File fi = new File(Collect.TMPFILE_PATH);
+                File fi = new File(FileUtilsExtended.EXTERNAL_CACHE + File.separator + FileUtilsExtended.CAPTURED_IMAGE_FILE);
+                // END custom
 
                 String mInstanceFolder =
                     InstancePath.substring(0, InstancePath.lastIndexOf("/") + 1);
@@ -1554,7 +1568,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 //                        .format(Calendar.getInstance().getTime());
 //            String file =
 //                mFormPath.substring(mFormPath.lastIndexOf('/') + 1, mFormPath.lastIndexOf('.'));
-//            String path = FileUtils.INSTANCES_PATH + file + "_" + time;
+//            String path = Collect.INSTANCES_PATH + "/" + file + "_" + time;
 //            if (FileUtils.createFolder(path)) {
 //                InstancePath = path + "/" + file + "_" + time + ".xml";
 //            }
@@ -1768,7 +1782,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         if (InstancePath != null) {
             String instanceDir = InstancePath.substring(0, InstancePath.lastIndexOf("/"));
             Log.d(Collect.LOGTAG, t + ": removing instance directory " + instanceDir);
-            FileUtils.deleteFolder(instanceDir);
+            FileUtilsExtended.deleteFolder(instanceDir);
         }
     }
     // END custom

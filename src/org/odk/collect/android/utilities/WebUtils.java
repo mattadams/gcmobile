@@ -35,7 +35,6 @@ import com.radicaldynamic.groupinform.application.Collect;
 
 import android.text.format.DateFormat;
 
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;

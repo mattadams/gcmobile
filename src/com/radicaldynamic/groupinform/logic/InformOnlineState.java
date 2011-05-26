@@ -436,10 +436,10 @@ public class InformOnlineState
                 Collect.getInstance().stopService(new Intent(InformCouchService.class.getName()));
 
                 // Remove DB files & log files
-                if (FileUtils.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/lib/couchdb"))
+                if (FileUtilsExtended.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/lib/couchdb"))
                     FileUtils.createFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/lib/couchdb");    
 
-                if (FileUtils.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/log/couchdb"))
+                if (FileUtilsExtended.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/log/couchdb"))
                     FileUtils.createFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/log/couchdb");
             }
         } catch (RemoteException e) {

@@ -168,10 +168,9 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         String formPath = path[0];
 
         File formXml = new File(formPath);
-        String formHash = FileUtils.getMd5Hash(formXml);
-        
+        String formHash = FileUtils.getMd5Hash(formXml);        
         // BEGIN custom 
-//      File formBin = new File(FileUtils.CACHE_PATH + formHash + ".formdef");
+//      File formBin = new File(Collect.CACHE_PATH + "/" + formHash + ".formdef");
         File formBin = new File(formDefinitionFile.getParent() + File.separator + formHash + ".formdef");
         // END custom        
 
@@ -265,7 +264,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 e.printStackTrace();            
             }
             // END custom
-            importData(FormEntryActivity.InstancePath , fec);
+            importData(FormEntryActivity.InstancePath, fec);
             fd.initialize(false);
         } else {
             fd.initialize(true);
@@ -310,7 +309,6 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         formBin = null;
         formXml = null;
         formPath = null;
-
 
         FormController fc = new FormController(fec);
         data = new FECWrapper(fc);
@@ -400,31 +398,27 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
      * @param filepath path to the form file
      */
     public void serializeFormDef(FormDef fd, String filepath) {
-        // if cache folder is missing, create it.
-        if (FileUtils.createFolder(FileUtils.CACHE_PATH)) {
+        // calculate unique md5 identifier
+        String hash = FileUtils.getMd5Hash(new File(filepath));
+        // BEGIN custom
+//        File formDef = new File(Collect.CACHE_PATH + "/" + hash + ".formdef");
+        String formId = filepath.substring(filepath.lastIndexOf("/") + 1, filepath.lastIndexOf("."));
+        File formDef = new File(FileUtilsExtended.FORMS_PATH + File.separator + formId + File.separator + hash + ".formdef");
+        // END custom
 
-            // calculate unique md5 identifier
-            String hash = FileUtils.getMd5Hash(new File(filepath));
-            // BEGIN custom block
-//            File formDef = new File(FileUtils.CACHE_PATH + hash + ".formdef");            
-            String formId = filepath.substring(filepath.lastIndexOf("/") + 1, filepath.lastIndexOf("."));
-            File formDef = new File(FileUtilsExtended.FORMS_PATH + File.separator + formId + File.separator + hash + ".formdef");
-            // END custom block
-
-            // formdef does not exist, create one.
-            if (!formDef.exists()) {
-                FileOutputStream fos;
-                try {
-                    fos = new FileOutputStream(formDef);
-                    DataOutputStream dos = new DataOutputStream(fos);
-                    fd.writeExternal(dos);
-                    dos.flush();
-                    dos.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        // formdef does not exist, create one.
+        if (!formDef.exists()) {
+            FileOutputStream fos;
+            try {
+                fos = new FileOutputStream(formDef);
+                DataOutputStream dos = new DataOutputStream(fos);
+                fd.writeExternal(dos);
+                dos.flush();
+                dos.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

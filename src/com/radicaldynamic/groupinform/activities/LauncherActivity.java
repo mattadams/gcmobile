@@ -181,7 +181,7 @@ public class LauncherActivity extends Activity
         super.onCreate(savedInstanceState);
 
         // If SD card error, quit
-        if (!FileUtils.storageReady())
+        if (!FileUtilsExtended.storageReady())
             showDialog(DIALOG_EXTERNAL_STORAGE_UNAVAILABLE);
 
         Intent intent = getIntent();

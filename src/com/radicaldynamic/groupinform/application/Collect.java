@@ -1,5 +1,6 @@
 package com.radicaldynamic.groupinform.application;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import org.apache.http.client.CookieStore;
@@ -17,7 +18,7 @@ import org.odk.collect.android.utilities.AgingCredentialsProvider;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.res.Configuration;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Gravity;
@@ -37,10 +38,19 @@ import com.radicaldynamic.groupinform.xform.FormBuilderState;
 
 public class Collect extends Application {
     public final static String LOGTAG = "Inform";
+    
+    // Storage paths
+    public static final String ODK_ROOT = Environment.getExternalStorageDirectory() + "/odk";
+    public static final String FORMS_PATH = ODK_ROOT + "/forms";
+    public static final String INSTANCES_PATH = ODK_ROOT + "/instances";
+    public static final String CACHE_PATH = ODK_ROOT + "/.cache";
+    public static final String METADATA_PATH = ODK_ROOT + "/metadata";
+    public static final String TMPFILE_PATH = CACHE_PATH + "/tmp.jpg";
 	
 	// Things from upstream
     private HttpContext localContext = null;
 	private static Collect singleton = null;
+	
 	private FormEntryController formEntryController = null;
     private FileReferenceFactory factory = null;
     private IBinder viewToken = null;    
@@ -63,27 +73,49 @@ public class Collect extends Application {
     // State container for the form builder
     private FormBuilderState formBuilderState = new FormBuilderState();
 
-	/* (non-Javadoc)
-	 * @see android.app.Application#onConfigurationChanged(android.content.res.Configuration)
-	 */
-	@Override
-	public void onConfigurationChanged(Configuration newConfig) {
-		super.onConfigurationChanged(newConfig);
-	}
 
-	/* (non-Javadoc)
-	 * @see android.app.Application#onCreate()
-	 */
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		singleton = this;
-	}
-	
     public static Collect getInstance()
     {
         return singleton;
     }
+    
+
+    public static void createODKDirs() throws RuntimeException {
+        String cardstatus = Environment.getExternalStorageState();
+        if (cardstatus.equals(Environment.MEDIA_REMOVED)
+                || cardstatus.equals(Environment.MEDIA_UNMOUNTABLE)
+                || cardstatus.equals(Environment.MEDIA_UNMOUNTED)
+                || cardstatus.equals(Environment.MEDIA_MOUNTED_READ_ONLY)
+                || cardstatus.equals(Environment.MEDIA_SHARED)) {
+            RuntimeException e =
+                new RuntimeException("ODK reports :: SDCard error: "
+                        + Environment.getExternalStorageState());
+            throw e;
+        }
+
+        String[] dirs = {
+                ODK_ROOT, FORMS_PATH, INSTANCES_PATH, CACHE_PATH, METADATA_PATH
+        };
+
+        for (String dirName : dirs) {
+            File dir = new File(dirName);
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    RuntimeException e =
+                        new RuntimeException("ODK reports :: Cannot create directory: " + dirName);
+                    throw e;
+                }
+            } else {
+                if (!dir.isDirectory()) {
+                    RuntimeException e =
+                        new RuntimeException("ODK reports :: " + dirName
+                                + " exists, but is not a directory");
+                    throw e;
+                }
+            }
+        }
+    }
+    
     
     public synchronized HttpContext getHttpContext() {
         if (localContext == null) {
@@ -101,7 +133,15 @@ public class Collect extends Application {
         }
         return localContext;
     }
+    
+    
+    @Override
+    public void onCreate() {
+        singleton = this;
+        super.onCreate();        
+    }
 
+    
 	public void setFormEntryController(FormEntryController formEntryController) 
 	{
 		this.formEntryController = formEntryController;

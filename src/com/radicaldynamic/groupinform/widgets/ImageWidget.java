@@ -100,8 +100,12 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
 
                 // if this gets modified, the onActivityResult in
                 // FormEntyActivity will also need to be updated.
+                // BEGIN custom
+//                i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,
+//                    Uri.fromFile(new File(Collect.TMPFILE_PATH)));
                 i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,
-                    Uri.fromFile(new File(FileUtils.TMPFILE_PATH)));
+                        Uri.fromFile(new File(FileUtilsExtended.EXTERNAL_CACHE + File.separator + FileUtilsExtended.CAPTURED_IMAGE_FILE)));
+                // END custom
                 ((Activity) getContext())
                         .startActivityForResult(i, FormEntryActivity.IMAGE_CAPTURE);
                 mWaitingForData = true;

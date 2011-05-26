@@ -3,8 +3,7 @@ package com.radicaldynamic.groupinform.documents;
 import com.radicaldynamic.groupinform.logic.ODKInstanceAttributes;
 
 public class FormInstance extends Generic
-{    
-    private static final String t = "FormInstanceDoc: ";
+{
     private static final long serialVersionUID = -2924171490521236262L;
 
     /*
