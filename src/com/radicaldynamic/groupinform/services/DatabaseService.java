@@ -41,6 +41,7 @@ import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.database.InformCouchDbConnector;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 
 /**
@@ -402,7 +403,7 @@ public class DatabaseService extends Service {
             }
             
             Log.d(Collect.LOGTAG, tt + "opening database " + db);
-            mLocalDbConnector = new StdCouchDbConnector("db_" + db, mLocalDbInstance);
+            mLocalDbConnector = new InformCouchDbConnector("db_" + db, mLocalDbInstance);
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, tt + "while opening DB " + db + ": " + e.toString());
             throw new DbUnavailableException();
@@ -415,7 +416,7 @@ public class DatabaseService extends Service {
         
         try {
             Log.d(Collect.LOGTAG, tt + "opening database " + db);
-            mRemoteDbConnector = new StdCouchDbConnector("db_" + db, mRemoteDbInstance);
+            mRemoteDbConnector = new InformCouchDbConnector("db_" + db, mRemoteDbInstance);
             
             /* 
              * This should trigger any 401:Unauthorized errors when connecting to a remote DB

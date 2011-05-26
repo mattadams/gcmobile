@@ -21,16 +21,13 @@ public class Generic extends CouchDbDocument
     private static final String t = "GenericDocument: ";
 
     public static final String DATETIME = "yyyy/MM/dd HH:mm:ss Z"; 
-    
-    private Integer authoredBy;
-    private Integer updatedBy;
-    
+   
+    private String createdBy;
+    private String updatedBy;
     private String dateCreated;
     private String dateUpdated;
     
     private String type;
-    
-    private Integer documentVersion;
     
     /*
      * TODO: possibly remove?
@@ -57,22 +54,22 @@ public class Generic extends CouchDbDocument
         return formatter.format(calendar.getTime());       
     }
     
-    public void setAuthoredBy(Integer author) {
-        this.authoredBy = author;
-    }    
-    
-    public Integer getAuthoredBy() {
-        return authoredBy;
-    }    
-    
-    public void setUpdatedBy(Integer author) {
-        this.updatedBy = author;
-    }    
-    
-    public Integer getUpdatedBy() {
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public String getUpdatedBy() {
         return updatedBy;
     }
-    
+
     public void setDateCreated(String dateCreated) {
         this.dateCreated = dateCreated;
     }
@@ -148,15 +145,5 @@ public class Generic extends CouchDbDocument
     public String getXmlHash()
     {
         return xmlHash;
-    }
-
-    public void setDocumentVersion(Integer documentVersion)
-    {
-        this.documentVersion = documentVersion;
-    }
-
-    public Integer getDocumentVersion()
-    {
-        return documentVersion;
     }
 }

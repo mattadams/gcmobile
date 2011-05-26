@@ -810,7 +810,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     {
         String[] items = {
                 getString(R.string.do_not_save),
-                getString(R.string.quit_entry), 
+                getString(R.string.keep_changes), 
                 getString(R.string.do_not_exit)
         };
     

@@ -124,7 +124,15 @@ the License.
 
     <activity 
         android:label="@string/app_name"
-        android:name=".activities.FormHierarchyActivity" />
+        android:name=".activities.FormHierarchyActivity" />        
+                        
+    <activity 
+        android:label="@string/app_name" 
+        android:name=".activities.InstanceUploaderList" />
+        
+    <activity 
+        android:label="@string/app_name"
+        android:name=".activities.InstanceUploaderActivity" />                 
         
     <activity 
         android:configChanges="orientation" 
@@ -193,15 +201,7 @@ the License.
     <activity 
         android:label="@string/app_name"
         android:name="org.odk.collect.android.activities.GeoPointMapActivity" />
-                
-    <activity 
-        android:label="@string/app_name" 
-        android:name="org.odk.collect.android.activities.InstanceUploaderList" />
-        
-    <activity 
-        android:label="@string/app_name"
-        android:name="org.odk.collect.android.activities.InstanceUploaderActivity" /> 
-                
+
     <activity 
         android:label="@string/app_name"
         android:name="org.odk.collect.android.preferences.PreferencesActivity" /> 
