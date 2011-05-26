@@ -415,7 +415,7 @@ public class AccountDeviceActivity extends Activity
                 
                 // Update successful
                 if (result.equals(InformOnlineState.OK)) {  
-                    Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();                    
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_saved_data), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
                     new File(getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).setLastModified(0);
@@ -468,13 +468,13 @@ public class AccountDeviceActivity extends Activity
     {
         String[] items = {
                 getString(R.string.do_not_save),
-                getString(R.string.tf_save_and_exit), 
+                getString(R.string.keep_changes), 
                 getString(R.string.tf_abort_exit)
         };
     
         mAlertDialog = new AlertDialog.Builder(this)
             .setIcon(R.drawable.ic_dialog_alert)
-            .setTitle(getString(R.string.quit_application))
+            .setTitle(getString(R.string.quit_application, "Without Saving?"))
             .setItems(items,
                 new DialogInterface.OnClickListener() {
                     @Override

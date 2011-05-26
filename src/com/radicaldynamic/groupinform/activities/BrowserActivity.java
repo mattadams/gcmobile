@@ -1006,23 +1006,24 @@ public class BrowserActivity extends ListActivity
                     showDialog(DIALOG_FOLDER_UNAVAILABLE);
                 }
             } else {
-                if (status == FormInstance.Status.nothing) {
-                    // Provide hints to user
-                    if (documents.isEmpty()) {
-                        TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-                        nothingToDisplay.setVisibility(View.VISIBLE);
-                    } else {
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
-                    }
+                // Provide hints to user
+                if (documents.isEmpty()) {
+                    TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+                    nothingToDisplay.setVisibility(View.VISIBLE);
                 } else {
                     Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
                     String descriptor = s1.getSelectedItem().toString().toLowerCase();
 
-                    // Provide hints to user
-                    if (documents.isEmpty()) {
-                        TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-                        nothingToDisplay.setVisibility(View.VISIBLE);
-                    } else {
+                    switch (s1.getSelectedItemPosition()) {
+                    case 0:
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
+                        break;
+                    case 1:
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_SHORT).show();
+                        break;
+                    case 2:
+                    case 3:
+                    case 4:
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
                     }
                 }

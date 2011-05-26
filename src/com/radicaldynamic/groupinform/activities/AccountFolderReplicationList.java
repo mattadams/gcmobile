@@ -243,7 +243,7 @@ public class AccountFolderReplicationList extends ListActivity
                 
                 // Update successful
                 if (result.equals(InformOnlineState.OK)) {  
-                    Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();                    
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_saved_data), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
                     new File(getCacheDir(), FileUtilsExtended.FOLDER_CACHE_FILE).setLastModified(0);
@@ -278,7 +278,7 @@ public class AccountFolderReplicationList extends ListActivity
     
         mAlertDialog = new AlertDialog.Builder(this)
             .setIcon(R.drawable.ic_dialog_alert)
-            .setTitle(getString(R.string.quit_application))
+            .setTitle(getString(R.string.quit_application, "Without Saving?"))
             .setItems(items,
                 new DialogInterface.OnClickListener() {
                     @Override

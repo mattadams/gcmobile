@@ -279,6 +279,7 @@
 	<string name="tf_do_you_have_an_account_msg">If you have registered another device or have been told to use Inform by someone else then you probably have an account.\n\nDo you have an account?</string>
 	<string name="tf_edit">Edit</string>
 	<string name="tf_edit_folder">Edit Folder</string>
+	<string name="tf_edit_form_definition_hint">Select list item to edit form template</string>
 	<string name="tf_edit_list_item">Edit List Item</string>
 	<string name="tf_editing">Editing</string>
 	<string name="tf_element_barcode">Barcode reader</string>
@@ -320,7 +321,7 @@
 	<string name="tf_folder_unavailable">Folder Unavailable</string>
 	<string name="tf_folder_updated">%s updated</string>
 	<string name="tf_form_builder_load_error">Problem Loading Form</string>
-    <string name="tf_form_builder_exit">Close Form Editor?</string>
+	<string name="tf_form_builder_exit">Close Form Editor?</string>
 	<string name="tf_form_folders">Folders</string>
 	<string name="tf_form_name">Form Name</string>
 	<string name="tf_form_name_required">Form name required</string>
@@ -427,6 +428,7 @@
 	<string name="tf_resetting_please_wait">Resetting...</string>
 	<string name="tf_retry">Retry</string>
 	<string name="tf_save_and_exit">Save and exit</string>
+	<string name="tf_saved_data">Saved!</string>
 	<string name="tf_saving_please_wait">Saving...</string>
 	<string name="tf_select_folders_for_offline_use">Select folders for offline use</string>
 	<string name="tf_select_multiple_type">Select multiple</string>
