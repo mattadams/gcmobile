@@ -31,13 +31,15 @@ import android.os.Parcelable;
 import com.radicaldynamic.groupinform.R;
 
 /**
+ * Allows the user to create desktop shortcuts to any form currently avaiable to Collect
+ * 
  * @author ctsims
  * @author carlhartung (modified for ODK)
  */
 public class AndroidShortcuts extends Activity {
 
-    Uri[] commands;
-    String[] names;
+    private Uri[] mCommands;
+    private String[] mNames;
 
 
     @Override
@@ -54,15 +56,16 @@ public class AndroidShortcuts extends Activity {
     }
 
 
+    /**
+     * Builds a list of shortcuts
+     */
     private void buildMenuList() {
         ArrayList<String> names = new ArrayList<String>();
         ArrayList<Uri> commands = new ArrayList<Uri>();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
         builder.setTitle("Select ODK Shortcut");
 
-        
         Cursor c = getContentResolver().query(FormsColumns.CONTENT_URI, null, null, null, null);
         startManagingCursor(c);
 
@@ -71,18 +74,19 @@ public class AndroidShortcuts extends Activity {
             while (c.moveToNext()) {
                 String formName = c.getString(c.getColumnIndex(FormsColumns.DISPLAY_NAME));
                 names.add(formName);
-                Uri uri = Uri.withAppendedPath(FormsColumns.CONTENT_URI, c.getString(c.getColumnIndex(FormsColumns._ID)));
+                Uri uri =
+                    Uri.withAppendedPath(FormsColumns.CONTENT_URI,
+                        c.getString(c.getColumnIndex(FormsColumns._ID)));
                 commands.add(uri);
             }
         }
 
-        this.names = names.toArray(new String[0]);
-        this.commands = commands.toArray(new Uri[0]);
+        mNames = names.toArray(new String[0]);
+        mCommands = commands.toArray(new Uri[0]);
 
-        builder.setItems(this.names, new DialogInterface.OnClickListener() {
+        builder.setItems(this.mNames, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
-                returnShortcut(AndroidShortcuts.this.names[item],
-                    AndroidShortcuts.this.commands[item]);
+                returnShortcut(mNames[item], mCommands[item]);
             }
         });
 
@@ -101,7 +105,7 @@ public class AndroidShortcuts extends Activity {
 
 
     /**
-     * 
+     * Returns the results to the calling intent.
      */
     private void returnShortcut(String name, Uri command) {
         Intent shortcutIntent = new Intent(Intent.ACTION_VIEW);
@@ -122,5 +126,5 @@ public class AndroidShortcuts extends Activity {
         finish();
         return;
     }
-        
+
 }

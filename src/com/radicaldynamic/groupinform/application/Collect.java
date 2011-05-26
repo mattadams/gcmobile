@@ -1,3 +1,16 @@
+/*
+ * Copyright (C) 2011 University of Washington
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.radicaldynamic.groupinform.application;
 
 import java.io.File;
@@ -36,6 +49,11 @@ import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.xform.FormBuilderState;
 
+/**
+ * Extends the Application class to implement 
+ * @author carlhartung
+ *
+ */
 public class Collect extends Application {
     public final static String LOGTAG = "Inform";
     
@@ -80,6 +98,10 @@ public class Collect extends Application {
     }
     
 
+    /**
+     * Creates required directories on the SDCard (or other external storage)
+     * @throws RuntimeException if there is no SDCard or the directory exists as a non directory
+     */
     public static void createODKDirs() throws RuntimeException {
         String cardstatus = Environment.getExternalStorageState();
         if (cardstatus.equals(Environment.MEDIA_REMOVED)
@@ -117,6 +139,10 @@ public class Collect extends Application {
     }
     
     
+    /**
+     * Shared HttpContext so a user doesn't have to re-enter login information
+     * @return
+     */
     public synchronized HttpContext getHttpContext() {
         if (localContext == null) {
             // set up one context for all HTTP requests so that authentication
@@ -127,7 +153,7 @@ public class Collect extends Application {
             CookieStore cookieStore = new BasicCookieStore();
             localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
 
-            // and establish a credentials provider...
+            // and establish a credentials provider.  Default is 7 minutes.
             CredentialsProvider credsProvider = new AgingCredentialsProvider(7 * 60 * 1000);
             localContext.setAttribute(ClientContext.CREDS_PROVIDER, credsProvider);
         }
@@ -135,6 +161,10 @@ public class Collect extends Application {
     }
     
     
+    /*
+     * (non-Javadoc)
+     * @see android.app.Application#onCreate()
+     */
     @Override
     public void onCreate() {
         singleton = this;
