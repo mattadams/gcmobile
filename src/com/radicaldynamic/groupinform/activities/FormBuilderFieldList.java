@@ -816,7 +816,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     
         mAlertDialog = new AlertDialog.Builder(this)
             .setIcon(R.drawable.ic_dialog_alert)
-            .setTitle(getString(R.string.quit_application))
+            .setTitle(getString(R.string.tf_form_builder_exit))
             .setItems(items,
                 new DialogInterface.OnClickListener() {
                     @Override

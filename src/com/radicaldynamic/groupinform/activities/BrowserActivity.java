@@ -310,35 +310,41 @@ public class BrowserActivity extends ListActivity
             builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {                
                     FormDefinition form = new FormDefinition();
-                    form.setName(inputNewFormName.getText().toString());
+                    form.setName(inputNewFormName.getText().toString().trim());
                     form.setStatus(FormDefinition.Status.temporary);
-        
-                    // Create a new form document and use an XForm template as the "xml" attachment
-                    try {
-                        InputStream is = getResources().openRawResource(R.raw.xform_template);
-        
-                        // Set up variables to receive data
-                        ByteArrayOutputStream data = new ByteArrayOutputStream();
-                        byte[] inputbuf = new byte[8192];            
-                        int inputlen;
-        
-                        while ((inputlen = is.read(inputbuf)) > 0) {
-                            data.write(inputbuf, 0, inputlen);
-                        }
+                    
+                    if (form.getName().length() == 0) {
+                        removeDialog(DIALOG_CREATE_FORM);
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_required), Toast.LENGTH_LONG).show();                        
+                        showDialog(DIALOG_CREATE_FORM);
+                    } else {                        
+                        // Create a new form document and use an XForm template as the "xml" attachment
+                        try {
+                            InputStream is = getResources().openRawResource(R.raw.xform_template);
+            
+                            // Set up variables to receive data
+                            ByteArrayOutputStream data = new ByteArrayOutputStream();
+                            byte[] inputbuf = new byte[8192];            
+                            int inputlen;
+            
+                            while ((inputlen = is.read(inputbuf)) > 0) {
+                                data.write(inputbuf, 0, inputlen);
+                            }
 
-                        form.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data.toByteArray())).toString(), "text/xml"));
-                        Collect.getInstance().getDbService().getDb().create(form);
-                        
-                        is.close();
-                        data.close();
-                        
-                        // Launch the form builder with the NEWFORM option set to true
-                        Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
-                        i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
-                        startActivity(i);
-                    } catch (Exception e) {
-                        Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
-                        e.printStackTrace();
+                            form.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data.toByteArray())).toString(), "text/xml"));
+                            Collect.getInstance().getDbService().getDb().create(form);
+                            
+                            is.close();
+                            data.close();
+                            
+                            // Launch the form builder with the NEWFORM option set to true
+                            Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
+                            i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
+                            startActivity(i);
+                        } catch (Exception e) {
+                            Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
+                            e.printStackTrace();
+                        }                        
                     }
                 }
             });

@@ -320,6 +320,7 @@
 	<string name="tf_folder_unavailable">Folder Unavailable</string>
 	<string name="tf_folder_updated">%s updated</string>
 	<string name="tf_form_builder_load_error">Problem Loading Form</string>
+    <string name="tf_form_builder_exit">Close Form Editor?</string>
 	<string name="tf_form_folders">Folders</string>
 	<string name="tf_form_name">Form Name</string>
 	<string name="tf_form_name_required">Form name required</string>
