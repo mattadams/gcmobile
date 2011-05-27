@@ -159,6 +159,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     private static final int REMOVE_DIALOG = 3;
     
     private static final int MENU_REMOVE = Menu.FIRST + 4;
+    private static final int MENU_INFO = Menu.FIRST + 5;
     
     // See onRetainNonConfigurationInstance()
     private static final String KEY_FORM_DEFINITION = "formdefinition";
@@ -533,10 +534,15 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         menu.removeItem(MENU_SAVE);
         // BEGIN custom
         menu.removeItem(MENU_REMOVE);
+        menu.removeItem(MENU_INFO);
         // END custom
 
         menu.add(0, MENU_SAVE, 0, R.string.save_all_answers).setIcon(
             android.R.drawable.ic_menu_save);
+        // BEGIN custom
+        menu.add(0, MENU_INFO, 0, R.string.tf_form_details).setIcon(
+                android.R.drawable.ic_menu_info_details);        
+        // END custom
         menu.add(0, MENU_DELETE_REPEAT, 0, getString(R.string.delete_repeat))
                 .setIcon(R.drawable.ic_menu_clear_playlist)
                 .setEnabled(mFormController.indexContainsRepeatableGroup() ? true : false);

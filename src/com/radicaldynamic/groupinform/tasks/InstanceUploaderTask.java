@@ -24,10 +24,20 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.protocol.HttpContext;
+import org.ektorp.Attachment;
+import org.ektorp.AttachmentInputStream;
+import org.ektorp.DbAccessException;
+import org.ektorp.DocumentNotFoundException;
+
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.documents.FormInstance;
+import com.radicaldynamic.groupinform.documents.Generic;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
+
 import org.odk.collect.android.listeners.InstanceUploaderListener;
 import org.odk.collect.android.preferences.PreferencesActivity;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+import org.odk.collect.android.utilities.FileUtils;
 import org.odk.collect.android.utilities.WebUtils;
 
 import android.content.SharedPreferences;
@@ -38,6 +48,7 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -49,6 +60,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.Map.Entry;
 
 /**
  * Background task for uploading completed forms.
@@ -71,14 +84,16 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
     protected HashMap<String, String> doInBackground(String... values) {
         HashMap<String, String> results = new HashMap<String, String>();
 
-        String selection = InstanceColumns.INSTANCE_FILE_PATH + "=?";
-        String[] selectionArgs = new String[values.length];
-        for (int i = 0; i < values.length; i++) {
-            if (i != values.length - 1) {
-                selection += " or " + InstanceColumns.INSTANCE_FILE_PATH + "=?";
-            }
-            selectionArgs[i] = values[i];
-        }
+        // BEGIN custom
+//        String selection = InstanceColumns.INSTANCE_FILE_PATH + "=?";
+//        String[] selectionArgs = new String[values.length];
+//        for (int i = 0; i < values.length; i++) {
+//            if (i != values.length - 1) {
+//                selection += " or " + InstanceColumns.INSTANCE_FILE_PATH + "=?";
+//            }
+//            selectionArgs[i] = values[i];
+//        }        
+        // END custom
 
         // get shared HttpContext so that authentication and cookies are retained.
         HttpContext localContext = Collect.getInstance().getHttpContext();
@@ -86,25 +101,52 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
 
         Map<URI, URI> uriRemap = new HashMap<URI, URI>();
 
-        Cursor c =
-            Collect.getInstance().getContentResolver()
-                    .query(InstanceColumns.CONTENT_URI, null, selection, selectionArgs, null);
-
-        // TODO: Should run a contentResolver().update() on all the error cases
-        if (c.getCount() > 0) {
-            c.moveToPosition(-1);
-            next_submission: while (c.moveToNext()) {
-                publishProgress(c.getPosition() + 1, c.getCount());
-                String instance = c.getString(c.getColumnIndex(InstanceColumns.INSTANCE_FILE_PATH));
-
-                // TODO: This needs to pull from the other preferences, too.
-                String urlString = c.getString(c.getColumnIndex(InstanceColumns.SUBMISSION_URI));
+        // BEGIN custom        
+//      Cursor c =
+//      Collect.getInstance().getContentResolver()
+//              .query(InstanceColumns.CONTENT_URI, null, selection, selectionArgs, null);
+//
+//  // TODO: Should run a contentResolver().update() on all the error cases
+//  if (c.getCount() > 0) {
+//      c.moveToPosition(-1);
+//      next_submission: while (c.moveToNext()) {
+//          publishProgress(c.getPosition() + 1, c.getCount());
+//          String instance = c.getString(c.getColumnIndex(InstanceColumns.INSTANCE_FILE_PATH));
+//
+//          // TODO: This needs to pull from the other preferences, too.
+//          String urlString = c.getString(c.getColumnIndex(InstanceColumns.SUBMISSION_URI));
+        
+            next_submission: for (int i = 0; i < values.length; i++) {
+                publishProgress(i + 1, values.length);
+                
+                FormInstance instanceDoc = null;
+                String instance = values[i];
+                
+                try {
+                    instanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instance);
+                } catch (DocumentNotFoundException e) {
+                    Log.w(Collect.LOGTAG, t + "unable to retrieve instance: " + e.toString());
+                    results.put(instance, fail + "warning: document not found :: details: " + e.getMessage());
+                    continue;
+                } catch (DbAccessException e) {
+                    Log.w(Collect.LOGTAG, t + "unable to access database: " + e.toString());
+                    results.put(instance, fail + "error: could not acess database :: details: " + e.getMessage());
+                    continue;
+                } catch (Exception e) {                    
+                    Log.e(Collect.LOGTAG, t + "unexpected exception: " + e.toString());                    
+                    e.printStackTrace();
+                    results.put(instance, fail + "unexpected error :: details: " + e.getMessage());
+                    continue;
+                }
+                
+                String urlString = instanceDoc.getOdk().getUploadUri();
+                // END custom
+                
                 if (urlString == null) {
                     SharedPreferences settings =
                         PreferenceManager.getDefaultSharedPreferences(Collect.getInstance());
                     urlString = settings.getString(PreferencesActivity.KEY_SERVER_URL, null);
                     urlString = urlString + "/submission";
-
                 }
 
                 URI u = null;
@@ -217,9 +259,56 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 // authenticated publication to the server.
                 //
                 // publishProgress(i, instanceCount);
+                
+                // BEGIN custom                
+                String uploadFolder = FileUtilsExtended.ODK_UPLOAD_PATH + File.separator + UUID.randomUUID();
+                FileUtils.createFolder(uploadFolder);
+                
+                try {                    
+                    HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instanceDoc.getAttachments();
+                    
+                    // Download files from database
+                    for (Entry<String, Attachment> entry : attachments.entrySet()) {                    
+                        String key = entry.getKey();
+
+                        AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instance, key);
+
+                        // ODK code below expects the XML instance to have a .xml extension
+                        if (key.equals("xml")) 
+                            key = instance + ".xml";
+
+                        FileOutputStream file = new FileOutputStream(new File(uploadFolder, key));
+                        byte[] buffer = new byte[8192];
+                        int bytesRead = 0;                    
+
+                        while ((bytesRead = ais.read(buffer)) != -1) {
+                            file.write(buffer, 0, bytesRead);
+                        }
+
+                        ais.close();
+                        file.close();
+                    }
+                } catch (DocumentNotFoundException e) {
+                    Log.w(Collect.LOGTAG, t + "unable to retrieve attachment: " + e.toString());
+                    results.put(instance, fail + "warning: attachment not found :: details: " + e.getMessage());
+                    continue;
+                } catch (DbAccessException e) {
+                    Log.w(Collect.LOGTAG, t + "unable to access database: " + e.toString());
+                    results.put(instance, fail + "error: could not acess database :: details: " + e.getMessage());
+                    continue;
+                } catch (Exception e) {                    
+                    Log.e(Collect.LOGTAG, t + "unexpected exception: " + e.toString());                    
+                    e.printStackTrace();
+                    results.put(instance, fail + "unexpected error :: details: " + e.getMessage());
+                    continue;
+                }
+                // END custom
 
                 // get instance file
-                File instanceFile = new File(instance);
+                // BEGIN custom
+//                File instanceFile = new File(instance);
+                File instanceFile = new File(uploadFolder, instance + ".xml");
+                // END custom
 
                 if (!instanceFile.exists()) {
                     results.put(instance, fail + "instance XML file does not exist!");
@@ -404,13 +493,27 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 // TODO: Should update.
                 results.put(instance, "SUCCESS!");
 
+                // BEGIN custom
+                instanceDoc.getOdk().setUploadDate(Generic.generateTimestamp());
+                
+                try {
+                    Collect.getInstance().getDbService().getDb().update(instanceDoc);    
+                } catch (Exception e) {
+                    Log.e(Collect.LOGTAG, t + "unable to setUploadDate of successful upload: " + e.toString());
+                    e.printStackTrace();
+                } finally {
+                    FileUtilsExtended.deleteFolder(uploadFolder);
+                }
+                // END custom
             }
-            if (c != null) {
-                c.close();
-            }
-
-        } // end while
-
+            // BEGIN custom
+//            if (c != null) {
+//                c.close();
+//            }
+//
+//        } // end while
+            // END custom
+        
         return results;
 
     }

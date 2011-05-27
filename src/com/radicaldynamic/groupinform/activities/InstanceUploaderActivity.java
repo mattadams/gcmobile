@@ -34,6 +34,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
+import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,13 +76,20 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
 
         // get instances to upload
         Intent intent = getIntent();
-        long[] selectedInstanceIDs = intent.getLongArrayExtra(FormEntryActivity.KEY_INSTANCES);
-        if (selectedInstanceIDs.length == 0) {
+        // BEGIN custom
+//        long[] selectedInstanceIDs = intent.getLongArrayExtra(FormEntryActivity.KEY_INSTANCES);
+//        if (selectedInstanceIDs.length == 0) {
+//            // nothing to upload
+//            //TODO:  toast and quit?
+//            return;
+//        }
+        
+        toSend = intent.getStringArrayListExtra(FormEntryActivity.KEY_INSTANCES);
+        if (toSend == null) {
             // nothing to upload
-            //TODO:  toast and quit?
             return;
         }
-
+        // END custom
 
         // get the task if we've changed orientations. If it's null it's a new upload.
         mInstanceUploaderTask = (InstanceUploaderTask) getLastNonConfigurationInstance();
@@ -90,28 +98,30 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
             showDialog(PROGRESS_DIALOG);
             mInstanceUploaderTask = new InstanceUploaderTask();
 
-            String selection = InstanceColumns._ID + "=?";
-            String[] selectionArgs = new String[selectedInstanceIDs.length];
-            for (int i = 0; i < selectedInstanceIDs.length; i++) {
-                selectionArgs[i] = new Long(selectedInstanceIDs[i]).toString();
-                if (i != selectedInstanceIDs.length - 1) {
-                    selection += " or " + InstanceColumns._ID + "=?";
-                }
-            }
-
-            String[] instances = new String[selectedInstanceIDs.length];
-            Cursor c =
-                managedQuery(InstanceColumns.CONTENT_URI, null, selection, selectionArgs, null);
-            if (c.getCount() > 0) {
-                c.moveToPosition(-1);
-                while (c.moveToNext()) {
-                    instances[c.getPosition()] =
-                        c.getString(c.getColumnIndex(InstanceColumns.INSTANCE_FILE_PATH));
-                }
-                mInstanceUploaderTask.execute(instances);
-            }
-            toSend = new ArrayList<String>(Arrays.asList(instances));
-
+            // BEGIN custom
+//            String selection = InstanceColumns._ID + "=?";
+//            String[] selectionArgs = new String[selectedInstanceIDs.length];
+//            for (int i = 0; i < selectedInstanceIDs.length; i++) {
+//                selectionArgs[i] = new Long(selectedInstanceIDs[i]).toString();
+//                if (i != selectedInstanceIDs.length - 1) {
+//                    selection += " or " + InstanceColumns._ID + "=?";
+//                }
+//            }
+//
+//            String[] instances = new String[selectedInstanceIDs.length];
+//            Cursor c =
+//                managedQuery(InstanceColumns.CONTENT_URI, null, selection, selectionArgs, null);
+//            if (c.getCount() > 0) {
+//                c.moveToPosition(-1);
+//                while (c.moveToNext()) {
+//                    instances[c.getPosition()] =
+//                        c.getString(c.getColumnIndex(InstanceColumns.INSTANCE_FILE_PATH));
+//                }
+//                mInstanceUploaderTask.execute(instances);
+//            }
+//            toSend = new ArrayList<String>(Arrays.asList(instances));
+            String [] instances = toSend.toArray(new String[toSend.size()]);
+            mInstanceUploaderTask.execute(instances);
         }
     }
 

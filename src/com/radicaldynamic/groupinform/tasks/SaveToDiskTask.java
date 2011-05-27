@@ -162,7 +162,8 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         try {
             FormInstance fid = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
             fid.setXmlHash(FileUtils.getMd5Hash(new File(instancePath)));
-            fid.getOdk().setUploadUri("submission");
+            // Not really sure what this is doing here
+//            fid.getOdk().setUploadUri("submission");
 
             if (mMarkCompleted) 
                 fid.setStatus(FormInstance.Status.complete);

@@ -21,7 +21,7 @@ public class FormInstanceRepo extends CouchDbRepositorySupport<FormInstance>
     
     public List<FormInstance> findByFormId(String formId) 
     {
-        return queryView("by_formId", formId);
+        return queryView("byFormId", formId);
     }
 
     /*

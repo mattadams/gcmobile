@@ -97,10 +97,10 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
         return results;
     }
     
-    public Map<String, List<String>> getFormsByAggregateReadiness() 
+    public Map<String, List<String>> getByAggregateReadiness() 
     {
         Map<String, List<String>> results = new HashMap<String, List<String>>();
-        ViewResult r = db.queryView(createQuery("by_instance_aggregate_readiness"));
+        ViewResult r = db.queryView(createQuery("byAggregateReadiness"));
         List<Row> rows = r.getRows();
         
         for(Row record : rows) {
