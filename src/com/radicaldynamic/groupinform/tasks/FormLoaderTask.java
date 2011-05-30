@@ -221,15 +221,15 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         fec = new FormEntryController(fem);
 
         // import existing data into formdef
-        if (FormEntryActivity.InstancePath != null) {
+        if (FormEntryActivity.mInstancePath != null) {
             // This order is important. Import data, then initialize.
             // BEGIN custom
             try {
-                String instanceId = FormEntryActivity.InstancePath.substring(FormEntryActivity.InstancePath.lastIndexOf("/") + 1, FormEntryActivity.InstancePath.lastIndexOf("."));
+                String instanceId = FormEntryActivity.mInstancePath.substring(FormEntryActivity.mInstancePath.lastIndexOf("/") + 1, FormEntryActivity.mInstancePath.lastIndexOf("."));
                 
                 Log.d(Collect.LOGTAG, t + ": retrieving form instance document " + instanceId);
                 
-                String instanceFolder = FormEntryActivity.InstancePath.substring(0, FormEntryActivity.InstancePath.lastIndexOf("/")); 
+                String instanceFolder = FormEntryActivity.mInstancePath.substring(0, FormEntryActivity.mInstancePath.lastIndexOf("/")); 
                 FileUtils.createFolder(instanceFolder);
                 
                 mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
@@ -243,7 +243,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                     AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, key);
                     
                     if (key.equals("xml")) {
-                        file = new FileOutputStream(FormEntryActivity.InstancePath);
+                        file = new FileOutputStream(FormEntryActivity.mInstancePath);
                     } else {
                         file = new FileOutputStream(instanceFolder + File.separator + key);
                     }
@@ -264,7 +264,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 e.printStackTrace();            
             }
             // END custom
-            importData(FormEntryActivity.InstancePath, fec);
+            importData(FormEntryActivity.mInstancePath, fec);
             fd.initialize(false);
         } else {
             fd.initialize(true);

@@ -86,7 +86,7 @@ public class FormHierarchyActivity extends ListActivity {
         mLoadedAutomatically = intent.getBooleanExtra(KEY_AUTOLOAD, false);
         
         if (Collect.getInstance().getInstanceBrowseList().size() > 1) {            
-            String instanceId = FormEntryActivity.InstancePath.substring(FormEntryActivity.InstancePath.lastIndexOf("/") + 1, FormEntryActivity.InstancePath.lastIndexOf("."));
+            String instanceId = FormEntryActivity.mInstancePath.substring(FormEntryActivity.mInstancePath.lastIndexOf("/") + 1, FormEntryActivity.mInstancePath.lastIndexOf("."));
             
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             RelativeLayout rl = (RelativeLayout) findViewById(R.id.rl);                        
@@ -409,11 +409,6 @@ public class FormHierarchyActivity extends ListActivity {
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see android.app.Activity#onKeyDown(int, android.view.KeyEvent)
-     */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
