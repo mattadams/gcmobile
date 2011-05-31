@@ -23,6 +23,7 @@ import org.javarosa.xform.parse.XFormParser;
 import org.kxml2.kdom.Element;
 
 import com.couchone.libcouch.Base64Coder;
+import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
@@ -213,7 +214,7 @@ public class DownloadFormsTask extends
             }
             count++;
             if (message.equalsIgnoreCase("")) {
-                message = " SUCCESS";
+                message = Collect.getInstance().getString(R.string.success);
             }
             result.put(fd.formName, message);
         }
@@ -232,7 +233,6 @@ public class DownloadFormsTask extends
      * @throws Exception
      */
     private File downloadXform(String formName, String url) throws Exception {
-
         File f = null;
 
         // clean up friendly form name...
@@ -333,10 +333,10 @@ public class DownloadFormsTask extends
 
             if (statusCode != 200) {
                 String errMsg =
-                    "fetch file failed; " + f.getAbsolutePath()
-                            + response.getStatusLine().getReasonPhrase() + " (" + statusCode + ")";
-                Log.e(t, "Fetch of " + f.getAbsolutePath() + " failed: "
-                        + response.getStatusLine().getReasonPhrase() + " (" + statusCode + ")");
+                    Collect.getInstance()
+                            .getString(R.string.file_fetch_failed, f.getAbsolutePath(),
+                                response.getStatusLine().getReasonPhrase(), statusCode);
+                Log.e(t, errMsg);
                 throw new Exception(errMsg);
             }
 
@@ -392,8 +392,8 @@ public class DownloadFormsTask extends
         if (fd.manifestUrl == null)
             return null;
 
-        publishProgress(fd.formName + " getting manifest ", Integer.valueOf(count).toString(),
-            Integer.valueOf(total).toString());
+        publishProgress(Collect.getInstance().getString(R.string.fetching_manifest, fd.formName),
+            Integer.valueOf(count).toString(), Integer.valueOf(total).toString());
 
         List<MediaFile> files = new ArrayList<MediaFile>();
         // get shared HttpContext so that authentication and cookies are retained.
@@ -408,25 +408,27 @@ public class DownloadFormsTask extends
             return result.errorMessage;
         }
 
-        String errMessage =
-        // app.getString(R.string.fetch_manifest_failed_no_detail)
-        // + app.getString(R.string.while_accessing)
-            "manifest failed no detail 1 " + "while accessing " + fd.manifestUrl;
+        String errMessage = Collect.getInstance().getString(R.string.access_error, fd.manifestUrl);
 
         if (!result.isOpenRosaResponse) {
-            Log.e(t, "Manifest reply doesn't report an OpenRosa version -- bad server?");
+            errMessage += Collect.getInstance().getString(R.string.manifest_server_error);
+            Log.e(t, errMessage);
             return errMessage;
         }
 
         // Attempt OpenRosa 1.0 parsing
         Element manifestElement = result.doc.getRootElement();
         if (!manifestElement.getName().equals("manifest")) {
-            Log.e(t, "Root element is not <manifest> -- was " + manifestElement.getName());
+            errMessage +=
+                Collect.getInstance().getString(R.string.root_element_error,
+                    manifestElement.getName());
+            Log.e(t, errMessage);
             return errMessage;
         }
         String namespace = manifestElement.getNamespace();
         if (!isXformsManifestNamespacedElement(manifestElement)) {
-            Log.e(t, "Root element Namespace is incorrect: " + namespace);
+            errMessage += Collect.getInstance().getString(R.string.root_namespace_error, namespace);
+            Log.e(t, errMessage);
             return errMessage;
         }
         int nElements = manifestElement.getChildCount();
@@ -476,8 +478,10 @@ public class DownloadFormsTask extends
                     }
                 }
                 if (filename == null || downloadUrl == null || hash == null) {
-                    Log.e(t, "Manifest entry " + Integer.toString(i)
-                            + " is missing one or more tags: filename, hash, or downloadUrl");
+                    errMessage +=
+                        Collect.getInstance().getString(R.string.manifest_tag_error,
+                            Integer.toString(i));
+                    Log.e(t, errMessage);
                     return errMessage;
                 }
                 files.add(new MediaFile(filename, hash, downloadUrl));
@@ -495,9 +499,10 @@ public class DownloadFormsTask extends
                     return "cancelled";
                 }
                 ++mediaCount;
-                publishProgress(fd.formName + "getting media files count: " + mediaCount
-                        + " and size " + files.size(), Integer.valueOf(count).toString(), Integer
-                        .valueOf(total).toString());
+                publishProgress(
+                    Collect.getInstance().getString(R.string.form_download_progress, fd.formName,
+                        mediaCount, files.size()), Integer.valueOf(count).toString(), Integer
+                            .valueOf(total).toString());
                 try {
                     File mediaFile = new File(mediaDir, toDownload.filename);
 
