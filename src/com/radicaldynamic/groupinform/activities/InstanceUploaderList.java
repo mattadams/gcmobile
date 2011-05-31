@@ -327,7 +327,7 @@ public class InstanceUploaderList extends ListActivity {
             
             if (!mInstances.isEmpty()) {
                 try {
-                    documents = (ArrayList<FormDefinition>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(mInstances.keySet()));            
+                    documents = (ArrayList<FormDefinition>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAllActiveByKeys(new ArrayList<Object>(mInstances.keySet()));            
                     DocumentUtils.sortByName(documents);
                 } catch (ClassCastException e) {
                     // TODO: is there a better way to handle empty lists?

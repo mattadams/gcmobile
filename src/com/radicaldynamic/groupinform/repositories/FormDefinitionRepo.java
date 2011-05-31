@@ -44,14 +44,17 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
 
     public List<FormDefinition> getAllByKeys(Collection<Object> keys) 
     {
-        List<FormDefinition> forms = db.queryView(createQuery("all").keys(keys).includeDocs(true), FormDefinition.class);
-        return forms;
+        return db.queryView(createQuery("all").keys(keys).includeDocs(true), FormDefinition.class);
+    }    
+    
+    public List<FormDefinition> getAllActive()
+    {        
+        return db.queryView(createQuery("allActive").includeDocs(true), FormDefinition.class);
     }
     
     public List<FormDefinition> getAllActiveByKeys(Collection<Object> keys) 
     {
-        List<FormDefinition> forms = db.queryView(createQuery("allActive").keys(keys).includeDocs(true), FormDefinition.class);
-        return forms;
+        return db.queryView(createQuery("allActive").keys(keys).includeDocs(true), FormDefinition.class);
     }
     
     public HashMap<String, HashMap<String, String>> getFormsByInstanceStatus(FormInstance.Status status) 

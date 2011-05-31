@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 	<item android:id="@+id/copy"   android:title="@string/tf_copy_to_folder" />
-	<item android:id="@+id/remove" android:title="@string/tf_remove" android:enabled="false" />
+	<item android:id="@+id/remove" android:title="@string/tf_remove" />
 	<item android:id="@+id/rename" android:title="@string/tf_rename" />
 </menu>

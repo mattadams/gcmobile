@@ -410,7 +410,8 @@
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_remind">Remind</string>
 	<string name="tf_remind_later">Remind Later</string>
-	<string name="tf_reminder_sent">Reminder sent to the account owner</string>	   
+	<string name="tf_reminder_sent">Reminder sent to the account owner</string>
+	<string name="tf_removal">Removal</string>
 	<string name="tf_removal_failed">Could not remove %s: group contains fields.\n\nRemove the inner fields first.</string>
 	<string name="tf_remove">Remove</string>	
 	<string name="tf_remove_device">Remove Profile</string>
@@ -418,6 +419,8 @@
 	<string name="tf_remove_folder">Remove Folder</string>
 	<string name="tf_remove_folder_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! All form templates, drafts and completed forms contained in this folder will be lost upon removal.\n\nIf you need any of this information export it before removing this folder.</string>
 	<string name="tf_remove_form">Remove Form</string>
+	<string name="tf_remove_form_with_instances_dialog_msg">The form \"%s\" has data associated with it.  If you remove it the associated data will become unavailable.\n\nDo you wish to proceed?</string>
+	<string name="tf_remove_form_without_instances_dialog_msg">Do you wish to remove the form template \"%s?\"</string>
 	<string name="tf_removed_with_param">Removed \"%s\"</string>
 	<string name="tf_removing_please_wait">Removing...</string>
 	<string name="tf_rename">Rename</string>

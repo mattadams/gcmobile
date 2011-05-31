@@ -143,6 +143,7 @@ public class BrowserActivity extends ListActivity
     
     private CopyToFolderTask mCopyToFolderTask;
     private RefreshViewTask mRefreshViewTask;
+    private RemoveTask mRemoveTask;
     private RenameTask mRenameTask;
     private UpdateFolderTask mUpdateFolderTask;
     
@@ -625,6 +626,36 @@ public class BrowserActivity extends ListActivity
             break;
             
         case DIALOG_REMOVE_FORM:
+            String removeFormMessage = getString(R.string.tf_remove_form_without_instances_dialog_msg, mFormDefinition.getName());
+            
+            try {
+                // Determine if draft or complete instances exist for this definition
+                if (new FormInstanceRepo(Collect.getInstance().getDbService().getDb()).findByFormId(mFormDefinition.getId()).size() > 0) {
+                    removeFormMessage = getString(R.string.tf_remove_form_with_instances_dialog_msg, mFormDefinition.getName());
+                }
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unexpected exception while processing DIALOG_REMOVE_FORM");
+                e.printStackTrace();
+            }
+            
+            builder
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle(R.string.tf_remove_form)
+            .setMessage(removeFormMessage);
+
+            builder.setPositiveButton(getString(R.string.tf_remove), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {                    
+                    removeDialog(DIALOG_REMOVE_FORM);
+                    mRemoveTask = new RemoveTask();
+                    mRemoveTask.execute(mFormDefinition);
+                }
+            });
+            
+            builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_REMOVE_FORM);
+                }
+            });
             
             mDialog = builder.create();
             break;
@@ -1074,9 +1105,15 @@ public class BrowserActivity extends ListActivity
         protected FormInstance.Status doInBackground(FormInstance.Status... status)
         {
             try {
-                FormDefinitionRepo formDefinitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());                
-                tallies = formDefinitionRepo.getFormsByInstanceStatus(status[0]);
-                documents = (ArrayList<FormDefinition>) formDefinitionRepo.getAllActiveByKeys(new ArrayList<Object>(tallies.keySet()));                    
+                FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());                
+                tallies = repo.getFormsByInstanceStatus(status[0]);
+                
+                if (status[0].equals(FormInstance.Status.any)) {
+                    documents = (ArrayList<FormDefinition>) repo.getAllActive();
+                } else {
+                    documents = (ArrayList<FormDefinition>) repo.getAllActiveByKeys(new ArrayList<Object>(tallies.keySet()));    
+                }
+                
                 DocumentUtils.sortByName(documents);
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
@@ -1161,6 +1198,54 @@ public class BrowserActivity extends ListActivity
             }
 
             setProgressVisibility(false);
+        }
+    }
+    
+    private class RemoveTask extends AsyncTask<Object, Void, Void>
+    {
+        FormDefinition formDefinition;
+        ProgressDialog progressDialog;
+        boolean removed = false;   
+        
+        @Override
+        protected Void doInBackground(Object... params)
+        {
+            formDefinition = (FormDefinition) params[0];
+            formDefinition.setStatus(FormDefinition.Status.removed);
+            
+            try {
+                Collect.getInstance().getDbService().getDb().update(formDefinition);
+                removed = true;
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unexpected exception");
+                e.printStackTrace();
+            }
+            
+            return null;
+        }
+    
+        @Override
+        protected void onPreExecute()
+        {
+            progressDialog = new ProgressDialog(BrowserActivity.this);
+            progressDialog.setMessage(getString(R.string.tf_removing_please_wait));  
+            progressDialog.show();
+        }
+    
+        @Override
+        protected void onPostExecute(Void nothing)
+        {   
+            progressDialog.cancel();
+            
+            // TODO
+            if (removed) {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_something_was_successful, getString(R.string.tf_removal)), Toast.LENGTH_SHORT).show();
+            } else {
+                // Unspecified failure
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_something_failed, getString(R.string.tf_removal)), Toast.LENGTH_LONG).show();                
+            }   
+                        
+            loadScreen();
         }
     }
     
@@ -1561,11 +1646,11 @@ public class BrowserActivity extends ListActivity
             case 1:
                 mRefreshViewTask.execute(FormInstance.Status.any);
                 break;
-                // Show all draft forms
+            // Show all draft forms
             case 2:
                 mRefreshViewTask.execute(FormInstance.Status.draft);
                 break;
-                // Show all completed forms
+            // Show all completed forms
             case 3:
                 mRefreshViewTask.execute(FormInstance.Status.complete);
                 break;
