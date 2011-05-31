@@ -80,6 +80,7 @@ public class Collect extends Application {
     private InformDependencies informDependencies = new InformDependencies();
 
     // Instance browse list, used for switching between instances of a given form
+    // TODO: move to FormEntryActivity (no point in this being global)
     private ArrayList<String> instanceBrowseList = new ArrayList<String>();
 
     // State container for the form builder

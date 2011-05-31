@@ -178,7 +178,7 @@ public class ClientInformationActivity extends Activity
             .setCancelable(false)
             .setIcon(R.drawable.ic_dialog_alert)
             .setMessage(R.string.tf_reset_incomplete_msg)
-            .setTitle(R.string.tf_reset_incomplete)            
+            .setTitle(getString(R.string.tf_something_failed, R.string.tf_reset))            
             .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     dialog.cancel();

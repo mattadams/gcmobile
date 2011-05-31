@@ -84,7 +84,7 @@ public class InformDependencies
             String depKey = it.next();
             
             if (getDependencies().get(depKey) == 0) {
-                Log.v(Collect.LOGTAG, t + "next dependency is " + depKey);
+//                Log.v(Collect.LOGTAG, t + "next dependency is " + depKey);
                 return depKey;
             }
         }
@@ -158,9 +158,9 @@ public class InformDependencies
         while (pkgAppsListIterator.hasNext()) {
             ResolveInfo ri = pkgAppsListIterator.next();
             
-            Log.v(Collect.LOGTAG, t 
-                    + "activity name: " + ri.activityInfo.name 
-                    + ", package name: " + ri.activityInfo.packageName);
+//            Log.v(Collect.LOGTAG, t 
+//                    + "activity name: " + ri.activityInfo.name 
+//                    + ", package name: " + ri.activityInfo.packageName);
             
             if (getDependencies().containsKey(ri.activityInfo.packageName)) {
                 Log.d(Collect.LOGTAG, t + "detected dependancy " + ri.activityInfo.packageName);

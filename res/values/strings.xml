@@ -239,8 +239,6 @@
 	<string name="tf_continue">Continue</string>
 	<string name="tf_copy">Copy</string>
 	<string name="tf_copy_as">Copy As</string>
-	<string name="tf_copy_failed">Copy failed! Please try again</string>
-	<string name="tf_copy_successful">Copy successful</string>
 	<string name="tf_copy_to_folder">Copy to Folder</string>
 	<string name="tf_copying_please_wait">Copying...</string>
 	<string name="tf_copying_with_param">Copying %s...</string>
@@ -414,6 +412,9 @@
 	<string name="tf_removed_with_param">Removed \"%s\"</string>
 	<string name="tf_removing_please_wait">Removing...</string>
 	<string name="tf_rename">Rename</string>
+	<string name="tf_rename_form_dialog">Rename Form</string>
+	<string name="tf_renaming_please_wait">Renaming...</string>
+	<string name="tf_renaming_with_param">Renaming %s...</string>
 	<string name="tf_repeated_group">repeated group</string>
 	<string name="tf_repeated_group_type">Repeated group of fields</string>
 	<string name="tf_replication_list">Synchronization</string>
@@ -426,7 +427,6 @@
 	<string name="tf_reset_complete">Reset Complete</string>
 	<string name="tf_reset_complete_msg">Inform has been successfully reset.\n\nAll data created by Inform has been removed from this device.</string>	
 	<string name="tf_reset_incomplete_msg">We were unable to reset this device. This is probably due to a problem communicating with Inform servers.\n\nPlease make sure that your device has Internet access and try again.</string>
-	<string name="tf_reset_incomplete">Reset Failed</string>
 	<string name="tf_reset_warning_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all Inform data stored on this device and cause this device to forget its device registration. This will not uninstall the Inform app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to Inform.\n\nIf you need to access the data associated with this device after resetting you must reactivate this device profile by using the current licence number, key and device PIN.\n\nDevice profiles may be reactivated during the device registration process.</string>
 	<string name="tf_reset_warning_admin_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all Inform data stored on this device and cause this device to forget its device registration. This will not uninstall the Inform app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to Inform.\n\nThis device profile may be reactivated by using the current licence number, key and device PIN during the registration process.</string>
 	<string name="tf_reset_with_param">Reset %s</string>
@@ -439,7 +439,9 @@
 	<string name="tf_select_multiple_type">Select multiple</string>
 	<string name="tf_select_single_type">Select one</string>
 	<string name="tf_select_task">Select Task</string>
-	<string name="tf_server_settings">Server settings</string>   
+	<string name="tf_server_settings">Server settings</string>
+	<string name="tf_something_failed">%s failed!  Please try again.</string>
+	<string name="tf_something_was_successful">%s successful</string>
 	<string name="tf_supply_account_details">Supply Account Details</string>
 	<string name="tf_synchronize">Synchronize</string>
 	<string name="tf_synchronized_folders">Synchronized Folders</string>
@@ -452,6 +454,8 @@
 	<string name="tf_translate_hint">Translate Description</string>
 	<string name="tf_translate_label">Translate Label</string>
 	<string name="tf_unable_to_connect">Unable To Connect</string>
+	<string name="tf_unable_to_copy">Unable To Copy</string>
+	<string name="tf_unable_to_copy_duplicate_dialog_msg">The folder \"%1$s\" already contains a form named \"%2$s.\"\n\nPlease choose another name.</string>
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
@@ -477,6 +481,8 @@
 	<string name="tf_unable_to_remove_language_dialog">Cannot Remove Language</string>
 	<string name="tf_unable_to_remove_language_dialog_msg">Before removing support for this language you must remove all of its translations by editing the affected fields and using the label &amp; description translation screens.</string>
 	<string name="tf_unable_to_remove_self">You cannot remove yourself!</string>
+	<string name="tf_unable_to_rename_dialog">Unable To Rename</string>
+	<string name="tf_unable_to_rename_dialog_msg">This folder already contains a form named \"%s.\"\n\nPlease choose another name.</string>
 	<string name="tf_unable_to_reset_self">Cannot reset this device from here</string>
 	<string name="tf_unable_to_save_empty_translation">Please provide a translation</string>
 	<string name="tf_unable_to_update_folder">Unable to update %s</string>

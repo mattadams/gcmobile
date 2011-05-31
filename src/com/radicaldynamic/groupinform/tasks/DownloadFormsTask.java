@@ -174,6 +174,7 @@ public class DownloadFormsTask extends
                 fDoc.setUiVersion(formInfo.get(FileUtils.UI));
                 fDoc.setJavaRosaId(formInfo.get(FileUtils.FORMID));
                 fDoc.setSubmissionUri(formInfo.get(FileUtils.SUBMISSIONURI));
+                fDoc.setStatus(FormDefinition.Status.active);
 
                 File[] allFiles = dl.getParentFile().listFiles();
 

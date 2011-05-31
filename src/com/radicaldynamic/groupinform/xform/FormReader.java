@@ -58,7 +58,7 @@ public class FormReader
         // Initialize new forms
         if (newForm) {
             // This might now be rigorous enough for i18n input
-            String formName = Collect.getInstance().getFormBuilderState().getFormDefDoc().getName(); 
+            String formName = Collect.getInstance().getFormBuilderState().getFormDefinition().getName(); 
             String instanceRoot = formName.replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9]", "");
             String instanceRootId = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
             
@@ -90,6 +90,8 @@ public class FormReader
         
         Log.d(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
         Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
+        
+        parseForm();
     }
     
     public ArrayList<Bind> getBinds()
@@ -130,7 +132,7 @@ public class FormReader
     /*
      * Trigger method for doing all of the actual work
      */
-    public void parseForm()
+    private void parseForm()
     {
         if (mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix)) {
             Log.d(Collect.LOGTAG, t + "parsing itext form translations...");

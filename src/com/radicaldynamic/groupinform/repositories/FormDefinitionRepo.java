@@ -28,8 +28,15 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
     {
         super(FormDefinition.class, db, "FormDefinitionRepoR1");
         initStandardDesignDocument();
-    }    
+    }
     
+    // For deuplication (when copying)
+    public List<FormDefinition> findByName(String name) 
+    {
+        return queryView("byName", name);
+    }
+    
+    // For deduplication (when importing from ODK Aggregate)
     public List<FormDefinition> findByXmlHash(String xmlHash) 
     {
         return queryView("byXmlHash", xmlHash);
@@ -41,10 +48,16 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
         return forms;
     }
     
+    public List<FormDefinition> getAllActiveByKeys(Collection<Object> keys) 
+    {
+        List<FormDefinition> forms = db.queryView(createQuery("allActive").keys(keys).includeDocs(true), FormDefinition.class);
+        return forms;
+    }
+    
     public HashMap<String, HashMap<String, String>> getFormsByInstanceStatus(FormInstance.Status status) 
     {
         HashMap<String, HashMap<String, String>> results = new HashMap<String, HashMap<String, String>>();
-        ViewResult r = db.queryView(createQuery("by_instance_status").group(true));        
+        ViewResult r = db.queryView(createQuery("byInstanceStatus").group(true));        
         List<Row> rows = r.getRows();
         
         for(Row record : rows) {
@@ -55,41 +68,15 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
                  * Document ID:     key.getString(0)
                  * Status category: key.getString(1)
                  */                
-                if (status.toString().equals(key.getString(1))) {
-                    if (!results.containsKey(key.getString(0)))
+                if (status.equals(FormInstance.Status.any) || status.toString().equals(key.getString(1))) {
+                    if (!results.containsKey(key.getString(0))) {
                         results.put(key.getString(0), new HashMap<String, String>());
+                    }
                     
                     results.get(key.getString(0)).put(key.getString(1), record.getValue());
                 }
             } catch (JSONException e) {
                 Log.e(Collect.LOGTAG, t + "failed to parse complex key in getFormsByInstanceStatus, key: " + record.getKey() + ", value: " + record.getValue());
-                e.printStackTrace();
-            }
-        }
-        
-        return results;
-    }
-    
-    public HashMap<String, HashMap<String, String>> getFormsWithInstanceCounts()
-    {
-        HashMap<String, HashMap<String, String>> results = new HashMap<String, HashMap<String, String>>();
-        ViewResult r = db.queryView(createQuery("by_instance_status").group(true));        
-        List<Row> rows = r.getRows();
-        
-        for(Row record : rows) {
-            try {
-                JSONArray key = (JSONArray) new JSONTokener(record.getKey()).nextValue();
-
-                /*
-                 * Document ID:     key.getString(0)
-                 * Status category: key.getString(1)
-                 */                
-                if (!results.containsKey(key.getString(0)))
-                    results.put(key.getString(0), new HashMap<String, String>());
-                
-                results.get(key.getString(0)).put(key.getString(1), record.getValue());
-            } catch (JSONException e) {
-                Log.e(Collect.LOGTAG, t + "failed to parse complex key in getFormsAsInstanceCount, key: " + record.getKey() + ", value: " + record.getValue());
                 e.printStackTrace();
             }
         }

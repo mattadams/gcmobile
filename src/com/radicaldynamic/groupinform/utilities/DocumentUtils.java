@@ -9,7 +9,7 @@ import com.radicaldynamic.groupinform.documents.FormDefinition;
 public class DocumentUtils
 {
     /*
-     * Sort a list of documents alphabetically by name
+     * Sort a list of form definition documents alphabetically by name
      */
     public static <T> void sortByName(ArrayList<T> documents) {        
         Collections.sort(documents, new Comparator<T>() {

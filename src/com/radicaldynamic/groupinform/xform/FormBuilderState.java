@@ -12,9 +12,10 @@ import com.radicaldynamic.groupinform.documents.FormDefinition;
  */
 public class FormBuilderState 
 {
-    private FormDefinition  formDefDoc  = null;         // The form definition document from the DB for reference
-    private Field                   field       = null;         // For passing a form "field" between activities
-    private Field                   item        = null;         // For passing a select list item to the translation screen
+    private FormDefinition formDefinition = null;   // The form definition document from the DB for reference
+    
+    private Field field = null;     // For passing a form "field" between activities
+    private Field item  = null;     // For passing a select list item to the translation screen
     
     private ArrayList<Bind>         binds           = null;
     private ArrayList<Field>        fields          = null;
@@ -23,14 +24,14 @@ public class FormBuilderState
     
     public FormBuilderState() { }
 
+    public void setFormDefinition(FormDefinition formDefinition) { this.formDefinition = formDefinition; }
+    public FormDefinition getFormDefinition() { return formDefinition; }
+
     public void setField(Field field) { this.field = field; }
     public Field getField() { return field; }
     
     public void setItem(Field item) { this.item = item; }
     public Field getItem() { return item; }
-
-    public void setFormDefDoc(FormDefinition formDefDoc) { this.formDefDoc = formDefDoc; }
-    public FormDefinition getFormDefDoc() { return formDefDoc; }
 
     public void setBinds(ArrayList<Bind> binds) { this.binds = binds; }
     public ArrayList<Bind> getBinds() { return binds; }

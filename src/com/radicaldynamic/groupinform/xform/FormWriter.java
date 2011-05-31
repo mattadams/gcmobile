@@ -10,20 +10,20 @@ import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.utilities.TranslationSortByDefault;
 
 public final class FormWriter
 {
     private static final String t = "FormWriter: ";
     
-    private static FormDefinition mFormDoc;
+    public static final String CONTENT_TYPE = "text/xml";
+    
     private static XMLTag mFormTag;
     private static String mDefaultPrefix;
     private static String mInstanceRoot;
     private static String mInstanceRootId;
     
-    public static byte[] writeXml(String instanceRoot, String instanceRootId)
+    public static byte[] writeXml(String headTitle, String instanceRoot, String instanceRootId)
     {
         // Retrieve and load a template XForm file (this makes it easier than hardcoding a new one from scratch)
         InputStream xis = Collect.getInstance().getResources().openRawResource(R.raw.xform_template);        
@@ -34,17 +34,19 @@ public final class FormWriter
         mInstanceRootId = instanceRootId;
         
         // Insert the title of this form into the XML
-        mFormDoc = Collect.getInstance().getFormBuilderState().getFormDefDoc();
-        mFormTag.gotoRoot().gotoTag("h:head/h:title").setText(FieldText.encodeXMLEntities(mFormDoc.getName()));
+        mFormTag.gotoRoot().gotoTag("h:head/h:title").setText(FieldText.encodeXMLEntities(headTitle));
         
         // Either write out translations or remove the unused itext tag
         if (Collect.getInstance().getFormBuilderState().getTranslations().size() > 0) {
-            if (!mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix))
+            if (!mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix)) {
                 mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).addTag(mDefaultPrefix + ":itext");
+            }
+            
             writeTranslations(null);
         } else {
-            if (mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix))
+            if (mFormTag.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix)) {
                 mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:itext", mDefaultPrefix).delete();
+            }
         }
         
         writeInstance(null);        

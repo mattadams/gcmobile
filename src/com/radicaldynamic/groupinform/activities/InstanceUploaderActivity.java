@@ -16,7 +16,6 @@ package com.radicaldynamic.groupinform.activities;
 
 import com.radicaldynamic.groupinform.R;
 import org.odk.collect.android.listeners.InstanceUploaderListener;
-import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
 import org.odk.collect.android.utilities.WebUtils;
 
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
@@ -28,16 +27,13 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
-import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;

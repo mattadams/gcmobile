@@ -296,7 +296,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             } else if (data == null) {
                 // Load important bits of the form definition from memory
                 mFieldState = Collect.getInstance().getFormBuilderState().getFields();
-                mForm = Collect.getInstance().getFormBuilderState().getFormDefDoc();
+                mForm = Collect.getInstance().getFormBuilderState().getFormDefinition();
                 
                 refreshView();
             }          
@@ -515,16 +515,13 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             
             try {
                 mForm = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, formId);
-                Collect.getInstance().getFormBuilderState().setFormDefDoc(mForm);
+                Collect.getInstance().getFormBuilderState().setFormDefinition(mForm);
                 Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
                 
                 Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
                 AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
                 mFormReader = new FormReader(ais);
-                
                 ais.close();
-                
-                mFormReader.parseForm();
                 
                 mFieldState = mFormReader.getFields();
                 mInstanceRoot = mFormReader.getInstanceRoot();
@@ -543,7 +540,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         }
         
         @Override
-        protected void onPostExecute(Void nothing) {
+        protected void onPostExecute(Void nothing) 
+        {
             synchronized (this) {
                 if (mStateListener != null) {
                     if (mError == null) {
@@ -555,7 +553,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             }
         }
         
-        public void setFormLoaderListener(FormLoaderListener sl) {
+        public void setFormLoaderListener(FormLoaderListener sl) 
+        {
             synchronized (this) {
                 mStateListener = sl;
             }
@@ -590,7 +589,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             
             try {
                 // Save to file first so we can get md5 hash
-                byte[] xml = FormWriter.writeXml(mInstanceRoot, mInstanceRootId);
+                String name = Collect.getInstance().getFormBuilderState().getFormDefinition().getName();
+                byte[] xml = FormWriter.writeXml(name, mInstanceRoot, mInstanceRootId);
                 
                 File f = new File(FileUtilsExtended.EXTERNAL_CACHE + File.separator + mForm.getId() + ".xml");
                 FileOutputStream fos = new FileOutputStream(f);
@@ -598,7 +598,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 fos.close();                
                                 
                 // Write out XML to database
-                mForm.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(xml)).toString(), "text/xml"));
+                mForm.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(xml)).toString(), FormWriter.CONTENT_TYPE));
+                mForm.setStatus(FormDefinition.Status.active);
                 mForm.setXmlHash(FileUtils.getMd5Hash(f));
                 
                 Collect.getInstance().getDbService().getDb().update(mForm);

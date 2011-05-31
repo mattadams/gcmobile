@@ -7,14 +7,13 @@ public class FormInstance extends Generic
     private static final long serialVersionUID = -2924171490521236262L;
 
     /*
+     * Any:         Not an actual status (represents queries for forms without regard for instance status, e.g., give me everything)
      * Placeholder: Created when a new instance is created for entry (may be deleted if instance entry is cancelled before being saved)
      * Draft:       A form instance that is saved but not marked complete (same as ODK "incomplete" status)
      * Complete:    A form instance that is saved and marked complete
-     * Updated:     Not an actual status (represents forms that have been updated/created by others)
      * Removed:     A form instance marked for delayed deletion
-     * Nothing:     Not an actual status (represents queries for forms without regard for instance status)
      */
-    public static enum Status { placeholder, draft, complete, updated, removed, nothing };
+    public static enum Status { any, draft, complete, placeholder, removed };
 
     private String formId;
     private ODKInstanceAttributes odk;

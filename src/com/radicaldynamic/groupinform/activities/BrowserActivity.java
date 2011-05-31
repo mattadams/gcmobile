@@ -15,18 +15,22 @@
 package com.radicaldynamic.groupinform.activities;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
 import org.ektorp.DbAccessException;
 import org.ektorp.DocumentNotFoundException;
 import org.ektorp.ReplicationStatus;
+import org.odk.collect.android.utilities.FileUtils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -77,6 +81,9 @@ import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
 import com.radicaldynamic.groupinform.repositories.FormInstanceRepo;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
+import com.radicaldynamic.groupinform.xform.FormReader;
+import com.radicaldynamic.groupinform.xform.FormWriter;
 
 /**
  * Responsible for displaying buttons to launch the major activities. Launches
@@ -101,8 +108,12 @@ public class BrowserActivity extends ListActivity
     private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 8;    
     private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 9;
     private static final int DIALOG_ONLINE_STATE_CHANGING = 10;
-    private static final int DIALOG_TOGGLE_ONLINE_STATE = 11;
-    private static final int DIALOG_UPDATING_FOLDER = 12;
+    private static final int DIALOG_REMOVE_FORM = 11;
+    private static final int DIALOG_RENAME_FORM = 12;
+    private static final int DIALOG_TOGGLE_ONLINE_STATE = 13;
+    private static final int DIALOG_UNABLE_TO_COPY_DUPLICATE = 14;
+    private static final int DIALOG_UNABLE_TO_RENAME_DUPLICATE = 15;
+    private static final int DIALOG_UPDATING_FOLDER = 16;
     
     // Keys for option menu items
     private static final int MENU_OPTION_REFRESH = 0;
@@ -122,17 +133,21 @@ public class BrowserActivity extends ListActivity
     private static final int RESULT_ABOUT_INFORM = 1;
     private static final int RESULT_COPY_TO_FOLDER = 2;    
 
-    private FormDefinition mFormDefinitionDoc;    // Stash for a selected form definition
+    private FormDefinition mFormDefinition;     // Stash for a selected form definition
     
     private String mCopyToFolderId;             // Data passed back from user selection on AccountFolderList
     private String mCopyToFolderName;           // Same
-    private String mDialogMessage;              // Custom message consumed by onCreateDialog()
+    private String mCopyToFolderAs;             // Used to pass to DIALOG_UNABLE_TO_COPY_DUPLICATE
     private String mSelectedDatabase;           // To save & restore the currently selected database
     private boolean mSpinnerInit = false;       // See s1...OnItemSelectedListener() where this is used in a horrid workaround
     
     private CopyToFolderTask mCopyToFolderTask;
     private RefreshViewTask mRefreshViewTask;
+    private RenameTask mRenameTask;
     private UpdateFolderTask mUpdateFolderTask;
+    
+    private Dialog mDialog;
+    private String mDialogMessage;              // Custom message consumed by onCreateDialog()
 
     @SuppressWarnings("unchecked")
     @Override
@@ -170,7 +185,7 @@ public class BrowserActivity extends ListActivity
             Object data = getLastNonConfigurationInstance();
             
             if (data instanceof HashMap<?, ?>) {
-                mFormDefinitionDoc = (FormDefinition) ((HashMap<String, Generic>) data).get(KEY_FORM_DEFINITION);
+                mFormDefinition = (FormDefinition) ((HashMap<String, Generic>) data).get(KEY_FORM_DEFINITION);
             }
         }
 
@@ -263,16 +278,20 @@ public class BrowserActivity extends ListActivity
         
         switch (item.getItemId()) {
         case R.id.copy:            
-            mFormDefinitionDoc = form;            
+            mFormDefinition = form;            
             i = new Intent(this, AccountFolderList.class);
             i.putExtra(AccountFolderList.KEY_COPY_TO_FOLDER, true);
             startActivityForResult(i, RESULT_COPY_TO_FOLDER);
             return true;
             
         case R.id.remove:
+            mFormDefinition = form;
+            showDialog(DIALOG_REMOVE_FORM);
             return true;
             
         case R.id.rename:
+            mFormDefinition = form;
+            showDialog(DIALOG_RENAME_FORM);
             return true;    
             
         default:
@@ -291,17 +310,17 @@ public class BrowserActivity extends ListActivity
     public Dialog onCreateDialog(int id)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        Dialog dialog = null;
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);        
         View view = null;
+        mDialog = null;
         
         switch (id) {
         // User wishes to make a new form
         case DIALOG_CREATE_FORM:
-            view = inflater.inflate(R.layout.dialog_create_form, null);
+            view = inflater.inflate(R.layout.dialog_create_or_rename_form, null);
             
             // Set an EditText view to get user input 
-            final EditText inputNewFormName = (EditText) view.findViewById(R.id.formName);
+            final EditText newFormName = (EditText) view.findViewById(R.id.formName);
             
             builder.setView(view);
             builder.setInverseBackgroundForced(true);
@@ -310,7 +329,7 @@ public class BrowserActivity extends ListActivity
             builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {                
                     FormDefinition form = new FormDefinition();
-                    form.setName(inputNewFormName.getText().toString().trim());
+                    form.setName(newFormName.getText().toString().trim());
                     form.setStatus(FormDefinition.Status.temporary);
                     
                     if (form.getName().length() == 0) {
@@ -331,7 +350,7 @@ public class BrowserActivity extends ListActivity
                                 data.write(inputbuf, 0, inputlen);
                             }
 
-                            form.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data.toByteArray())).toString(), "text/xml"));
+                            form.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data.toByteArray())).toString(), FormWriter.CONTENT_TYPE));
                             Collect.getInstance().getDbService().getDb().create(form);
                             
                             is.close();
@@ -344,7 +363,7 @@ public class BrowserActivity extends ListActivity
                         } catch (Exception e) {
                             Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
                             e.printStackTrace();
-                        }                        
+                        }          
                     }
                 }
             });
@@ -355,7 +374,7 @@ public class BrowserActivity extends ListActivity
                 }
             });
             
-            dialog = builder.create();
+            mDialog = builder.create();
             break;
         
         case DIALOG_COPY_TO_FOLDER:
@@ -366,7 +385,7 @@ public class BrowserActivity extends ListActivity
             final EditText copyName = (EditText) view.findViewById(R.id.copyName);
             
             copyDestination.setText(mCopyToFolderName);
-            copyName.setText(mFormDefinitionDoc.getName());
+            copyName.setText(mFormDefinition.getName());
             
             builder
                 .setTitle(R.string.tf_copy_to_folder)
@@ -378,8 +397,9 @@ public class BrowserActivity extends ListActivity
                     String copyAsName = copyName.getText().toString().trim();
                     
                     if (copyAsName.length() > 0) {
+                        mCopyToFolderAs = copyAsName;
                         mCopyToFolderTask = new CopyToFolderTask();
-                        mCopyToFolderTask.execute(mCopyToFolderId, mFormDefinitionDoc.getId(), mFormDefinitionDoc.getName(), copyAsName);
+                        mCopyToFolderTask.execute(mFormDefinition, mCopyToFolderId, copyAsName);
                         removeDialog(DIALOG_COPY_TO_FOLDER);                        
                     } else {
                         removeDialog(DIALOG_COPY_TO_FOLDER);   
@@ -395,7 +415,7 @@ public class BrowserActivity extends ListActivity
                 }
             });
             
-            dialog = builder.create();
+            mDialog = builder.create();
             break;
             
         // Local folder is most likely out-of-date
@@ -421,7 +441,7 @@ public class BrowserActivity extends ListActivity
                 }
             });
             
-            dialog = builder.create();
+            mDialog = builder.create();
             break;
             
         // Couldn't connect to DB (for a specific reason)
@@ -448,7 +468,7 @@ public class BrowserActivity extends ListActivity
                 });
             }
             
-            dialog = builder.create();
+            mDialog = builder.create();
             break;        
             
         // Unable to launch form builder (instances present) 
@@ -464,7 +484,7 @@ public class BrowserActivity extends ListActivity
                 }
             });
             
-            dialog = builder.create();
+            mDialog = builder.create();
             break;
             
         // User requested forms (definitions or instances) to be loaded but none could be found 
@@ -482,7 +502,7 @@ public class BrowserActivity extends ListActivity
                 }
             });
             
-            dialog = builder.create();
+            mDialog = builder.create();
             break;
             
         // We can't go offline (CouchDB not installed or not available locally)
@@ -500,7 +520,7 @@ public class BrowserActivity extends ListActivity
                 }
             });
             
-            dialog = builder.create();
+            mDialog = builder.create();
             break;            
             
         // We can't go offline (user has not selected any databases to be replicated)
@@ -517,16 +537,16 @@ public class BrowserActivity extends ListActivity
                 }
             });
 
-            dialog = builder.create();
+            mDialog = builder.create();
             
             break;
 
         // Simple progress dialog for online/offline
         case DIALOG_ONLINE_STATE_CHANGING:
             if (Collect.getInstance().getIoService().isSignedIn())
-                dialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_disconnecting));
+                mDialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_disconnecting));
             else
-                dialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_connecting));
+                mDialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_connecting));
             
             break;
         
@@ -565,7 +585,7 @@ public class BrowserActivity extends ListActivity
                 }
             });
             
-            dialog = builder.create();
+            mDialog = builder.create();
             break;
             
         // Tried going offline but couldn't
@@ -583,7 +603,7 @@ public class BrowserActivity extends ListActivity
                 }
             });
 
-            dialog = builder.create();
+            mDialog = builder.create();
             break;            
             
         // Tried going online but couldn't
@@ -601,15 +621,97 @@ public class BrowserActivity extends ListActivity
                 }
             });
 
-            dialog = builder.create();
+            mDialog = builder.create();
             break;
+            
+        case DIALOG_REMOVE_FORM:
+            
+            mDialog = builder.create();
+            break;
+            
+        case DIALOG_RENAME_FORM:
+            view = inflater.inflate(R.layout.dialog_create_or_rename_form, null);
+            
+            // Set an EditText view to get user input 
+            final EditText renamedFormName = (EditText) view.findViewById(R.id.formName);
+            
+            builder.setView(view);
+            builder.setInverseBackgroundForced(true);
+            builder.setTitle(getText(R.string.tf_rename_form_dialog));
+            
+            renamedFormName.setText(mFormDefinition.getName());
+            
+            builder.setPositiveButton(getText(R.string.tf_rename), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) { 
+                    String newName = renamedFormName.getText().toString().trim();
+                    
+                    if (newName.length() == 0) {
+                        removeDialog(DIALOG_RENAME_FORM);
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_required), Toast.LENGTH_LONG).show();                        
+                        showDialog(DIALOG_RENAME_FORM);
+                    } else {
+                        if (newName.equals(mFormDefinition.getName())) {
+                            // Do nothing
+                        } else {
+                            // Hijack this variable in case we need to display DIALOG_UNABLE_TO_RENAME_DUPLICATE
+                            mCopyToFolderAs = newName;
+                            
+                            mRenameTask = new RenameTask();
+                            mRenameTask.execute(mFormDefinition, newName);
+                        }
+                    }
+                }
+            });
+        
+            builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_RENAME_FORM);
+                }
+            });
+            
+            mDialog = builder.create();
+            break;            
+            
+        case DIALOG_UNABLE_TO_COPY_DUPLICATE:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle(R.string.tf_unable_to_copy)
+            .setMessage(getString(R.string.tf_unable_to_copy_duplicate_dialog_msg, mCopyToFolderName, mCopyToFolderAs));
+
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_UNABLE_TO_COPY_DUPLICATE);
+                    showDialog(DIALOG_COPY_TO_FOLDER);
+                }
+            });
+
+            mDialog = builder.create();
+            break;    
+            
+        case DIALOG_UNABLE_TO_RENAME_DUPLICATE:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle(R.string.tf_unable_to_rename_dialog)
+            .setMessage(getString(R.string.tf_unable_to_rename_dialog_msg, mCopyToFolderAs));
+
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_UNABLE_TO_RENAME_DUPLICATE);
+                    showDialog(DIALOG_RENAME_FORM);
+                }
+            });
+
+            mDialog = builder.create();
+            break;    
 
         case DIALOG_UPDATING_FOLDER:
-            dialog = ProgressDialog.show(this, "", getString(R.string.tf_updating_with_param, getSelectedFolderName()));            
+            mDialog = ProgressDialog.show(this, "", getString(R.string.tf_updating_with_param, getSelectedFolderName()));            
             break;
         }
         
-        return dialog;        
+        return mDialog;        
     }
 
     @Override
@@ -709,7 +811,7 @@ public class BrowserActivity extends ListActivity
     {
         // Avoid refetching documents from database by preserving them
         HashMap<String, Generic> persistentData = new HashMap<String, Generic>();
-        persistentData.put(KEY_FORM_DEFINITION, mFormDefinitionDoc);
+        persistentData.put(KEY_FORM_DEFINITION, mFormDefinition);
         
         return persistentData;
     }
@@ -724,68 +826,98 @@ public class BrowserActivity extends ListActivity
         outState.putString(KEY_SELECTED_DB, mSelectedDatabase);
     }
     
-    private class CopyToFolderTask extends AsyncTask<String, Void, Void>
+    private class CopyToFolderTask extends AsyncTask<Object, Void, Void>
     {
         private static final String tt = t + "CopyToFolderTask: ";
         
         private static final String KEY_ITEM = "key_item";
         
-        private boolean mCopied = false;
-        private String mCopyFormAsName;
-        private String mCopyToFolderId;
-        private String mFormToCopyId;
-        private String mFormToCopyName;
+        private boolean copied = false;
+        private boolean duplicate = false;
+        private String copyFormAsName;
+        private String copyToFolderId;
+        private FormDefinition formDefinition;
         
-        ProgressDialog mProgressDialog = null;
+        ProgressDialog progressDialog = null;
         
-        final Handler mProgressHandler = new Handler() {
+        final Handler progressHandler = new Handler() {
             public void handleMessage(Message msg) {
-                mProgressDialog.setMessage(getString(R.string.tf_copying_with_param, msg.getData().getString(KEY_ITEM)));
+                progressDialog.setMessage(getString(R.string.tf_copying_with_param, msg.getData().getString(KEY_ITEM)));
             }
         };
         
         @Override
-        protected Void doInBackground(String... params)
-        {
-            mCopyToFolderId = params[0];
-            mFormToCopyId   = params[1];
-            mFormToCopyName = params[2];
-            mCopyFormAsName = params[3];
+        protected Void doInBackground(Object... params)
+        {            
+            formDefinition = (FormDefinition) params[0];
+            copyToFolderId = (String) params[1];
+            copyFormAsName = (String) params[2];
             
-            Log.d(Collect.LOGTAG, tt + "about to copy " + mFormToCopyId + " to " + mCopyToFolderId);
+            Log.d(Collect.LOGTAG, tt + "about to copy " + formDefinition.getId() + " to " + copyToFolderId);
             
-            Message msg = mProgressHandler.obtainMessage();
+            Message msg = progressHandler.obtainMessage();
             Bundle b = new Bundle();
-            b.putString(KEY_ITEM, mFormToCopyName);
+            b.putString(KEY_ITEM, formDefinition.getName());
             msg.setData(b);
-            mProgressHandler.sendMessage(msg);
+            progressHandler.sendMessage(msg);
             
             AttachmentInputStream ais = null;;
             ByteArrayOutputStream output = null;
+            byte [] xml = null;
             
-            byte[] buffer = new byte[8192];
+            byte [] buffer = new byte[8192];
             int bytesRead;
             
-            try {            
-                ais = Collect.getInstance().getDbService().getDb().getAttachment(mFormToCopyId, "xml");
+            try {
+                // Basic deduplication
+                FormDefinitionRepo formDefinitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb(copyToFolderId));
+                List<FormDefinition> definitions = formDefinitionRepo.findByName(copyFormAsName);
+                
+                if (!definitions.isEmpty()) {
+                    duplicate = true;
+                    return null;
+                }
+                
+                ais = Collect.getInstance().getDbService().getDb().getAttachment(formDefinition.getId(), "xml");
+                
+                FormDefinition copyOfFormDefinition = new FormDefinition();
 
-                output = new ByteArrayOutputStream();
+                // If copying with the exact same name
+                if (copyFormAsName.equals(formDefinition.getName())) {
+                    output = new ByteArrayOutputStream();
 
-                while ((bytesRead = ais.read(buffer)) != -1) {
-                    output.write(buffer, 0, bytesRead);
+                    while ((bytesRead = ais.read(buffer)) != -1) {
+                        output.write(buffer, 0, bytesRead);
+                    }
+                    
+                    xml = output.toByteArray();
+                    output.close();
+                    
+                    // No need to recompute this if it is an exact copy
+                    copyOfFormDefinition.setXmlHash(formDefinition.getXmlHash());
+                } else {
+                    // Rename form definition
+                    xml = renameFormDefinition(ais, copyFormAsName);
+                    
+                    // Save to file first so we can get md5 hash
+                    File f = new File(FileUtilsExtended.EXTERNAL_CACHE + File.separator + UUID.randomUUID() + ".xml");
+                    FileOutputStream fos = new FileOutputStream(f);
+                    fos.write(xml);
+                    fos.close();
+                    
+                    copyOfFormDefinition.setXmlHash(FileUtils.getMd5Hash(f));
+                    
+                    f.delete();
                 }
 
                 ais.close();
                 
-                FormDefinition formDefDoc = new FormDefinition();
-                formDefDoc.setName(mCopyFormAsName);
-                formDefDoc.setStatus(FormDefinition.Status.active);
-                formDefDoc.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(output.toByteArray())).toString(), "text/xml"));
-                output.close();
+                copyOfFormDefinition.setName(copyFormAsName);
+                copyOfFormDefinition.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(xml)).toString(), FormWriter.CONTENT_TYPE));                
                 
-                Collect.getInstance().getDbService().getDb(mCopyToFolderId).create(formDefDoc);
+                Collect.getInstance().getDbService().getDb(copyToFolderId).create(copyOfFormDefinition);
                 
-                mCopied = true;
+                copied = true;
             } catch (DocumentNotFoundException e) {
                 Log.w(Collect.LOGTAG, tt + "DocumentNotFoundException: " + e.toString());
             } catch (DbAccessException e) {
@@ -801,20 +933,25 @@ public class BrowserActivity extends ListActivity
         @Override
         protected void onPreExecute()
         {
-            mProgressDialog = new ProgressDialog(BrowserActivity.this);
-            mProgressDialog.setMessage(getString(R.string.tf_copying_please_wait));  
-            mProgressDialog.show();
+            progressDialog = new ProgressDialog(BrowserActivity.this);
+            progressDialog.setMessage(getString(R.string.tf_copying_please_wait));  
+            progressDialog.show();
         }        
 
         @Override
         protected void onPostExecute(Void nothing)
         {   
-            mProgressDialog.cancel();
+            progressDialog.cancel();
             
-            if (mCopied)
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_copy_successful), Toast.LENGTH_SHORT).show();
-            else
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_copy_failed), Toast.LENGTH_SHORT).show();           
+            if (copied) {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_something_was_successful, getString(R.string.tf_copy)), Toast.LENGTH_SHORT).show();
+            } else if (duplicate) {
+                // Show duplicate explanation dialog
+                showDialog(DIALOG_UNABLE_TO_COPY_DUPLICATE);
+            } else { 
+                // Some other failure
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_something_failed, getString(R.string.tf_copy)), Toast.LENGTH_LONG).show();
+            }
         }        
     }
     
@@ -937,18 +1074,10 @@ public class BrowserActivity extends ListActivity
         protected FormInstance.Status doInBackground(FormInstance.Status... status)
         {
             try {
-                if (status[0] == FormInstance.Status.nothing) {
-                    tallies = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getFormsWithInstanceCounts();
-                    documents = (ArrayList<FormDefinition>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAll();
-                    DocumentUtils.sortByName(documents);                    
-                } else {
-                    tallies = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getFormsByInstanceStatus(status[0]);
-
-                    if (!tallies.isEmpty()) {
-                        documents = (ArrayList<FormDefinition>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAllByKeys(new ArrayList<Object>(tallies.keySet()));                    
-                        DocumentUtils.sortByName(documents);
-                    }                 
-                }
+                FormDefinitionRepo formDefinitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());                
+                tallies = formDefinitionRepo.getFormsByInstanceStatus(status[0]);
+                documents = (ArrayList<FormDefinition>) formDefinitionRepo.getAllActiveByKeys(new ArrayList<Object>(tallies.keySet()));                    
+                DocumentUtils.sortByName(documents);
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
                 Log.w(Collect.LOGTAG, t + e.toString());
@@ -1011,26 +1140,131 @@ public class BrowserActivity extends ListActivity
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
                 } else {
-                    Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
-                    String descriptor = s1.getSelectedItem().toString().toLowerCase();
+                    if (mDialog != null && !mDialog.isShowing()) { 
+                        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
+                        String descriptor = s1.getSelectedItem().toString().toLowerCase();
 
-                    switch (s1.getSelectedItemPosition()) {
-                    case 0:
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
-                        break;
-                    case 1:
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_SHORT).show();
-                        break;
-                    case 2:
-                    case 3:
-                    case 4:
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
+                        switch (s1.getSelectedItemPosition()) {
+                        case 0:
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
+                            break;
+                        case 1:
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_SHORT).show();
+                            break;
+                        case 2:
+                        case 3:
+                        case 4:
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
             }
 
             setProgressVisibility(false);
         }
+    }
+    
+    private class RenameTask extends AsyncTask<Object, Void, Void>
+    {
+        private static final String tt = t + "RenameTask: ";        
+        private static final String KEY_ITEM = "key_item";
+        
+        private boolean renamed = false;
+        private boolean duplicate = false;
+        private String newName;
+        private FormDefinition formDefinition;
+        
+        ProgressDialog progressDialog = null;
+        
+        final Handler progressHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                progressDialog.setMessage(getString(R.string.tf_renaming_with_param, msg.getData().getString(KEY_ITEM)));
+            }
+        };
+        
+        @Override
+        protected Void doInBackground(Object... params)
+        {            
+            formDefinition = (FormDefinition) params[0];
+            newName = (String) params[1];
+            
+            Log.d(Collect.LOGTAG, tt + "about to rename " + formDefinition.getId() + " to " + newName);
+            
+            Message msg = progressHandler.obtainMessage();
+            Bundle b = new Bundle();
+            b.putString(KEY_ITEM, formDefinition.getName());
+            msg.setData(b);
+            progressHandler.sendMessage(msg);
+            
+            AttachmentInputStream ais = null;;
+            byte [] xml = null;
+            
+            try {
+                // Basic deduplication
+                FormDefinitionRepo formDefinitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());
+                List<FormDefinition> definitions = formDefinitionRepo.findByName(newName);
+                
+                if (!definitions.isEmpty()) {
+                    // If there is more than one match OR the first (and only) match isn't the form that was selected
+                    if (definitions.size() > 1 || definitions.get(0).getId() != formDefinition.getId()) {
+                        duplicate = true;
+                        return null;
+                    }
+                }
+                
+                ais = Collect.getInstance().getDbService().getDb().getAttachment(formDefinition.getId(), "xml");
+
+                // Rename form definition
+                xml = renameFormDefinition(ais, newName);
+
+                // Save to file first so we can get md5 hash
+                File f = new File(FileUtilsExtended.EXTERNAL_CACHE + File.separator + UUID.randomUUID() + ".xml");
+                FileOutputStream fos = new FileOutputStream(f);
+                fos.write(xml);
+                fos.close();
+
+                formDefinition.setXmlHash(FileUtils.getMd5Hash(f));
+
+                f.delete();
+                ais.close();
+                
+                formDefinition.setName(newName);
+                formDefinition.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(xml)).toString(), FormWriter.CONTENT_TYPE));                
+                
+                Collect.getInstance().getDbService().getDb().update(formDefinition);
+                
+                renamed = true;           
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, tt + "unexpected exception");
+                e.printStackTrace();
+            }
+            
+            return null;
+        }
+        
+        @Override
+        protected void onPreExecute()
+        {
+            progressDialog = new ProgressDialog(BrowserActivity.this);
+            progressDialog.setMessage(getString(R.string.tf_renaming_please_wait));  
+            progressDialog.show();
+        }        
+
+        @Override
+        protected void onPostExecute(Void nothing)
+        {   
+            progressDialog.cancel();
+            
+            if (renamed) {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_something_was_successful, getString(R.string.tf_rename)), Toast.LENGTH_SHORT).show();
+            } else if (duplicate) {
+                // Show duplicate explanation dialog
+                showDialog(DIALOG_UNABLE_TO_RENAME_DUPLICATE);
+            } else { 
+                // Some other failure
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_something_failed, getString(R.string.tf_rename)), Toast.LENGTH_LONG).show();
+            }
+        }        
     }
     
     /*
@@ -1263,6 +1497,26 @@ public class BrowserActivity extends ListActivity
         registerForContextMenu(getListView());
     }
     
+    /*
+     * Parse an attachment input stream (form definition XML file), affect h:title and instance 
+     * root & id attribute and return the XML file as byte[] for consumption by the controlling task. 
+     */
+    private byte[] renameFormDefinition(AttachmentInputStream ais, String newName)
+    {
+        FormReader fr = new FormReader(ais);
+        
+        String instanceRoot = fr.getInstanceRoot();
+        String instanceRootId = fr.getInstanceRootId();
+        
+        // Populate global state (expected by FormWriter)
+        Collect.getInstance().getFormBuilderState().setBinds(fr.getBinds());
+        Collect.getInstance().getFormBuilderState().setFields(fr.getFields());
+        Collect.getInstance().getFormBuilderState().setInstance(fr.getInstance());
+        Collect.getInstance().getFormBuilderState().setTranslations(fr.getTranslations());
+        
+        return FormWriter.writeXml(newName, instanceRoot, instanceRootId);
+    }
+    
     private void setProgressVisibility(boolean visible)
     {
         ProgressBar pb = (ProgressBar) getWindow().findViewById(R.id.titleProgressBar);
@@ -1305,7 +1559,7 @@ public class BrowserActivity extends ListActivity
             // Show all forms (in folder)
             case 0:
             case 1:
-                mRefreshViewTask.execute(FormInstance.Status.nothing);
+                mRefreshViewTask.execute(FormInstance.Status.any);
                 break;
                 // Show all draft forms
             case 2:
