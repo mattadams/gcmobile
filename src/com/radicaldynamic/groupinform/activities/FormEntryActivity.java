@@ -15,6 +15,7 @@
 package com.radicaldynamic.groupinform.activities;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -165,11 +166,12 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     
     public static final String KEY_NEXT_INSTANCE = "skiptonextinstance";
     public static final String KEY_PREVIOUS_INSTANCE = "skiptopreviousinstance";
-    
     public static final String KEY_FINISH_ACTIVITY = "finishactivity";
 
     private FormDefinition mFormDefinition = null;
     private FormInstance mFormInstance = null;
+
+    private ArrayList<String> mInstances = new ArrayList<String>();
     // END custom
     
 
@@ -219,6 +221,11 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             if (savedInstanceState.containsKey(KEY_ERROR)) {
                 mErrorMessage = savedInstanceState.getString(KEY_ERROR);
             }
+            // BEGIN custom
+            if (savedInstanceState.containsKey(KEY_INSTANCES)) {
+                mInstances = savedInstanceState.getStringArrayList(KEY_INSTANCES);
+            }
+            // END custom
         }
 
         // If a parse error message is showing then nothing else is loaded
@@ -311,7 +318,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 //                }
                 
                 // Set browse list
-                Collect.getInstance().setInstanceBrowseList(intent.getStringArrayListExtra(KEY_INSTANCES));
+                mInstances = intent.getStringArrayListExtra(KEY_INSTANCES);
                 
                 // Create folders for form storage; set form path
                 String formFolder = FileUtilsExtended.FORMS_PATH + File.separator + intent.getStringExtra(KEY_FORMPATH);          
@@ -339,6 +346,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         outState.putString(KEY_FORMPATH, mFormPath);
         outState.putBoolean(NEWFORM, false);
         outState.putString(KEY_ERROR, mErrorMessage);
+        // BEGIN custom
+        outState.putStringArrayList(KEY_INSTANCES, mInstances);
+        // END custom
     }
 
 
@@ -570,6 +580,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                     saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
                 }
                 Intent i = new Intent(this, FormHierarchyActivity.class);
+                // BEGIN custom
+                i.putStringArrayListExtra(KEY_INSTANCES, mInstances);
+                // END custom
                 startActivityForResult(i, HIERARCHY_ACTIVITY);
             // BEGIN custom
                 return true;
@@ -1369,7 +1382,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                             
                             Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mFormDefinition.getName()), Toast.LENGTH_SHORT).show();
 
-                            if (Collect.getInstance().getInstanceBrowseList().size() > 1) {
+                            if (mInstances.size() > 1) {
                                 browseToNextInstance(true);
                             } else {
                                 finish();
@@ -1560,6 +1573,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             // BEGIN custom
 //            startActivity(i);
             i.putExtra(FormHierarchyActivity.KEY_AUTOLOAD, true);
+            i.putStringArrayListExtra(KEY_INSTANCES, mInstances);
             startActivityForResult(i, HIERARCHY_ACTIVITY);
             // END custom
             return; // so we don't show the intro screen before jumping to the hierarchy
@@ -1688,13 +1702,13 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     // BEGIN custom
     private void browseToInstance(String instanceId) 
     {
-        Log.v(Collect.LOGTAG, t + ": about to browse to " + instanceId + " using form " + mFormDefinition.getId() + " with list " + Collect.getInstance().getInstanceBrowseList().toString());
+        Log.v(Collect.LOGTAG, t + ": about to browse to " + instanceId + " using form " + mFormDefinition.getId() + " with list " + mInstances.toString());
         
         tidyBeforeFinish();
         finish();
         
         Intent i = new Intent(this, FormEntryActivity.class);
-        i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, Collect.getInstance().getInstanceBrowseList());
+        i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstances);
         i.putExtra(FormEntryActivity.KEY_FORMPATH, mFormDefinition.getId());        
         i.putExtra(FormEntryActivity.KEY_INSTANCEPATH, instanceId);
         startActivity(i);
@@ -1705,15 +1719,15 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     {
         String nextInstanceId;       
         
-        if (Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstance.getId()) < Collect.getInstance().getInstanceBrowseList().size() - 1) {                                                                    
-            nextInstanceId = Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstance.getId()) + 1).next();
+        if (mInstances.indexOf(mFormInstance.getId()) < mInstances.size() - 1) {
+            nextInstanceId = mInstances.listIterator(mInstances.indexOf(mFormInstance.getId()) + 1).next();
         } else {
-            nextInstanceId = Collect.getInstance().getInstanceBrowseList().get(0);
+            nextInstanceId = mInstances.get(0);
         }
         
         // For when a user "removes" a form instance
         if (removeCurrentInstance)
-            Collect.getInstance().getInstanceBrowseList().remove(mFormInstance.getId());
+            mInstances.remove(mFormInstance.getId());
         
         browseToInstance(nextInstanceId);
     }
@@ -1723,11 +1737,11 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     {
         String previousInstanceId;
         
-        if (Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstance.getId())).hasPrevious()) {
-            previousInstanceId = Collect.getInstance().getInstanceBrowseList().listIterator(Collect.getInstance().getInstanceBrowseList().indexOf(mFormInstance.getId())).previous();
+        if (mInstances.listIterator(mInstances.indexOf(mFormInstance.getId())).hasPrevious()) {
+            previousInstanceId = mInstances.listIterator(mInstances.indexOf(mFormInstance.getId())).previous();
         } else {
-            previousInstanceId = Collect.getInstance().getInstanceBrowseList().
-            get(Collect.getInstance().getInstanceBrowseList().size() - 1);
+            previousInstanceId = mInstances.
+            get(mInstances.size() - 1);
         }
 
         browseToInstance(previousInstanceId);

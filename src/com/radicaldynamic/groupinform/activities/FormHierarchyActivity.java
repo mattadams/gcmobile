@@ -65,6 +65,7 @@ public class FormHierarchyActivity extends ListActivity {
     // This activity was loaded automatically when the user browsed to a saved form
     public static final String KEY_AUTOLOAD = "autoload"; 
     
+    private ArrayList<String> mInstances = new ArrayList<String>();
     private boolean mLoadedAutomatically;
     // END custom
 
@@ -83,9 +84,10 @@ public class FormHierarchyActivity extends ListActivity {
         
         // BEGIN custom
         Intent intent = getIntent();
+        mInstances = intent.getStringArrayListExtra(FormEntryActivity.KEY_INSTANCES);
         mLoadedAutomatically = intent.getBooleanExtra(KEY_AUTOLOAD, false);
         
-        if (Collect.getInstance().getInstanceBrowseList().size() > 1) {            
+        if (mInstances.size() > 1) {
             String instanceId = FormEntryActivity.mInstancePath.substring(FormEntryActivity.mInstancePath.lastIndexOf("/") + 1, FormEntryActivity.mInstancePath.lastIndexOf("."));
             
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -95,8 +97,8 @@ public class FormHierarchyActivity extends ListActivity {
             TextView positionText = (TextView) pager.findViewById(R.id.position);
             
             // Set current position relative to the number of instances in the index
-            Integer currentPosition = Collect.getInstance().getInstanceBrowseList().indexOf(instanceId) + 1;            
-            positionText.setText(currentPosition + "/" + Collect.getInstance().getInstanceBrowseList().size());
+            Integer currentPosition = mInstances.indexOf(instanceId) + 1;
+            positionText.setText(currentPosition + "/" + mInstances.size());
             
             rl.addView(pager);
             rl.invalidate();            

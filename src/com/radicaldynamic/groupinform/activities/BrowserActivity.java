@@ -123,8 +123,9 @@ public class BrowserActivity extends ListActivity
     private static final int MENU_OPTION_INFO = 5;
     
     // Keys for persistence between screen orientation changes
-    private static final String KEY_COPY_TO_FOLDER_NAME = "copy_to_folder_name";
+    private static final String KEY_COPY_TO_FOLDER_AS   = "copy_to_folder_as";
     private static final String KEY_COPY_TO_FOLDER_ID   = "copy_to_folder_id";
+    private static final String KEY_COPY_TO_FOLDER_NAME = "copy_to_folder_name";
     private static final String KEY_DIALOG_MESSAGE      = "dialog_msg";
     private static final String KEY_FORM_DEFINITION     = "form_definition_doc";
     private static final String KEY_SELECTED_DB         = "selected_db";
@@ -167,6 +168,9 @@ public class BrowserActivity extends ListActivity
             mSelectedDatabase = null;
         } else {
             // For "copy to folder" operation, restore destination folder
+            if (savedInstanceState.containsKey(KEY_COPY_TO_FOLDER_AS))
+                mCopyToFolderAs = savedInstanceState.getString(KEY_COPY_TO_FOLDER_AS);
+
             if (savedInstanceState.containsKey(KEY_COPY_TO_FOLDER_ID))
                 mCopyToFolderId = savedInstanceState.getString(KEY_COPY_TO_FOLDER_ID);
             
@@ -560,16 +564,10 @@ public class BrowserActivity extends ListActivity
                 .setIcon(R.drawable.ic_dialog_info);
             
             if (Collect.getInstance().getIoService().isSignedIn()) {
-                builder
-                    .setTitle(getText(R.string.tf_go_offline) + "?")
-                    .setMessage(R.string.tf_go_offline_dialog_msg);
-                
+                builder.setTitle(getText(R.string.tf_go_offline) + "?").setMessage(R.string.tf_go_offline_dialog_msg);
                 buttonText = getText(R.string.tf_go_offline).toString();
             } else {
-                builder
-                    .setTitle(getText(R.string.tf_go_online) + "?")
-                    .setMessage(R.string.tf_go_online_dialog_msg);
-
+                builder.setTitle(getText(R.string.tf_go_online) + "?").setMessage(R.string.tf_go_online_dialog_msg);
                 buttonText = getText(R.string.tf_go_online).toString();
             }
 
@@ -752,7 +750,7 @@ public class BrowserActivity extends ListActivity
         menu.add(0, MENU_OPTION_REFRESH, 0, getString(R.string.refresh)).setIcon(R.drawable.ic_menu_refresh);
         menu.add(0, MENU_OPTION_FOLDERS, 0, getString(R.string.tf_form_folders)).setIcon(R.drawable.ic_menu_archive);
         menu.add(0, MENU_OPTION_NEWFORM, 0, getString(R.string.tf_create_form)).setIcon(R.drawable.ic_menu_add);
-        menu.add(0, MENU_OPTION_ODKTOOLS, 0, "Open Data Kit").setIcon(R.drawable.ic_menu_upload);
+        menu.add(0, MENU_OPTION_ODKTOOLS, 0, getString(R.string.open_data_kit)).setIcon(R.drawable.ic_menu_upload);
         menu.add(0, MENU_OPTION_INFO, 0, getString(R.string.tf_inform_info)).setIcon(R.drawable.ic_menu_info_details);
         return true;
     }
@@ -851,6 +849,7 @@ public class BrowserActivity extends ListActivity
     protected void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
+        outState.putString(KEY_COPY_TO_FOLDER_AS, mCopyToFolderAs);
         outState.putString(KEY_COPY_TO_FOLDER_ID, mCopyToFolderId);
         outState.putString(KEY_COPY_TO_FOLDER_NAME, mCopyToFolderName);
         outState.putString(KEY_DIALOG_MESSAGE, mDialogMessage);
@@ -1042,17 +1041,17 @@ public class BrowserActivity extends ListActivity
      */
     private class InstanceLoadPathTask extends AsyncTask<Object, Integer, Void>
     {
-        String mFormId;
-        ArrayList<String> mInstanceIds = new ArrayList<String>();
+        String formId;
+        ArrayList<String> instanceIds = new ArrayList<String>();
         boolean caughtExceptionInBackground = true;
 
         @Override
         protected Void doInBackground(Object... params)
         {
             try {
-                mFormId = (String) params[0];
+                formId = (String) params[0];
                 FormInstance.Status status = (FormInstance.Status) params[1];
-                mInstanceIds = new FormInstanceRepo(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(mFormId, status);                
+                instanceIds = new FormInstanceRepo(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(formId, status);
                 caughtExceptionInBackground = false;
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "unhandled exception while processing InstanceLoadPathTask.doInBackground(): " + e.toString());
@@ -1077,9 +1076,9 @@ public class BrowserActivity extends ListActivity
             } else {
                 try {
                     Intent i = new Intent(BrowserActivity.this, FormEntryActivity.class);
-                    i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, mInstanceIds);
-                    i.putExtra(FormEntryActivity.KEY_INSTANCEPATH, mInstanceIds.get(0));
-                    i.putExtra(FormEntryActivity.KEY_FORMPATH, mFormId);            
+                    i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, instanceIds);
+                    i.putExtra(FormEntryActivity.KEY_INSTANCEPATH, instanceIds.get(0));
+                    i.putExtra(FormEntryActivity.KEY_FORMPATH, formId);
                     startActivity(i);
                 } catch (IndexOutOfBoundsException e) {
                     // There were no mInstanceIds returned (no DB error, per-se but something was missing)
@@ -1589,17 +1588,14 @@ public class BrowserActivity extends ListActivity
     private byte[] renameFormDefinition(AttachmentInputStream ais, String newName)
     {
         FormReader fr = new FormReader(ais);
-        
-        String instanceRoot = fr.getInstanceRoot();
-        String instanceRootId = fr.getInstanceRootId();
-        
+
         // Populate global state (expected by FormWriter)
         Collect.getInstance().getFormBuilderState().setBinds(fr.getBinds());
         Collect.getInstance().getFormBuilderState().setFields(fr.getFields());
         Collect.getInstance().getFormBuilderState().setInstance(fr.getInstance());
         Collect.getInstance().getFormBuilderState().setTranslations(fr.getTranslations());
         
-        return FormWriter.writeXml(newName, instanceRoot, instanceRootId);
+        return FormWriter.writeXml(newName, fr.getInstanceRoot(), fr.getInstanceRootId());
     }
     
     private void setProgressVisibility(boolean visible)

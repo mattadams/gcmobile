@@ -14,7 +14,6 @@
 package com.radicaldynamic.groupinform.application;
 
 import java.io.File;
-import java.util.ArrayList;
 
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.CredentialsProvider;
@@ -78,10 +77,6 @@ public class Collect extends Application {
     
     // Installed dependency state
     private InformDependencies informDependencies = new InformDependencies();
-
-    // Instance browse list, used for switching between instances of a given form
-    // TODO: move to FormEntryActivity (no point in this being global)
-    private ArrayList<String> instanceBrowseList = new ArrayList<String>();
 
     // State container for the form builder
     private FormBuilderState formBuilderState = new FormBuilderState();
@@ -254,9 +249,6 @@ public class Collect extends Application {
 
     public void setInformOnlineState(InformOnlineState informOnlineState) { this.informOnlineState = informOnlineState; }
     public InformOnlineState getInformOnlineState() { return informOnlineState; }
-
-    public void setInstanceBrowseList(ArrayList<String> instanceBrowseList) { this.instanceBrowseList = instanceBrowseList; }
-    public ArrayList<String> getInstanceBrowseList() { return instanceBrowseList; }
 
     public void setIoService(InformOnlineService ioService) { this.ioService = ioService; }
     public InformOnlineService getIoService() { return ioService; }
