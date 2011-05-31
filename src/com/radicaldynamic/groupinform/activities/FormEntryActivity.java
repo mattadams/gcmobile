@@ -1585,7 +1585,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
 
     /**
-     * Called by the FormLoaderTask if everything loads correctly.
+     * Called by SavetoDiskTask if everything saves correctly.
      */
     @Override
     // BEGIN custom
@@ -1614,7 +1614,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
             case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
                 refreshCurrentView();
-                Toast.makeText(this, saveStatus, Toast.LENGTH_LONG).show();
+                // an answer constraint was violated, so do a 'swipe' to the next
+                // question to display the proper toast(s)
+                next();
                 break;
         }
     }
@@ -1672,6 +1674,16 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         // END custom
 
     }
+    
+    
+    public void next() {
+        if(!mBeenSwiped){
+                mBeenSwiped = true;
+                showNextView();
+        }
+        
+}
+    
 
     // BEGIN custom
     private void browseToInstance(String instanceId) 
