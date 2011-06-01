@@ -103,7 +103,7 @@
 <string name="longitude">Longitude</string>
 <string name="main_menu">Main Menu</string>
 <string name="main_menu_details">Magnifying human resources\nwith technology</string>
-<string name="main_menu_message">ODK Collect v1.1.7</string>
+<string name="main_menu_message">Inform v1.2.0 (ODK v1.1.7)</string>
 <string name="manage_files">Manage Forms</string>
 <string name="mark_finished">Mark Form as Finished</string>
 <string name="no">No</string>
@@ -159,7 +159,7 @@
 <string name="open_data_kit">Open Data Kit</string>
 <string name="general_preferences">Preferences</string>
 <string name="change_username">Change Username</string>
-<string name="click_to_web">Touch for http://opendatakit.org</string>
+<string name="click_to_web">Touch for http://groupcomplete.com</string>
 <string name="first_run">Do first run on restart</string>
 <string name="client">Client</string>
 <string name="show_splash">Show splash screen</string>
