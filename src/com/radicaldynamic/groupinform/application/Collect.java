@@ -59,6 +59,8 @@ public class Collect extends Application {
     public static final String CACHE_PATH = ODK_ROOT + "/.cache";
     public static final String METADATA_PATH = ODK_ROOT + "/metadata";
     public static final String TMPFILE_PATH = CACHE_PATH + "/tmp.jpg";
+    
+    public static final String DEFAULT_FONTSIZE = "21";
 	
 	// Things from upstream
     private HttpContext localContext = null;
