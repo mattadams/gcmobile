@@ -23,6 +23,7 @@ import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.model.xform.XFormsModule;
+import org.odk.collect.android.listeners.AdvanceToNextListener;
 import org.odk.collect.android.logic.FormController;
 import org.odk.collect.android.logic.PropertyManager;
 import org.odk.collect.android.preferences.PreferencesActivity;
@@ -39,15 +40,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -90,7 +88,7 @@ import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class FormEntryActivity extends Activity implements AnimationListener, FormLoaderListener,
-        FormSavedListener {
+        FormSavedListener, AdvanceToNextListener {
     private static final String t = "FormEntryActivity";
 
     // Defines for FormEntryActivity
@@ -1436,7 +1434,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     @Override
     protected void onPause() {
         dismissDialogs();
-        if (currentPromptIsQuestion()) {
+        if (mCurrentView != null && currentPromptIsQuestion()) {
             saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
         }
         super.onPause();
