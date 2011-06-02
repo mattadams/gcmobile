@@ -161,7 +161,8 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     SharedPreferences settings =
                         PreferenceManager.getDefaultSharedPreferences(Collect.getInstance());
                     urlString = settings.getString(PreferencesActivity.KEY_SERVER_URL, null);
-                    String submissionUrl = settings.getString(PreferencesActivity.KEY_SUBMISSION_URL, "/submission");
+                    String submissionUrl =
+                        settings.getString(PreferencesActivity.KEY_SUBMISSION_URL, "/submission");
                     urlString = urlString + submissionUrl;
                 }
 
@@ -224,8 +225,6 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             // we need authentication, so stop and return what we've
                             // done so far.
                             mAuthRequestingServer = u;
-                            Log.e("Carl", "results so far? " + mResults.size());
-                            return mResults;
                         } else if (statusCode == 204) {
                             Header[] locations = response.getHeaders("Location");
                             if (locations != null && locations.length == 1) {
@@ -356,8 +355,6 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 // cookiestore (referenced by localContext) that will enable
                 // authenticated publication to the server.
                 //
-                // publishProgress(i, instanceCount);
-                
                 // BEGIN custom                
                 String uploadFolder = FileUtilsExtended.ODK_UPLOAD_PATH + File.separator + UUID.randomUUID();
                 FileUtils.createFolder(uploadFolder);
@@ -651,7 +648,6 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
             // END custom
         
         return mResults;
-
     }
 
 
