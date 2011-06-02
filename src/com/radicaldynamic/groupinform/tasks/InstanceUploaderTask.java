@@ -69,7 +69,10 @@ import java.util.Map.Entry;
  * 
  * @author Carl Hartung (carlhartung@gmail.com)
  */
+// BEGIN custom
+//public class InstanceUploaderTask extends AsyncTask<Long, Integer, HashMap<String, String>> {
 public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<String, String>> {
+// END custom
 
     private static String t = "InstanceUploaderTask";
     private InstanceUploaderListener mStateListener;
@@ -77,22 +80,26 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
     private static final String fail = "FAILED: ";
 
     private URI mAuthRequestingServer;
+    HashMap<String, String> mResults;
 
 
-    // TODO:  This method is like 350 lines long, down from 400.
-    // still.  ridiculous.  make it smaller.
+    // TODO: This method is like 350 lines long, down from 400.
+    // still. ridiculous. make it smaller.
     @Override
+    // BEGIN custom
+//    protected HashMap<String, String> doInBackground(Long... values) {
     protected HashMap<String, String> doInBackground(String... values) {
-        HashMap<String, String> results = new HashMap<String, String>();
+    // END custom    
+        mResults = new HashMap<String, String>();
 
         // BEGIN custom
-//        String selection = InstanceColumns.INSTANCE_FILE_PATH + "=?";
+//        String selection = InstanceColumns._ID + "=?";
 //        String[] selectionArgs = new String[values.length];
 //        for (int i = 0; i < values.length; i++) {
 //            if (i != values.length - 1) {
-//                selection += " or " + InstanceColumns.INSTANCE_FILE_PATH + "=?";
+//                selection += " or " + InstanceColumns._ID + "=?";
 //            }
-//            selectionArgs[i] = values[i];
+//            selectionArgs[i] = values[i].toString();
 //        }        
         // END custom
 
@@ -111,19 +118,18 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
 //      c.moveToPosition(-1);
 //      next_submission: while (c.moveToNext()) {
 //          if (isCancelled()) {
-//              return results;
+//              return mResults;
 //          }        
 //          publishProgress(c.getPosition() + 1, c.getCount());
 //          String instance = c.getString(c.getColumnIndex(InstanceColumns.INSTANCE_FILE_PATH));
 //          String id = c.getString(c.getColumnIndex(InstanceColumns._ID));
 //          Uri toUpdate = Uri.withAppendedPath(InstanceColumns.CONTENT_URI, id);
 //
-//          // TODO: This needs to pull from the other preferences, too.
 //          String urlString = c.getString(c.getColumnIndex(InstanceColumns.SUBMISSION_URI));
         
             next_submission: for (int i = 0; i < values.length; i++) {
                 if (isCancelled()) {
-                    return results;
+                    return mResults;
                 }
                 
                 publishProgress(i + 1, values.length);
@@ -135,16 +141,16 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     instanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstance.class, id);
                 } catch (DocumentNotFoundException e) {
                     Log.w(Collect.LOGTAG, t + "unable to retrieve instance: " + e.toString());
-                    results.put(id, fail + "warning: document not found :: details: " + e.getMessage());
+                    mResults.put(id, fail + "warning: document not found :: details: " + e.getMessage());
                     continue;
                 } catch (DbAccessException e) {
                     Log.w(Collect.LOGTAG, t + "unable to access database: " + e.toString());
-                    results.put(id, fail + "error: could not acess database :: details: " + e.getMessage());
+                    mResults.put(id, fail + "error: could not acess database :: details: " + e.getMessage());
                     continue;
                 } catch (Exception e) {                    
                     Log.e(Collect.LOGTAG, t + "unexpected exception: " + e.toString());                    
                     e.printStackTrace();
-                    results.put(id, fail + "unexpected error :: details: " + e.getMessage());
+                    mResults.put(id, fail + "unexpected error :: details: " + e.getMessage());
                     continue;
                 }
                 
@@ -155,7 +161,8 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     SharedPreferences settings =
                         PreferenceManager.getDefaultSharedPreferences(Collect.getInstance());
                     urlString = settings.getString(PreferencesActivity.KEY_SERVER_URL, null);
-                    urlString = urlString + "/submission";
+                    String submissionUrl = settings.getString(PreferencesActivity.KEY_SUBMISSION_URL, "/submission");
+                    urlString = urlString + submissionUrl;
                 }
 
                 ContentValues cv = new ContentValues();
@@ -165,7 +172,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     u = url.toURI();
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
-                    results.put(id,
+                    mResults.put(id,
                         fail + "invalid url: " + urlString + " :: details: " + e.getMessage());
                     // BEGIN custom
 //                    cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
@@ -181,7 +188,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     continue;
                 } catch (URISyntaxException e) {
                     e.printStackTrace();
-                    results.put(id,
+                    mResults.put(id,
                         fail + "invalid uri: " + urlString + " :: details: " + e.getMessage());
 //                    cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                    Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
@@ -217,8 +224,8 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             // we need authentication, so stop and return what we've
                             // done so far.
                             mAuthRequestingServer = u;
-                            cancel(true);
-                            return results;
+                            Log.e("Carl", "results so far? " + mResults.size());
+                            return mResults;
                         } else if (statusCode == 204) {
                             Header[] locations = response.getHeaders("Location");
                             if (locations != null && locations.length == 1) {
@@ -234,14 +241,16 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                                     } else {
                                         // Don't follow a redirection attempt to a different host.
                                         // We can't tell if this is a spoof or not.
-                                        results.put(
+                                        mResults.put(
                                             id,
                                             fail
                                                     + "Unexpected redirection attempt to a different host: "
                                                     + uNew.toString());
                                         // BEGIN custom
-//                                        cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
-//                                        Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
+//                                        cv.put(InstanceColumns.STATUS,
+//                                            InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
+//                                        Collect.getInstance().getContentResolver()
+//                                                .update(toUpdate, cv, null, null);
                                         
                                         try {
                                             instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
@@ -254,10 +263,12 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    results.put(id, fail + e.getMessage());
+                                    mResults.put(id, fail + e.getMessage());
                                     // BEGIN custom
-//                                    cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
-//                                    Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
+//                                    cv.put(InstanceColumns.STATUS,
+//                                        InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
+//                                    Collect.getInstance().getContentResolver()
+//                                            .update(toUpdate, cv, null, null);
                                     
                                     try {
                                         instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
@@ -287,10 +298,12 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
 
                             Log.w(t, "Status code on Head request: " + statusCode);
                             if (statusCode >= 200 && statusCode <= 299) {
-                                results.put(id, fail + "network login? ");
+                                mResults.put(id, fail + "network login? ");
                                 // BEGIN custom
-//                                cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
-//                                Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
+//                                cv.put(InstanceColumns.STATUS,
+//                                    InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
+//                                Collect.getInstance().getContentResolver()
+//                                        .update(toUpdate, cv, null, null);
                                 
                                 try {
                                     instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
@@ -304,7 +317,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         }
                     } catch (ClientProtocolException e) {
                         e.printStackTrace();
-                        results.put(id, fail + "client protocol exeption?");
+                        mResults.put(id, fail + "client protocol exeption?");
                         // BEGIN custom
 //                        cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                        Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
@@ -319,7 +332,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         continue;
                     } catch (Exception e) {
                         e.printStackTrace();
-                        results.put(id, fail + "generic excpetion.  great");
+                        mResults.put(id, fail + "generic excpetion.  great");
 //                        cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                        Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
                         
@@ -375,16 +388,16 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     }
                 } catch (DocumentNotFoundException e) {
                     Log.w(Collect.LOGTAG, t + "unable to retrieve attachment: " + e.toString());
-                    results.put(id, fail + "warning: attachment not found :: details: " + e.getMessage());
+                    mResults.put(id, fail + "warning: attachment not found :: details: " + e.getMessage());
                     continue;
                 } catch (DbAccessException e) {
                     Log.w(Collect.LOGTAG, t + "unable to access database: " + e.toString());
-                    results.put(id, fail + "error: could not acess database :: details: " + e.getMessage());
+                    mResults.put(id, fail + "error: could not acess database :: details: " + e.getMessage());
                     continue;
                 } catch (Exception e) {                    
                     Log.e(Collect.LOGTAG, t + "unexpected exception: " + e.toString());                    
                     e.printStackTrace();
-                    results.put(id, fail + "unexpected error :: details: " + e.getMessage());
+                    mResults.put(id, fail + "unexpected error :: details: " + e.getMessage());
                     continue;
                 }
                 // END custom
@@ -396,7 +409,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 // END custom
 
                 if (!instanceFile.exists()) {
-                    results.put(id, fail + "instance XML file does not exist!");
+                    mResults.put(id, fail + "instance XML file does not exist!");
                     // BEGIN custom
 //                    cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                    Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
@@ -570,14 +583,16 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         // If it wasn't, the submission has failed.
                         if (responseCode != 201 && responseCode != 202) {
                             if (responseCode == 200) {
-                                results.put(id, fail + "Network login failure?  again?");
+                                mResults.put(id, fail + "Network login failure?  again?");
                             } else {
-                                results.put(id, fail + responseCode + " returned "
+                                mResults.put(id, fail + responseCode + " returned "
                                         + response.getStatusLine().getReasonPhrase());
                             }
                             // BEGIN custom
-//                            cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
-//                            Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
+//                            cv.put(InstanceColumns.STATUS,
+//                                InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
+//                            Collect.getInstance().getContentResolver()
+//                                    .update(toUpdate, cv, null, null);
                             
                             try {
                                 instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
@@ -590,7 +605,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        results.put(id, fail + "generic exception... " + e.getMessage());
+                        mResults.put(id, fail + "generic exception... " + e.getMessage());
                         // BEGIN custom
 //                        cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                        Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
@@ -607,7 +622,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 }
 
                 // if it got here, it must have worked
-                results.put(id, Collect.getInstance().getString(R.string.success));
+                mResults.put(id, Collect.getInstance().getString(R.string.success));
                 // BEGIN custom
 //                cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMITTED);
 //                Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
@@ -635,7 +650,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
 //        } // end while
             // END custom
         
-        return results;
+        return mResults;
 
     }
 
@@ -644,13 +659,12 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
     protected void onPostExecute(HashMap<String, String> value) {
         synchronized (this) {
             if (mStateListener != null) {
-                if (isCancelled()) {
-                    mStateListener.authRequest(mAuthRequestingServer, value);
+                if (mAuthRequestingServer != null) {
+                    mStateListener.authRequest(mAuthRequestingServer, mResults);
                 } else {
                     mStateListener.uploadingComplete(value);
                 }
             }
-
         }
     }
 

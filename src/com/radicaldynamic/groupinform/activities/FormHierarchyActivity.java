@@ -41,7 +41,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.application.Collect;
 
 public class FormHierarchyActivity extends ListActivity {
 
