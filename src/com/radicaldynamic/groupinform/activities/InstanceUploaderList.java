@@ -28,7 +28,6 @@ import android.app.ListActivity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.SparseBooleanArray;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -58,12 +57,8 @@ public class InstanceUploaderList extends ListActivity {
 
     private static final int MENU_PREFERENCES = Menu.FIRST;
     private static final int INSTANCE_UPLOADER = 0;
-    private static final String BUNDLE_SELECTED_COUNT = "selectedcount";
-    
-    // number of items selected in the list
-    private int mSelectedCount;
 
-    private Button mActionButton;
+    private Button mUploadButton;
     private Button mToggleButton;
 
     // BEGIN custom
@@ -83,8 +78,8 @@ public class InstanceUploaderList extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.instance_uploader_list);
 
-        mActionButton = (Button) findViewById(R.id.upload_button);
-        mActionButton.setOnClickListener(new OnClickListener() {
+        mUploadButton = (Button) findViewById(R.id.upload_button);
+        mUploadButton.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
@@ -125,7 +120,7 @@ public class InstanceUploaderList extends ListActivity {
                     }
                     // END custom
                 }
-                mActionButton.setEnabled(!(mSelected.size() == 0));
+                mUploadButton.setEnabled(!(mSelected.size() == 0));
 
             }
         });
@@ -152,11 +147,11 @@ public class InstanceUploaderList extends ListActivity {
 //        setListAdapter(mInstances);
 //        getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 //        getListView().setItemsCanFocus(false);
-//        mActionButton.setEnabled(!(mSelected.size() == 0));
-//
-//        // set title
-//        setTitle(getString(R.string.app_name) + " > " + getString(R.string.send_data));
-//
+//        mUploadButton.setEnabled(!(mSelected.size() == 0));
+
+        // set title
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.send_data));
+
 //        // if current activity is being reinitialized due to changing orientation restore all check
 //        // marks for ones selected
 //        if (mRestored) {
@@ -246,9 +241,9 @@ public class InstanceUploaderList extends ListActivity {
             mSelected.remove(form.getId());
         else
             mSelected.add(form.getId());
-
-        mActionButton.setEnabled(!(mSelected.size() == 0));
         // END custom
+
+        mUploadButton.setEnabled(!(mSelected.size() == 0));
     }
 
 
@@ -264,8 +259,8 @@ public class InstanceUploaderList extends ListActivity {
         mToggled = savedInstanceState.getBoolean(BUNDLE_TOGGLED_KEY);
         mRestored = true;
         // BEGIN custom
-//        mActionButton.setEnabled(selectedArray.length > 0);
-        mActionButton.setEnabled(mSelected.size() > 0);
+//        mUploadButton.setEnabled(selectedArray.length > 0);
+        mUploadButton.setEnabled(mSelected.size() > 0);
         // END custom
     }
 
@@ -360,7 +355,7 @@ public class InstanceUploaderList extends ListActivity {
             getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
             getListView().setItemsCanFocus(false);
     
-            mActionButton.setEnabled(!(mSelected.size() == 0));
+            mUploadButton.setEnabled(!(mSelected.size() == 0));
     
             // If current activity is being reinitialised due to changing orientation restore selected checkmarks
             if (mRestored) {
