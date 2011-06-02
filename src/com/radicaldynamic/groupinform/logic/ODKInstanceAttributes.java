@@ -16,7 +16,7 @@ public class ODKInstanceAttributes
     private static final String t = "ODKInstanceAttributes: ";
     
     // See ODK provider/SubmissionsStorage.java
-    public static enum UploadStatus { complete, partial, failed };     
+    public static enum UploadStatus { complete, failed };     
     
     private String uploadDate;
     private UploadStatus uploadStatus;
