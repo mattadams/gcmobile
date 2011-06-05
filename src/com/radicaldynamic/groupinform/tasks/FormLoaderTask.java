@@ -114,8 +114,8 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
     FECWrapper data;
     
     // BEGIN custom
-    FormDefinition mFormDefinitionDoc = null;
-    FormInstance mFormInstanceDoc = null;
+    FormDefinition mFormDefinition = null;
+    FormInstance mFormInstance = null;
     // END custom
 
 
@@ -141,19 +141,32 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             FileUtils.createFolder(formDefinitionFile.getParent());
             FileUtils.createFolder(formDefinitionFile.getParent() + File.separator + FileUtilsExtended.MEDIA_DIR); 
             
-            mFormDefinitionDoc = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, formId);
-            AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
-             
-            FileOutputStream file = new FileOutputStream(formDefinitionFile);
-            byte [] buffer = new byte[8192];
-            int bytesRead = 0;
+            mFormDefinition = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, formId);
+            HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) mFormDefinition.getAttachments();
             
-            while ((bytesRead = ais.read(buffer)) != -1) {
-                file.write(buffer, 0, bytesRead);
+            // Download attachments (form definition XML & other media)
+            for (Entry<String, Attachment> entry : attachments.entrySet()) {
+                String key = entry.getKey();
+                FileOutputStream file;
+                
+                AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, key);
+                
+                if (key.equals("xml")) {
+                    file = new FileOutputStream(formDefinitionFile);
+                } else {
+                    file = new FileOutputStream(formDefinitionFile.getParent() + File.separator + FileUtilsExtended.MEDIA_DIR + File.separator + key);
+                }
+                
+                byte [] buffer = new byte[8192];
+                int bytesRead = 0;
+                
+                while ((bytesRead = ais.read(buffer)) != -1) {
+                    file.write(buffer, 0, bytesRead);
+                }
+                
+                file.close();
+                ais.close();
             }
-            
-            file.close();
-            ais.close();
         } catch (DocumentNotFoundException e) {
             Log.w(Collect.LOGTAG, t + ": " + e.toString());
             mErrorMsg = "The form that you requested could not be found.  It may have been removed by one of your team members.\n\nSelect OK to refresh the screen and try again.";
@@ -237,8 +250,8 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 String instanceFolder = FormEntryActivity.mInstancePath.substring(0, FormEntryActivity.mInstancePath.lastIndexOf("/")); 
                 FileUtils.createFolder(instanceFolder);
                 
-                mFormInstanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
-                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) mFormInstanceDoc.getAttachments();
+                mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
+                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) mFormInstance.getAttachments();
                 
                 // Download attachments (form instance XML & other media)
                 for (Entry<String, Attachment> entry : attachments.entrySet()) {
@@ -440,7 +453,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 } else {
                     // BEGIN custom 
 //                    mStateListener.loadingComplete(wrapper.getController());
-                    mStateListener.loadingComplete(wrapper.getController(), mFormDefinitionDoc, mFormInstanceDoc);
+                    mStateListener.loadingComplete(wrapper.getController(), mFormDefinition, mFormInstance);
                     // END custom 
                 }
             }

@@ -14,32 +14,8 @@
 
 package com.radicaldynamic.groupinform.tasks;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.protocol.HttpContext;
-import org.ektorp.Attachment;
-import org.javarosa.xform.parse.XFormParser;
-import org.kxml2.kdom.Element;
-
-import com.couchone.libcouch.Base64Coder;
-import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinition;
-import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
-import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
-
-import org.odk.collect.android.listeners.FormDownloaderListener;
-import org.odk.collect.android.logic.FormDetails;
-import org.odk.collect.android.utilities.DocumentFetchResult;
-import org.odk.collect.android.utilities.FileUtils;
-import org.odk.collect.android.utilities.WebUtils;
-
-import android.os.AsyncTask;
-import android.util.Log;
-import android.webkit.MimeTypeMap;
-
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -52,6 +28,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.protocol.HttpContext;
+import org.ektorp.AttachmentInputStream;
+import org.javarosa.xform.parse.XFormParser;
+import org.kxml2.kdom.Element;
+import org.odk.collect.android.listeners.FormDownloaderListener;
+import org.odk.collect.android.logic.FormDetails;
+import org.odk.collect.android.utilities.DocumentFetchResult;
+import org.odk.collect.android.utilities.FileUtils;
+import org.odk.collect.android.utilities.WebUtils;
+
+import android.os.AsyncTask;
+import android.util.Log;
+import android.webkit.MimeTypeMap;
+
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.documents.FormDefinition;
+import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**
  * Background task for downloading a given list of forms. We assume right now that the forms are
@@ -176,12 +175,13 @@ public class DownloadFormsTask extends
                 fDoc.setJavaRosaId(formInfo.get(FileUtils.FORMID));
                 fDoc.setSubmissionUri(formInfo.get(FileUtils.SUBMISSIONURI));
                 fDoc.setStatus(FormDefinition.Status.active);
+                Collect.getInstance().getDbService().getDb().create(fDoc);
 
-                File[] allFiles = dl.getParentFile().listFiles();
-
-                for (File f : allFiles) {
+                for (File f : dl.getParentFile().listFiles()) {
                     String fileName = f.getName();
                     String attachmentName = fileName;
+                    
+                    Log.v(Collect.LOGTAG, t + ": attaching " + fileName + " to " + fDoc.getId());
 
                     if (fileName.equals(dl.getName())) {
                         // Store a hash of the XML file for deduplication
@@ -191,14 +191,15 @@ public class DownloadFormsTask extends
 
                     String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
                     String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
-
-                    fDoc.addInlineAttachment(new Attachment(
-                            attachmentName, 
-                            new String(Base64Coder.encode(FileUtils.getFileAsBytes(f.getAbsoluteFile()))).toString(),
-                            contentType));   
+                    
+                    // Make sure that we have the most current revision number
+                    fDoc = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, fDoc.getId());
+                    
+                    FileInputStream fis = new FileInputStream(f);
+                    Collect.getInstance().getDbService().getDb().createAttachment(fDoc.getId(), fDoc.getRevision(), 
+                            new AttachmentInputStream(attachmentName, fis, contentType, f.length()));
+                    fis.close();
                 }
-
-                Collect.getInstance().getDbService().getDb().create(fDoc);
 
                 // Remove temporary download directory
                 FileUtilsExtended.deleteFolder(dl.getParent());
