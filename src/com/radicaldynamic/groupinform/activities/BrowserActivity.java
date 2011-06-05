@@ -289,6 +289,11 @@ public class BrowserActivity extends ListActivity
             startActivityForResult(i, RESULT_COPY_TO_FOLDER);
             return true;
             
+        case R.id.edit:
+            FormBuilderLauncherTask fbl = new FormBuilderLauncherTask();
+            fbl.execute(form.getId());
+            return true;
+            
         case R.id.export:
             i = new Intent(this, DataExportActivity.class);
             i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
