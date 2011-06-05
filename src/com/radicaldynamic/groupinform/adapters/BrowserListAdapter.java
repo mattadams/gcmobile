@@ -65,6 +65,9 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
                 case 1:
                     if (mSpinner.getSelectedItemPosition() == 1)
                         fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_edit));
+                case 2:
+                    if (mSpinner.getSelectedItemPosition() == 2)
+                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.clipboard_download));
                     
                     if (mTallies.containsKey(f.getId())) {
                         draft    = mTallies.get(f.getId()).get(FormInstance.Status.draft.toString());
@@ -80,7 +83,7 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
                     tallies = draft + " draft(s), " + complete + " complete";
                     break;
                     
-                case 2:
+                case 3:
                     draft = mTallies.get(f.getId()).get(FormInstance.Status.draft.toString());
                     
                     if (draft == null)
@@ -93,7 +96,7 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
                         tallies = tallies.substring(0, tallies.length() - 1);
                     break;
                     
-                case 3:
+                case 4:
                     complete = mTallies.get(f.getId()).get(FormInstance.Status.complete.toString());
                     
                     if (complete == null)

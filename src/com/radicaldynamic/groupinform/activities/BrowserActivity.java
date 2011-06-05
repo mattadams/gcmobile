@@ -289,6 +289,12 @@ public class BrowserActivity extends ListActivity
             startActivityForResult(i, RESULT_COPY_TO_FOLDER);
             return true;
             
+        case R.id.export:
+            i = new Intent(this, DataExportActivity.class);
+            i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
+            startActivity(i);
+            return true;
+            
         case R.id.remove:
             mFormDefinition = form;
             showDialog(DIALOG_REMOVE_FORM);
@@ -798,13 +804,18 @@ public class BrowserActivity extends ListActivity
             FormBuilderLauncherTask fbl = new FormBuilderLauncherTask();
             fbl.execute(form.getId());
             break;
-        // When showing all draft forms in folder... browse selected form instances
+        // When showing all forms in folder... export records
         case 2:
+            Intent dea = new Intent(this, DataExportActivity.class);
+            dea.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
+            startActivity(dea);        
+        // When showing all draft forms in folder... browse selected form instances
+        case 3:
             ilp = new InstanceLoadPathTask();
             ilp.execute(form.getId(), FormInstance.Status.draft);
             break;
         // When showing all completed forms in folder... browse selected form instances
-        case 3:
+        case 4:
             ilp = new InstanceLoadPathTask();
             ilp.execute(form.getId(), FormInstance.Status.complete);
             break;
@@ -1176,7 +1187,7 @@ public class BrowserActivity extends ListActivity
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
                 } else {
-                    if (mDialog != null && !mDialog.isShowing()) { 
+                    if (mDialog == null || !mDialog.isShowing()) { 
                         Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
                         String descriptor = s1.getSelectedItem().toString().toLowerCase();
 
@@ -1188,6 +1199,8 @@ public class BrowserActivity extends ListActivity
                             Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_SHORT).show();
                             break;
                         case 2:
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_export_records_hint), Toast.LENGTH_SHORT).show();
+                            break;
                         case 3:
                         case 4:
                             Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
@@ -1640,14 +1653,15 @@ public class BrowserActivity extends ListActivity
             // Show all forms (in folder)
             case 0:
             case 1:
+            case 2:
                 mRefreshViewTask.execute(FormInstance.Status.any);
                 break;
             // Show all draft forms
-            case 2:
+            case 3:
                 mRefreshViewTask.execute(FormInstance.Status.draft);
                 break;
             // Show all completed forms
-            case 3:
+            case 4:
                 mRefreshViewTask.execute(FormInstance.Status.complete);
                 break;
             }

@@ -152,9 +152,7 @@ public class AccountFolderList extends ListActivity
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         Dialog dialog = null;
         
-        switch (id) {
-
-            
+        switch (id) {            
         case DIALOG_DENIED_NOT_OWNER:            
             builder
                 .setIcon(R.drawable.ic_dialog_info)

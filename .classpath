@@ -18,5 +18,6 @@
 	<classpathentry kind="lib" path="lib/org.ektorp-1.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-io-2.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/kxml2-2.3.0.jar"/>
+	<classpathentry kind="lib" path="lib/SuperCSV-1.52.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

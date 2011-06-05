@@ -146,15 +146,14 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
             
             // Download attachments (form definition XML & other media)
             for (Entry<String, Attachment> entry : attachments.entrySet()) {
-                String key = entry.getKey();
+                // TODO: Skip this attachment if a cache file exists and is newer than the document create date/update date                
+                AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, entry.getKey());
                 FileOutputStream file;
                 
-                AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, key);
-                
-                if (key.equals("xml")) {
+                if (entry.getKey().equals("xml")) {
                     file = new FileOutputStream(formDefinitionFile);
                 } else {
-                    file = new FileOutputStream(formDefinitionFile.getParent() + File.separator + FileUtilsExtended.MEDIA_DIR + File.separator + key);
+                    file = new FileOutputStream(formDefinitionFile.getParent() + File.separator + FileUtilsExtended.MEDIA_DIR + File.separator + entry.getKey());
                 }
                 
                 byte [] buffer = new byte[8192];
@@ -255,15 +254,13 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 
                 // Download attachments (form instance XML & other media)
                 for (Entry<String, Attachment> entry : attachments.entrySet()) {
-                    String key = entry.getKey();
+                    AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, entry.getKey());
                     FileOutputStream file;
                     
-                    AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, key);
-                    
-                    if (key.equals("xml")) {
+                    if (entry.getKey().equals("xml")) {
                         file = new FileOutputStream(FormEntryActivity.mInstancePath);
                     } else {
-                        file = new FileOutputStream(instanceFolder + File.separator + key);
+                        file = new FileOutputStream(instanceFolder + File.separator + entry.getKey());
                     }
                     
                     byte [] buffer = new byte[8192];

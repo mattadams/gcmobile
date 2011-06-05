@@ -12,7 +12,9 @@ import org.ektorp.support.CouchDbDocument;
 
 import android.util.Log;
 
+import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.logic.AccountDevice;
 
 @SuppressWarnings("serial")
 public class Generic extends CouchDbDocument
@@ -60,6 +62,17 @@ public class Generic extends CouchDbDocument
     public String getCreatedBy() {
         return createdBy;
     }
+    
+    @JsonIgnore
+    public String getCreatedByAlias() 
+    { 
+        AccountDevice device = Collect.getInstance().getInformOnlineState().getAccountDevices().get(createdBy);
+        
+        if (device == null)
+            return Collect.getInstance().getString(R.string.tf_unavailable).toString();
+        else
+            return device.getDisplayName();
+    }
 
     public void setUpdatedBy(String updatedBy) {
         this.updatedBy = updatedBy;
@@ -67,6 +80,17 @@ public class Generic extends CouchDbDocument
 
     public String getUpdatedBy() {
         return updatedBy;
+    }
+    
+    @JsonIgnore
+    public String getUpdatedByAlias() 
+    { 
+        AccountDevice device = Collect.getInstance().getInformOnlineState().getAccountDevices().get(updatedBy);
+        
+        if (device == null)
+            return Collect.getInstance().getString(R.string.tf_unavailable).toString();
+        else
+            return device.getDisplayName();
     }
 
     public void setDateCreated(String dateCreated) {

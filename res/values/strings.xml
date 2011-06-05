@@ -222,7 +222,7 @@
 	<string name="tf_alias_not_assigned">Alias not assigned</string>
 	<string name="tf_at_top_of_form">Viewing Top of Form</string>
 	<string name="tf_audio_media_type">Audio recording</string>
-	<string name="tf_begin_instance_hint">Select list item to begin new form</string>
+	<string name="tf_begin_instance_hint">Select item to begin a new form</string>
 	<string name="tf_beta_release_msg">This software is available as a beta release but isn\'t quite ready for prime time.\n\nPlease send any questions, bug reports or suggestions to confab@groupcomplete.com or visit us on our website at http://groupcomplete.com</string>
 	<string name="tf_browse_instances_hint">Select item to %s</string>
 	<string name="tf_change_select_type">Change select type?</string>
@@ -292,7 +292,7 @@
 	<string name="tf_do_you_have_an_account_msg">If you have registered another device or have been told to use Inform by someone else then you probably have an account.\n\nDo you have an account?</string>
 	<string name="tf_edit">Edit</string>
 	<string name="tf_edit_folder">Edit Folder</string>
-	<string name="tf_edit_form_definition_hint">Select list item to edit form template</string>
+	<string name="tf_edit_form_definition_hint">Select item to edit form template</string>
 	<string name="tf_edit_list_item">Edit List Item</string>
 	<string name="tf_editing">Editing</string>
 	<string name="tf_element_barcode">Barcode reader</string>
@@ -306,6 +306,8 @@
 	<string name="tf_email_address_required">An email address is required</string>
 	<string name="tf_email_not_available">Email address not available</string>
 	<string name="tf_exit_inform">Exit Inform</string>
+	<string name="tf_export_records">Export Records</string>
+    <string name="tf_export_records_hint">Select an item to export records</string>
 	<string name="tf_fbel_default">Default value</string>
 	<string name="tf_fbel_default_hint">Any value supplied here will be shown in the input area of the field and will be saved as-is unless otherwise changed by the user.</string>
 	<string name="tf_fbel_hidden">Hidden</string>
@@ -317,7 +319,7 @@
 	<string name="tf_fbel_readonly">Read-only</string>
 	<string name="tf_fbel_readonly_hint">Read-only fields will be visible to the user but they will not be able to modify them directly. The values of read-only fields may be manipulated by advanced properties.</string>
 	<string name="tf_fbel_required">Required</string>
-	<string name="tf_fbel_required_hint">Marking this field as required will force the user to respond to it before marking the form as complete.</string>
+	<string name="tf_fbel_required_hint">Require the user to respond to this field before marking the form as complete.</string>
 	<string name="tf_field">Field</string>
 	<string name="tf_field_cannot_be_saved">Cannot save: this field must have a Label</string>
 	<string name="tf_folder_admin_name_label">Name</string>
@@ -401,7 +403,8 @@
 	<string name="tf_offline_mode_enabled_msg">You are currently working offline.  Only those folders that have been synchronized for offline use are available at this time.\n\nPlease note that some parts of this app will be unavailable while offline.</string>
 	<string name="tf_open_data_kit">Open Data Kit</string>
 	<string name="tf_open_data_kit_abbrev">ODK</string>
-	<string name="tf_opening_please_wait">Opening, please wait...</string>	
+	<string name="tf_opening_please_wait">Opening, please wait...</string>
+    <string name="tf_preparing_to_export">Preparing to export...</string>	
 	<string name="tf_processing">Processing...</string>
 	<string name="tf_reactivation_delayed_reason">Please wait 5 minutes after device reset</string>
 	<string name="tf_reactivation_delayed_wait">PIN will be accepted in%1$s%2$s %3$s</string>   
@@ -472,6 +475,8 @@
 	<string name="tf_unable_to_copy_duplicate_dialog_msg">The folder \"%1$s\" already contains a form named \"%2$s.\"\n\nPlease choose another name.</string>
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
+    <string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
+    <string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one output option must be selected for export.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_db">The Inform database is required to work offline.  If you are receiving this message it means that the database is unavailable for one or more reasons.\n\nPlease let us know that you are receiving this message by visiting us at http://groupinform.com/support - thank you!</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>

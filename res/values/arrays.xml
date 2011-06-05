@@ -63,6 +63,7 @@
     <string-array name="tf_task_spinner_values">
         <item>Start New Form</item>        
         <item>Edit Forms</item>
+        <item>Export Records</item>
         <item>Browse Drafts</item>
         <item>Browse Completed Forms</item>
     </string-array>    
