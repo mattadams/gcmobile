@@ -81,6 +81,13 @@
         android:layout_height="wrap_content"
         android:text="Include XForm instance files" />
         
+    <CheckBox
+        android:id="@+id/outputRecordMetadata"
+        android:enabled="false"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:text="Include record metadata" />
+
     <Button
         android:id="@+id/beginExport"
         android:layout_height="wrap_content"

@@ -41,6 +41,7 @@ public class DataExportActivity extends Activity implements DataExportListener
     public static final String KEY_OUTPUT_EXTERNAL_ZIP = "key_output_external_zip";
     public static final String KEY_OUTPUT_MEDIA_FILES = "key_output_media_files";
     public static final String KEY_OUTPUT_XFORM_FILES = "key_output_xform_files";
+    public static final String KEY_OUTPUT_RECORD_METADATA = "key_output_record_metadata";
     
     private static final String KEY_DATA_EXPORT_TASK = "key_data_export_task";
     private static final String KEY_FORM_DEFINITION  = "key_form_definition";
@@ -59,6 +60,7 @@ public class DataExportActivity extends Activity implements DataExportListener
     private CheckBox mOutputExternalZip;
     private CheckBox mOutputMediaFiles;
     private CheckBox mOutputXFormFiles;
+    private CheckBox mOutputRecordMetadata;
     
     private FormDefinition mFormDefinition;
     
@@ -111,6 +113,7 @@ public class DataExportActivity extends Activity implements DataExportListener
         mOutputExternalZip  = (CheckBox) findViewById(R.id.outputExternalZip);
         mOutputMediaFiles   = (CheckBox) findViewById(R.id.outputMediaFiles);
         mOutputXFormFiles   = (CheckBox) findViewById(R.id.outputXFormFiles);
+        mOutputRecordMetadata = (CheckBox) findViewById(R.id.outputRecordMetadata);
         
         Button beginExport = (Button) findViewById(R.id.beginExport);
         
@@ -150,9 +153,13 @@ public class DataExportActivity extends Activity implements DataExportListener
                 mOutputExternalZip.setEnabled(isChecked);
                 mOutputMediaFiles.setEnabled(isChecked);
                 mOutputXFormFiles.setEnabled(isChecked);
+                mOutputRecordMetadata.setEnabled(isChecked);
                 
                 if (!mOutputMediaFiles.isChecked() && isChecked)
                     mOutputMediaFiles.setChecked(true);
+
+                if (!mOutputRecordMetadata.isChecked() && isChecked)
+                    mOutputRecordMetadata.setChecked(true);
             }           
         });
         
@@ -320,6 +327,9 @@ public class DataExportActivity extends Activity implements DataExportListener
         
         if (mOutputXFormFiles.isEnabled() && mOutputXFormFiles.isChecked())
             data.putBoolean(KEY_OUTPUT_XFORM_FILES, true);
+
+        if (mOutputRecordMetadata.isEnabled() && mOutputRecordMetadata.isChecked())
+            data.putBoolean(KEY_OUTPUT_RECORD_METADATA, true);
         
         return data;        
     }

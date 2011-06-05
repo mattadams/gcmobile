@@ -95,13 +95,19 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
             ais.close();
             
             publishProgress("Generating headers...");
-            // Include metadata headers
-            mExportHeaders.put("recordUuid", "Unique Record ID");            
-            mExportHeaders.put("dateCreated", "Record Date Created");
-            mExportHeaders.put("createdBy", "Record Created By");
-            mExportHeaders.put("dateUpdated", "Record Date Updated");
-            mExportHeaders.put("updatedBy", "Record Updated By");
-            mExportHeaders.put("recordStatus", "Record Status");
+
+            // Include metadata headers?
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
+                mExportHeaders.put("formDefinitionName", "Form Name");
+                mExportHeaders.put("formDefinitionUuid", "Unique Form ID");
+                mExportHeaders.put("recordUuid", "Unique Record ID");
+                mExportHeaders.put("dateCreated", "Record Date Created");
+                mExportHeaders.put("createdBy", "Record Created By");
+                mExportHeaders.put("dateUpdated", "Record Date Updated");
+                mExportHeaders.put("updatedBy", "Record Updated By");
+                mExportHeaders.put("recordStatus", "Record Status");
+            }
+
             generateExportHeaders(mFormReader.getInstance());
             
             // Exit early if error
@@ -172,12 +178,18 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 
                 // Prepare new record for export
                 mExportData.add(new HashMap<String, Object>());
-                mExportData.getLast().put(mExportHeaders.get("recordUuid"), instance.getId());
-                mExportData.getLast().put(mExportHeaders.get("recordStatus"), instance.getStatus().toString());
-                mExportData.getLast().put(mExportHeaders.get("dateCreated"), instance.getDateCreated());
-                mExportData.getLast().put(mExportHeaders.get("createdBy"), instance.getCreatedByAlias());
-                mExportData.getLast().put(mExportHeaders.get("dateUpdated"), instance.getDateUpdated());
-                mExportData.getLast().put(mExportHeaders.get("updatedBy"), instance.getUpdatedByAlias());
+
+                // Add in per-record metadata?
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
+                    mExportData.getLast().put(mExportHeaders.get("formDefinitionUuid"), mFormDefinition.getId());
+                    mExportData.getLast().put(mExportHeaders.get("formDefinitionName"), mFormDefinition.getName());
+                    mExportData.getLast().put(mExportHeaders.get("recordUuid"), instance.getId());
+                    mExportData.getLast().put(mExportHeaders.get("recordStatus"), instance.getStatus().toString());
+                    mExportData.getLast().put(mExportHeaders.get("dateCreated"), instance.getDateCreated());
+                    mExportData.getLast().put(mExportHeaders.get("createdBy"), instance.getCreatedByAlias());
+                    mExportData.getLast().put(mExportHeaders.get("dateUpdated"), instance.getDateUpdated());
+                    mExportData.getLast().put(mExportHeaders.get("updatedBy"), instance.getUpdatedByAlias());
+                }
                 
                 // Parse instance data from XML file
                 FileInputStream fis = new FileInputStream(new File(instancePath));
