@@ -113,12 +113,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
             // Exit early if error
             if (mErrorMsg != null)
                 return null;
-            
-            // Directory to place data files
-            String prefix = "export_" + getExportTimestamp();
-            String exportPath = Environment.getExternalStorageDirectory() + File.separator + prefix + File.separator; 
-            FileUtils.createFolder(exportPath);
-            
+
             publishProgress("Retrieving records...");
             List<FormInstance> unfilteredList = ((FormInstanceRepo) new FormInstanceRepo(Collect.getInstance().getDbService().getDb())).findByFormId(mFormDefinition.getId());
             
@@ -135,6 +130,16 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 }
             }
             
+            if (mExportList.size() == 0) {
+                mErrorMsg = "No records found to export!";
+                return null;
+            }
+
+            // Directory to place data files
+            String prefix = "export_" + getExportTimestamp();
+            String exportPath = Environment.getExternalStorageDirectory() + File.separator + prefix + File.separator; 
+            FileUtils.createFolder(exportPath);
+
             // Compile export data for each instance
             for (i = 0; i < mExportList.size(); i++) {
                 FormInstance instance = mExportList.get(i);
@@ -247,9 +252,9 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 // Remove export data directory
                 FileUtilsExtended.deleteFolder(exportPath);
                 
-                mCompleteMsg = "Data has been exported to your device's external storage (SD card or other).\n\nPlease look for a ZIP file with the following name:\n\n" + prefix;
+                mCompleteMsg = mExportList.size() + " records have been exported to your device's external storage (SD card or other).\n\nPlease look for a ZIP file with the following name:\n\n" + prefix;
             } else {
-                mCompleteMsg = "Data has been exported to your device's external storage (SD card or other).\n\nPlease look for a folder with the following name:\n\n" + prefix;                
+                mCompleteMsg = mExportList.size() + " records have been exported to your device's external storage (SD card or other).\n\nPlease look for a folder with the following name:\n\n" + prefix;
             }
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + "problem retreiving form template: " + e.toString());
