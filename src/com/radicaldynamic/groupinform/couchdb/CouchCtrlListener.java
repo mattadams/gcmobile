@@ -4,8 +4,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.couchone.libcouch.Base64Coder;
 import com.couchone.libcouch.AndCouch;
+import com.radicaldynamic.groupinform.utilities.Base64Coder;
 
 import android.util.Log;
 

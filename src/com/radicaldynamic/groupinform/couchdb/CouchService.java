@@ -18,7 +18,7 @@ import android.os.RemoteException;
 
 import com.couchone.libcouch.AeSimpleSHA1;
 import com.couchone.libcouch.AndCouch;
-import com.couchone.libcouch.Base64Coder;
+import com.radicaldynamic.groupinform.utilities.Base64Coder;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 public class CouchService extends Service 
