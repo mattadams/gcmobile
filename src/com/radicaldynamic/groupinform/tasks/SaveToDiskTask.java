@@ -20,6 +20,9 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.ektorp.AttachmentInputStream;
 import org.javarosa.core.model.FormDef;
@@ -181,48 +184,105 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
 //        }
         
         String instancePath = FormEntryActivity.mInstancePath;
-        String instanceId = instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.lastIndexOf("."));
+        String docId = instancePath.substring(instancePath.lastIndexOf("/") + 1, instancePath.lastIndexOf("."));
+        boolean firstSave = mFormInstance.getStatus().equals(FormInstance.Status.placeholder);
+        String revision = null;
         
         try {
-            FormInstance fid = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
-            fid.setXmlHash(FileUtils.getMd5Hash(new File(instancePath)));
-
+            // Update document status, etc.
             if (mMarkCompleted) 
-                fid.setStatus(FormInstance.Status.complete);
+                mFormInstance.setStatus(FormInstance.Status.complete);
             else
-                fid.setStatus(FormInstance.Status.draft);
+                mFormInstance.setStatus(FormInstance.Status.draft);
 
-            Collect.getInstance().getDbService().getDb().update(fid);
+            mFormInstance.setXmlHash(FileUtils.getMd5Hash(new File(instancePath)));
+            Collect.getInstance().getDbService().getDb().update(mFormInstance);
+            revision = mFormInstance.getRevision();
 
+            // Process attachments
             File instanceDir = new File(instancePath).getParentFile();
-            String [] attachmentFilenames = instanceDir.list();
+            String[] attachmentFilenames = instanceDir.list();
 
-            for (String attachmentFilename : attachmentFilenames) {
-                Log.v(Collect.LOGTAG, t + "attaching " + attachmentFilename + " to " + instanceId);
+            /*
+             * Get a list of attachments that already exist; we will use this to determine if 
+             * we need to remove attachments after saving attachments that exist in our cache
+             * directory.
+             */
+            Set<String> existingAttachments = new HashSet<String>();
 
-                // Make sure that we have the most current revision number
-                fid = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
-                
-                File f = new File(new File(instancePath).getParentFile(), attachmentFilename);
-                FileInputStream fis = new FileInputStream(f);
-                
-                String extension = attachmentFilename.substring(attachmentFilename.lastIndexOf(".") + 1);
-                String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+            if (mFormInstance.getAttachments() != null) {
+                existingAttachments = new HashSet<String>(mFormInstance.getAttachments().keySet());
+            }
+
+            for (String fileName : attachmentFilenames) {
+                File f = new File(new File(instancePath).getParentFile(), fileName);
+                String ext = fileName.substring(fileName.lastIndexOf(".") + 1);
+                boolean exists = false;
                 
                 // XML instance file should simply be named "xml"
-                if (attachmentFilename.equals(instanceId + ".xml"))
-                    attachmentFilename = "xml";
+                if (fileName.equals(docId + ".xml"))
+                    fileName = "xml";
                 
-                AttachmentInputStream a = new AttachmentInputStream(attachmentFilename, fis, contentType, f.length());
+                // Remove this entry from the list of existing attachments (to be removed)
+                if (existingAttachments.contains(fileName))
+                    exists = existingAttachments.remove(fileName);
+
+                // Skip identically named attachments with the same size
+                if (exists && mFormInstance.getAttachments().get(fileName).getContentLength() == f.length()) {
+                    Log.v(Collect.LOGTAG, t + ": " + fileName + " already attached to " + docId + " (" + f.length() + " bytes)");
+
+                    // Don't skip the xml instance document!  Contents are likely to change but leave the size untouched.
+                    if (!fileName.equals("xml"))
+                        continue;
+                } else {
+                    Log.d(Collect.LOGTAG, t + ": attaching " + fileName + " to " + docId);
+                }
+
+
+                FileInputStream fis = new FileInputStream(f);
+                String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+                AttachmentInputStream a = new AttachmentInputStream(fileName, fis, contentType, f.length());
                 
-                Collect.getInstance().getDbService().getDb().createAttachment(instanceId, fid.getRevision(), a);
+                revision = Collect.getInstance().getDbService().getDb().createAttachment(docId, revision, a);
             }
             
-            // Retrieve last revision object to return to form editor
-            mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
+            // Remove attachments that no longer exist
+            Iterator<String> attachmentsToRemove = existingAttachments.iterator();
+
+            while (attachmentsToRemove.hasNext()) {
+                String attachmentId = attachmentsToRemove.next();
+
+                try {
+                    Log.d(Collect.LOGTAG, t + ": removing unused attachment " + attachmentId);
+                    revision = Collect.getInstance().getDbService().getDb().deleteAttachment(docId, revision, attachmentId);
+                } catch (Exception e) {
+                    Log.e(Collect.LOGTAG, t + ": unexpected exception while removing unused attachment " + attachmentId);
+                    e.printStackTrace();
+                }
+            }
+
+            // Make sure that we have the most current instance to return to FormEntryActivity
+            mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, docId);
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "error while attaching files to instance document " + instanceId);
+            Log.e(Collect.LOGTAG, t + ": unexpected exception while attaching files to instance document " + docId);
             e.printStackTrace();
+
+            /*
+             * It is possible that the first update may succeed but that attachments changes may fail.
+             * If this document is a new one, then remove it altogether so that we don't have stale 
+             * and invalid documents laying about.  This is a last ditch effort.
+             */
+            try {
+                if (firstSave) {
+                    Log.d(Collect.LOGTAG, t + ": removing " + mFormInstance.getId() + " due to first save failure ");
+                    Collect.getInstance().getDbService().getDb().delete(mFormInstance.getId(), mFormInstance.getRevision());
+                    mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, docId);
+                }
+            } catch (Exception e1) {
+                Log.e(Collect.LOGTAG, t + ": failed last ditch effort to tidy after save oops");
+                e.printStackTrace();
+            }
+
             return false;
         }        
         // END custom        
@@ -294,9 +354,15 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     }
 
 
-    public void setExportVars(Boolean saveAndExit, Boolean markCompleted) {
+    // BEGIN custom
+//    public void setExportVars(Boolean saveAndExit, Boolean markCompleted) {
+    public void setExportVars(Boolean saveAndExit, Boolean markCompleted, FormInstance formInstance) {
+    // END custom
         mSave = saveAndExit;
         mMarkCompleted = markCompleted;
+        // BEGIN custom
+        mFormInstance = formInstance;
+        // END custom
     }
 
 

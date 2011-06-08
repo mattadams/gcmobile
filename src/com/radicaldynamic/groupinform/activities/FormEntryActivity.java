@@ -1144,7 +1144,10 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
         mSaveToDiskTask = new SaveToDiskTask(getIntent().getData());
         mSaveToDiskTask.setFormSavedListener(this);
-        mSaveToDiskTask.setExportVars(exit, complete);
+        // BEGIN custom
+//        mSaveToDiskTask.setExportVars(exit, complete);
+        mSaveToDiskTask.setExportVars(exit, complete, mFormInstance);
+        // END custom
         mSaveToDiskTask.execute();
         showDialog(SAVING_DIALOG);
 

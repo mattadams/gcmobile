@@ -241,6 +241,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         if (FormEntryActivity.mInstancePath != null) {
             // This order is important. Import data, then initialize.
             // BEGIN custom
+//            importData(FormEntryActivity.mInstancePath, fec);
             try {
                 String instanceId = FormEntryActivity.mInstancePath.substring(FormEntryActivity.mInstancePath.lastIndexOf("/") + 1, FormEntryActivity.mInstancePath.lastIndexOf("."));
                 
@@ -273,13 +274,14 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                     file.close();
                     ais.close();
                 }
+
+                importData(FormEntryActivity.mInstancePath, fec);
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form instance: " + e.toString());
                 mErrorMsg = e.getMessage();
                 e.printStackTrace();            
             }
             // END custom
-            importData(FormEntryActivity.mInstancePath, fec);
             fd.initialize(false);
         } else {
             fd.initialize(true);
