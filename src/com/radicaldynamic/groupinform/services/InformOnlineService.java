@@ -35,6 +35,7 @@ import org.json.JSONTokener;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Binder;
 import android.os.ConditionVariable;
 import android.os.IBinder;
@@ -224,6 +225,12 @@ public class InformOnlineService extends Service {
         params.add(new BasicNameValuePair("deviceId", Collect.getInstance().getInformOnlineState().getDeviceId()));
         params.add(new BasicNameValuePair("deviceKey", Collect.getInstance().getInformOnlineState().getDeviceKey()));
         params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
+        
+        try {
+            params.add(new BasicNameValuePair("lastCheckinWith", this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName));
+        } catch (NameNotFoundException e1) {
+            params.add(new BasicNameValuePair("lastCheckinWith", "unknown"));
+        }
         
         String checkinUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/checkin";
         String postResult = HttpUtils.postUrlData(checkinUrl, params);            
