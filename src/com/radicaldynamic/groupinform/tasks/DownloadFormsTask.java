@@ -175,7 +175,10 @@ public class DownloadFormsTask extends
                 fDoc.setJavaRosaId(formInfo.get(FileUtils.FORMID));
                 fDoc.setSubmissionUri(formInfo.get(FileUtils.SUBMISSIONURI));
                 fDoc.setStatus(FormDefinition.Status.active);
+                fDoc.setXmlHash(FileUtils.getMd5Hash(dl));
                 Collect.getInstance().getDbService().getDb().create(fDoc);
+
+                String revision = fDoc.getRevision();
 
                 for (File f : dl.getParentFile().listFiles()) {
                     String fileName = f.getName();
@@ -183,21 +186,15 @@ public class DownloadFormsTask extends
                     
                     Log.v(Collect.LOGTAG, t + ": attaching " + fileName + " to " + fDoc.getId());
 
-                    if (fileName.equals(dl.getName())) {
-                        // Store a hash of the XML file for deduplication
-                        fDoc.setXmlHash(FileUtils.getMd5Hash(f));
-                        attachmentName = "xml";                        
-                    }
+                    if (fileName.equals(dl.getName()))
+                        attachmentName = "xml";
 
                     String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
                     String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
                     
-                    // Make sure that we have the most current revision number
-                    fDoc = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, fDoc.getId());
-                    
                     FileInputStream fis = new FileInputStream(f);
-                    Collect.getInstance().getDbService().getDb().createAttachment(fDoc.getId(), fDoc.getRevision(), 
-                            new AttachmentInputStream(attachmentName, fis, contentType, f.length()));
+                    AttachmentInputStream ais = new AttachmentInputStream(attachmentName, fis, contentType, f.length()); 
+                    revision = Collect.getInstance().getDbService().getDb().createAttachment(fDoc.getId(), revision, ais);
                     fis.close();
                 }
 
@@ -290,6 +287,7 @@ public class DownloadFormsTask extends
         List<FormDefinition> fdl = fdr.findByXmlHash(md5Hash);
         
         if (!fdl.isEmpty()) {
+            FileUtilsExtended.deleteFolder(downloadFolder);
             throw new DuplicateXFormFile();
         }
         // END custom
