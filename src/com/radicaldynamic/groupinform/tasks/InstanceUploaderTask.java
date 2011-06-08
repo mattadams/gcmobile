@@ -160,7 +160,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 if (urlString == null) {
                     SharedPreferences settings =
                         PreferenceManager.getDefaultSharedPreferences(Collect.getInstance());
-                    urlString = settings.getString(PreferencesActivity.KEY_SERVER_URL, null);
+                    urlString = settings.getString(PreferencesActivity.KEY_SERVER_URL, Collect.getInstance().getString(R.string.default_server_url));
                     String submissionUrl =
                         settings.getString(PreferencesActivity.KEY_SUBMISSION_URL, "/submission");
                     urlString = urlString + submissionUrl;
