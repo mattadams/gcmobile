@@ -152,6 +152,11 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 
                 HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
                 
+                if (attachments == null) {
+                    Log.w(Collect.LOGTAG, t + "skipping attachment download for " + instance.getId() + ": no attachments!");
+                    continue;
+                }
+
                 // Download attachments (form instance XML & other media)
                 for (Entry<String, Attachment> entry : attachments.entrySet()) {
                     String key = entry.getKey();
@@ -221,6 +226,9 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
             
             writer.close();
             
+            // Total successfully exported vs. total in list to export
+            String exportTally = mExportData.size() + "/" + mExportList.size();
+
             // Create a ZIP archive containing the requested file
             if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_EXTERNAL_ZIP, false)) {
                 publishProgress("Compressing exported data...");
@@ -252,9 +260,9 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 // Remove export data directory
                 FileUtilsExtended.deleteFolder(exportPath);
                 
-                mCompleteMsg = mExportList.size() + " records have been exported to your device's external storage (SD card or other).\n\nPlease look for a ZIP file with the following name:\n\n" + prefix;
+                mCompleteMsg = exportTally + " records have been successfully exported to your device's external storage (SD card or other).\n\nPlease look for a ZIP file with the following name:\n\n" + prefix;
             } else {
-                mCompleteMsg = mExportList.size() + " records have been exported to your device's external storage (SD card or other).\n\nPlease look for a folder with the following name:\n\n" + prefix;
+                mCompleteMsg = exportTally + " records have been successfully exported to your device's external storage (SD card or other).\n\nPlease look for a folder with the following name:\n\n" + prefix;
             }
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + "problem retreiving form template: " + e.toString());

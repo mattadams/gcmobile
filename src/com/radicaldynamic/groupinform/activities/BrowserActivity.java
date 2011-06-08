@@ -813,7 +813,8 @@ public class BrowserActivity extends ListActivity
         case 2:
             Intent dea = new Intent(this, DataExportActivity.class);
             dea.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
-            startActivity(dea);        
+            startActivity(dea);
+            break;
         // When showing all draft forms in folder... browse selected form instances
         case 3:
             ilp = new InstanceLoadPathTask();
