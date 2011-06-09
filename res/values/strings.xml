@@ -294,10 +294,10 @@
 	<string name="tf_edit_folder">Edit Folder</string>
 	<string name="tf_edit_form_definition_hint">Select item to edit form template</string>
 	<string name="tf_edit_list_item">Edit List Item</string>
-    <string name="tf_edit_template">Edit Template</string>
+	<string name="tf_edit_template">Edit Template</string>
 	<string name="tf_editing">Editing</string>
 	<string name="tf_element_barcode">Barcode reader</string>
-	<string name="tf_element_date">Date selection</string>
+	<string name="tf_element_datetime">Date/time selection</string>
 	<string name="tf_element_geopoint">Geopoint detection</string>
 	<string name="tf_element_group">Group of fields</string>
 	<string name="tf_element_media">Media field</string>
@@ -307,8 +307,9 @@
 	<string name="tf_email_address_required">An email address is required</string>
 	<string name="tf_email_not_available">Email address not available</string>
 	<string name="tf_exit_inform">Exit Inform</string>
+	<string name="tf_export_from">Export from</string>
 	<string name="tf_export_records">Export Records</string>
-    <string name="tf_export_records_hint">Select an item to export records</string>
+	<string name="tf_export_records_hint">Select an item to export records</string>
 	<string name="tf_fbel_default">Default value</string>
 	<string name="tf_fbel_default_hint">Any value supplied here will be shown in the input area of the field and will be saved as-is unless otherwise changed by the user.</string>
 	<string name="tf_fbel_hidden">Hidden</string>
@@ -405,7 +406,7 @@
 	<string name="tf_open_data_kit">Open Data Kit</string>
 	<string name="tf_open_data_kit_abbrev">ODK</string>
 	<string name="tf_opening_please_wait">Opening, please wait...</string>
-    <string name="tf_preparing_to_export">Preparing to export...</string>	
+	<string name="tf_preparing_to_export">Preparing to export...</string>	
 	<string name="tf_processing">Processing...</string>
 	<string name="tf_reactivation_delayed_reason">Please wait 5 minutes after device reset</string>
 	<string name="tf_reactivation_delayed_wait">PIN will be accepted in%1$s%2$s %3$s</string>   
@@ -476,8 +477,8 @@
 	<string name="tf_unable_to_copy_duplicate_dialog_msg">The folder \"%1$s\" already contains a form named \"%2$s.\"\n\nPlease choose another name.</string>
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
-    <string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
-    <string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one output option must be selected for export.</string>
+	<string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
+	<string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one output option must be selected for export.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_db">The Inform database is required to work offline.  If you are receiving this message it means that the database is unavailable for one or more reasons.\n\nPlease let us know that you are receiving this message by visiting us at http://groupinform.com/support - thank you!</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>

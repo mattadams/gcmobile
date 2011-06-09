@@ -16,20 +16,6 @@
         android:layout_height="wrap_content" 
         android:layout_width="fill_parent"
         android:layout_marginBottom="3dp"
-        android:text="Export Data From"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-        
-    <TextView 
-        android:id="@+id/exportFormDefinitionName"
-        android:layout_height="wrap_content" 
-        android:layout_width="fill_parent" />
-        
-    <TextView 
-        android:id="@android:id/empty"
-        android:layout_height="wrap_content" 
-        android:layout_width="fill_parent"
-        android:layout_marginBottom="3dp"
-        android:paddingTop="10dp"
         android:text="Select Records To Export"
         android:textAppearance="?android:attr/textAppearanceLarge" />        
        

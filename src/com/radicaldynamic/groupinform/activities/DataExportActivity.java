@@ -105,8 +105,7 @@ public class DataExportActivity extends Activity implements DataExportListener
         super.onCreate(savedInstanceState);
         
         setContentView(R.layout.data_export);
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_export_records));
-        
+
         mExportDraft        = (CheckBox) findViewById(R.id.exportDraft);
         mExportCompleted    = (CheckBox) findViewById(R.id.exportCompleted);
         mOutputExternal     = (CheckBox) findViewById(R.id.outputExternal);
@@ -172,7 +171,7 @@ public class DataExportActivity extends Activity implements DataExportListener
             
             try {
                 mFormDefinition = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, id);
-                ((TextView) findViewById(R.id.exportFormDefinitionName)).setText(mFormDefinition.getName());                
+                setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_export_from) + " " + mFormDefinition.getName());
             } catch (Exception e ){
                 Log.e(Collect.LOGTAG, t + "unexpected exception while retrieving form definition document: " + e.toString());
                 e.printStackTrace();
