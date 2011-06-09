@@ -181,14 +181,15 @@ public class InstanceUploaderList extends ListActivity {
 //        Intent i = new Intent(this, InstanceUploaderActivity.class);
 //        i.putExtra(FormEntryActivity.KEY_INSTANCES, instanceIDs);
 //        startActivityForResult(i, INSTANCE_UPLOADER);
-        ArrayList<String> selectedInstances = new ArrayList<String>();
         
+        Bundle b = new Bundle();
+
         for (String formId : mSelected) {
-            selectedInstances.addAll(mInstances.get(formId));            
+            b.putStringArrayList(formId, new ArrayList<String>(mInstances.get(formId)));
         }
-        
+
         Intent i = new Intent(this, InstanceUploaderActivity.class);
-        i.putExtra(FormEntryActivity.KEY_INSTANCES, selectedInstances);
+        i.putExtra(FormEntryActivity.KEY_INSTANCES, b);
         startActivityForResult(i, INSTANCE_UPLOADER);
         // END custom
     }

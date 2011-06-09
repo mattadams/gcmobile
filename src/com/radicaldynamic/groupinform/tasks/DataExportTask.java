@@ -335,7 +335,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 Log.v(Collect.LOGTAG, tt + "add export column index " + i.getXPath() + " with column header " + xpathPrefix + i.getName());
                 mExportHeaders.put(i.getXPath(), xpathPrefix + i.getName());
             } else {
-                mErrorMsg = "This form template contains repeated questions.\n\nExport of form data containing repeated groups is not yet supported by this app release.";
+                mErrorMsg = "This form template contains one or more repeated groups.\n\nExport of form data with repeated groups is not supported by this version of Inform.\n\nSupport for exporting these types of forms will be added in a future release.";
                 return;
             }
         }

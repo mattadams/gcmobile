@@ -20,7 +20,11 @@ import org.odk.collect.android.preferences.PreferencesActivity;
 import org.odk.collect.android.utilities.WebUtils;
 
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
+import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.documents.FormDefinition;
+import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
 import com.radicaldynamic.groupinform.tasks.InstanceUploaderTask;
+import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -41,6 +45,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -68,6 +73,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
     // BEGIN custom
 //    private ArrayList<Long> mInstancesToSend;
     private ArrayList<String> mInstancesToSend;
+    private Bundle mUploadBundle;
     // END custom
 
     // maintain a list of what we've sent, in case we're interrupted by auth requests
@@ -98,12 +104,17 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
 //            return;
 //        }
 
-        mInstancesToSend = intent.getStringArrayListExtra(FormEntryActivity.KEY_INSTANCES);
+        if (intent.hasExtra(FormEntryActivity.KEY_INSTANCES)) {
+            mUploadBundle = intent.getBundleExtra(FormEntryActivity.KEY_INSTANCES);
+            mInstancesToSend = new ArrayList<String>();
 
-        if (mInstancesToSend == null) {
-            Toast.makeText(this, R.string.noselect_error, Toast.LENGTH_LONG);
-            finish();
-            return;
+            Set<String> formIds = mUploadBundle.keySet();
+            Iterator<String> formIterator = formIds.iterator();
+
+            while (formIterator.hasNext()) {
+                String formId = formIterator.next();
+                mInstancesToSend.addAll(mUploadBundle.getStringArrayList(formId));
+            }
         }
         // END custom
         
@@ -114,6 +125,11 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
             if (savedInstanceState.containsKey(ALERT_SHOWING)) {
                 mAlertShowing = savedInstanceState.getBoolean(ALERT_SHOWING, false);
             }
+            // BEGIN custom
+            if (savedInstanceState.containsKey(FormEntryActivity.KEY_INSTANCES)) {
+                mUploadBundle = savedInstanceState.getBundle(FormEntryActivity.KEY_INSTANCES);
+            }
+            // END custom
         }
         
         if (savedInstanceState != null && !savedInstanceState.containsKey(TO_SEND)) {
@@ -197,18 +213,53 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
 //        
 //        createAlertDialog(message.toString());
         
-        // TODO: properly integrate with names as per above commented out code
-        StringBuilder b = new StringBuilder();
-        Set<String> keys = result.keySet();
-        Iterator<String> it = keys.iterator();
-        
-        while (it.hasNext()) {
-            String instance = it.next();
-            b.append(instance + " :: ");
-            b.append(result.get(instance) + " \n");            
+
+        try {
+            FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());
+            ArrayList<FormDefinition> definitions = (ArrayList<FormDefinition>) repo.getAllActiveByKeys(new ArrayList<Object>(mUploadBundle.keySet()));
+            DocumentUtils.sortByName(definitions);
+
+            StringBuilder b = new StringBuilder();
+            Iterator<FormDefinition> definitionIterator = definitions.iterator();
+
+            while (definitionIterator.hasNext()) {
+                StringBuilder errors = new StringBuilder();
+                FormDefinition d = definitionIterator.next();
+                b.append(d.getName() + ": sent ");
+
+                int totalUploads = 0;
+                int successfulUploads = 0;
+
+                Iterator<String> instanceIterator = mUploadBundle.getStringArrayList(d.getId()).iterator();
+
+                while (instanceIterator.hasNext()) {
+                    String i = instanceIterator.next();
+                    totalUploads++;
+
+                    if (result.get(i).equals("SUCCESS"))
+                        successfulUploads++;
+                    else
+                        errors.append(result.get(i) + "\n");
+                }
+
+                b.append(successfulUploads + "/" + totalUploads + "\n");
+                b.append("Errors: ");
+
+                if (errors.length() > 0)
+                    b.append(errors.toString());
+                else
+                    b.append("none");
+
+                if (definitionIterator.hasNext())
+                    b.append("\n\n");
+            }
+
+            createAlertDialog(b.toString());
+        } catch (Exception e) {
+            createAlertDialog("Error attempting to summarize upload results:\n" + e.toString());
+            Log.e(Collect.LOGTAG, t + ": unable to summarize upload results");
+            e.printStackTrace();
         }
-        
-        createAlertDialog(b.toString());
         // END custom
     }
 
@@ -325,6 +376,9 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         outState.putString(ALERT_MSG, mAlertMsg);
         outState.putBoolean(ALERT_SHOWING, mAlertShowing);
         outState.putSerializable(TO_SEND, mInstancesToSend);
+        // BEGIN custom
+        outState.putBundle(FormEntryActivity.KEY_INSTANCES, mUploadBundle);
+        // END custom
     }
 
 
