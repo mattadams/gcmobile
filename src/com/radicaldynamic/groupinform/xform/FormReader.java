@@ -3,6 +3,7 @@ package com.radicaldynamic.groupinform.xform;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLDocumentException;
 import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.utilities.StringUtils;
 
 public class FormReader
 {
@@ -29,8 +31,11 @@ public class FormReader
     private ArrayList<Bind> mBinds = new ArrayList<Bind>();
     private ArrayList<Field> mFields = new ArrayList<Field>();
     private ArrayList<Instance> mInstance = new ArrayList<Instance>();
-    private ArrayList<Translation> mTranslations = new ArrayList<Translation>();    
-    
+    private ArrayList<Translation> mTranslations = new ArrayList<Translation>();
+
+    // Indexed by XMLTool tag location (e.g., *[2]/*[2]/*[3])
+    private HashMap<String, Field> mFlatFieldIndex = new HashMap<String, Field>();
+
     {
         // List of valid fields that we can handle
         Collections.addAll(mFieldList, "group", "input", "item", "repeat", "select", "select1", "trigger", "upload");
@@ -39,7 +44,7 @@ public class FormReader
     /*
      * Used to read in a form definition for manipulation by the Form Builder.
      */
-    public FormReader(InputStream is)
+    public FormReader(InputStream is) throws Exception
     {
         boolean newForm = false;
         mForm = XMLDoc.from(is, false);
@@ -84,7 +89,8 @@ public class FormReader
                 // It's possible that the ID attribute doesn't exist -- if this is the case, try and use the old-style XMLNS attribute
                 mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute("xmlns");
             } catch (XMLDocumentException e1) {
-                Log.w(Collect.LOGTAG, t + e1.toString());
+                Log.e(Collect.LOGTAG, t + e1.toString());
+                throw new Exception("Unable to find id or xmlns attribute for instance.\n\nPlease contact our support team with this message at confab@groupcomplete.com");
             }
         }
         
@@ -92,6 +98,9 @@ public class FormReader
         Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
         
         parseForm();
+
+        // Free immediately
+        mFlatFieldIndex.clear();
     }
     
     public ArrayList<Bind> getBinds()
@@ -132,7 +141,7 @@ public class FormReader
     /*
      * Trigger method for doing all of the actual work
      */
-    private void parseForm()
+    private void parseForm() throws Exception
     {
         if (mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix)) {
             Log.d(Collect.LOGTAG, t + "parsing itext form translations...");
@@ -154,24 +163,55 @@ public class FormReader
     /*
      * Recursively iterate over the form fields, creating objects to represent these fields
      */
-    private void parseFormFields(XMLTag tag)
+    private void parseFormFields(XMLTag tag) throws Exception
     {       
-        Log.v(Collect.LOGTAG, t + "visiting <" + tag.getCurrentTagName() + ">");
+        String ctl = tag.getCurrentTagLocation();
+
+        Log.v(Collect.LOGTAG, t + "visiting <" + tag.getCurrentTagName() + "> at " + ctl);
         
         if (mFieldList.contains(tag.getCurrentTagName())) {
-            if (tag.getCurrentTagLocation().split("/").length == 2) {
+            Field f = null;
+
+            if (ctl.split("/").length == 2) {
                 // Add a top level field
-                mFields.add(new Field(tag, mBinds, mInstanceRoot, null));
+                f = new Field(tag, mBinds, mInstanceRoot, null);
+                mFields.add(f);
             } else {
-                // Field belongs elsewhere as a child of another field
-                attachChildToParentField(tag, null);
+                String ptl = StringUtils.join(ctl.split("/"), "/", ctl.split("/").length - 1);
+                Field p = mFlatFieldIndex.get(ptl);
+
+                if (p == null) {
+                    Log.e(Collect.LOGTAG, t + "could not find parent!");
+                    throw new Exception("Could not find parent tag at " + ptl + ".\n\nPlease contact our support team with this message at confab@groupcomplete.com");
+                } else {
+                    f = new Field(tag, mBinds, mInstanceRoot, p);
+                    p.getChildren().add(f);
+                }
             }
-        } else if (tag.getCurrentTagName().equals("label")) {
-            applyProperty(tag);
-        } else if (tag.getCurrentTagName().equals("hint")) {
-            applyProperty(tag);
-        } else if (tag.getCurrentTagName().equals("value")) {
-            applyProperty(tag);
+
+            mFlatFieldIndex.put(ctl, f);
+        } else if (mFields.size() > 0) {
+            String ptl = StringUtils.join(ctl.split("/"), "/", ctl.split("/").length - 1);
+            Field p = mFlatFieldIndex.get(ptl);
+
+            if (p == null) {
+                Log.e(Collect.LOGTAG, t + "could not find parent!");
+                throw new Exception("Could not find parent tag at " + ptl + ".\n\nPlease contact our support team with this message at confab@groupcomplete.com");
+            }
+
+            if (tag.getCurrentTagName().equals("label")) {
+                if (tag.hasAttribute("ref"))
+                    p.setLabel(tag.getAttribute("ref"));
+                else
+                    p.setLabel(tag.getInnerText());
+            } else if (tag.getCurrentTagName().equals("hint")) {
+                if (tag.hasAttribute("ref"))
+                    p.setHint(tag.getAttribute("ref"));
+                else
+                    p.setHint(tag.getInnerText());
+            } else if (tag.getCurrentTagName().equals("value")) {
+                p.setItemValue(tag.getInnerText());
+            }
         }
 
         // If field element has children then list fields recursively from the standpoint of every child
@@ -180,106 +220,16 @@ public class FormReader
                 @Override
                 public void execute(XMLTag arg0)
                 {
-                    parseFormFields(arg0);
+                    try {
+                        parseFormFields(arg0);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             });
         }
     }
 
-    /*
-     * For fields that are nested within other fields (e.g., not top-level group or repeat fields) 
-     * determine which field is the parent and attach the new field to it as a child.
-     * 
-     * This uses the same test for determining a parent as recursivelyApplyProperty().
-     */
-    private void attachChildToParentField(XMLTag child, Field incomingParent)
-    {
-        Iterator<Field> it = null;
-        
-        if (incomingParent == null)
-            it = mFields.iterator();
-        else
-            it = incomingParent.getChildren().iterator();
-        
-        while (it.hasNext()) {
-            Field parent = it.next();
-            
-            if (child.getCurrentTagLocation().split("/").length - parent.getLocation().split("/").length == 1 &&
-                    parent.getLocation().equals(child.getCurrentTagLocation().substring(0, parent.getLocation().length())))
-                parent.getChildren().add(new Field(child, mBinds, mInstanceRoot, parent));
-            
-            if (!parent.getChildren().isEmpty())
-                attachChildToParentField(child, parent);
-        }
-    }
-    
-    /*
-     * Iterate recursively through the list of fields stopping only when the correct field object 
-     * has been found (the field object to which this property applies and should be set for)
-     */
-    private boolean applyProperty(XMLTag tag)
-    {
-        Iterator<Field> it = mFields.iterator();
-        
-        while (it.hasNext()) {
-            Field c = it.next();
-            if (recursivelyApplyProperty(c, tag)) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    /*
-     * Recursive method for applyProperty().  Determines the proper object to apply the property to by 
-     * comparing the property location and the field object location.  E.g.,
-     * 
-     * If the field exists at *[2]/*[2]/*[3] then the property located at  *[2]/*[2]/*[3]/*[1] or 
-     * any other direct child of *[2]/*[2]/*[3] should be assigned to same. 
-     */
-    private boolean recursivelyApplyProperty(Field targetField, XMLTag tag)
-    {
-        if (tag.getCurrentTagLocation().split("/").length - targetField.getLocation().split("/").length == 1 &&
-                targetField.getLocation().equals(tag.getCurrentTagLocation().substring(0, targetField.getLocation().length()))) {       
-            
-            // Set the label
-            if (tag.getCurrentTagName().contains("label")) {
-                if (tag.hasAttribute("ref")) 
-                    targetField.setLabel(tag.getAttribute("ref"));
-                else
-                    targetField.setLabel(tag.getInnerText());
-            }
-            
-            // Set the hint
-            if (tag.getCurrentTagName().contains("hint")) {
-                if (tag.hasAttribute("ref")) 
-                    targetField.setHint(tag.getAttribute("ref"));
-                else
-                    targetField.setHint(tag.getInnerText());                
-            }
-            
-            // Set the value of this item (used for select and select1 item lists)
-            if (tag.getCurrentTagName().contains("value")) {
-                targetField.setItemValue(tag.getInnerText());
-            }
-            
-            return true;
-        }
-        
-        Iterator<Field> children = targetField.getChildren().iterator();
-        
-        while (children.hasNext()) {
-            Field child = children.next();
-            
-            if (recursivelyApplyProperty(child, tag))
-                return true;
-        }
-        
-        // This should never happen
-        return false;
-    }
-    
     /*
      * Recursively parse the form translations, adding objects to mTranslationState to represent them
      */

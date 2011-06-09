@@ -28,4 +28,19 @@ public class StringUtils
     public static void main(String[] args) throws NoSuchAlgorithmException {
         System.out.println(getMD5("Javarmi.com"));
     }
+
+    public static String join(String[] a, String separator, int limit) {
+        StringBuffer result = new StringBuffer();
+
+        if (a.length > 0) {
+            result.append(a[0]);
+
+            for (int i = 1; i < a.length && i < limit; i++) {
+                result.append(separator);
+                result.append(a[i]);
+            }
+        }
+
+        return result.toString();
+    }
 }

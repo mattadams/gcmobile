@@ -1604,7 +1604,7 @@ public class BrowserActivity extends ListActivity
      * Parse an attachment input stream (form definition XML file), affect h:title and instance 
      * root & id attribute and return the XML file as byte[] for consumption by the controlling task. 
      */
-    private byte[] renameFormDefinition(AttachmentInputStream ais, String newName)
+    private byte[] renameFormDefinition(AttachmentInputStream ais, String newName) throws Exception
     {
         FormReader fr = new FormReader(ais);
 
