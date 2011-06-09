@@ -297,7 +297,7 @@
 	<string name="tf_edit_template">Edit Template</string>
 	<string name="tf_editing">Editing</string>
 	<string name="tf_element_barcode">Barcode reader</string>
-	<string name="tf_element_datetime">Date/time selection</string>
+	<string name="tf_element_date">Date selection</string>
 	<string name="tf_element_geopoint">Geopoint detection</string>
 	<string name="tf_element_group">Group of fields</string>
 	<string name="tf_element_media">Media field</string>
@@ -475,6 +475,7 @@
 	<string name="tf_unable_to_connect">Unable To Connect</string>
 	<string name="tf_unable_to_copy">Unable To Copy</string>
 	<string name="tf_unable_to_copy_duplicate_dialog_msg">The folder \"%1$s\" already contains a form named \"%2$s.\"\n\nPlease choose another name.</string>
+	<string name="tf_unable_to_copy_unsupported_definition">The form template that you are trying to copy uses a new template format that is not fully supported by this version of Inform.\n\nSupport for copying forms with multimedia questions will be added in a future version of Inform.</string>
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
