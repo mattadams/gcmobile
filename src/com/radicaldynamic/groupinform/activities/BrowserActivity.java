@@ -27,7 +27,6 @@ import java.util.UUID;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
-import org.ektorp.DbAccessException;
 import org.ektorp.DocumentNotFoundException;
 import org.ektorp.ReplicationStatus;
 import org.odk.collect.android.utilities.FileUtils;
