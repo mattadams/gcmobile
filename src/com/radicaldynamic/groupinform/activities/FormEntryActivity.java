@@ -126,7 +126,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     private static final int MENU_LANGUAGES = Menu.FIRST + 1;
     private static final int MENU_HIERARCHY_VIEW = Menu.FIRST + 2;
     private static final int MENU_SAVE = Menu.FIRST + 3;
-    private static final int MENU_FONT = Menu.FIRST + 4;
+    private static final int MENU_PREFERENCES = Menu.FIRST + 4;
 
     private static final int PROGRESS_DIALOG = 1;
     private static final int SAVING_DIALOG = 2;
@@ -537,7 +537,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         menu.removeItem(MENU_LANGUAGES);
         menu.removeItem(MENU_HIERARCHY_VIEW);
         menu.removeItem(MENU_SAVE);
-        menu.removeItem(MENU_FONT);
+        menu.removeItem(MENU_PREFERENCES);
         // BEGIN custom
         menu.removeItem(MENU_REMOVE);
         menu.removeItem(MENU_INFO);
@@ -559,8 +559,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 .setEnabled(
                     (mFormController.getLanguages() == null || mFormController.getLanguages().length == 1) ? false
                             : true);
-        //TODO:  Add to strings, and add an icon to the menu
-        menu.add(0, MENU_FONT, 0, "font");
+        menu.add(0, MENU_PREFERENCES, 0, getString(R.string.general_preferences)).setIcon(
+            android.R.drawable.ic_menu_preferences);
         // BEGIN custom
         menu.add(0, MENU_REMOVE, 0, getString(R.string.tf_remove_form)).setIcon(R.drawable.ic_menu_delete);
         // END custom
@@ -591,7 +591,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 // END custom
                 startActivityForResult(i, HIERARCHY_ACTIVITY);
                 return true;
-            case MENU_FONT:
+            case MENU_PREFERENCES:
                 Intent pref = new Intent(this, PreferencesActivity.class);
                 startActivity(pref);
                 return true;

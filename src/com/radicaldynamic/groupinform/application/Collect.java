@@ -29,6 +29,7 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Environment;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -156,6 +157,7 @@ public class Collect extends Application {
     @Override
     public void onCreate() {
         singleton = this;
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         super.onCreate();        
     }
 

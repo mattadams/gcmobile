@@ -143,11 +143,6 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
 //            }
             // END custom
         }
-        
-        if (mAlertShowing) {
-            createAlertDialog(mAlertMsg);
-            return;
-        }
 
         // get the task if we've changed orientations. If it's null it's a new upload.
         mInstanceUploaderTask = (InstanceUploaderTask) getLastNonConfigurationInstance();
@@ -408,6 +403,9 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
     protected void onResume() {
         if (mInstanceUploaderTask != null) {
             mInstanceUploaderTask.setUploaderListener(this);
+        }
+        if (mAlertShowing) {
+            createAlertDialog(mAlertMsg);
         }
         super.onResume();
     }

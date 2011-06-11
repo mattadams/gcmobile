@@ -262,7 +262,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    mResults.put(id, fail + e.getMessage());
+                                    mResults.put(id, fail + urlString + " " + e.getMessage());
                                     // BEGIN custom
 //                                    cv.put(InstanceColumns.STATUS,
 //                                        InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
@@ -518,6 +518,10 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             entity.addPart(f.getName(), fb);
                             byteCount += f.length();
                             Log.i(t, "added csv file " + f.getName());
+                        } else if (f.getName().endsWith(".amr")) {
+                            fb = new FileBody(f, "audio/amr");
+                            entity.addPart(f.getName(), fb);
+                            Log.i(t, "added audio file " + f.getName());
                         } else if (extension.equals("xls")) {
                             fb = new FileBody(f, "application/vnd.ms-excel");
                             entity.addPart(f.getName(), fb);
@@ -582,8 +586,8 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             if (responseCode == 200) {
                                 mResults.put(id, fail + "Network login failure?  again?");
                             } else {
-                                mResults.put(id, fail + responseCode + " returned "
-                                        + response.getStatusLine().getReasonPhrase());
+                                mResults.put(id, fail + urlString + " returned " + responseCode + " " + 
+                                        response.getStatusLine().getReasonPhrase());
                             }
                             // BEGIN custom
 //                            cv.put(InstanceColumns.STATUS,
