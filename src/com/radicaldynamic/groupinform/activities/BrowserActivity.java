@@ -994,13 +994,9 @@ public class BrowserActivity extends ListActivity
                 
                 Collect.getInstance().getDbService().getDb(copyToFolderId).create(copyOfFormDefinition);
                 
-                copied = true;
-            } catch (DocumentNotFoundException e) {
-                Log.w(Collect.LOGTAG, tt + "DocumentNotFoundException: " + e.toString());
-            } catch (DbAccessException e) {
-                Log.w(Collect.LOGTAG, tt + "DbAccessException: " + e.toString());                
+                copied = true;             
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, tt + "unhandled exception");
+                Log.e(Collect.LOGTAG, tt + "unexpected exception");
                 e.printStackTrace();
             }
             
