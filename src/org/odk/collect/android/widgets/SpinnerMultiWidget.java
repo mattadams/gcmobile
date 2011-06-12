@@ -6,7 +6,7 @@ import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.SelectMultiData;
 import org.javarosa.core.model.data.helper.Selection;
 import org.javarosa.form.api.FormEntryPrompt;
-import org.odk.collect.android.R;
+import com.radicaldynamic.groupinform.R;
 
 import android.app.AlertDialog;
 import android.content.Context;
