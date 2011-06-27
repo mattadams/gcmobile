@@ -224,11 +224,11 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 e.printStackTrace();
             } 
         }
-        
+
         if (mErrorMsg != null) {
             return null;
         }
-        
+
         // new evaluation context for function handlers
         EvaluationContext ec = new EvaluationContext();
         fd.setEvaluationContext(ec);
@@ -237,54 +237,59 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         FormEntryModel fem = new FormEntryModel(fd);
         fec = new FormEntryController(fem);
 
-        // import existing data into formdef
-        if (FormEntryActivity.mInstancePath != null) {
-            // This order is important. Import data, then initialize.
-            // BEGIN custom
-//            importData(FormEntryActivity.mInstancePath, fec);
-            try {
-                String instanceId = FormEntryActivity.mInstancePath.substring(FormEntryActivity.mInstancePath.lastIndexOf("/") + 1, FormEntryActivity.mInstancePath.lastIndexOf("."));
-                
-                Log.d(Collect.LOGTAG, t + ": retrieving form instance document " + instanceId);
-                
-                String instanceFolder = FormEntryActivity.mInstancePath.substring(0, FormEntryActivity.mInstancePath.lastIndexOf("/")); 
-                FileUtils.createFolder(instanceFolder);
-                
-                mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
-                HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) mFormInstance.getAttachments();
-                
-                // Download attachments (form instance XML & other media)
-                for (Entry<String, Attachment> entry : attachments.entrySet()) {
-                    AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, entry.getKey());
-                    FileOutputStream file;
-                    
-                    if (entry.getKey().equals("xml")) {
-                        file = new FileOutputStream(FormEntryActivity.mInstancePath);
-                    } else {
-                        file = new FileOutputStream(instanceFolder + File.separator + entry.getKey());
-                    }
-                    
-                    byte [] buffer = new byte[8192];
-                    int bytesRead = 0;
-                    
-                    while ((bytesRead = ais.read(buffer)) != -1) {
-                        file.write(buffer, 0, bytesRead);
-                    }
-                    
-                    file.close();
-                    ais.close();
-                }
+        try {
+            // import existing data into formdef
+            if (FormEntryActivity.mInstancePath != null) {
+                // This order is important. Import data, then initialize.
+                // BEGIN custom
+                // importData(FormEntryActivity.mInstancePath, fec);
+                try {
+                    String instanceId = FormEntryActivity.mInstancePath.substring(FormEntryActivity.mInstancePath.lastIndexOf("/") + 1, FormEntryActivity.mInstancePath.lastIndexOf("."));
 
-                importData(FormEntryActivity.mInstancePath, fec);
-            } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form instance: " + e.toString());
-                mErrorMsg = e.getMessage();
-                e.printStackTrace();            
+                    Log.d(Collect.LOGTAG, t + ": retrieving form instance document " + instanceId);
+
+                    String instanceFolder = FormEntryActivity.mInstancePath.substring(0, FormEntryActivity.mInstancePath.lastIndexOf("/")); 
+                    FileUtils.createFolder(instanceFolder);
+
+                    mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, instanceId);
+                    HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) mFormInstance.getAttachments();
+
+                    // Download attachments (form instance XML & other media)
+                    for (Entry<String, Attachment> entry : attachments.entrySet()) {
+                        AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(instanceId, entry.getKey());
+                        FileOutputStream file;
+
+                        if (entry.getKey().equals("xml")) {
+                            file = new FileOutputStream(FormEntryActivity.mInstancePath);
+                        } else {
+                            file = new FileOutputStream(instanceFolder + File.separator + entry.getKey());
+                        }
+
+                        byte [] buffer = new byte[8192];
+                        int bytesRead = 0;
+
+                        while ((bytesRead = ais.read(buffer)) != -1) {
+                            file.write(buffer, 0, bytesRead);
+                        }
+
+                        file.close();
+                        ais.close();
+                    }
+
+                    importData(FormEntryActivity.mInstancePath, fec);
+                } catch (Exception e) {
+                    Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form instance: " + e.toString());
+                    mErrorMsg = e.getMessage();
+                    e.printStackTrace();            
+                }
+                // END custom
+                fd.initialize(false);
+            } else {
+                fd.initialize(true);
             }
-            // END custom
-            fd.initialize(false);
-        } else {
-            fd.initialize(true);
+        } catch (RuntimeException e) {
+            mErrorMsg = e.getMessage();
+            return null;
         }
 
         // set paths to /sdcard/odk/forms/formfilename-media/

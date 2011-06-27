@@ -754,7 +754,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 BitmapDrawable bitImage = null;
                 // attempt to load the form-specific logo...
                 // this is arbitrarily silly
-                bitImage = new BitmapDrawable(mediaDir + "form_logo.png");
+                bitImage = new BitmapDrawable(mediaDir + "/form_logo.png");
 
                 if (bitImage != null && bitImage.getBitmap() != null
                         && bitImage.getIntrinsicHeight() > 0 && bitImage.getIntrinsicWidth() > 0) {
@@ -1106,6 +1106,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      * Creates and displays dialog with the given errorMsg.
      */
     private void createErrorDialog(String errorMsg, final boolean shouldExit) {
+        mErrorMessage = errorMsg;
         mAlertDialog = new AlertDialog.Builder(this).create();
         mAlertDialog.setIcon(android.R.drawable.ic_dialog_alert);
         mAlertDialog.setTitle(getString(R.string.error_occured));
@@ -1489,9 +1490,10 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
     @Override
     protected void onResume() {
+        super.onResume();
         if (mFormLoaderTask != null) {
             mFormLoaderTask.setFormLoaderListener(this);
-            if (mFormLoaderTask.getStatus() == AsyncTask.Status.FINISHED) {
+            if (mFormController != null && mFormLoaderTask.getStatus() == AsyncTask.Status.FINISHED) {
                 dismissDialog(PROGRESS_DIALOG);
                 refreshCurrentView();
             }
@@ -1499,7 +1501,10 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         if (mSaveToDiskTask != null) {
             mSaveToDiskTask.setFormSavedListener(this);
         }
-        super.onResume();
+        if (mErrorMessage != null && (mAlertDialog != null && !mAlertDialog.isShowing())) {
+            createErrorDialog(mErrorMessage, EXIT);
+            return;
+        }
     }
 
 
@@ -1641,23 +1646,26 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         // BEGIN custom
         /* Disabled this functionality until we can integrate in into our world (new issue) */
 //        // Set the language if one has already been set in the past
-//        String defaultLanguage = mFormController.getLanguage();
-//        String newLanguage = "";
-//        String selection = FormsColumns.FORM_FILE_PATH + "=?";
-//        String selectArgs[] = {
-//            mFormPath
-//        };
-//        Cursor c = managedQuery(FormsColumns.CONTENT_URI, null, selection, selectArgs, null);
-//        if (c.getCount() == 1) {
-//            c.moveToFirst();
-//            newLanguage = c.getString(c.getColumnIndex(FormsColumns.LANGUAGE));
-//        }
+//        String[] languageTest = mFormController.getLanguages();
+//        if (languageTest != null) {
+//            String defaultLanguage = mFormController.getLanguage();
+//            String newLanguage = "";
+//            String selection = FormsColumns.FORM_FILE_PATH + "=?";
+//            String selectArgs[] = {
+//                mFormPath
+//            };
+//            Cursor c = managedQuery(FormsColumns.CONTENT_URI, null, selection, selectArgs, null);
+//            if (c.getCount() == 1) {
+//                c.moveToFirst();
+//                newLanguage = c.getString(c.getColumnIndex(FormsColumns.LANGUAGE));
+//            }
 //
-//        // if somehow we end up with a bad language, set it to the default
-//        try {
-//            mFormController.setLanguage(newLanguage);
-//        } catch (Exception e) {
-//            mFormController.setLanguage(defaultLanguage);
+//            // if somehow we end up with a bad language, set it to the default
+//            try {
+//                mFormController.setLanguage(newLanguage);
+//            } catch (Exception e) {
+//                mFormController.setLanguage(defaultLanguage);
+//            }
 //        }
         // END custom
 
@@ -1671,7 +1679,6 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     @Override
     public void loadingError(String errorMsg) {
         dismissDialog(PROGRESS_DIALOG);
-        mErrorMessage = errorMsg;
         if (errorMsg != null) {
             createErrorDialog(errorMsg, EXIT);
         } else {
