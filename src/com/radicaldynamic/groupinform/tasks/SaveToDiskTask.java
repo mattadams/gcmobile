@@ -56,6 +56,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     private Boolean mSave;
     private Boolean mMarkCompleted;
     private Uri mUri;
+    private String mInstanceName;
 
     public static final int SAVED = 500;
     public static final int SAVE_ERROR = 501;
@@ -68,8 +69,17 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     // END custom
 
 
-    public SaveToDiskTask(Uri uri) {
+    // BEGIN custom
+//    public SaveToDiskTask(Uri uri, Boolean saveAndExit, Boolean markCompleted, String updatedName) {
+    public SaveToDiskTask(Uri uri, Boolean saveAndExit, Boolean markCompleted, String updatedName, FormInstance formInstance) {
+    // END custom
         mUri = uri;
+        mSave = saveAndExit;
+        mMarkCompleted = markCompleted;
+        mInstanceName = updatedName;
+        // BEGIN custom
+        mFormInstance = formInstance;
+        // END custom
     }
 
 
@@ -131,6 +141,9 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
 //        // If FormEntryActivity was started with an Instance, just update that instance
 //        if (Collect.getInstance().getContentResolver().getType(mUri) == InstanceColumns.CONTENT_ITEM_TYPE) {
 //            ContentValues values = new ContentValues();
+//            if (mInstanceName != null) {
+//                values.put(InstanceColumns.DISPLAY_NAME, mInstanceName);
+//            }
 //            if (!mMarkCompleted) {
 //                values.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_INCOMPLETE);
 //            } else {
@@ -144,6 +157,9 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
 //            // 'save data' option from the menu. So try to update first, then make a new one if that
 //            // fails.
 //            ContentValues values = new ContentValues();
+//            if (mInstanceName != null) {
+//                values.put(InstanceColumns.DISPLAY_NAME, mInstanceName);
+//            }
 //            if (mMarkCompleted) {
 //                values.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_COMPLETE);
 //            } else {
@@ -176,7 +192,11 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
 //                values.put(InstanceColumns.INSTANCE_FILE_PATH, FormEntryActivity.mInstancePath);
 //                values.put(InstanceColumns.INSTANCE_FILE_PATH, FormEntryActivity.mInstancePath);
 //                values.put(InstanceColumns.SUBMISSION_URI, submissionUri);
-//                values.put(InstanceColumns.DISPLAY_NAME, formname);
+//                if (mInstanceName != null) {
+//                    values.put(InstanceColumns.DISPLAY_NAME, mInstanceName);
+//                } else {
+//                    values.put(InstanceColumns.DISPLAY_NAME, formname);
+//                }
 //                values.put(InstanceColumns.JR_FORM_ID, jrformid);
 //                Collect.getInstance().getContentResolver()
 //                        .insert(InstanceColumns.CONTENT_URI, values);
@@ -196,6 +216,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                 mFormInstance.setStatus(FormInstance.Status.draft);
 
             mFormInstance.setXmlHash(FileUtils.getMd5Hash(new File(instancePath)));
+            mFormInstance.setName(mInstanceName);
             Collect.getInstance().getDbService().getDb().update(mFormInstance);
             revision = mFormInstance.getRevision();
 
@@ -351,18 +372,6 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
         synchronized (this) {
             mSavedListener = fsl;
         }
-    }
-
-
-    // BEGIN custom
-//    public void setExportVars(Boolean saveAndExit, Boolean markCompleted) {
-    public void setExportVars(Boolean saveAndExit, Boolean markCompleted, FormInstance formInstance) {
-    // END custom
-        mSave = saveAndExit;
-        mMarkCompleted = markCompleted;
-        // BEGIN custom
-        mFormInstance = formInstance;
-        // END custom
     }
 
 

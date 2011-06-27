@@ -37,6 +37,9 @@ public class FormDefinition extends Generic
 
     public void setName(String name)
     {
+        if (name != null) 
+            name = name.trim();
+        
         this.name = name;
     }
 

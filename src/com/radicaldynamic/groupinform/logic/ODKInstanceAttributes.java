@@ -11,6 +11,10 @@ import android.util.Log;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.Generic;
 
+/*
+ * Attributes associated with a FormInstance that serve no purpose but to provide interoperability with
+ * Open Data Kit upstream functionality or compatibility with native ODK components (e.g., ODK Aggregate).
+ */
 public class ODKInstanceAttributes 
 {   
     private static final String t = "ODKInstanceAttributes: ";

@@ -65,6 +65,7 @@ import android.view.animation.Animation.AnimationListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -574,7 +575,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 return true;
             case MENU_SAVE:
                 // don't exit
-                saveDataToDisk(DO_NOT_EXIT, isInstanceComplete());
+                saveDataToDisk(DO_NOT_EXIT, isInstanceComplete(), null);
                 return true;
             case MENU_HIERARCHY_VIEW:
                 if (currentPromptIsQuestion()) {
@@ -776,13 +777,62 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                     ((CheckBox) endView.findViewById(R.id.mark_finished));
                 instanceComplete.setChecked(isInstanceComplete());
 
-                // Create 'save for later' button
+                // edittext to change the displayed name of the instance
+                final EditText saveAs = (EditText) endView.findViewById(R.id.save_name);
+                String saveName = mFormController.getFormTitle();
+                // BEGIN custom
+//                if (getContentResolver().getType(getIntent().getData()) == InstanceColumns.CONTENT_ITEM_TYPE) {
+//                    Uri instanceUri = getIntent().getData();
+//                    Cursor instance = managedQuery(instanceUri, null, null, null, null);
+//                    if (instance.getCount() == 1) {
+//                        instance.moveToFirst();
+//                        saveName =
+//                            instance.getString(instance
+//                                    .getColumnIndex(InstanceColumns.DISPLAY_NAME));
+//                    }
+//                }
+
+                // Retrieve instance name if it has been set
+                if (mFormInstance.getName() != null) {
+                    saveName = mFormInstance.getName();                   
+                }
+                // END custom
+
+                saveAs.setText(saveName);
+
+                // Create 'save' button
                 ((Button) endView.findViewById(R.id.save_exit_button))
                         .setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 // Form is marked as 'saved' here.
-                                saveDataToDisk(EXIT, instanceComplete.isChecked());
+                                if (saveAs.getText().length() < 1) {
+                                    Toast.makeText(FormEntryActivity.this, R.string.save_as_error,
+                                        Toast.LENGTH_SHORT).show();
+                                } else {
+                                    // BEGIN custom
+//                                    saveDataToDisk(EXIT, instanceComplete.isChecked(), saveAs
+//                                            .getText().toString());
+                                    
+                                    /*
+                                     * Don't ask the SaveToDiskTask to set an instance name if it is
+                                     * equal to the current form definition name.
+                                     * 
+                                     * Rationale: if the form definition name changes in the future 
+                                     * we don't want to call instances by the old form name or 
+                                     * display the old form name.  This won't make a lot of sense to 
+                                     * the user.
+                                     * 
+                                     * The current idea is that we might display form instances in the
+                                     * form browser by their form name AND any custom name if it exists.
+                                     * E.g., New Widgets (Smith Interview)
+                                     */
+                                    if (saveAs.getText().toString().equals(mFormDefinition.getName()))
+                                        saveDataToDisk(EXIT, instanceComplete.isChecked(), null);
+                                    else
+                                        saveDataToDisk(EXIT, instanceComplete.isChecked(), saveAs.getText().toString());
+                                    // END custom
+                                }
                             }
                         });
 
@@ -1135,21 +1185,24 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
 
     /**
-     * Called during a 'save and exit' command. The form is not 'done' here.
+     * Saves data and writes it to disk. If exit is set, program will exit after save completes.
+     * Complete indicates whether the user has marked the isntancs as complete. If updatedSaveName
+     * is non-null, the instances content provider is updated with the new name
      */
-    private boolean saveDataToDisk(boolean exit, boolean complete) {
+    private boolean saveDataToDisk(boolean exit, boolean complete, String updatedSaveName) {
         // save current answer
         if (!saveAnswersForCurrentScreen(EVALUATE_CONSTRAINTS)) {
             Toast.makeText(this, getString(R.string.data_saved_error), Toast.LENGTH_SHORT).show();
             return false;
         }
 
-        mSaveToDiskTask = new SaveToDiskTask(getIntent().getData());
-        mSaveToDiskTask.setFormSavedListener(this);
         // BEGIN custom
-//        mSaveToDiskTask.setExportVars(exit, complete);
-        mSaveToDiskTask.setExportVars(exit, complete, mFormInstance);
+//        mSaveToDiskTask = 
+//            new SaveToDiskTask(getIntent().getData(), exit, complete, updatedSaveName);
+        mSaveToDiskTask = 
+            new SaveToDiskTask(getIntent().getData(), exit, complete, updatedSaveName, mFormInstance);
         // END custom
+        mSaveToDiskTask.setFormSavedListener(this);
         mSaveToDiskTask.execute();
         showDialog(SAVING_DIALOG);
 
@@ -1183,7 +1236,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                             switch (which) {
 
                                 case 0: // save and exit
-                                    saveDataToDisk(EXIT, isInstanceComplete());
+                                    saveDataToDisk(EXIT, isInstanceComplete(), null);
                                     break;
                                     
                                 case 1: // discard changes and exit

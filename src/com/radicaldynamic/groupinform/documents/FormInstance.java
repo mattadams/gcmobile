@@ -8,14 +8,15 @@ public class FormInstance extends Generic
 
     /*
      * Any:         Not an actual status (represents queries for forms without regard for instance status, e.g., give me everything)
-     * Placeholder: Created when a new instance is created for entry (may be deleted if instance entry is cancelled before being saved)
      * Draft:       A form instance that is saved but not marked complete (same as ODK "incomplete" status)
      * Complete:    A form instance that is saved and marked complete
+     * Placeholder: Created when a new instance is created for entry (may be deleted if instance entry is cancelled before being saved)
      * Removed:     A form instance marked for delayed deletion
      */
     public static enum Status { any, draft, complete, placeholder, removed };
 
     private String formId;
+    private String name;
     private ODKInstanceAttributes odk;
     private Status status;
     
@@ -32,6 +33,17 @@ public class FormInstance extends Generic
     public String getFormId()
     {
         return formId;
+    }    
+
+    public void setName(String name) {
+        if (name != null) 
+            name = name.trim();        
+        
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public void setOdk(ODKInstanceAttributes odk) {
