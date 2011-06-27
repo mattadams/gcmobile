@@ -173,16 +173,14 @@ public class SpinnerWidget extends QuestionWidget {
 
     @Override
     public void setOnLongClickListener(OnLongClickListener l) {
-        super.setOnLongClickListener(l);
         spinner.setOnLongClickListener(l);
     }
-    
+
+
     @Override
     public void cancelLongPress() {
         super.cancelLongPress();
         spinner.cancelLongPress();
     }
-    
-    
 
 }

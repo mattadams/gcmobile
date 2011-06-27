@@ -337,7 +337,6 @@ public class GridWidget extends QuestionWidget {
 
     @Override
     public void setOnLongClickListener(OnLongClickListener l) {
-        super.setOnLongClickListener(l);
         gridview.setOnLongClickListener(l);
     }
 

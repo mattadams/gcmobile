@@ -20,7 +20,6 @@ import org.javarosa.form.api.FormEntryPrompt;
 
 import android.content.Context;
 import android.view.Gravity;
-import android.view.View.OnLongClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
 
@@ -135,7 +134,6 @@ public class DateWidget extends QuestionWidget {
 
     @Override
     public void setOnLongClickListener(OnLongClickListener l) {
-        super.setOnLongClickListener(l);
         mDatePicker.setOnLongClickListener(l);
     }
 

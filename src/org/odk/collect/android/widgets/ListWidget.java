@@ -24,7 +24,6 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -279,26 +278,6 @@ public class ListWidget extends QuestionWidget implements OnCheckedChangeListene
     }
 
 
-    @Override
-    public void setOnLongClickListener(OnLongClickListener l) {
-        super.setOnLongClickListener(l);
-
-        for (RadioButton r : buttons) {
-            r.setOnLongClickListener(l);
-        }
-    }
-
-
-    @Override
-    public void cancelLongPress() {
-        super.cancelLongPress();
-
-        for (RadioButton r : buttons) {
-            r.cancelLongPress();
-        }
-    }
-
-
     // Override QuestionWidget's add question text. Build it the same
     // but add it to the relative layout
     protected void addQuestionText(FormEntryPrompt p) {
@@ -327,6 +306,23 @@ public class ListWidget extends QuestionWidget implements OnCheckedChangeListene
         questionLayout.setOrientation(LinearLayout.HORIZONTAL);
 
         questionLayout.addView(questionText, labelParams);
+    }
+
+
+    @Override
+    public void setOnLongClickListener(OnLongClickListener l) {
+        for (RadioButton r : buttons) {
+            r.setOnLongClickListener(l);
+        }
+    }
+
+
+    @Override
+    public void cancelLongPress() {
+        super.cancelLongPress();
+        for (RadioButton r : buttons) {
+            r.cancelLongPress();
+        }
     }
 
 }

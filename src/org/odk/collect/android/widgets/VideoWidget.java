@@ -246,7 +246,6 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
 
     @Override
     public void setOnLongClickListener(OnLongClickListener l) {
-        super.setOnLongClickListener(l);
         mCaptureButton.setOnLongClickListener(l);
         mChooseButton.setOnLongClickListener(l);
         mPlayButton.setOnLongClickListener(l);

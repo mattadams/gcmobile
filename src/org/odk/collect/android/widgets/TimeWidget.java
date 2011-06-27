@@ -20,7 +20,6 @@ import org.javarosa.form.api.FormEntryPrompt;
 
 import android.content.Context;
 import android.view.Gravity;
-import android.view.View.OnLongClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TimePicker;
 
@@ -104,7 +103,6 @@ public class TimeWidget extends QuestionWidget {
 
     @Override
     public void setOnLongClickListener(OnLongClickListener l) {
-        super.setOnLongClickListener(l);
         mTimePicker.setOnLongClickListener(l);
     }
 
