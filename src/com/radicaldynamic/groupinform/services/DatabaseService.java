@@ -89,10 +89,10 @@ public class DatabaseService extends Service {
                         
                         // Needed for things like housekeeping and replication
                         if (!mConnectedToLocal)
-                            connectToLocal();                        
+                            connectToLocalServer();                        
                         
                         performLocalHousekeeping();
-                        replicateAll();                        
+                        synchronizeLocalDBs();                        
                     } catch (Exception e) {
                         Log.w(Collect.LOGTAG, tt + "error automatically connecting to DB: " + e.toString()); 
                     } finally {
@@ -209,7 +209,7 @@ public class DatabaseService extends Service {
         final String tt = t + "initLocalDb(): ";
         
         try {
-            ReplicationStatus status = replicateUnlessOffline(db, REPLICATE_PULL);
+            ReplicationStatus status = replicate(db, REPLICATE_PULL);
 
             if (status == null)
                 return false;
@@ -270,10 +270,10 @@ public class DatabaseService extends Service {
                     return;
                 }
             } else {
-                connectToLocal();
+                connectToLocalServer();
             }
-            
-            openLocalDatabase(db);
+
+            openLocalDb(db);
         } else {
             // Remote database
             if (mConnectedToRemote) {
@@ -281,20 +281,22 @@ public class DatabaseService extends Service {
                     return;
                 }
             } else {
-                connectToRemote();
+                connectToRemoteServer();
             }
             
-            openRemoteDatabase(db);
+            openRemoteDb(db);
         }
     }
     
-    // Database is candidate for controlled removal (remove only if final replication push is successful)
+    /*
+     * Remove local database IF final replication push is successful
+     */
     public boolean removeLocalDb(String db)
     {
         final String tt = t + "removeLocalDb(): ";
         
         try {
-            ReplicationStatus status = replicateUnlessOffline(db, REPLICATE_PUSH);
+            ReplicationStatus status = replicate(db, REPLICATE_PUSH);
 
             if (status == null)
                 return false;
@@ -311,9 +313,82 @@ public class DatabaseService extends Service {
         }
     }
     
-    synchronized private void connectToLocal() throws DbUnavailableException 
+    synchronized public ReplicationStatus replicate(String db, int mode)
     {
-        final String tt = t + "connectToLocal(): ";
+        final String tt = t + "replicate(): ";
+
+        // Will not replicate unless signed in
+        if (!Collect.getInstance().getIoService().isSignedIn()) {
+            Log.w(Collect.LOGTAG, tt + "aborting replication of " + db + " (not signed in)");
+            return null;
+        }
+
+        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
+            Log.d(Collect.LOGTAG, tt + "aborting replication of " + db + " (offline mode is enabled)");
+            return null;
+        }
+
+        /*
+         * Lookup master cluster by IP.  Do this instead of relying on Erlang's internal resolver 
+         * (and thus Google's public DNS).  Our builds of Erlang for Android do not yet use 
+         * Android's native DNS resolver.
+         */
+        String masterClusterIP = null;
+
+        try {
+            InetAddress [] clusterInetAddresses = InetAddress.getAllByName(getString(R.string.tf_default_ionline_server));
+            masterClusterIP = clusterInetAddresses[new Random().nextInt(clusterInetAddresses.length)].getHostAddress();
+        } catch (UnknownHostException e) {
+            Log.e(Collect.LOGTAG, tt + "unable to lookup master cluster IP addresses: " + e.toString());
+            e.printStackTrace();
+        }
+
+        // Create local instance of database
+        boolean dbCreated = false;
+
+        if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) == -1) {
+            mLocalDbInstance.createDatabase("db_" + db);
+            dbCreated = true;
+        }
+
+        // Configure replication direction
+        String source = null;
+        String target = null;
+
+        String arg0 = "37112e49!";
+        arg0 = arg0 + "26177d15&";
+        arg0 = arg0 + "28fb8778";
+
+        switch (mode) {
+        case REPLICATE_PUSH:
+            source = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db; 
+            target = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
+            break;
+
+        case REPLICATE_PULL:
+            source = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
+            target = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db;
+            break;
+        }
+
+        ReplicationCommand cmd = new ReplicationCommand.Builder().source(source).target(target).build();
+        ReplicationStatus status = null;
+
+        try {
+            status = mLocalDbInstance.replicate(cmd);
+        } catch (Exception e) {
+            // Remove a recently created DB if the replication failed
+            if (dbCreated) {
+                mLocalDbInstance.deleteDatabase("db_" + db);
+            }
+        }
+
+        return status;
+    }
+
+    synchronized private void connectToLocalServer() throws DbUnavailableException 
+    {
+        final String tt = t + "connectToLocalServer(): ";
         
         String host = "127.0.0.1";
         int port = 5985;
@@ -347,9 +422,9 @@ public class DatabaseService extends Service {
         }
     }
 
-    synchronized private void connectToRemote() throws DbUnavailableException 
+    synchronized private void connectToRemoteServer() throws DbUnavailableException 
     {        
-        final String tt = t + "connectToRemote(): ";
+        final String tt = t + "connectToRemoteServer(): ";
         
         String host = getString(R.string.tf_default_ionline_server);
         int port = 6984;
@@ -380,9 +455,9 @@ public class DatabaseService extends Service {
         }
     }
 
-    private void openLocalDatabase(String db) throws DbUnavailableException 
+    private void openLocalDb(String db) throws DbUnavailableException 
     {
-        final String tt = t + "openLocalDatabase(): ";
+        final String tt = t + "openLocalDb(): ";
         
         try {
             /*
@@ -410,9 +485,9 @@ public class DatabaseService extends Service {
         }
     }
     
-    private void openRemoteDatabase(String db) throws DbUnavailableException 
+    private void openRemoteDb(String db) throws DbUnavailableException 
     {
-        final String tt = t + "openRemoteDatabase(): ";
+        final String tt = t + "openRemoteDb(): ";
         
         try {
             Log.d(Collect.LOGTAG, tt + "opening database " + db);
@@ -429,7 +504,9 @@ public class DatabaseService extends Service {
         }
     }
 
-    // Perform any local house keeping (e.g., removing of unused DBs, view compaction & cleanup)
+    /*
+     * Perform any local house keeping (e.g., removing of unused DBs, view compaction & cleanup)
+     */
     private void performLocalHousekeeping()
     {   
         final String tt = t + "performLocalHousekeeping(): ";
@@ -466,77 +543,12 @@ public class DatabaseService extends Service {
         }
     }
     
-    synchronized public ReplicationStatus replicate(String db, int mode)
-    {        
-        final String tt = t + "replicate(): ";
-        
-        // Will not replicate unless signed in
-        if (!Collect.getInstance().getIoService().isSignedIn()) {
-            Log.w(Collect.LOGTAG, tt + "aborting replication of " + db + " (not signed in)");
-            return null;
-        }
-        
-        /* 
-         * Lookup master cluster by IP.  Do this instead of relying on Erlang's internal resolver 
-         * (and thus Google's public DNS).  Our builds of Erlang for Android do not yet use 
-         * Android's native DNS resolver. 
-         */
-        String masterClusterIP = null;        
-        
-        try {
-            InetAddress [] clusterInetAddresses = InetAddress.getAllByName(getString(R.string.tf_default_ionline_server));
-            masterClusterIP = clusterInetAddresses[new Random().nextInt(clusterInetAddresses.length)].getHostAddress();
-        } catch (UnknownHostException e) {
-            Log.e(Collect.LOGTAG, tt + "unable to lookup master cluster IP addresses: " + e.toString());
-            e.printStackTrace();
-        }
-        
-        // Create local instance of database
-        boolean dbCreated = false;
-        
-        if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) == -1) {
-            mLocalDbInstance.createDatabase("db_" + db);
-            dbCreated = true;
-        }
-        
-        // Configure replication direction
-        String source = null;
-        String target = null;        
-        
-        String arg0 = "37112e49!";
-        arg0 = arg0 + "26177d15&";
-        arg0 = arg0 + "28fb8778";
-        
-        switch (mode) {
-        case REPLICATE_PUSH:
-            source = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db; 
-            target = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
-            break;
-    
-        case REPLICATE_PULL:
-            source = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
-            target = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db;
-            break;
-        }
-        
-        ReplicationCommand cmd = new ReplicationCommand.Builder().source(source).target(target).build();
-        ReplicationStatus status = null;
-        
-        try {            
-            status = mLocalDbInstance.replicate(cmd);
-        } catch (Exception e) {
-            // Remove a recently created DB if the replication failed
-            if (dbCreated) {
-                mLocalDbInstance.deleteDatabase("db_" + db);
-            }
-        }
-        
-        return status;
-    }
-    
-    private void replicateAll()
+    /*
+     * Trigger a push/pull replication for each locally replicated database
+     */
+    private void synchronizeLocalDBs()
     {
-        final String tt = t + "replicateAll(): ";
+        final String tt = t + "synchronizeLocalDBs(): ";
         
         Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
         Iterator<String> folderIds = folderSet.iterator();
@@ -548,26 +560,13 @@ public class DatabaseService extends Service {
                 Log.i(Collect.LOGTAG, tt + "about to begin scheduled replication of " + folder.getName());
                 
                 try {
-                    replicateUnlessOffline(folder.getId(), REPLICATE_PUSH);
-                    replicateUnlessOffline(folder.getId(), REPLICATE_PULL);
+                    replicate(folder.getId(), REPLICATE_PUSH);
+                    replicate(folder.getId(), REPLICATE_PULL);
                 } catch (Exception e) {
                     Log.w(Collect.LOGTAG, tt + "problem replicating " + folder.getId() + ": " + e.toString());
                     e.printStackTrace();
                 }
             }
         }
-    }
-
-    synchronized public ReplicationStatus replicateUnlessOffline(String db, int mode)
-    {
-        final String tt = t + "replicateUnlessOffline(): ";
-        
-        // Will not replicate while offline
-        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
-            Log.d(Collect.LOGTAG, tt + "aborting replication of " + db + " (offline mode is enabled)");
-            return null;
-        }
-
-        return replicate(db, mode);
     }
 }

@@ -1528,8 +1528,8 @@ public class BrowserActivity extends ListActivity
                     progressHandler.sendMessage(msg);
                     
                     try {                        
-                        Collect.getInstance().getDbService().replicateUnlessOffline(folder.getId(), DatabaseService.REPLICATE_PUSH);
-                        Collect.getInstance().getDbService().replicateUnlessOffline(folder.getId(), DatabaseService.REPLICATE_PULL);
+                        Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PUSH);
+                        Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL);
                     } catch (Exception e) {
                         Log.w(Collect.LOGTAG, t + "problem replicating " + folder.getId() + ": " + e.toString());
                         e.printStackTrace();
@@ -1615,7 +1615,7 @@ public class BrowserActivity extends ListActivity
             b1.setText(getText(R.string.tf_inform_state_online));
         else
             b1.setText(getText(R.string.tf_inform_state_offline));
-        
+
         // Re-enable (may be disabled thanks to toggling state)
         Button b2 = (Button) findViewById(R.id.folderTitleButton);
         b2.setEnabled(true);
@@ -1672,12 +1672,12 @@ public class BrowserActivity extends ListActivity
         
         String folderName = getSelectedFolderName();
         
-        // Open selected database
         try {            
             // Reflect the currently selected folder
             Button b2 = (Button) findViewById(R.id.folderTitleButton);
             b2.setText(folderName);
-            
+
+            // Open selected database
             Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
         
             mRefreshViewTask = new RefreshViewTask();
