@@ -840,7 +840,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                         case 0:
                             // Discard any changes and exit
                             try {
-                                if (mForm.getStatus() == FormDefinition.Status.temporary)
+                                if (mForm.getStatus() == FormDefinition.Status.placeholder)
                                     Collect.getInstance().getDbService().getDb().delete(mForm);
                             } catch (Exception e) {
                                 Log.e(Collect.LOGTAG, t + "unable to remove temporary document");

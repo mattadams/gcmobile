@@ -346,7 +346,7 @@ public class BrowserActivity extends ListActivity
                 public void onClick(DialogInterface dialog, int whichButton) {                
                     FormDefinition form = new FormDefinition();
                     form.setName(newFormName.getText().toString().trim());
-                    form.setStatus(FormDefinition.Status.temporary);
+                    form.setStatus(FormDefinition.Status.placeholder);
                     
                     if (form.getName().length() == 0) {
                         removeDialog(DIALOG_CREATE_FORM);
@@ -1147,7 +1147,10 @@ public class BrowserActivity extends ListActivity
         @Override
         protected FormInstance.Status doInBackground(FormInstance.Status... status)
         {
-            try {
+            try {               
+                // Clean up the currently selected database before we display anything from it
+                Collect.getInstance().getDbService().performHousekeeping(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
+                
                 FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());                
                 tallies = repo.getFormsByInstanceStatus(status[0]);
                 

@@ -6,7 +6,7 @@ public class FormDefinition extends Generic
     private static final String t = "FormDefinitionDoc: ";
     private static final long serialVersionUID = 8292491291779289389L;   
     
-    public static enum Status { active, inactive, removed, temporary };
+    public static enum Status { active, inactive, placeholder, removed };
     
     private String javaRosaId;
     private String modelVersion;

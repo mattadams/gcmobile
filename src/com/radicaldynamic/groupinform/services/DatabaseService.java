@@ -16,8 +16,13 @@ package com.radicaldynamic.groupinform.services;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -30,6 +35,7 @@ import org.ektorp.http.HttpClient;
 import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbConnector;
 import org.ektorp.impl.StdCouchDbInstance;
+import org.json.JSONObject;
 
 import android.app.NotificationManager;
 import android.app.Service;
@@ -42,7 +48,10 @@ import android.util.Log;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.database.InformCouchDbConnector;
+import com.radicaldynamic.groupinform.documents.Generic;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
+import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
+import com.radicaldynamic.groupinform.repositories.FormInstanceRepo;
 
 /**
  * Database abstraction layer for CouchDB, based on Ektorp.
@@ -55,7 +64,12 @@ public class DatabaseService extends Service {
 
     // Replication modes
     public static final int REPLICATE_PUSH = 0;
-    public static final int REPLICATE_PULL = 1;    
+    public static final int REPLICATE_PULL = 1;   
+    
+    // 5 minutes (represented as seconds)
+    private static final long TIME_FIVE_MINUTES = 300;
+    // 24 hours (represented as milliseconds)
+    private static final long TIME_24_HOURS = 86400000;
     
     private HttpClient mLocalHttpClient = null;
     private CouchDbInstance mLocalDbInstance = null;
@@ -77,6 +91,9 @@ public class DatabaseService extends Service {
     private ConditionVariable mCondition;   
     private NotificationManager mNM;
     
+    // Hash of database-to-last cleanup timestamp (used for controlled purging databases of placeholders)
+    private Map<String, Long> mDbLastCleanup = new HashMap<String, Long>();
+    
     private Runnable mTask = new Runnable() 
     {
         final String tt = t + "mTask: ";
@@ -91,8 +108,8 @@ public class DatabaseService extends Service {
                         if (!mConnectedToLocal)
                             connectToLocalServer();                        
                         
-                        performLocalHousekeeping();
-                        synchronizeLocalDBs();                        
+                        performHousekeeping();
+                        synchronizeLocalDBs();                      
                     } catch (Exception e) {
                         Log.w(Collect.LOGTAG, tt + "error automatically connecting to DB: " + e.toString()); 
                     } finally {
@@ -182,6 +199,7 @@ public class DatabaseService extends Service {
         final String tt = t + "getDb(): ";
         
         AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db);
+        CouchDbConnector dbConnector;
         
         if (folder.isReplicated()) {
             // Local database
@@ -191,7 +209,7 @@ public class DatabaseService extends Service {
                 Log.w(Collect.LOGTAG, tt + "unable to connect to local database server: " + e.toString());
             }
             
-            return mLocalDbConnector;
+            dbConnector = mLocalDbConnector;
         } else {
             // Remote database
             try {
@@ -200,8 +218,10 @@ public class DatabaseService extends Service {
                 Log.w(Collect.LOGTAG, tt + "unable to connect to remote database server: " + e.toString());
             }
             
-            return mRemoteDbConnector;
+            dbConnector = mRemoteDbConnector;
         }
+
+        return dbConnector;
     }
     
     public boolean initLocalDb(String db)
@@ -286,6 +306,24 @@ public class DatabaseService extends Service {
             
             openRemoteDb(db);
         }
+    }
+    
+    /*
+     * Similar in purpose to performHousekeeping(), this method is targeted towards any database 
+     */
+    public void performHousekeeping(String db) throws DbUnavailableException
+    {
+        final String tt = t + "performHousekeeping(String): ";
+        
+        // Determine if this database needs to be cleaned up
+        Long lastCleanup = mDbLastCleanup.get(db);
+        
+        if (lastCleanup == null || System.currentTimeMillis() / 1000 - lastCleanup > TIME_FIVE_MINUTES) {
+            Log.i(Collect.LOGTAG, tt + "beginning cleanup for " + db);
+            mDbLastCleanup.put(db, new Long(System.currentTimeMillis() / 1000));            
+            removePlaceholders(new FormDefinitionRepo(getDb()).getAllPlaceholders());
+            removePlaceholders(new FormInstanceRepo(getDb()).getAllPlaceholders());
+        }        
     }
     
     /*
@@ -505,12 +543,13 @@ public class DatabaseService extends Service {
     }
 
     /*
-     * Perform any local house keeping (e.g., removing of unused DBs, view compaction & cleanup)
+     * Perform any house keeping (e.g., removing of unused DBs, view compaction & cleanup)
      */
-    private void performLocalHousekeeping()
+    private void performHousekeeping()
     {   
-        final String tt = t + "performLocalHousekeeping(): ";
+        final String tt = t + "performHousekeeping(): ";
         
+        //
         try {
             List<String> allDatabases = mLocalDbInstance.getAllDatabases();
             Iterator<String> dbs = allDatabases.iterator();
@@ -541,6 +580,53 @@ public class DatabaseService extends Service {
             Log.e(Collect.LOGTAG, tt + "unhandled exception " + e.toString());
             e.printStackTrace();
         }
+    }
+    
+    /*
+     * Evaluate and remove a set of placeholders on the basis of who created it and when it was created
+     */
+    private void removePlaceholders(HashMap<String, JSONObject> placeholders)
+    {        
+        final String tt = t + "removePlaceholders(): ";
+        
+        for (Map.Entry<String, JSONObject> entry : placeholders.entrySet()) {
+            if (entry.getValue().optString("createdBy", null) == null || entry.getValue().optString("dateCreated", null) == null) {
+                // Remove old style (unowned) placeholders immediately
+                try {
+                    getDb().delete(entry.getKey(), entry.getValue().optString("_rev"));
+                    Log.d(Collect.LOGTAG, tt + "removed old-style placeholder " + entry.getKey());
+                } catch (Exception e) {
+                    Log.e(Collect.LOGTAG, tt + "unable to remove old-style placeholder");
+                }
+            } else if (entry.getValue().optString("createdBy").equals(Collect.getInstance().getInformOnlineState().getDeviceId())) {
+                // Remove placeholders owned by me immediately
+                try {                        
+                    getDb().delete(entry.getKey(), entry.getValue().optString("_rev"));
+                    Log.d(Collect.LOGTAG, tt + "removed my placeholder " + entry.getKey());
+                } catch (Exception e) {
+                    Log.e(Collect.LOGTAG, tt + "unable to remove my placeholder");
+                }                                       
+            } else {
+                // Remove placeholders owned by other people if they are stale (older than a day)
+                SimpleDateFormat sdf = new SimpleDateFormat(Generic.DATETIME);
+                Calendar calendar = Calendar.getInstance();
+
+                try {
+                    calendar.setTime(sdf.parse(entry.getValue().optString("dateCreated")));
+
+                    if (calendar.getTimeInMillis() - Calendar.getInstance().getTimeInMillis() > TIME_24_HOURS) {
+                        try {                        
+                            getDb().delete(entry.getKey(), entry.getValue().optString("_rev"));
+                            Log.d(Collect.LOGTAG, tt + "removed stale placeholder " + entry.getKey());
+                        } catch (Exception e) {
+                            Log.e(Collect.LOGTAG, tt + "unable to remove stale placeholder");
+                        } 
+                    }                        
+                } catch (ParseException e1) {
+                    Log.e(Collect.LOGTAG, tt + "unable to parse dateCreated: " + e1.toString());            
+                }
+            }
+        }                
     }
     
     /*

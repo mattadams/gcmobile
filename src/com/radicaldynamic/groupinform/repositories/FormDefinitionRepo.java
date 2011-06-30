@@ -12,6 +12,7 @@ import org.ektorp.ViewResult.Row;
 import org.ektorp.support.CouchDbRepositorySupport;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import android.util.Log;
@@ -26,7 +27,7 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
     
     public FormDefinitionRepo(CouchDbConnector db) 
     {
-        super(FormDefinition.class, db, "FormDefinitionRepoR1");
+        super(FormDefinition.class, db, "FormDefinitionRepoR2");
         initStandardDesignDocument();
     }
     
@@ -55,6 +56,23 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
     public List<FormDefinition> getAllActiveByKeys(Collection<Object> keys) 
     {
         return db.queryView(createQuery("allActive").keys(keys).includeDocs(true), FormDefinition.class);
+    }
+    
+    public HashMap<String, JSONObject> getAllPlaceholders()
+    {
+        HashMap<String, JSONObject> results = new HashMap<String, JSONObject>();
+        ViewResult r = db.queryView(createQuery("allPlaceholders"));
+        
+        for (Row record : r.getRows()) {
+            try {
+                results.put(record.getKey(), (JSONObject) new JSONTokener(record.getValue()).nextValue());                
+            } catch (JSONException e) {
+                Log.e(Collect.LOGTAG, t + "failed to parse complex value in getAllPlaceholders, key: " + record.getKey() + ", value: " + record.getValue());
+                e.printStackTrace();
+            }
+        }
+        
+        return results;
     }
     
     public HashMap<String, HashMap<String, String>> getFormsByInstanceStatus(FormInstance.Status status) 
