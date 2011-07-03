@@ -204,11 +204,13 @@ public class DownloadFormsTask extends
             } catch (SocketTimeoutException se) {
                 se.printStackTrace();
                 message += se.getMessage();
+            // BEGIN custom
             } catch (DuplicateXFormFile e) {
                 message = " SKIPPED (duplicate)";
+            // END custom
             } catch (Exception e) {
                 e.printStackTrace();
-                message += e.getMessage();
+                message += e.getCause().getMessage();
             }
             count++;
             if (message.equalsIgnoreCase("")) {
