@@ -67,7 +67,7 @@ the License.
         <action android:name="android.intent.action.EDIT" />
         <action android:name="android.intent.action.PICK" />
         <category android:name="android.intent.category.DEFAULT" />
-        <data android:mimeType="vnd.android.cursor.dir/vnd.godk.form" />
+        <data android:mimeType="vnd.android.cursor.dir/vnd.odk.form" />
       </intent-filter>
     </activity>
 
@@ -166,7 +166,8 @@ the License.
     </activity>
 
     <uses-library
-        android:name="com.google.android.maps" />
+        android:name="com.google.android.maps"
+        android:required="false" />
 
     <service 
         android:label="@string/app_name"
