@@ -8,19 +8,16 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.client.CookieStore;
-import org.odk.collect.android.utilities.FileUtils;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.couchdb.InformCouchService;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
@@ -417,11 +414,7 @@ public class InformOnlineState
         
         setDefaultDatabase(null);
         setOfflineModeEnabled(false);
-        setSession(null);   
-        
-        // Reset dependency preferences back to defaults
-        if (Collect.getInstance().getInformDependencies().isInitialized())
-            Collect.getInstance().getInformDependencies().setReminderEnabled(true);
+        setSession(null);
                 
         // Remove cache files
         new File(mContext.getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).delete();
@@ -429,23 +422,24 @@ public class InformOnlineState
         new File(mContext.getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE).delete();
 
         // Shutdown CouchDB and remove databases & log files
-        try {
-            if (Collect.getInstance().getCouchService() instanceof InformCouchService) {
-                // Stop CouchDB
-                Collect.getInstance().getCouchService().quitCouchDB();              
-                Collect.getInstance().stopService(new Intent(InformCouchService.class.getName()));
-
-                // Remove DB files & log files
-                if (FileUtilsExtended.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/lib/couchdb"))
-                    FileUtils.createFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/lib/couchdb");    
-
-                if (FileUtilsExtended.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/log/couchdb"))
-                    FileUtils.createFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/log/couchdb");
-            }
-        } catch (RemoteException e) {
-            Log.e(Collect.LOGTAG, t + "unable to quit CouchDB: " + e.toString());
-            e.printStackTrace();
-        }
+        // FIXME: how do we do this under the new system?
+//        try {
+//            if (Collect.getInstance().getCouchService() instanceof InformCouchService) {
+//                // Stop CouchDB
+//                Collect.getInstance().getCouchService().quitCouchDB();              
+//                Collect.getInstance().stopService(new Intent(InformCouchService.class.getName()));
+//
+//                // Remove DB files & log files
+//                if (FileUtilsExtended.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/lib/couchdb"))
+//                    FileUtils.createFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/lib/couchdb");    
+//
+//                if (FileUtilsExtended.deleteFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/log/couchdb"))
+//                    FileUtils.createFolder(FileUtilsExtended.EXTERNAL_COUCH + "/var/log/couchdb");
+//            }
+//        } catch (RemoteException e) {
+//            Log.e(Collect.LOGTAG, t + "unable to quit CouchDB: " + e.toString());
+//            e.printStackTrace();
+//        }
         
         // Shutdown other services to ensure a full reset off all stateful information
         Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), DatabaseService.class));

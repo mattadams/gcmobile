@@ -489,7 +489,6 @@
 	<string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one output option must be selected for export.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
-	<string name="tf_unable_to_go_offline_dialog_msg_reason_db">The Inform database is required to work offline.  If you are receiving this message it means that the database is unavailable for one or more reasons.\n\nPlease let us know that you are receiving this message by visiting us at http://groupinform.com/support - thank you!</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Inform was unable to connect to the Simple Sharing service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
 	<string name="tf_unable_to_go_online_dialog">Cannot Go Online</string>

@@ -37,7 +37,6 @@ import org.ektorp.impl.StdCouchDbConnector;
 import org.ektorp.impl.StdCouchDbInstance;
 import org.json.JSONObject;
 
-import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
@@ -71,13 +70,17 @@ public class DatabaseService extends Service {
     // 24 hours (represented as milliseconds)
     private static final long TIME_24_HOURS = 86400000;
     
+    // Values returned by the Couch service -- we can't connect to the localhost until these are known
+    private String mLocalHost = null;
+    private int mLocalPort = 0;
+    
     private HttpClient mLocalHttpClient = null;
     private CouchDbInstance mLocalDbInstance = null;
     private CouchDbConnector mLocalDbConnector = null;
     
     private HttpClient mRemoteHttpClient = null;
     private CouchDbInstance mRemoteDbInstance = null;
-    private CouchDbConnector mRemoteDbConnector = null;   
+    private CouchDbConnector mRemoteDbConnector = null;
     
     private boolean mInit = false;
     
@@ -88,8 +91,7 @@ public class DatabaseService extends Service {
     // See RemoteService for a more complete example.
     private final IBinder mBinder = new LocalBinder();
   
-    private ConditionVariable mCondition;   
-    private NotificationManager mNM;
+    private ConditionVariable mCondition;
     
     // Hash of database-to-last cleanup timestamp (used for controlled purging databases of placeholders)
     private Map<String, Long> mDbLastCleanup = new HashMap<String, Long>();
@@ -104,12 +106,10 @@ public class DatabaseService extends Service {
                     try {
                         mInit = true;
                         
-                        // Needed for things like housekeeping and replication
-                        if (!mConnectedToLocal)
-                            connectToLocalServer();                        
-                        
-                        performHousekeeping();
-                        synchronizeLocalDBs();                      
+                        if (mLocalDbInstance != null) {
+                            performHousekeeping();
+                            synchronizeLocalDBs();
+                        }
                     } catch (Exception e) {
                         Log.w(Collect.LOGTAG, tt + "error automatically connecting to DB: " + e.toString()); 
                     } finally {
@@ -155,8 +155,6 @@ public class DatabaseService extends Service {
     @Override
     public void onCreate() 
     {
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        
         Thread persistentConnectionThread = new Thread(null, mTask, "DatabaseService");        
         mCondition = new ConditionVariable(false);
         persistentConnectionThread.start();
@@ -165,7 +163,6 @@ public class DatabaseService extends Service {
     @Override
     public void onDestroy() 
     {   
-        mNM.cancel(R.string.tf_connection_status_notification);
         mCondition.open();
     }
 
@@ -252,6 +249,9 @@ public class DatabaseService extends Service {
         boolean result = false;
         
         try {
+            if (mLocalDbInstance == null)
+                connectToLocalServer();
+            
             if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) != -1)
                 result = true;
         } catch (DbAccessException e) {
@@ -354,18 +354,20 @@ public class DatabaseService extends Service {
     synchronized public ReplicationStatus replicate(String db, int mode)
     {
         final String tt = t + "replicate(): ";
+        
+        Log.d(Collect.LOGTAG, tt + "about to replicate " + db);
 
         // Will not replicate unless signed in
         if (!Collect.getInstance().getIoService().isSignedIn()) {
-            Log.w(Collect.LOGTAG, tt + "aborting replication of " + db + " (not signed in)");
+            Log.w(Collect.LOGTAG, tt + "aborting replication: not signed in");
             return null;
         }
 
         if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
-            Log.d(Collect.LOGTAG, tt + "aborting replication of " + db + " (offline mode is enabled)");
+            Log.d(Collect.LOGTAG, tt + "aborting replication: offline mode is enabled");
             return null;
         }
-
+        
         /*
          * Lookup master cluster by IP.  Do this instead of relying on Erlang's internal resolver 
          * (and thus Google's public DNS).  Our builds of Erlang for Android do not yet use 
@@ -392,20 +394,16 @@ public class DatabaseService extends Service {
         // Configure replication direction
         String source = null;
         String target = null;
-
-        String arg0 = "37112e49!";
-        arg0 = arg0 + "26177d15&";
-        arg0 = arg0 + "28fb8778";
-
+        
         switch (mode) {
         case REPLICATE_PUSH:
-            source = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db; 
+            source = "http://" + mLocalHost + ":" + mLocalPort + "/db_" + db; 
             target = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
             break;
 
         case REPLICATE_PULL:
             source = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
-            target = "http://admin:" + arg0 + "@127.0.0.1:5985/db_" + db;
+            target = "http://" + mLocalHost + ":" + mLocalPort + "/db_" + db; 
             break;
         }
 
@@ -423,26 +421,29 @@ public class DatabaseService extends Service {
 
         return status;
     }
+    
+    public void setLocalDatabaseInfo(String host, int port)
+    {
+        mLocalHost = host;
+        mLocalPort = port;
+    }
 
     synchronized private void connectToLocalServer() throws DbUnavailableException 
     {
         final String tt = t + "connectToLocalServer(): ";
         
-        String host = "127.0.0.1";
-        int port = 5985;
+        if (mLocalHost == null || mLocalPort == 0) {
+            Log.w(Collect.LOGTAG, tt + "local host information not available; aborting connection");
+            mConnectedToLocal = false;
+            return;
+        }
         
-        Log.d(Collect.LOGTAG, tt + "establishing connection to " + host + ":" + port);
-        
-        String arg0 = "37112e49!";
-        arg0 = arg0 + "26177d15&";
-        arg0 = arg0 + "28fb8778";
-        
+        Log.d(Collect.LOGTAG, tt + "establishing connection to " + mLocalHost + ":" + mLocalPort);
+
         try {                     
             mLocalHttpClient = new StdHttpClient.Builder()
-                .host(host)
-                .port(port)
-                .username("admin")
-                .password(arg0)
+                .host(mLocalHost)
+                .port(mLocalPort)
                 .build();
             
             mLocalDbInstance = new StdCouchDbInstance(mLocalHttpClient);
@@ -451,9 +452,9 @@ public class DatabaseService extends Service {
             if (mConnectedToLocal == false)
                 mConnectedToLocal = true;
             
-            Log.d(Collect.LOGTAG, tt + "connection to " + host + " successful");
+            Log.d(Collect.LOGTAG, tt + "connection to " + mLocalHost + " successful");
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "while connecting to server " + port + ": " + e.toString());      
+            Log.e(Collect.LOGTAG, tt + e.toString());      
             e.printStackTrace();
             mConnectedToLocal = false;            
             throw new DbUnavailableException();
@@ -549,7 +550,6 @@ public class DatabaseService extends Service {
     {   
         final String tt = t + "performHousekeeping(): ";
         
-        //
         try {
             List<String> allDatabases = mLocalDbInstance.getAllDatabases();
             Iterator<String> dbs = allDatabases.iterator();

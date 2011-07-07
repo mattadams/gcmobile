@@ -69,8 +69,6 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.couchdb.CouchInitializer;
-import com.radicaldynamic.groupinform.couchdb.CouchInstaller;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
 import com.radicaldynamic.groupinform.documents.Generic;
@@ -103,17 +101,16 @@ public class BrowserActivity extends ListActivity
     private static final int DIALOG_FORM_BUILDER_LAUNCH_ERROR = 4;
     private static final int DIALOG_INSTANCES_UNAVAILABLE = 5;
     private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 6;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_DB = 7;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 8;    
-    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 9;
-    private static final int DIALOG_ONLINE_STATE_CHANGING = 10;
-    private static final int DIALOG_REMOVE_FORM = 11;
-    private static final int DIALOG_RENAME_FORM = 12;
-    private static final int DIALOG_TOGGLE_ONLINE_STATE = 13;
-    private static final int DIALOG_UNABLE_TO_COPY_DUPLICATE = 14;
-    private static final int DIALOG_UNABLE_TO_COPY_UNSUPPORTED = 15;
-    private static final int DIALOG_UNABLE_TO_RENAME_DUPLICATE = 16;
-    private static final int DIALOG_UPDATING_FOLDER = 17;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 7;
+    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 8;
+    private static final int DIALOG_ONLINE_STATE_CHANGING = 9;
+    private static final int DIALOG_REMOVE_FORM = 10;
+    private static final int DIALOG_RENAME_FORM = 11;
+    private static final int DIALOG_TOGGLE_ONLINE_STATE = 12;
+    private static final int DIALOG_UNABLE_TO_COPY_DUPLICATE = 13;
+    private static final int DIALOG_UNABLE_TO_COPY_UNSUPPORTED = 14;
+    private static final int DIALOG_UNABLE_TO_RENAME_DUPLICATE = 15;
+    private static final int DIALOG_UPDATING_FOLDER = 16;
     
     // Keys for option menu items
     private static final int MENU_OPTION_REFRESH = 0;
@@ -520,25 +517,7 @@ public class BrowserActivity extends ListActivity
             
             mDialog = builder.create();
             break;
-            
-        // We can't go offline (CouchDB not installed or not available locally)
-        case DIALOG_OFFLINE_MODE_UNAVAILABLE_DB:
-            builder
-                .setCancelable(false)
-                .setIcon(R.drawable.ic_dialog_alert)
-                .setTitle(R.string.tf_unable_to_go_offline_dialog)
-                .setMessage(R.string.tf_unable_to_go_offline_dialog_msg_reason_db);
 
-            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    startActivity(new Intent(BrowserActivity.this, AccountFolderList.class));
-                    dialog.cancel();
-                }
-            });
-            
-            mDialog = builder.create();
-            break;            
-            
         // We can't go offline (user has not selected any databases to be replicated)
         case DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS:
             builder
@@ -1406,7 +1385,6 @@ public class BrowserActivity extends ListActivity
     private class ToggleOnlineStateTask extends AsyncTask<Void, Void, Void>
     {        
         Boolean hasReplicatedFolders = false;
-        Boolean missingCouch = false;
         Boolean missingSynchronizedFolders = false;
         Boolean unableToGoOffline = false;
         Boolean unableToGoOnline = false;
@@ -1449,13 +1427,9 @@ public class BrowserActivity extends ListActivity
 
         @Override
         protected void onPreExecute()
-        {          
-            if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized()) {
-                hasReplicatedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
-            } else {
-                missingCouch = true;
-            }
-            
+        {
+            hasReplicatedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
+
             if (hasReplicatedFolders) {
                 progressDialog = new ProgressDialog(BrowserActivity.this);
                 progressDialog.setMessage(getString(R.string.tf_synchronizing_folders_dialog_msg));  
@@ -1482,10 +1456,7 @@ public class BrowserActivity extends ListActivity
             else
                 progressDialog.cancel();
             
-            if (missingCouch) {
-                showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE_DB);
-                loadScreen();
-            } else if (missingSynchronizedFolders) {
+            if (missingSynchronizedFolders) {
                 showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS);
                 loadScreen();
             } else if (unableToGoOffline) {
@@ -1555,7 +1526,14 @@ public class BrowserActivity extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            status = Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL);
+            try {
+                status = Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL);
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unable to replicate during UpdateFolderTask: " + e.toString());
+                e.printStackTrace();
+                status = null;
+            }
+            
             return null;
         }
     

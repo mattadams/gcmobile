@@ -170,20 +170,18 @@ the License.
 
     <service 
         android:label="@string/app_name"
-        android:name=".services.DatabaseService" />
+        android:name=".services.DatabaseService"
+        android:exported="false" />
     <service 
         android:label="@string/app_name"
-        android:name=".services.InformOnlineService" />
+        android:name=".services.InformOnlineService"
+        android:exported="false" />
 
     <!-- CouchDB -->
     <service 
+        android:name="com.couchbase.libcouch.CouchService" 
         android:enabled="true" 
-        android:exported="false" 
-        android:name=".couchdb.CouchService" 
-        android:process=":remote">
-      <intent-filter>
-        <action android:name="com.radicaldynamic.groupinform.couchdb.InformCouchService" />
-      </intent-filter>
+        android:exported="false">
     </service>
     
     <!-- Native ODK code -->

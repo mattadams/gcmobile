@@ -27,6 +27,7 @@ import org.odk.collect.android.utilities.AgingCredentialsProvider;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.ServiceConnection;
 import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -38,8 +39,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.couchdb.InformCouchService;
-import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
@@ -71,15 +70,12 @@ public class Collect extends Application {
     private IBinder viewToken = null;    
     
     // Service connections
-    private InformCouchService couchService = null; 
+    private ServiceConnection couchService = null;
     private DatabaseService dbService = null;
     private InformOnlineService ioService = null;
     
     // Current registration state of this device
     private InformOnlineState informOnlineState = new InformOnlineState();
-    
-    // Installed dependency state
-    private InformDependencies informDependencies = new InformDependencies();
 
     // State container for the form builder
     private FormBuilderState formBuilderState = new FormBuilderState();
@@ -241,15 +237,12 @@ public class Collect extends Application {
 		t.setGravity(Gravity.CENTER, 0, 0);
 		t.show();
 	}
-
-    public void setCouchService(InformCouchService couchService) { this.couchService = couchService; }
-    public InformCouchService getCouchService() { return couchService; }    
+	
+    public void setCouchService(ServiceConnection couchService) { this.couchService = couchService; }
+    public ServiceConnection getCouchService() { return couchService; }
 
     public void setDbService(DatabaseService dbService) { this.dbService = dbService; }
     public DatabaseService getDbService() { return dbService; }
-
-    public void setInformDependencies(InformDependencies informDependencies) { this.informDependencies = informDependencies; }
-    public InformDependencies getInformDependencies() { return informDependencies; }
 
     public void setInformOnlineState(InformOnlineState informOnlineState) { this.informOnlineState = informOnlineState; }
     public InformOnlineState getInformOnlineState() { return informOnlineState; }

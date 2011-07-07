@@ -15,6 +15,8 @@
 package com.radicaldynamic.groupinform.activities;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
 
 import org.odk.collect.android.utilities.FileUtils;
 
@@ -30,13 +32,9 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
-import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -46,13 +44,12 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
 
+import com.couchbase.libcouch.CouchDB;
+import com.couchbase.libcouch.CouchInstaller;
+import com.couchbase.libcouch.CouchService;
+import com.couchbase.libcouch.ICouchClient;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.couchdb.CouchInitializer;
-import com.radicaldynamic.groupinform.couchdb.CouchInstaller;
-import com.radicaldynamic.groupinform.couchdb.InformCouchClient;
-import com.radicaldynamic.groupinform.couchdb.InformCouchService;
-import com.radicaldynamic.groupinform.logic.InformDependencies;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
@@ -66,11 +63,12 @@ public class LauncherActivity extends Activity
     private static final String t = "LauncherActivity: ";
     
     // Dialog constants
-    private static final int DIALOG_DEPENDENCY_UNMET = 1;
+    private static final int DIALOG_COUCH_ERROR = 1;
     private static final int DIALOG_EXTERNAL_STORAGE_UNAVAILABLE = 2;
     private static final int DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED = 3;
     private static final int DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED = 4;
     private static final int DIALOG_UNABLE_TO_REGISTER = 5;    
+    private static final int DIALOG_UPGRADE_FAILED = 6;
     
     // Intent status codes
     private static final String KEY_REINIT_IOSERVICE = "key_reinit_ioservice";
@@ -78,35 +76,44 @@ public class LauncherActivity extends Activity
     private static final int BROWSER_ACTIVITY = 1;
     
     private ProgressDialog mProgressDialog;
-    private Toast mSplashToast;
-    
-    /*
-     * Implement the callbacks that allow CouchDB to talk to this app
-     * (not really necessary)
-     */
-    private InformCouchClient mCallback = new InformCouchClient.Stub() {
-        @Override
-        public void couchStarted(String host, int port) throws RemoteException {
-        }
+    private Toast mSplashToast;    
 
+    private final ICouchClient mCouchCallback = new ICouchClient.Stub() {
         @Override
-        public void databaseCreated(String name, String user, String pass, String tag) throws RemoteException {
-        }
-    };
-    
-    // Service handling for the CouchDB process
-    private ServiceConnection mCouchConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            try {
-                Collect.getInstance().setCouchService(InformCouchService.Stub.asInterface(service));
-                Collect.getInstance().getCouchService().initCouchDB(mCallback);
-            } catch (RemoteException e) {
-                e.printStackTrace();
+        public void couchStarted(String host, int port) 
+        {
+            if (mProgressDialog != null) {
+                mProgressDialog.dismiss();
             }
+            
+            // Persistent service
+            startService(new Intent(LauncherActivity.this, CouchService.class));
+            
+            Collect.getInstance().getDbService().setLocalDatabaseInfo(host, port);
+            startActivityForResult(new Intent(LauncherActivity.this, BrowserActivity.class), BROWSER_ACTIVITY);
         }
 
-        public void onServiceDisconnected(ComponentName className) {
-            Collect.getInstance().setCouchService(null);
+        @Override
+        public void installing(int completed, int total) 
+        {
+            if (mProgressDialog == null) {
+                mProgressDialog = new ProgressDialog(LauncherActivity.this);
+                mProgressDialog.setTitle(" ");
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                mProgressDialog.show();
+            }            
+            
+            mProgressDialog.setTitle("Initializing Database");
+            mProgressDialog.setProgress(completed);
+            mProgressDialog.setMax(total);
+        }
+
+        @Override
+        public void exit(String error) 
+        {
+            Log.v(Collect.LOGTAG, "CouchDB error: " + error);
+            showDialog(DIALOG_COUCH_ERROR);
         }
     };
 
@@ -135,45 +142,21 @@ public class LauncherActivity extends Activity
             Collect.getInstance().setIoService(null);
         }
     };
-    
-    private Handler mProgressHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-            
-            case CouchInstaller.ERROR:
-                AlertDialog.Builder builder = new AlertDialog.Builder(LauncherActivity.this);
-                
-                // TODO: write a better error message
-                builder.setMessage(LauncherActivity.this.getString(R.string.couch_install_error))
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() { 
-                        public void onClick(DialogInterface dialog, int id) { 
-                            finish();                            
-                        }
-                    });
-                
-                AlertDialog alert = builder.create();
-                alert.show();                
-                break;
 
-            case CouchInstaller.PROGRESS:
-                if (msg.arg1 > 0)
-                    mProgressDialog.setProgress(msg.arg1);                
-                break;
-
-            case CouchInstaller.COMPLETE:
-                // We should only dismiss dialogs that are actually showing
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
-                
-                if (msg.arg1 == 0)
-                    restartActivity(true);
-                
-                break;
-            }
-        }
-    };
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        
+        if (resultCode == RESULT_CANCELED)
+            return;
+        
+        switch (requestCode) {
+        // "Exit" if the user returns from BrowserActivity
+        case BROWSER_ACTIVITY:
+            finish();
+            break; 
+        }        
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -198,189 +181,36 @@ public class LauncherActivity extends Activity
 
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
         setContentView(R.layout.launcher);
-                
-        if (Collect.getInstance().getIoService() instanceof InformOnlineService && Collect.getInstance().getIoService().isReady()) {            
-            if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized()) {                
-                if (Collect.getInstance().getInformDependencies().isInitialized()) {
-                    if (Collect.getInstance().getInformDependencies().allSatisfied()) {                        
-                        // Start the persistent online connection
-                        startService(new Intent(LauncherActivity.this, InformOnlineService.class));
-                        
-                        // Start the persistent database connection
-                        startService(new Intent(LauncherActivity.this, DatabaseService.class));                        
-                        
-                        startActivityForResult(new Intent(LauncherActivity.this, BrowserActivity.class), BROWSER_ACTIVITY);                        
-                    } else {
-                        showDialog(DIALOG_DEPENDENCY_UNMET);
-                    }
-                }                
-            } else {                
-                /*
-                 * Install database engine
-                 * 
-                 * TODO: calculate required space before install begins 
-                 */
-                mProgressDialog = new ProgressDialog(LauncherActivity.this);
-                mProgressDialog.setCancelable(false);                
-                mProgressDialog.setTitle(R.string.tf_database_being_installed);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                mProgressDialog.show();
-
-                new Thread() {
-                    public void run() {
-                        try {
-                            CouchInstaller.doInstall(mProgressHandler);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            mProgressDialog.dismiss();
-                            mProgressHandler.sendMessage(mProgressHandler.obtainMessage(CouchInstaller.ERROR));
-                        }
-                    }
-                }.start();
-            }
-        } else {
-            new InitializeApplicationTask().execute(getApplicationContext());
-        }
         
-        if (bindService(new Intent(LauncherActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE))
-            Log.d(Collect.LOGTAG, t + "successfully bound to InformOnlineService");
-        else 
-            Log.e(Collect.LOGTAG, t + "unable to bind to InformOnlineService");
+        startService(new Intent(this, InformOnlineService.class));
+        startService(new Intent(this, DatabaseService.class));
         
-        if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE))
-            Log.d(Collect.LOGTAG, t + "successfully bound to DatabaseService");
-        else 
-            Log.e(Collect.LOGTAG, t + "unable to bind to DatabaseService");
+        new InitializeApplicationTask().execute(getApplicationContext());
     }
 
-    /*
-     * (non-Javadoc)
-     * @see android.app.ListActivity#onDestroy()
-     * 
-     * Recall:
-     * Because onPause() is the first of the three [killable methods], it's the only one that's guaranteed to be called 
-     * before the process is killed — onStop() and onDestroy() may not be. Therefore, you should use onPause() to write 
-     * any persistent data (such as user edits) to storage. 
-     */
-    @Override
-    protected void onDestroy()
-    {
-        // Close down our services (not all can be expected to be running)
-        if (Collect.getInstance().getCouchService() instanceof InformCouchService) {
-            try {
-                Log.d(Collect.LOGTAG, t + "unbinding from CouchService");
-                unbindService(mCouchConnection);                
-            } catch (IllegalArgumentException e) {
-                Log.w(Collect.LOGTAG, t + "CouchService not registered: " + e.toString());
-            }
-        }
-        
-        if (Collect.getInstance().getDbService() instanceof DatabaseService) {
-            try {
-                Log.d(Collect.LOGTAG, t + "unbinding from DatabaseService");
-                unbindService(mDatabaseConnection);
-            } catch (IllegalArgumentException e) { 
-                Log.w(Collect.LOGTAG, t + "DatabaseService not registered: " + e.toString());    
-            }
-        }
-        
-        if (Collect.getInstance().getIoService() instanceof InformOnlineService) {
-            try {
-                Log.d(Collect.LOGTAG, t + "unbinding from InformOnlineService");
-                unbindService(mOnlineConnection);
-            } catch (IllegalArgumentException e) {
-                Log.w(Collect.LOGTAG, t + "InformOnlineService not registered: " + e.toString());
-            }
-        }
-        
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onResume()
-    {
-        super.onResume();        
-        
-        if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized())
-            if (Collect.getInstance().getInformDependencies().isInitialized())
-                if (!Collect.getInstance().getInformDependencies().allSatisfied())
-                    showDialog(DIALOG_DEPENDENCY_UNMET);
-    }
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-        
-        if (resultCode == RESULT_CANCELED)
-            return;
-        
-        switch (requestCode) {
-        // "Exit" if the user returns from BrowserActivity
-        case BROWSER_ACTIVITY:
-            finish();
-            break; 
-        }        
-    }
-    
     public Dialog onCreateDialog(int id)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         Dialog dialog = null;
         
         switch (id) {
-        case DIALOG_DEPENDENCY_UNMET:            
-            /*
-             * Since showDependencyDialog essentially enters a loop once unsatisfied dependencies
-             * are found we need a way to get out once all dependencies have been satisfied or
-             * after the user has skipped installation.  This is our out.  
-             */        
-            if (Collect.getInstance().getInformDependencies().getNextDependency() == null) {
-                restartActivity(false);
-                return builder.create();
-            }
-            
-            String copy = getString(R.string.tf_unavailable);
-            String dependency = Collect.getInstance().getInformDependencies().getNextDependency();
-            
-            if (dependency.equals(InformDependencies.BARCODE))
-                copy = getString(R.string.com_google_zxing_client_android);
-            else if (dependency.equals(InformDependencies.COUCHDB))
-                copy = getString(R.string.com_couchone_couchdb);            
-            
+        case DIALOG_COUCH_ERROR:
             builder
-                .setCancelable(false)
-                .setIcon(R.drawable.ic_dialog_info)
-                .setTitle(R.string.tf_dependency_missing_dialog)
-                .setMessage(getString(R.string.tf_dependency_missing_dialog_msg) + copy);
-            
-            builder.setPositiveButton(getText(R.string.tf_install), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    // The install may not be successful but at this point we just pretend that it was
-                    String dependency = Collect.getInstance().getInformDependencies().getNextDependency();                    
-                    Collect.getInstance().getInformDependencies().getDependencies().put(dependency, 1);
-                    
-                    removeDialog(DIALOG_DEPENDENCY_UNMET);
-                    showDialog(DIALOG_DEPENDENCY_UNMET);
-                    
-                    String uri = "market://details?id=" + dependency;
-                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-                    startActivity(i);
+            .setMessage("Error Initializing or Starting Database")
+            .setPositiveButton("Try Again?", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    startCouch();
+                }
+            })
+            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    LauncherActivity.this.moveTaskToBack(true);
                 }
             });
             
-            builder.setNeutralButton(getText(R.string.tf_remind_later), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {          
-                    // This doesn't permanently mark the dependency as installed but it allows us to skip to the next one
-                    Collect.getInstance().getInformDependencies().getDependencies().put(
-                            Collect.getInstance().getInformDependencies().getNextDependency(), 1);
-
-                    removeDialog(DIALOG_DEPENDENCY_UNMET);
-                    showDialog(DIALOG_DEPENDENCY_UNMET);
-                }
-            });
-            
-            dialog = builder.create();            
+            dialog = builder.create();
             break;
         
         case DIALOG_EXTERNAL_STORAGE_UNAVAILABLE:
@@ -401,10 +231,8 @@ public class LauncherActivity extends Activity
         // Registered    
         case DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED:
             String msg;            
-
-            if (CouchInstaller.checkInstalled() 
-                    && CouchInitializer.isEnvironmentInitialized()
-                    && Collect.getInstance().getInformOnlineState().hasReplicatedFolders())
+    
+            if (Collect.getInstance().getInformOnlineState().hasReplicatedFolders())
                 msg = getString(R.string.tf_connection_error_registered_with_db_msg);
             else    
                 msg = getString(R.string.tf_connection_error_registered_without_db_msg);
@@ -414,43 +242,27 @@ public class LauncherActivity extends Activity
                 .setIcon(R.drawable.ic_dialog_alert)        
                 .setTitle(R.string.tf_unable_to_connect)
                 .setMessage(msg);
-
+    
             builder.setPositiveButton(getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     restartActivity(true);
                 }
             });
             
-            if (CouchInstaller.checkInstalled() 
-                    && CouchInitializer.isEnvironmentInitialized()
-                    && Collect.getInstance().getInformOnlineState().hasReplicatedFolders()) {
-                
+            if (Collect.getInstance().getInformOnlineState().hasReplicatedFolders()) {                
                 builder.setNeutralButton(getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        restartActivity(false);
+                        startCouch();
                     }
                 });    
             }
-
+    
             builder.setNegativeButton(getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    // Make sure that Couch shuts down (since it's a remote process)
-                    if (Collect.getInstance().getCouchService() instanceof InformCouchService) {
-                        // The user could not connect so there is no point of any of this continuing to run in the background
-                        try {
-                            Collect.getInstance().getCouchService().quitCouchDB();
-                        } catch (RemoteException e) {
-                            Log.w(Collect.LOGTAG, t + "unable to quit CouchDB: " + e.toString());
-                            e.printStackTrace();
-                        }
-                        
-                        Collect.getInstance().stopService(new Intent(InformCouchService.class.getName()));
-                    }
-                    
                     finish();
                 }
             });
-
+    
             dialog = builder.create();            
             break;
            
@@ -461,13 +273,13 @@ public class LauncherActivity extends Activity
                 .setIcon(R.drawable.ic_dialog_info)        
                 .setTitle(R.string.tf_offline_mode_enabled)
                 .setMessage(getString(R.string.tf_offline_mode_enabled_msg));
-
+    
             builder.setPositiveButton(getText(R.string.tf_continue), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     restartActivity(false);        
                 }
             });
-
+    
             dialog = builder.create();       
             break;
             
@@ -477,30 +289,111 @@ public class LauncherActivity extends Activity
                 .setIcon(R.drawable.ic_dialog_alert)        
                 .setTitle(R.string.tf_unable_to_connect)
                 .setMessage(getString(R.string.tf_connection_error_unregistered_msg));
-
+    
             builder.setPositiveButton(getText(R.string.tf_retry), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     restartActivity(true);
                 }
             });
-
+    
             builder.setNegativeButton(getText(R.string.tf_exit_inform), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     finish();
                 }
             });
-
+    
             dialog = builder.create();            
-            break;       
+            break;
+            
+        case DIALOG_UPGRADE_FAILED:
+            builder
+            .setMessage("Error Upgrading Application")
+            .setPositiveButton("Try Again?", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    restartActivity(true);
+                }
+            })
+            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    LauncherActivity.this.moveTaskToBack(true);
+                }
+            });
+            
+            dialog = builder.create();            
+            break;
         }
         
         return dialog;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see android.app.ListActivity#onDestroy()
+     * 
+     * Recall:
+     * Because onPause() is the first of the three [killable methods], it's the only one that's guaranteed to be called 
+     * before the process is killed — onStop() and onDestroy() may not be. Therefore, you should use onPause() to write 
+     * any persistent data (such as user edits) to storage. 
+     */
+    @Override
+    protected void onDestroy()
+    {        
+        // Unbind from our services
+        if (Collect.getInstance().getCouchService() instanceof ServiceConnection) {
+            try {
+                Log.d(Collect.LOGTAG, t + "unbinding from CouchService");
+                unbindService(Collect.getInstance().getCouchService());                
+            } catch (IllegalArgumentException e) {
+                Log.w(Collect.LOGTAG, t + "CouchService not registered: " + e.toString());
+            }
+        }
+
+        if (Collect.getInstance().getDbService() instanceof DatabaseService) {
+            try {
+                Log.d(Collect.LOGTAG, t + "unbinding from DatabaseService");
+                unbindService(mDatabaseConnection);
+            } catch (IllegalArgumentException e) { 
+                Log.w(Collect.LOGTAG, t + "DatabaseService not registered: " + e.toString());    
+            }
+        }
+
+        if (Collect.getInstance().getIoService() instanceof InformOnlineService) {
+            try {
+                Log.d(Collect.LOGTAG, t + "unbinding from InformOnlineService");
+                unbindService(mOnlineConnection);
+            } catch (IllegalArgumentException e) {
+                Log.w(Collect.LOGTAG, t + "InformOnlineService not registered: " + e.toString());
+            }
+        }
+        
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();    
+    }
+    
+    @Override
+    protected void onResume()
+    {   
+        super.onResume();
+        
+        if (Collect.getInstance().getIoService() == null)
+            bindService(new Intent(LauncherActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE);
+        
+        if (Collect.getInstance().getDbService() == null)
+            bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE);
     }
     
     public class InitializeApplicationTask extends AsyncTask<Object, Void, Void> 
     {
         private boolean pinged = false;
         private boolean registered = false;
+        private boolean upgradeFailed = false;
         
         @Override
         protected Void doInBackground(Object... args)
@@ -508,10 +401,19 @@ public class LauncherActivity extends Activity
             // Timer
             int seconds = 0;
             
-            // Reset & create directories
+            // Prepare environment for new Couch packaging if need be
+            try {
+                couchPackageUpgradePath();
+            } catch (IOException e) {
+                Log.e(Collect.LOGTAG, t + "upgrade path failed at some point " + e.toString());
+                e.printStackTrace();
+                upgradeFailed = true;
+            }
+            
+            // Create directories
             FileUtils.createFolder(FileUtilsExtended.EXTERNAL_CACHE);
             FileUtils.createFolder(FileUtilsExtended.EXTERNAL_DB);
-            FileUtils.createFolder(FileUtilsExtended.EXTERNAL_FILES);            
+            FileUtils.createFolder(FileUtilsExtended.EXTERNAL_FILES);
             
             // The InformOnlineService will perform ping and check-in immediately (no need to duplicate here)
             while (true) {
@@ -542,39 +444,6 @@ public class LauncherActivity extends Activity
             
             pinged = Collect.getInstance().getIoService().isRespondingToPings();
             registered = Collect.getInstance().getIoService().isRegistered();
-            
-            seconds = 0;
-            
-            if (registered) {
-                if (!Collect.getInstance().getInformDependencies().isInitialized())
-                    Collect.getInstance().setInformDependencies(new InformDependencies(getApplicationContext()));               
-
-                if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized() == false)
-                    CouchInitializer.initializeEnvironment(mProgressHandler);
-
-                if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized()) {
-                    // Start the database process
-                    startService(new Intent(InformCouchService.class.getName()));
-
-                    if (bindService(new Intent(InformCouchService.class.getName()), mCouchConnection, Context.BIND_AUTO_CREATE))
-                        Log.d(Collect.LOGTAG, t + "successfully bound to InformCouchService");
-                    else 
-                        Log.e(Collect.LOGTAG, t + "unable to bind to InformCouchService");                
-
-                    // Wait a reasonable period of time for the DB to start up
-                    while (Collect.getInstance().getCouchService() == null) {
-                        if (seconds > 30)
-                            break;
-
-                        try {
-                            Thread.sleep(1000);
-                            seconds++;                        
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
 
             return null;
         }
@@ -582,21 +451,19 @@ public class LauncherActivity extends Activity
         @Override
         protected void onPreExecute()
         {
-            if (CouchInstaller.checkInstalled() && CouchInitializer.isEnvironmentInitialized() == false) {
-                mProgressDialog = new ProgressDialog(LauncherActivity.this);
-                mProgressDialog.setCancelable(false);                
-                mProgressDialog.setTitle(R.string.tf_database_being_initialized);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                mProgressDialog.show();
-            }
         }
     
         @Override
         protected void onPostExecute(Void nothing) 
-        {            
+        {
+            if (upgradeFailed) {
+                showDialog(DIALOG_UPGRADE_FAILED);
+                return;
+            }            
+            
             if (pinged) {
                 if (registered) {
-                    restartActivity(false);
+                    startCouch();
                 } else {
                     startActivity(new Intent(getApplicationContext(), ClientRegistrationActivity.class));
                     finish();
@@ -612,21 +479,61 @@ public class LauncherActivity extends Activity
                 }
             }
         }
+        
+        /*
+         * Test for the old way of packaging Couch (e.g., sdcard-based install) and perform steps
+         * to bring the environment up-to-date for the new Couch install
+         */
+        private void couchPackageUpgradePath() throws IOException
+        {
+            /*
+             * Only copy the actual Couch databases (view index directories named .dbname_design and the
+             * contents thereof will be automatically regenerated 
+             */
+            class DbFilesFilter implements FilenameFilter 
+            {
+                @Override
+                public boolean accept(File dir, String filename) {
+                    if (filename.startsWith("db_") && filename.endsWith(".couch"))
+                        return true;
+                    
+                    return false;
+                }
+            }
+            
+            // Are the old Couch & Erlang directories present?
+            if (!new File(FileUtilsExtended.EXTERNAL_COUCH).exists() && !new File(FileUtilsExtended.EXTERNAL_ERLANG).exists())
+                return;
+                
+            Log.i(Collect.LOGTAG, t + "old CouchDB environment detected; about to execute upgrade path");
+
+            // Get a list of Couch database files
+            FilenameFilter filter = new DbFilesFilter();
+            String [] dbFiles = new File(FileUtilsExtended.EXTERNAL_COUCH, "/var/lib/couchdb").list(filter);
+
+            // Move database and design files to the new location
+            if (dbFiles == null) {
+                Log.d(Collect.LOGTAG, t + "no databases to move");
+            } else {
+                for (String file : dbFiles) {
+                    Log.d(Collect.LOGTAG, t + "about to copy " + file + " to new location");
+                    File f = new File(FileUtilsExtended.EXTERNAL_COUCH, "/var/lib/couchdb/" + file);
+                    org.apache.commons.io.FileUtils.copyFileToDirectory(f, new File(FileUtilsExtended.EXTERNAL_DB));
+                }
+            }
+
+            // Remove couchdb, erlang and other files on sdcard data storage
+            CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_COUCH));
+            CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_ERLANG));
+            CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_FILES));
+
+            // Remove couchdb & erlang on internal data storage
+            CouchInstaller.appNamespace = LauncherActivity.this.getApplication().getPackageName();
+            CouchInstaller.deleteDirectory(new File(CouchInstaller.dataPath() + "/couchdb"));
+            CouchInstaller.deleteDirectory(new File(CouchInstaller.dataPath() + "/erlang"));
+        }
     }
     
-    // Restart this activity, optionally requesting a complete restart
-    private void restartActivity(boolean fullRestart)
-    {
-        Intent i = new Intent(getApplicationContext(), LauncherActivity.class);
-        
-        // If the user wants a full restart then request reinitialization of the IO service
-        if (fullRestart)
-            i.putExtra(KEY_REINIT_IOSERVICE, true);
-        
-        startActivity(i);
-        finish();
-    }
-
     private void displaySplash()
     {
         // Don't show the splash screen if this app appears to be registered
@@ -689,5 +596,23 @@ public class LauncherActivity extends Activity
         mSplashToast.setView(layout);
         mSplashToast.setGravity(Gravity.CENTER, 0, 0);
         mSplashToast.show();
+    }
+    
+    // Restart this activity, optionally requesting a complete restart
+    private void restartActivity(boolean fullRestart)
+    {
+        Intent i = new Intent(getApplicationContext(), LauncherActivity.class);
+        
+        // If the user wants a full restart then request reinitialization of the IO service
+        if (fullRestart)
+            i.putExtra(KEY_REINIT_IOSERVICE, true);
+        
+        startActivity(i);
+        finish();
+    }
+
+    private void startCouch() 
+    {
+        Collect.getInstance().setCouchService(CouchDB.getService(getBaseContext(), null, "release-1.0.2-1", mCouchCallback));
     }
 }
