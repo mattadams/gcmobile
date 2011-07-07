@@ -2,6 +2,5 @@
 <resources>
 <style name="GroupInformTheme" parent="android:Theme.Light">
     <item name="android:windowTitleSize">37dip</item>
-    <item name="android:windowTitleBackgroundStyle">@style/WindowTitleBackgroundCustom</item>
 </style>
 </resources>
