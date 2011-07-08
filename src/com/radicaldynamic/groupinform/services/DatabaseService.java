@@ -395,14 +395,17 @@ public class DatabaseService extends Service {
         String source = null;
         String target = null;
         
+        String deviceId = Collect.getInstance().getInformOnlineState().getDeviceId();
+        String deviceKey = Collect.getInstance().getInformOnlineState().getDeviceKey();
+        
         switch (mode) {
         case REPLICATE_PUSH:
             source = "http://" + mLocalHost + ":" + mLocalPort + "/db_" + db; 
-            target = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
+            target = "https://" + deviceId + ":" + deviceKey + "@" + masterClusterIP + ":6984/db_" + db;
             break;
 
         case REPLICATE_PULL:
-            source = "https://" + Collect.getInstance().getInformOnlineState().getDeviceId() + ":" + Collect.getInstance().getInformOnlineState().getDeviceKey() + "@" + masterClusterIP + ":6984/db_" + db;
+            source = "https://" + deviceId + ":" + deviceKey + "@" + masterClusterIP + ":6984/db_" + db;
             target = "http://" + mLocalHost + ":" + mLocalPort + "/db_" + db; 
             break;
         }
@@ -415,6 +418,9 @@ public class DatabaseService extends Service {
         } catch (Exception e) {
             // Remove a recently created DB if the replication failed
             if (dbCreated) {
+                Log.e(Collect.LOGTAG, t + "replication exception: " + e.toString());
+                e.printStackTrace();
+                
                 mLocalDbInstance.deleteDatabase("db_" + db);
             }
         }
@@ -440,10 +446,16 @@ public class DatabaseService extends Service {
         
         Log.d(Collect.LOGTAG, tt + "establishing connection to " + mLocalHost + ":" + mLocalPort);
 
-        try {                     
+        try {          
+            /*
+             * Socket timeout of 5 minutes is important, otherwise long-running replications
+             * will fail.  It is possible that we will need to extend this in the future if
+             * it turns out to be insufficient.
+             */
             mLocalHttpClient = new StdHttpClient.Builder()
                 .host(mLocalHost)
                 .port(mLocalPort)
+                .socketTimeout(300 * 1000)
                 .build();
             
             mLocalDbInstance = new StdCouchDbInstance(mLocalHttpClient);
