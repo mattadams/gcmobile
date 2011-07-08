@@ -200,7 +200,6 @@ public class AccountDeviceList extends ListActivity
         JSONObject jsonDeviceList;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
             jsonDeviceList = (JSONObject) new JSONTokener(getResult).nextValue();
             
             String result = jsonDeviceList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);

@@ -413,7 +413,6 @@ public class AccountFolderList extends ListActivity
         JSONObject jsonFolderList;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
             jsonFolderList = (JSONObject) new JSONTokener(getResult).nextValue();
             
             String result = jsonFolderList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
