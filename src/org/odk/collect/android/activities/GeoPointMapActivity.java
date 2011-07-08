@@ -29,7 +29,6 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
-import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 
 public class GeoPointMapActivity extends MapActivity implements LocationListener {
 
@@ -49,6 +48,9 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
     private boolean mCaptureLocation = true;
     private Button mShowLocation;
 
+    private boolean mGPSOn = false;
+    private boolean mNetworkOn = false;
+    
     private static double LOCATION_ACCURACY = 5;
 
 
@@ -83,19 +85,17 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
         mMapView.setSatellite(false);
         mMapController.setZoom(16);
 
-        // make sure we have at least one non-passive gp provider before continuing
-        List<String> providers = mLocationManager.getProviders(true);
-        boolean gps = false;
-        boolean network = false;
+        // make sure we have a good location provider before continuing
+        List<String> providers = mLocationManager.getProviders(true);        
         for (String provider : providers) {
             if (provider.equalsIgnoreCase(LocationManager.GPS_PROVIDER)) {
-                gps = true;
+                mGPSOn = true;
             }
             if (provider.equalsIgnoreCase(LocationManager.NETWORK_PROVIDER)) {
-                network = true;
+                mNetworkOn = true;
             }
         }
-        if (!gps && !network) {
+        if (!mGPSOn && !mNetworkOn) {
             Toast.makeText(getBaseContext(), getString(R.string.provider_disabled_error),
                 Toast.LENGTH_SHORT).show();
             finish();
@@ -103,7 +103,6 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
 
         mLocationOverlay = new MyLocationOverlay(this, mMapView);
         mMapView.getOverlays().add(mLocationOverlay);
-
 
         if (mCaptureLocation) {
             mLocationStatus = (TextView) findViewById(R.id.location_status);
@@ -115,7 +114,6 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
                     returnLocation();
                 }
             });
-
 
         } else {
 
@@ -142,7 +140,7 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
         if (mLocation != null) {
             Intent i = new Intent();
             i.putExtra(
-                FormEntryActivity.LOCATION_RESULT,
+                    com.radicaldynamic.groupinform.activities.FormEntryActivity.LOCATION_RESULT,
                 mLocation.getLatitude() + " " + mLocation.getLongitude() + " "
                         + mLocation.getAltitude() + " " + mLocation.getAccuracy());
             setResult(RESULT_OK, i);
@@ -170,8 +168,13 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
         super.onResume();
 
         ((MyLocationOverlay) mLocationOverlay).enableMyLocation();
-        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-        mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+        if (mGPSOn) {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        }
+        if (mNetworkOn) {
+            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+        }
+
     }
 
 
@@ -204,19 +207,16 @@ public class GeoPointMapActivity extends MapActivity implements LocationListener
 
     @Override
     public void onProviderDisabled(String provider) {
-        // TODO Auto-generated method stub
     }
 
 
     @Override
     public void onProviderEnabled(String provider) {
-        // TODO Auto-generated method stub
     }
 
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-        // TODO Auto-generated method stub
     }
 
     class Marker extends Overlay {

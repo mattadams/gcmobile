@@ -16,8 +16,6 @@ package org.odk.collect.android.activities;
 
 import com.radicaldynamic.groupinform.R;
 
-import com.radicaldynamic.groupinform.activities.FormEntryActivity;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -31,13 +29,16 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import java.text.DecimalFormat;
+import java.util.List;
 
 public class GeoPointActivity extends Activity implements LocationListener {
 
     private ProgressDialog mLocationDialog;
     private LocationManager mLocationManager;
     private Location mLocation;
-
+    private boolean mGPSOn = false;
+    private boolean mNetworkOn = false;
+    
     // default location accuracy
     private static double LOCATION_ACCURACY = 5;
 
@@ -49,7 +50,25 @@ public class GeoPointActivity extends Activity implements LocationListener {
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.get_location));
 
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        // make sure we have at least one non-passive gp provider before continuing
+        List<String> providers = mLocationManager.getProviders(true);        
+        for (String provider : providers) {
+            if (provider.equalsIgnoreCase(LocationManager.GPS_PROVIDER)) {
+                mGPSOn = true;
+            }
+            if (provider.equalsIgnoreCase(LocationManager.NETWORK_PROVIDER)) {
+                mNetworkOn = true;
+            }
+        }
+        if (!mGPSOn && !mNetworkOn) {
+            Toast.makeText(getBaseContext(), getString(R.string.provider_disabled_error),
+                Toast.LENGTH_SHORT).show();
+            finish();
+        }
+        
         setupLocationDialog();
+        
     }
 
 
@@ -70,14 +89,12 @@ public class GeoPointActivity extends Activity implements LocationListener {
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Prefer faster, less demanding NETWORK provider and fallback to GPS
-        if (mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        } else {
+        if (mGPSOn) {
             mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
         }
-
+        if (mNetworkOn) {
+            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+        }
         mLocationDialog.show();
     }
 
@@ -101,8 +118,6 @@ public class GeoPointActivity extends Activity implements LocationListener {
                             finish();
                             break;
                     }
-                    // TODO: does this stop gps?
-                    // on cancel, stop gps
                 }
             };
 
@@ -123,7 +138,7 @@ public class GeoPointActivity extends Activity implements LocationListener {
         if (mLocation != null) {
             Intent i = new Intent();
             i.putExtra(
-                FormEntryActivity.LOCATION_RESULT,
+                com.radicaldynamic.groupinform.activities.FormEntryActivity.LOCATION_RESULT,
                 mLocation.getLatitude() + " " + mLocation.getLongitude() + " "
                         + mLocation.getAltitude() + " " + mLocation.getAccuracy());
             setResult(RESULT_OK, i);
@@ -152,9 +167,7 @@ public class GeoPointActivity extends Activity implements LocationListener {
 
     @Override
     public void onProviderDisabled(String provider) {
-        Toast.makeText(getBaseContext(), getString(R.string.provider_disabled_error),
-            Toast.LENGTH_SHORT).show();
-        finish();
+
     }
 
 
