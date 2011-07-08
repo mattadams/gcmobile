@@ -276,7 +276,7 @@ public class LauncherActivity extends Activity
     
             builder.setPositiveButton(getText(R.string.tf_continue), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    restartActivity(false);        
+                    startCouch();
                 }
             });
     
