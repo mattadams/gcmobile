@@ -249,7 +249,7 @@ public class AccountDeviceList extends ListActivity
         ArrayList<AccountDevice> devices = new ArrayList<AccountDevice>();
         
         if (!new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).exists()) {
-            Log.d(Collect.LOGTAG, t + "device cache file cannot be read: aborting loadDeviceList()");
+            Log.w(Collect.LOGTAG, t + "device cache file cannot be read: aborting loadDeviceList()");
             return devices;
         }
         

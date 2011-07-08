@@ -451,7 +451,7 @@ public class AccountFolderList extends ListActivity
         ArrayList<AccountFolder> folders = new ArrayList<AccountFolder>();
         
         if (!new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.FOLDER_CACHE_FILE).exists()) {
-            Log.d(Collect.LOGTAG, t + "folder cache file cannot be read: aborting loadFolderList()");
+            Log.w(Collect.LOGTAG, t + "folder cache file cannot be read: aborting loadFolderList()");
             return folders;
         }
         

@@ -15,7 +15,7 @@
 
     <EditText
         android:id="@+id/accountNumber" 
-        android:inputType="textNoSuggestions"
+        android:inputType="phone"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content" 
         android:maxLength="14" 
