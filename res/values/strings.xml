@@ -397,7 +397,7 @@
 	<string name="tf_item_value_not_unique">Cannot save: item must have a unique value</string>
 	<string name="tf_list_items">List Items</string>
 	<string name="tf_licence_limit_reached_dialog">All Licences In Use</string>
-	<string name="tf_licence_limit_reached_dialog_msg">All of the %1$s licences available to your %2$s account are in use.\n\nPlease contact the account owner to remove any unneeded device profiles or to add more licences to the account.\n\nAccount owners: please visit\nhttp://groupcomplete.com for more information on Simple Sharing plans and pricing.</string>
+	<string name="tf_licence_limit_reached_dialog_msg">All of the %1$s licences available to your %2$s account are in use.\n\nPlease contact the account owner to remove any unneeded device profiles or to add more licences to the account.\n\nAccount owners: please visit\nhttp://groupcomplete.com for more information on our plans and pricing.</string>
 	<string name="tf_licence_validation_failed">Unable to validate this licence. Double check both values and try again!</string>
 	<string name="tf_licence_validation_succeeded">Licence successfully validated!</string>
 	<string name="tf_loading">Loading</string>
@@ -421,7 +421,7 @@
 	<string name="tf_register_this_device">Welcome to Inform!</string>
 	<string name="tf_registration_error_email_in_use">This email address is already in use</string>
 	<string name="tf_registration">Register Device</string>
-	<string name="tf_registration_msg">INFORM will help you to create smart forms, fill them out and share the forms &amp; results with your team.  Please register this device so that we can connect you with the rest of your team.\n\nAll mobile devices used by your team must be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you. It\'s free for up to 2 users and you\'ll be up and running in 60 seconds.\n\nPlease visit http://groupcomplete.com for more information on INFORM and our Simple Sharing services.</string>
+	<string name="tf_registration_msg">INFORM will help you to create smart forms, fill them out and share the forms &amp; results with your team.  Please register this device so that we can connect you with the rest of your team.\n\nAll mobile devices used by your team must be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you. It\'s free for up to 2 users and you\'ll be up and running in 60 seconds.\n\nPlease visit http://groupcomplete.com for more information on INFORM and Group Complete mobile data collection.</string>
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_remind">Remind</string>
 	<string name="tf_remind_later">Remind Later</string>
@@ -490,7 +490,7 @@
 	<string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one output option must be selected for export.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>
-	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Inform was unable to connect to the Simple Sharing service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
+	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Inform was unable to connect to the Group Complete service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
 	<string name="tf_unable_to_go_online_dialog">Cannot Go Online</string>
 	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Please make sure that this device can access the Internet and try again.</string>
 	<string name="tf_unable_to_launch_form_builder_dialog">Cannot Start Form Builder</string>
