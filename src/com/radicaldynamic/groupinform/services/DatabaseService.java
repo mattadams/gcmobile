@@ -487,6 +487,7 @@ public class DatabaseService extends Service {
                 .enableSSL(true)            
                 .host(host)
                 .port(port)
+                .socketTimeout(30 * 1000)
                 .username(Collect.getInstance().getInformOnlineState().getDeviceId())
                 .password(Collect.getInstance().getInformOnlineState().getDeviceKey())                    
                 .build();
