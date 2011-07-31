@@ -19,7 +19,7 @@
 <string name="add_repeat_no">Do Not Add</string>
 <string name="advance">advance to next prompt</string>
 <string name="altitude">Altitude</string>
-<string name="app_name">Inform</string>
+<string name="app_name">GC Mobile</string>
 <string name="audio_file_error">No audio file was specified.</string>
 <string name="audio_file_invalid">File: %s is not a valid audio file.</string>
 <string name="backup">return to previous prompt</string>
@@ -103,7 +103,7 @@
 <string name="longitude">Longitude</string>
 <string name="main_menu">Main Menu</string>
 <string name="main_menu_details">Magnifying human resources\nwith technology</string>
-<string name="main_menu_message">Inform v1.2.4 (ODK v1.1.7)</string>
+<string name="main_menu_message">GC Mobile v1.2.4 (ODK v1.1.7)</string>
 <string name="manage_files">Manage Forms</string>
 <string name="mark_finished">Mark Form as Finished</string>
 <string name="no">No</string>
@@ -210,12 +210,12 @@
     <string name="change_server">change_server</string>
     <string name="default_server">default_server</string>
 
-	<!-- Inform string resources below -->
-	<string name="tf_about_inform_account_header">This screen displays information about your Inform installation. Certain details are only available to the account owner.</string>
-	<string name="tf_about_inform_device_header">Information about the device you are currently using.</string>
+	<!-- GC Mobile string resources below -->
+	<string name="tf_about_inform_account_header">This screen displays information about your GC Mobile installation. Certain details are only available to the account owner.</string>
+	<string name="tf_about_inform_device_header">GC Mobileation about the device you are currently using.</string>
 	<string name="tf_abort_exit">Abort exit</string>
 	<string name="tf_account_created">Account Created</string>
-	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About Inform\" option menu.\n\nWe have sent an email to %s confirming this new account.</string>
+	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About GC Mobile\" option menu.\n\nWe have sent an email to %s confirming this new account.</string>
 	<string name="tf_account_details">If you do not know these details you can have a reminder sent to the account owner.</string>
 	<string name="tf_account_device">Registered Device</string>
 	<string name="tf_account_devices">Account Devices</string>
@@ -249,9 +249,9 @@
 	<string name="tf_confirm_instance_removal_dialog_msg">Do you want to remove this form?\n\nThis action can not be undone.</string>
 	<string name="tf_confirm_removal">Confirm Removal</string>
 	<string name="tf_confirm_removal_msg">Are you sure you want to remove \"%s?\"</string>
-	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
-	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the Inform service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
-	<string name="tf_connection_error_unregistered_msg">Unable to connect to the Inform service to register this device.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
+	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the GC Mobile service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
+	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the GC Mobile service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
+	<string name="tf_connection_error_unregistered_msg">Unable to connect to the GC Mobile service to register this device.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
 	<string name="tf_connection_status_notification">CONNECTION STATUS NOTIFICATION</string>	
 	<string name="tf_connectivity_settings">Connectivity settings</string>
 	<string name="tf_contact_account_owner">Action reserved for your account owner!</string>
@@ -271,7 +271,7 @@
 	<string name="tf_default_ionline_port">5101</string>	
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_dependency_missing_dialog">Install Helper Software?</string>
-	<string name="tf_dependency_missing_dialog_msg">The following free app will help to maximize the potential of Inform:\n\n</string>
+	<string name="tf_dependency_missing_dialog_msg">The following free app will help to maximize the potential of GC Mobile:\n\n</string>
 	<string name="tf_destination">Destination</string>
 	<string name="tf_device_admin_alias_label">Alias</string>
 	<string name="tf_device_admin_alias_hint">Identify this user by an alias instead of using the the email address. Examples: Joe Smith, North Warehouse or Survey Team.</string>
@@ -285,7 +285,7 @@
 	<string name="tf_device_admin_status_hint"></string>
 	<string name="tf_device_admin_status_inuse">In Use</string>	
 	<string name="tf_device_admin_status_unused">Unused (available for activation)</string>
-	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device. The address must be unique to this Inform account.</string>
+	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device. The address must be unique to this GC Mobile account.</string>
 	<string name="tf_device_info">Device Info</string>
 	<string name="tf_device_owner_notified_of_pin_use">User notified on your behalf via email</string>
 	<string name="tf_device_pin_label">Device PIN</string>
@@ -297,7 +297,7 @@
 	<string name="tf_device_registration_method_register_new">New Device</string>
 	<string name="tf_device_registration_method_reactivate">Reactivate</string>
 	<string name="tf_do_you_have_an_account">Do You Have An Account?</string>
-	<string name="tf_do_you_have_an_account_msg">If you have registered another device or have been told to use Inform by someone else then you probably have an account.\n\nDo you have an account?</string>
+	<string name="tf_do_you_have_an_account_msg">If you have registered another device or have been told to use GC Mobile by someone else then you probably have an account.\n\nDo you have an account?</string>
 	<string name="tf_edit">Edit</string>
 	<string name="tf_edit_folder">Edit Folder</string>
 	<string name="tf_edit_form_definition_hint">Select item to edit form template</string>
@@ -314,7 +314,7 @@
 	<string name="tf_element_text">Text field</string>
 	<string name="tf_email_address_required">An email address is required</string>
 	<string name="tf_email_not_available">Email address not available</string>
-	<string name="tf_exit_inform">Exit Inform</string>
+	<string name="tf_exit_inform">Exit GC Mobile</string>
 	<string name="tf_export_from">Export from</string>
 	<string name="tf_export_records">Export Records</string>
 	<string name="tf_export_records_hint">Select an item to export records</string>
@@ -377,12 +377,12 @@
 	<string name="tf_image_media_type">Photograph</string>
 	<string name="tf_improperly_formatted_licence_number">Improperly formatted licence number</string>
 	<string name="tf_improperly_formatted_licence_key">Improperly formatted licence key</string>
-	<string name="tf_inform_info">About Inform</string>
+	<string name="tf_inform_info">About GC Mobile</string>
 	<string name="tf_inform_state_connecting">Going online...</string>
 	<string name="tf_inform_state_disconnecting">Going offline...</string>
-	<string name="tf_inform_state_offline">Inform: OFFLINE</string>
-	<string name="tf_inform_state_online">Inform: Online</string>
-	<string name="tf_inform_state_transition">Inform: ...</string>
+	<string name="tf_inform_state_offline">GC Mobile: OFFLINE</string>
+	<string name="tf_inform_state_online">GC Mobile: Online</string>
+	<string name="tf_inform_state_transition">GC Mobile: ...</string>
 	<string name="tf_install">Install</string>
 	<string name="tf_integer_number_type">Integers only</string>
 	<string name="tf_invalid_email">Invalid email address</string>
@@ -418,10 +418,10 @@
 	<string name="tf_processing">Processing...</string>
 	<string name="tf_reactivation_delayed_reason">Please wait 5 minutes after device reset</string>
 	<string name="tf_reactivation_delayed_wait">PIN will be accepted in%1$s%2$s %3$s</string>   
-	<string name="tf_register_this_device">Welcome to Inform!</string>
+	<string name="tf_register_this_device">Welcome to GC Mobile!</string>
 	<string name="tf_registration_error_email_in_use">This email address is already in use</string>
 	<string name="tf_registration">Register Device</string>
-	<string name="tf_registration_msg">INFORM will help you to create smart forms, fill them out and share the forms &amp; results with your team.  Please register this device so that we can connect you with the rest of your team.\n\nAll mobile devices used by your team must be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you. It\'s free for up to 2 users and you\'ll be up and running in 60 seconds.\n\nPlease visit http://groupcomplete.com for more information on INFORM and Group Complete mobile data collection.</string>
+	<string name="tf_registration_msg">GC Mobile (Group Complete Mobile) will help you to create smart forms, fill them out and share the forms &amp; results with your team.  Please register this device so that we can connect you with the rest of your team.\n\nAll mobile devices used by your team should be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you. It\'s free for up to 2 users and you\'ll be up and running in 60 seconds.\n\nPlease visit http://groupcomplete.com for more information on Group Complete &amp; GC Mobile.</string>
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_remind">Remind</string>
 	<string name="tf_remind_later">Remind Later</string>
@@ -430,7 +430,7 @@
 	<string name="tf_removal_failed">Could not remove %s: group contains fields.\n\nRemove the inner fields first.</string>
 	<string name="tf_remove">Remove</string>	
 	<string name="tf_remove_device">Remove Profile</string>
-	<string name="tf_remove_device_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! If you remove this registered profile the following things will happen:\n\n1) The associated device will reset itself the next time it checks in with Inform. Following this the user will no longer be able to access this account.\n\n2) This alias or email address will continue to appear in association with records in various places but no further operations will be able to be performed using this device profile.\n\n3) You will be assigned as the owner of any folders currently associated with this user.</string>	
+	<string name="tf_remove_device_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! If you remove this registered profile the following things will happen:\n\n1) The associated device will reset itself the next time it checks in with GC Mobile. Following this the user will no longer be able to access this account.\n\n2) This alias or email address will continue to appear in association with records in various places but no further operations will be able to be performed using this device profile.\n\n3) You will be assigned as the owner of any folders currently associated with this user.</string>	
 	<string name="tf_remove_folder">Remove Folder</string>
 	<string name="tf_remove_folder_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! All form templates, drafts and completed forms contained in this folder will be lost upon removal.\n\nIf you need any of this information export it before removing this folder.</string>
 	<string name="tf_remove_form">Remove Form</string>
@@ -446,16 +446,16 @@
 	<string name="tf_repeated_group_type">Repeated group of fields</string>
 	<string name="tf_replication_list">Synchronization</string>
 	<string name="tf_request_account_reminder">Request Reminder</string>
-	<string name="tf_request_account_reminder_hint">Hint: this is probably the email address of the person in your team that told you to use Inform.</string>
+	<string name="tf_request_account_reminder_hint">Hint: this is probably the email address of the person in your team that told you to use GC Mobile.</string>
 	<string name="tf_request_account_reminder_msg">Enter the email address of the account owner. A reminder email containing the licence info will be sent to this person.</string>
 	<string name="tf_reset">Reset</string>	
 	<string name="tf_reset_device">Reset Device</string>	
-	<string name="tf_reset_inform">Reset Inform</string>	
+	<string name="tf_reset_inform">Reset GC Mobile</string>	
 	<string name="tf_reset_complete">Reset Complete</string>
-	<string name="tf_reset_complete_msg">Inform has been successfully reset.\n\nAll data created by Inform has been removed from this device.</string>	
-	<string name="tf_reset_incomplete_msg">We were unable to reset this device. This is probably due to a problem communicating with Inform servers.\n\nPlease make sure that your device has Internet access and try again.</string>
-	<string name="tf_reset_warning_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all Inform data stored on this device and cause this device to forget its device registration. This will not uninstall the Inform app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to Inform.\n\nIf you need to access the data associated with this device after resetting you must reactivate this device profile by using the current licence number, key and device PIN.\n\nDevice profiles may be reactivated during the device registration process.</string>
-	<string name="tf_reset_warning_admin_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all Inform data stored on this device and cause this device to forget its device registration. This will not uninstall the Inform app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to Inform.\n\nThis device profile may be reactivated by using the current licence number, key and device PIN during the registration process.</string>
+	<string name="tf_reset_complete_msg">GC Mobile has been successfully reset.\n\nAll data created by GC Mobile has been removed from this device.</string>	
+	<string name="tf_reset_incomplete_msg">We were unable to reset this device. This is probably due to a problem communicating with GC Mobile servers.\n\nPlease make sure that your device has Internet access and try again.</string>
+	<string name="tf_reset_warning_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all GC Mobile data stored on this device and cause this device to forget its device registration. This will not uninstall the GC Mobile app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to GC Mobile.\n\nIf you need to access the data associated with this device after resetting you must reactivate this device profile by using the current licence number, key and device PIN.\n\nDevice profiles may be reactivated during the device registration process.</string>
+	<string name="tf_reset_warning_admin_msg">IMPORTANT - PLEASE READ\n\nSelecting \"reset\" will remove all GC Mobile data stored on this device and cause this device to forget its device registration. This will not uninstall the GC Mobile app.\n\nYou should only perform a reset in one of the following situations:\n\na) You have been advised to do so by our customer support, or\n\nb) This device is being given to another person who should not have access to GC Mobile.\n\nThis device profile may be reactivated by using the current licence number, key and device PIN during the registration process.</string>
 	<string name="tf_reset_with_param">Reset %s</string>
 	<string name="tf_resetting_please_wait">Resetting...</string>
 	<string name="tf_retry">Retry</string>
@@ -483,14 +483,14 @@
 	<string name="tf_unable_to_connect">Unable To Connect</string>
 	<string name="tf_unable_to_copy">Unable To Copy</string>
 	<string name="tf_unable_to_copy_duplicate_dialog_msg">The folder \"%1$s\" already contains a form named \"%2$s.\"\n\nPlease choose another name.</string>
-	<string name="tf_unable_to_copy_unsupported_definition">The form template that you are trying to copy uses a new template format that is not fully supported by this version of Inform.\n\nSupport for copying forms with multimedia questions will be added in a future version of Inform.</string>
+	<string name="tf_unable_to_copy_unsupported_definition">The form template that you are trying to copy uses a new template format that is not fully supported by this version of GC Mobile.\n\nSupport for copying forms with multimedia questions will be added in a future version of GC Mobile.</string>
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one output option must be selected for export.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>
-	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">Inform was unable to connect to the Group Complete service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
+	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">GC Mobile was unable to connect to the Group Complete service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
 	<string name="tf_unable_to_go_online_dialog">Cannot Go Online</string>
 	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Please make sure that this device can access the Internet and try again.</string>
 	<string name="tf_unable_to_launch_form_builder_dialog">Cannot Start Form Builder</string>
@@ -503,7 +503,7 @@
 	<string name="tf_unable_to_open_folder_while_offline">The folder \"%s\" is unavailable while offline.\n\nPlease go online to access this folder or select a folder that is synchronized for offline use.</string>
 	<string name="tf_unable_to_proceed_without_licence_number_and_key">A licence number and key are required</string>
 	<string name="tf_unable_to_reactivate_while_in_use_dialog">Device In Use</string>
-	<string name="tf_unable_to_reactivate_while_in_use_dialog_msg">Our records indicate that the device profile associated with this PIN is currently in use.\n\nIf you have access to this device then you should reset Inform before reusing this profile.\n\nIf you cannot reset Inform then you should notify the person who uses this device.  Additional instructions will be sent to this person.</string>
+	<string name="tf_unable_to_reactivate_while_in_use_dialog_msg">Our records indicate that the device profile associated with this PIN is currently in use.\n\nIf you have access to this device then you should reset GC Mobile before reusing this profile.\n\nIf you cannot reset GC Mobile then you should notify the person who uses this device.  Additional instructions will be sent to this person.</string>
 	<string name="tf_unable_to_remove">Unable to Remove</string>
 	<string name="tf_unable_to_remove_defaultdb">This special folder cannot be removed</string>
 	<string name="tf_unable_to_remove_form_instance">Unable to remove form at this time.  Please try again later.</string>
@@ -517,6 +517,7 @@
 	<string name="tf_unable_to_update_folder">Unable to update %s</string>
 	<string name="tf_unavailable">Unavailable</string>
 	<string name="tf_unknown_contact_email">Unknown email address</string>
+    <string name="tf_unknown_error">An unknown error occurred.  Please contact us at confab@groupcomplete.com and let us know what you were doing when you received this message.</string>
 	<string name="tf_update">Update</string>
 	<string name="tf_updating_with_param">Updating %s...</string>
 	<string name="tf_video_media_type">Video recording</string>
@@ -524,14 +525,4 @@
 	<string name="tf_viewing_instance">Output Fields for</string>
 	<string name="tf_while_offline">Changes cannot be saved while offline</string>
 	<string name="tf_yes">Yes</string>
-	<!-- Dependency explanations below -->
-	<string name="com.google.zxing.client.android">The Barcode Scanner app allows Inform to scan, decode and store all major forms of barcodes.\n\nBarcode scanning technology is very useful for inventory or warehouse operations.</string>
-	<string name="com.couchone.couchdb">CouchDB allows Inform to store forms and data locally on your device.\n\nThis technology enables you to access your data while offline and keeps your information synchronized with the rest of your team.\n\nInstall CouchDB to get the most out of Inform.</string>
-	<!-- CouchDB message below -->
-	<string name="couch_stop">Stop CouchDB</string>
-	<string name="couch_delete">Delete Databases</string>
-	<string name="couch_loading_dialog">CouchDB is Loading...</string>
-	<string name="couch_confirm_delete">Are you sure you want to delete, this will delete all of your existing data?</string>
-	<string name="couch_install_error">There was an error fetching the binaries, are you online? Please try again.</string>
-	<string name="couch_password">Admin Password</string>
 </resources>

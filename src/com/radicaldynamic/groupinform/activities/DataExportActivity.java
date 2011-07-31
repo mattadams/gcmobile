@@ -72,7 +72,7 @@ public class DataExportActivity extends Activity implements DataExportListener
                 AlertDialog.Builder builder = new AlertDialog.Builder(DataExportActivity.this);
                 
                 // TODO: write or pass a proper error message
-                builder.setMessage(DataExportActivity.this.getString(R.string.couch_install_error))
+                builder.setMessage(DataExportActivity.this.getString(R.string.tf_unknown_error))
                     .setCancelable(false)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() { 
                         public void onClick(DialogInterface dialog, int id) { 

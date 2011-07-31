@@ -50,7 +50,7 @@ import com.radicaldynamic.groupinform.xform.FormBuilderState;
  *
  */
 public class Collect extends Application {
-    public final static String LOGTAG = "Inform";
+    public final static String LOGTAG = "GC Mobile";
     
     // Storage paths
     public static final String ODK_ROOT = Environment.getExternalStorageDirectory() + "/odk";
