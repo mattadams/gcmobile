@@ -14,6 +14,16 @@
 
 package org.odk.collect.android.utilities;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.TimeZone;
+
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
@@ -21,13 +31,13 @@ import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.params.AuthPolicy;
+import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.HttpClientParams;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -42,16 +52,6 @@ import org.xmlpull.v1.XmlPullParser;
 
 import android.text.format.DateFormat;
 import android.util.Log;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.TimeZone;
 
 /**
  * Common utility methods for managing the credentials associated with the request context and
@@ -180,6 +180,8 @@ public final class WebUtils {
 
         // setup client
         HttpClient httpclient = new DefaultHttpClient(params);
+        httpclient.getParams().setParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true); 
+
         return httpclient;
     }
 
@@ -322,7 +324,14 @@ public final class WebUtils {
         } 
         catch (Exception e) {
             e.printStackTrace();
-            String error = "Error: " + e.getCause().getMessage() + " while accessing " + u.toString();
+            String cause;
+            if (e.getCause() != null) {
+                cause = e.getCause().getMessage();
+            } else {
+                cause = e.getMessage();
+            }
+            String error = "Error: " + cause + " while accessing " + u.toString();
+
             Log.w(t, error);
             return new DocumentFetchResult(error, 0);
         }

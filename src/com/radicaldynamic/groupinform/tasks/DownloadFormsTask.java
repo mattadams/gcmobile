@@ -210,7 +210,9 @@ public class DownloadFormsTask extends
             // END custom
             } catch (Exception e) {
                 e.printStackTrace();
-                message += e.getCause().getMessage();
+                if (e.getCause() != null) {
+                    message += e.getCause().getMessage();
+                }
             }
             count++;
             if (message.equalsIgnoreCase("")) {
@@ -335,7 +337,7 @@ public class DownloadFormsTask extends
             if (statusCode != 200) {
                 String errMsg =
                     Collect.getInstance()
-                            .getString(R.string.file_fetch_failed, f.getAbsolutePath(),
+                            .getString(R.string.file_fetch_failed, downloadUrl,
                                 response.getStatusLine().getReasonPhrase(), statusCode);
                 Log.e(t, errMsg);
                 throw new Exception(errMsg);
