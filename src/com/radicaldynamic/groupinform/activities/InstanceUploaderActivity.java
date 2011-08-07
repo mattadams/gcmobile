@@ -76,6 +76,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
 
     // maintain a list of what we've sent, in case we're interrupted by auth requests
     private HashMap<String, String> mUploadedInstances;
+    private String mUrl;
 
     private final static String AUTH_URI = "auth";
 
@@ -265,7 +266,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
 
 
     @Override
-    protected Dialog onCreateDialog(int id, final Bundle bundle) {
+    protected Dialog onCreateDialog(int id) {
         switch (id) {
             case PROGRESS_DIALOG:
                 mProgressDialog = new ProgressDialog(this);
@@ -296,7 +297,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
                 SharedPreferences settings =
                     PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 
-                String server = bundle.getString(AUTH_URI);
+                String server = mUrl;
                 if (server == null) {
                     // if the bundle is null, we're looking for a formlist
                     server =
@@ -327,7 +328,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
                         EditText username = (EditText) dialogView.findViewById(R.id.username_edit);
                         EditText password = (EditText) dialogView.findViewById(R.id.password_edit);
 
-                        URI u = URI.create(bundle.getString(AUTH_URI));
+                        URI u = URI.create(mUrl);
                         WebUtils.addCredentials(username.getText().toString(), password.getText()
                                 .toString(), u.getHost());
 
@@ -360,6 +361,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
+        mUrl = savedInstanceState.getString(AUTH_URI);
     }
 
 
@@ -369,6 +371,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         outState.putString(ALERT_MSG, mAlertMsg);
         outState.putBoolean(ALERT_SHOWING, mAlertShowing);
         outState.putSerializable(TO_SEND, mInstancesToSend);
+        outState.putString(AUTH_URI, mUrl);
         // BEGIN custom
         outState.putBundle(FormEntryActivity.KEY_INSTANCES, mUploadBundle);
         // END custom
@@ -435,9 +438,11 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
             mUploadedInstances.putAll(doneSoFar);
         }
 
-        Bundle b = new Bundle();
-        b.putString(AUTH_URI, url.toString());
-        showDialog(AUTH_DIALOG, b);
+//        Bundle b = new Bundle();
+//        b.putString(AUTH_URI, url.toString());
+//        showDialog(AUTH_DIALOG, b);
+        mUrl = url.toString();
+        showDialog(AUTH_DIALOG);
     }
 
 

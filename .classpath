@@ -19,5 +19,6 @@
 	<classpathentry kind="lib" path="lib/SuperCSV-1.52.jar"/>
 	<classpathentry kind="src" path="/LibCouch"/>
 	<classpathentry kind="src" path="LibCouch_src"/>
+	<classpathentry kind="lib" path="lib/joda-time-2.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
