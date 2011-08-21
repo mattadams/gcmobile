@@ -23,7 +23,25 @@ public final class FormWriter
     private static String mInstanceRoot;
     private static String mInstanceRootId;
     
-    public static byte[] writeXml(String headTitle, String instanceRoot, String instanceRootId)
+    @SuppressWarnings("serial")
+    public static class FormSanityException extends Exception
+    {
+        FormSanityException(String s)
+        {
+            super(s);
+        }
+    }
+    
+    @SuppressWarnings("serial")
+    public static class GroupHasNoChildrenException extends FormSanityException
+    {
+        GroupHasNoChildrenException(String s)
+        {
+            super(s);
+        }
+    }
+    
+    public static byte[] writeXml(String headTitle, String instanceRoot, String instanceRootId) throws GroupHasNoChildrenException
     {
         // Retrieve and load a template XForm file (this makes it easier than hardcoding a new one from scratch)
         InputStream xis = Collect.getInstance().getResources().openRawResource(R.raw.xform_template);        
@@ -57,15 +75,16 @@ public final class FormWriter
         return mFormTag.toBytes();
     }
 
-    private static void writeControls(Field incomingField)
+    private static void writeControls(Field incomingField) throws GroupHasNoChildrenException
     {
         Iterator<Field> it;
         
         if (incomingField == null) {
             it = Collect.getInstance().getFormBuilderState().getFields().iterator();
             mFormTag.gotoRoot().gotoTag("h:body");
-        } else
+        } else {
             it = incomingField.getChildren().iterator();
+        }
         
         while (it.hasNext()) {
             Field field = it.next();
@@ -73,11 +92,12 @@ public final class FormWriter
             mFormTag.addTag(field.getType());
 
             // Support for repeat (nodeset) references as well as regular references
-            if (field.getXPath() != null)
+            if (field.getXPath() != null) {
                 if (field.getType().equals("repeat"))
                     mFormTag.getCurrentTag().setAttribute("nodeset", field.getXPath());
                 else 
                     mFormTag.getCurrentTag().setAttribute("ref", field.getXPath());
+            }
             
             // Upload control fields only
             if (field.getAttributes().containsKey("mediatype"))
@@ -93,16 +113,18 @@ public final class FormWriter
                      */ 
                     mFormTag.addTag(XMLDoc.from("<label>" + FieldText.encodeXMLEntities(field.getLabel().toString().replace("xmlns=\"http://www.w3.org/2002/xforms\" ", "")) + "</label>", false));                                       
                 }
-            } else
+            } else {
                 mFormTag.addTag("label").addAttribute("ref", "jr:itext('" + field.getLabel().getRef() + "')").gotoParent();
+            }
             
             // Do the same for hints
             if (field.getHint().getRef() == null) {
                 if (field.getHint().toString().length() > 0) {
                     mFormTag.addTag(XMLDoc.from("<hint>" + FieldText.encodeXMLEntities(field.getHint().toString().replace("xmlns=\"http://www.w3.org/2002/xforms\" ", "")) + "</hint>", false));
                 }                    
-            } else 
+            } else {
                 mFormTag.addTag("hint").addAttribute("ref", "jr:itext('" + field.getHint().getRef() + "')").gotoParent();
+            }
             
             // Special support for item control fields
             if (field.getType().equals("item")) {
@@ -112,10 +134,19 @@ public final class FormWriter
                     mFormTag.addTag("value").setText(field.getItemValue());
             }
             
+            // Sanity check to make sure groups have children
+            if (field.getType().equals("group")) {
+                if (Field.isRepeatedGroup(field) && field.getRepeat().getChildren().size() == 0) {
+                    throw new GroupHasNoChildrenException("The repeated group \"" + field.getLabel() + "\" does not contain any fields.\n\nYou must create a field within this group or remove it before saving the form.");        
+                } else if (field.getChildren().size() == 0) {
+                    throw new GroupHasNoChildrenException("The group \"" + field.getLabel() + "\" does not contain any fields.\n\nYou must create a field within this group or remove it before saving the form.");
+                }
+            }
+                
             writeControls(field);
             
             mFormTag.gotoParent();
-        }       
+        }
     }
 
     private static void writeBinds()
@@ -162,8 +193,9 @@ public final class FormWriter
             // Initialize the instance root (only done once)
             mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
             mFormTag.addTag(mInstanceRoot).addAttribute("id", mInstanceRootId);
-        } else
+        } else {
             it = incomingInstance.getChildren().iterator();
+        }
             
         while (it.hasNext()) {
             Instance instance = it.next();

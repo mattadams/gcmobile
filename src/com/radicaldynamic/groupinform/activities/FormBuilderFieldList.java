@@ -50,6 +50,7 @@ import com.radicaldynamic.groupinform.xform.FormBuilderState;
 import com.radicaldynamic.groupinform.xform.FormReader;
 import com.radicaldynamic.groupinform.xform.FormWriter;
 import com.radicaldynamic.groupinform.xform.Instance;
+import com.radicaldynamic.groupinform.xform.FormWriter.FormSanityException;
 
 public class FormBuilderFieldList extends ListActivity implements FormLoaderListener, FormSavedListener
 {
@@ -57,6 +58,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     
     private static final int LOADING_DIALOG = 1;
     private static final int SAVING_DIALOG = 2;
+    private static final int SANITY_DIALOG = 3;
     
     private static final int REQUEST_EDITFIELD = 1;
     private static final int REQUEST_TRANSLATIONS = 2;
@@ -76,11 +78,12 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private Button jumpPreviousButton;
     private TextView mPathText;
    
+    private String mAlertDialogMsg;
     private String mFormId;
     private String mInstanceRoot;
     private String mInstanceRootId;
     private FormDefinition mForm;
-    private FormReader mFormReader;
+    private FormReader mFormReader;    
     
     private ArrayList<Field> mFieldState = new ArrayList<Field>();    
     private ArrayList<String> mPath = new ArrayList<String>();          // Human readable location in mFieldState
@@ -157,8 +160,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
              * Group removal must be dealt with separately from regular items and repeated groups differ from regular groups.  
              * This code takes the easy way out and refuses to remove groups that are not empty.  This saves us from having to
              * worry about recursive removal of binds and instances.
-             * 
-             * TODO: improve this once the mechanism for storing states has been improved.
              */
             if (item.getType().equals("group")) {
                 if (Field.isRepeatedGroup(item)) {
@@ -360,6 +361,22 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);            
             return mProgressDialog;
+            
+        case SANITY_DIALOG:
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            
+            builder
+                .setIcon(R.drawable.ic_dialog_alert)
+                .setTitle(R.string.tf_form_builder_sanity_dialog)
+                .setMessage(mAlertDialogMsg);
+            
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {                    
+                    removeDialog(SANITY_DIALOG);
+                }
+            });
+            
+            return builder.create();
         }
 
         return null;
@@ -434,7 +451,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
              */
             String humanFieldType = null;
             
-            if (field.getType().equals("input"))
+            if (field.getType().equals("input")) {
                 if (field.getBind() == null || field.getBind().getType().equals("string")) {
                     humanFieldType = "text";
                 } else if (field.getBind().getType().equals("decimal") || field.getBind().getType().equals("int")) {
@@ -442,12 +459,13 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 } else {
                     humanFieldType = field.getBind().getType();
                 }
-            else if (field.getType().equals("select") || field.getType().equals("select1"))
+            } else if (field.getType().equals("select") || field.getType().equals("select1")) {
                 humanFieldType = "select";
-            else if (field.getType().equals("upload"))
+            } else if (field.getType().equals("upload")) {
                 humanFieldType = "media";
-            else if (field.getType().equals("trigger"))
+            } else if (field.getType().equals("trigger")) {
                 humanFieldType = "trigger";
+            }
             
             if (humanFieldType != null) 
                 startFieldEditor(humanFieldType, field);
@@ -595,7 +613,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 File f = new File(FileUtilsExtended.EXTERNAL_CACHE + File.separator + mForm.getId() + ".xml");
                 FileOutputStream fos = new FileOutputStream(f);
                 fos.write(xml);
-                fos.close();                
+                fos.close();
                                 
                 // Write out XML to database
                 mForm.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(xml)).toString(), FormWriter.CONTENT_TYPE));
@@ -604,6 +622,11 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                 
                 Collect.getInstance().getDbService().getDb().update(mForm);
                 f.delete();
+            } catch (FormSanityException e) {
+                Log.w(Collect.LOGTAG, t + "sanity exception while writing XForm " + e.toString());
+                e.printStackTrace();
+                mAlertDialogMsg = e.getMessage();
+                result = SaveToDiskTask.VALIDATE_ERROR;
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, t + "failed writing XForm to XML: " + e.toString());
                 e.printStackTrace();
@@ -669,6 +692,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         dismissDialog(SAVING_DIALOG);
 
         switch (saveStatus) {
+        case SaveToDiskTask.VALIDATE_ERROR:
+            showDialog(SANITY_DIALOG);
+            break;
         case SaveToDiskTask.SAVED:
             Toast.makeText(getApplicationContext(), getString(R.string.data_saved_ok), Toast.LENGTH_SHORT).show();
             break;
@@ -692,13 +718,15 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         f.setNewField(false);
         
         // Handle groups, repeated groups and other control field types separately
-        if (f.getType().equals("group"))
-            if (Field.isRepeatedGroup(f))
+        if (f.getType().equals("group")) {
+            if (Field.isRepeatedGroup(f)) {
                 addNewRepeatedGroupField(f);
-            else
+            } else {
                 addNewGroupField(f);
-        else
+            }
+        } else {
             addNewRegularField(f);
+        }
     }
     
     private void addNewGroupField(Field f)

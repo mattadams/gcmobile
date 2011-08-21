@@ -211,8 +211,8 @@
     <string name="default_server">default_server</string>
 
 	<!-- GC Mobile string resources below -->
-	<string name="tf_about_inform_account_header">This screen displays information about your GC Mobile installation. Certain details are only available to the account owner.</string>
-	<string name="tf_about_inform_device_header">GC Mobileation about the device you are currently using.</string>
+	<string name="tf_about_inform_account_header">This screen displays information about your Group Complete account. Certain details are only available to the account owner.\n\nSee the list of Account Devices and get more info on This Device from the option menu.</string>
+	<string name="tf_about_inform_device_header">Information about the device you are currently using.</string>
 	<string name="tf_abort_exit">Abort exit</string>
 	<string name="tf_account_created">Account Created</string>
 	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About GC Mobile\" option menu.\n\nWe have sent an email to %s confirming this new account.</string>
@@ -331,7 +331,6 @@
 	<string name="tf_fbel_required">Required</string>
 	<string name="tf_fbel_required_hint">Require the user to respond to this field before marking the form as complete.</string>
 	<string name="tf_field">Field</string>
-	<string name="tf_field_cannot_be_saved">Cannot save: this field must have a Label</string>
 	<string name="tf_folder_admin_name_label">Name</string>
 	<string name="tf_folder_admin_name_hint">A concise name for this folder.</string>
 	<string name="tf_folder_admin_description_label">Description</string>
@@ -347,16 +346,17 @@
 	<string name="tf_folder_updated">%s updated</string>
 	<string name="tf_form_builder_load_error">Problem Loading Form</string>
 	<string name="tf_form_builder_exit">Close Form Editor?</string>
+    <string name="tf_form_builder_sanity_dialog">Form Did Not Validate</string>
 	<string name="tf_form_details">Form Details</string>
 	<string name="tf_form_folders">Folders</string>
 	<string name="tf_form_name">Form Name</string>
 	<string name="tf_form_name_required">Form name required</string>
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_go_offline">Go Offline</string>
-	<string name="tf_go_offline_dialog_msg">You are currently online.\n\nFolders that are selected for offline use will be synchronized prior to going offline.</string>
+	<string name="tf_go_offline_dialog_msg">Folders selected for offline use will be synchronized prior to going offline.</string>
 	<string name="tf_go_online">Go Online</string>
-	<string name="tf_go_online_dialog_msg">You are currently offline.\n\nFolders that are selected for offline use will be synchronized after going online.</string>
-	<string name="tf_help">Help</string>    
+	<string name="tf_go_online_dialog_msg">Folders selected for offline use will be synchronized after going online.</string>
+	<string name="tf_help">Help</string>
 	<string name="tf_i18n_add_language">Add Language</string>
 	<string name="tf_i18n_add_language_hint">Select language to add to form</string>
 	<string name="tf_i18n_add_language_failed">\"%s\" is already supported</string>
@@ -377,7 +377,7 @@
 	<string name="tf_image_media_type">Photograph</string>
 	<string name="tf_improperly_formatted_licence_number">Improperly formatted licence number</string>
 	<string name="tf_improperly_formatted_licence_key">Improperly formatted licence key</string>
-	<string name="tf_inform_info">About GC Mobile</string>
+	<string name="tf_inform_info">About GC</string>
 	<string name="tf_inform_state_connecting">Going online...</string>
 	<string name="tf_inform_state_disconnecting">Going offline...</string>
 	<string name="tf_inform_state_offline">GC Mobile: OFFLINE</string>
