@@ -328,7 +328,7 @@ public class FormReader
         if (field == null) {
             it = mFields.iterator();
         } else { 
-            if (field.getXPath() != null && field.getXPath().equals(instance.getXPath())) {
+            if (field.hasXPath() && field.getXPath().equals(instance.getXPath())) {
                 Log.v(Collect.LOGTAG, t + "instance matched with field object via " + instance.getXPath());
                 field.setInstance(instance);
                 field.getInstance().setField(field);

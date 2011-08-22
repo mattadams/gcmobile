@@ -743,29 +743,22 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             f.setParent(parent);
             
             // If parent is null then we are at the top of the form
-            if (parent == null)
+            if (parent == null) {
                 Collect.getInstance().getFormBuilderState().getFields().add(f);
-            else
+            } else {
                 parent.getChildren().add(f);
+            }
         }
     }
     
     private void addNewRepeatedGroupField(Field f)
     {
         /* 
-         * Assign this repeated group field as a child of the currently active field
+         * Assign this repeated group field as a child of the currently active field (its parent)
          * (taking into account the complexity of repeated groups)
          */
-        Field parent = returnActiveField(null);
-        String xpath = "";
-        
-        // Determine proper XPath for our new repeated group
-        if (Field.isRepeatedGroup(parent)) {
-            // If the parent of this repeated group is itself a repeated group then use that group's repeat XPath as a basis
-            xpath = createUniqueXPath(parent.getRepeat().getChildren(), parent.getRepeat().getXPath() + File.separator + Field.makeFieldName(f.getLabel()));
-        } else {
-            xpath = createUniqueXPath(Collect.getInstance().getFormBuilderState().getFields(), File.separator + mInstanceRoot + File.separator + Field.makeFieldName(f.getLabel()));            
-        }
+        Field p = returnActiveField(null);
+        String xpath = determineXPathInheritance(p, f);
         
         // Set xpath of repeat
         f.getRepeat().setXPath(xpath);
@@ -773,50 +766,38 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         // Set XPath of bind
         f.getRepeat().getBind().setXPath(xpath);
         
-        // Set xpath of instance        
+        // Set xpath of instance
         f.getRepeat().getInstance().setXPath(xpath);
         
         // Associate field with instance
         f.getRepeat().getInstance().setField(f);
         
         // Add the field either at the top level or as the child of a group
-        if (Field.isRepeatedGroup(parent)) {
-            f.setParent(parent.getRepeat());
-            parent.getRepeat().getChildren().add(f);
-            
-            // Also add the instance
-            parent.getRepeat().getInstance().getChildren().add(f.getRepeat().getInstance());
+        if (Field.isRepeatedGroup(p)) {
+            f.setParent(p.getRepeat());
+            p.getRepeat().getChildren().add(f);
         } else {
-            f.setParent(parent);
+            f.setParent(p);
             
             // If parent is null then we are at the top of the form
-            if (parent == null)
+            if (p == null) {
                 Collect.getInstance().getFormBuilderState().getFields().add(f);
-            else
-                parent.getChildren().add(f);
-            
-            // Also add the instance
-            Collect.getInstance().getFormBuilderState().getInstance().add(f.getRepeat().getInstance());
+            } else {
+                p.getChildren().add(f);
+            }
         }
-        
+
         // Also add the bind
-        Collect.getInstance().getFormBuilderState().getBinds().add(f.getRepeat().getBind());        
+        Collect.getInstance().getFormBuilderState().getBinds().add(f.getRepeat().getBind());
+
+        attachFieldToInstanceParent(p, f.getRepeat());
     }
     
     private void addNewRegularField(Field f)
     {
-        // Assign this field as a child of the currently active field
-        Field parent = returnActiveField(null);
-        String xpath = "";
-        
-        // Associated parent to field and set proper XPath
-        if (Field.isRepeatedGroup(parent)) {
-            f.setParent(parent.getRepeat());
-            xpath = createUniqueXPath(parent.getRepeat().getChildren(), parent.getRepeat().getXPath() + File.separator + Field.makeFieldName(f.getLabel()));
-        } else {
-            f.setParent(parent);    
-            xpath = createUniqueXPath(Collect.getInstance().getFormBuilderState().getFields(), File.separator + mInstanceRoot + File.separator + Field.makeFieldName(f.getLabel()));
-        }
+        // Assign this field as a child of the currently active field (its parent)
+        Field p = returnActiveField(null);
+        String xpath = determineXPathInheritance(p, f);
         
         // Use XPath for associated instance and bind as well as this field
         f.getInstance().setXPath(xpath);
@@ -827,23 +808,38 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         f.getInstance().setField(f);
         
         // Add the field either at the top level or as the child of a group
-        if (Field.isRepeatedGroup(parent)) {
-            parent.getRepeat().getChildren().add(f);
+        if (Field.isRepeatedGroup(p)) {
+            f.setParent(p.getRepeat());
+            p.getRepeat().getChildren().add(f);
         } else {
-            if (parent == null)
+            f.setParent(p);
+
+            if (p == null) {
                 Collect.getInstance().getFormBuilderState().getFields().add(f);
-            else
-                parent.getChildren().add(f);
+            } else {
+                p.getChildren().add(f);
+            }
         }
         
         // Binds are a flat list, so it does not matter where they are added
         Collect.getInstance().getFormBuilderState().getBinds().add(f.getBind());
-        
-        // Whether the parent is a repeated group influences how the instance is recorded
-        if (Field.isRepeatedGroup(parent))
-            parent.getRepeat().getInstance().getChildren().add(f.getInstance());
-        else
+
+        attachFieldToInstanceParent(p, f);
+    }
+
+    /*
+     * Associate the field with an instance parent.  This will either be the nearest repeated group OR 
+     * the root of the instance, which ever comes first.  
+     */
+    private void attachFieldToInstanceParent(Field p, Field f)
+    {
+        if (Field.isRepeatedGroup(p)) {
+            p.getRepeat().getInstance().getChildren().add(f.getInstance());
+        } else if (p == null) {
             Collect.getInstance().getFormBuilderState().getInstance().add(f.getInstance());
+        } else {
+            attachFieldToInstanceParent(p.getParent(), f);
+        }
     }
 
     /*
@@ -912,8 +908,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             Field f = it.next();
 
             // XPath of repeated groups is located at a different level
-            if ((Field.isRepeatedGroup(f) && f.getRepeat().getXPath() != null && f.getRepeat().getXPath().equals(path)) ||
-                    (f.getXPath() != null && f.getXPath().equals(path))) {
+            if ((Field.isRepeatedGroup(f) && f.getRepeat().hasXPath() && f.getRepeat().getXPath().equals(path)) ||
+                    (f.hasXPath() && f.getXPath().equals(path))) {
                 
                 // Capture counter from path
                 Pattern pattern = Pattern.compile(".*([0-9]+)$");
@@ -932,7 +928,30 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
 
         return path;
     }
-
+    
+    /*
+     * Determine XPath inheritance by traversing upwards in the tree from the current location.
+     * 
+     * The XPath will be determined from the XPath of the closest repeated group or from the 
+     * root of the instance, which ever comes first. 
+     */
+    private String determineXPathInheritance(Field parent, Field field)
+    {
+        String xpath = "";
+        
+        if (parent == null) {
+            xpath = createUniqueXPath(Collect.getInstance().getFormBuilderState().getFields(), File.separator + mInstanceRoot + File.separator + Field.makeFieldName(field.getLabel()));            
+        } else {
+            if (Field.isRepeatedGroup(parent)) {
+                xpath = createUniqueXPath(parent.getRepeat().getChildren(), parent.getRepeat().getXPath() + File.separator + Field.makeFieldName(field.getLabel()));
+            } else {
+                xpath = determineXPathInheritance(parent.getParent(), field);
+            }
+        }
+        
+        return xpath;
+    }
+    
     /*
      * Finds the current active field, sets it to inactive and either returns 
      * null to signal that the "top level" of the form has been reached or 

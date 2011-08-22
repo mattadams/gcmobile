@@ -19,6 +19,7 @@ public class Field
     
     // Any attributes found on this element
     private Map<String, String> attributes = new HashMap<String, String>();
+
     // Any children (other fields) of this one, e.g., groups and repeats (or items for a select or select1 field)
     private ArrayList<Field> children = new ArrayList<Field>();    
     
@@ -183,20 +184,13 @@ public class Field
     
     public void setXPath(String xpath) { this.xpath = xpath; }
     public String getXPath() { return xpath; }
+    public boolean hasXPath() { if (xpath != null && xpath.length() > 0) return true; else return false; }
 
     public void setBind(Bind bind) { this.bind = bind; }
     public Bind getBind() { return bind; }
 
-    public void setActive(boolean active)
-    {
-        Log.v(Collect.LOGTAG, t + "setting field " + getLabel() + " active state to " + active);
-        this.active = active;
-    }
-
-    public boolean isActive()
-    {
-        return active;
-    }
+    public void setActive(boolean active) { this.active = active; }
+    public boolean isActive() { return active; }
     
     public void setParent(Field parent) { this.parent = parent; }
     public Field getParent() { return parent; }
@@ -224,7 +218,7 @@ public class Field
                 && f.getChildren().get(0).getType().equals("repeat"))
             return true;
         else
-            return false;        
+            return false;
     }
     
     /*

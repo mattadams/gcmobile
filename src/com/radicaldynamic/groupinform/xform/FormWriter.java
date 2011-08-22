@@ -92,11 +92,12 @@ public final class FormWriter
             mFormTag.addTag(field.getType());
 
             // Support for repeat (nodeset) references as well as regular references
-            if (field.getXPath() != null) {
-                if (field.getType().equals("repeat"))
+            if (field.hasXPath()) {
+                if (field.getType().equals("repeat")) {
                     mFormTag.getCurrentTag().setAttribute("nodeset", field.getXPath());
-                else 
+                } else {  
                     mFormTag.getCurrentTag().setAttribute("ref", field.getXPath());
+                }
             }
             
             // Upload control fields only
