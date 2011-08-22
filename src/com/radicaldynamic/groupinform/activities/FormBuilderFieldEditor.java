@@ -63,7 +63,7 @@ public class FormBuilderFieldEditor extends Activity
     private CheckBox mReadonly;
     private CheckBox mRequired;
     
-    // Special hack to deal with the added complexity of selecte fields
+    // Special hack to deal with the added complexity of select fields
     private String mSelectInstanceDefault = "";
     
     @Override
@@ -679,15 +679,8 @@ public class FormBuilderFieldEditor extends Activity
     private boolean saveChanges()
     {
         // Ensure that a label is present
-        if (mLabel.getText().toString().replaceAll("\\s+", "").length() == 0) {
-            mLabel.requestFocusFromTouch();
-            
-            Toast.makeText(
-                    getApplicationContext(), 
-                    getString(R.string.tf_field_cannot_be_saved), 
-                    Toast.LENGTH_SHORT).show();            
-            
-            return false;            
+        if (mLabel.getText().toString().replaceAll("\\s+", "").length() == 0) {            
+            mLabel.setText("No label for " + mFieldType);
         }
         
         // Save common attributes

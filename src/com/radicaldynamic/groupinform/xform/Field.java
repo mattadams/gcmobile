@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -228,23 +229,31 @@ public class Field
     
     /*
      * Creates a suitable instance field name from the label.  This should only be used on new fields.
-     * 
-     * TODO: the user should probably be aware if this method returns false
      */
     public static String makeFieldName(FieldText label)
     {
-        String instanceFieldName = label.toString().replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9]", "");
+        final StringTokenizer st = new StringTokenizer(label.toString(), " ", true);
+        final StringBuilder sb = new StringBuilder();
+        String name = "";
+         
+        while (st.hasMoreTokens()) {
+            String token = st.nextToken();
+            token = String.format("%s%s", Character.toUpperCase(token.charAt(0)), token.substring(1));
+            sb.append(token);
+        }
+        
+        name = sb.toString().replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9]", "");
         
         // Just in case the label did not have anything in it from which to generate a sane field name
-        if (instanceFieldName.length() == 0) {
+        if (name.length() == 0) {
             Log.i(Collect.LOGTAG, t 
                     + "unable to construct field name from getLabel().toString() of " 
                     + label.toString());
             
             // Get rid of - characters (not valid in XML tag names)
-            instanceFieldName = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
+            name = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
         }
         
-        return instanceFieldName;
+        return name;
     }
 }

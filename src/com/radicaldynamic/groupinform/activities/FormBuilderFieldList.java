@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
@@ -760,9 +762,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         // Determine proper XPath for our new repeated group
         if (Field.isRepeatedGroup(parent)) {
             // If the parent of this repeated group is itself a repeated group then use that group's repeat XPath as a basis
-            xpath = parent.getRepeat().getXPath() + File.separator + Field.makeFieldName(f.getLabel());
+            xpath = createUniqueXPath(parent.getRepeat().getChildren(), parent.getRepeat().getXPath() + File.separator + Field.makeFieldName(f.getLabel()));
         } else {
-            xpath = File.separator + mInstanceRoot + File.separator + Field.makeFieldName(f.getLabel());            
+            xpath = createUniqueXPath(Collect.getInstance().getFormBuilderState().getFields(), File.separator + mInstanceRoot + File.separator + Field.makeFieldName(f.getLabel()));            
         }
         
         // Set xpath of repeat
@@ -810,10 +812,10 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         // Associated parent to field and set proper XPath
         if (Field.isRepeatedGroup(parent)) {
             f.setParent(parent.getRepeat());
-            xpath = parent.getRepeat().getXPath() + File.separator + Field.makeFieldName(f.getLabel());
+            xpath = createUniqueXPath(parent.getRepeat().getChildren(), parent.getRepeat().getXPath() + File.separator + Field.makeFieldName(f.getLabel()));
         } else {
             f.setParent(parent);    
-            xpath = File.separator + mInstanceRoot + File.separator + Field.makeFieldName(f.getLabel());
+            xpath = createUniqueXPath(Collect.getInstance().getFormBuilderState().getFields(), File.separator + mInstanceRoot + File.separator + Field.makeFieldName(f.getLabel()));
         }
         
         // Use XPath for associated instance and bind as well as this field
@@ -896,7 +898,41 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     
         mAlertDialog.show();
     }
-    
+
+    /*
+     * Iterate through all fields at the same depth as the new one and 
+     * ensure that the XPath is unique.  Modify it with a counter if it
+     * is not.
+     */
+    private String createUniqueXPath(final ArrayList<Field> fieldsAtSameDepth, String path)
+    {
+        Iterator<Field> it = fieldsAtSameDepth.iterator();
+
+        while (it.hasNext()) {
+            Field f = it.next();
+
+            // XPath of repeated groups is located at a different level
+            if ((Field.isRepeatedGroup(f) && f.getRepeat().getXPath() != null && f.getRepeat().getXPath().equals(path)) ||
+                    (f.getXPath() != null && f.getXPath().equals(path))) {
+                
+                // Capture counter from path
+                Pattern pattern = Pattern.compile(".*([0-9]+)$");
+                Matcher matcher = pattern.matcher(path);
+                Integer counter = 1;
+
+                if (matcher.find()) {
+                    path = path.replaceFirst(matcher.group(1) + "$", "");
+                    counter = Integer.valueOf(matcher.group(1));
+                    counter++;   
+                } 
+
+                return createUniqueXPath(fieldsAtSameDepth, path + counter);
+            }
+        }
+
+        return path;
+    }
+
     /*
      * Finds the current active field, sets it to inactive and either returns 
      * null to signal that the "top level" of the form has been reached or 
@@ -1055,9 +1091,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         
         Iterator<Field> it = null;
         
-        if (f == null)
+        if (f == null) {
             it = mFieldState.iterator();
-        else {
+        } else {
             if (f.isActive())
                 return f;
             
