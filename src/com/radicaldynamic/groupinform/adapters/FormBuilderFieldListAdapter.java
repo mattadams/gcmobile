@@ -61,7 +61,10 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
             
             // Special logic to hide the complexity of repeated elements
             if (Field.isRepeatedGroup(field)) {
-                details.add("Repeated group");
+                if (field.getRepeat().getChildren().size() == 1)
+                    details.add("Repeats " + field.getRepeat().getChildren().size() + " field");
+                else
+                    details.add("Repeats " + field.getRepeat().getChildren().size() + " fields");
             } else { 
                 if (field.getChildren().size() == 1)
                     details.add("Contains " + field.getChildren().size() + " field");
@@ -84,10 +87,6 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
             } finally {
                 fieldTypeView.setImageDrawable(icon);
             }
-            
-        } else if (field.getType().equals("repeat")) { 
-            fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_group));
-            details.add("Repeated");
             
         } else if (field.getType().equals("select")) {
             fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_selectmulti));
