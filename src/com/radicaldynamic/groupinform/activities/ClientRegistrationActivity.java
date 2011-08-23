@@ -42,7 +42,7 @@ public class ClientRegistrationActivity extends Activity
     private static final int DIALOG_DEVICE_REGISTERED = 4;
     private static final int DIALOG_DEVICE_ACTIVE = 5;
     private static final int DIALOG_SYSTEM_ERROR = 10;
-    private static final int DIALOG_BETA_PREVIEW = 11;
+//    private static final int DIALOG_BETA_PREVIEW = 11;
     
     // verifyDeviceRegistration exit codes
     private static final int DEVICE_REGISTRATION_VERIFIED = 0;                              // Generic "registration ok"
@@ -106,8 +106,9 @@ public class ClientRegistrationActivity extends Activity
         register.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v)
-            {
-                showDialog(DIALOG_BETA_PREVIEW);
+            {                
+//                showDialog(DIALOG_BETA_PREVIEW);
+                showDialog(DIALOG_BEGIN_REGISTRATION);
             }            
         });
     }
@@ -212,19 +213,19 @@ public class ClientRegistrationActivity extends Activity
                 });
                 break;
                 
-            case DIALOG_BETA_PREVIEW:
-                builder
-                .setCancelable(false)
-                .setIcon(R.drawable.splash_beta_blue)
-                .setTitle("Technology Preview")
-                .setMessage(R.string.tf_beta_release_msg)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        removeDialog(DIALOG_BETA_PREVIEW);
-                        showDialog(DIALOG_BEGIN_REGISTRATION);
-                    }
-                });
-                break;                
+//            case DIALOG_BETA_PREVIEW:
+//                builder
+//                .setCancelable(false)
+//                .setIcon(R.drawable.splash_beta_blue)
+//                .setTitle("Technology Preview")
+//                .setMessage(R.string.tf_beta_release_msg)
+//                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int whichButton) {
+//                        removeDialog(DIALOG_BETA_PREVIEW);
+//                        showDialog(DIALOG_BEGIN_REGISTRATION);
+//                    }
+//                });
+//                break;                
         }
         
         return builder.create();
