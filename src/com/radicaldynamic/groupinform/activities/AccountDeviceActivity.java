@@ -219,18 +219,18 @@ public class AccountDeviceActivity extends Activity
         super.onCreateOptionsMenu(menu);
         
         boolean enabled = false;
-        
+
         if (Collect.getInstance().getIoService().isSignedIn())
             enabled = true;
-        
+
         menu.add(0, MENU_RESET_DEVICE, 0, getString(R.string.tf_reset_device))
             .setIcon(R.drawable.ic_menu_close_clear_cancel)
             .setEnabled(enabled);
-        
+
         menu.add(0, MENU_REMOVE_DEVICE, 0, getString(R.string.tf_remove_device))
             .setIcon(R.drawable.ic_menu_delete)
-            .setEnabled(enabled);        
-        
+            .setEnabled(enabled);
+
         return true;
     }    
     
@@ -240,7 +240,7 @@ public class AccountDeviceActivity extends Activity
         switch (keyCode) {
         case KeyEvent.KEYCODE_BACK:
             if (Collect.getInstance().getIoService().isSignedIn())
-                showQuitDialog();
+                new UpdateDeviceInfoTask().execute();
             else 
                 finish();
             
@@ -329,7 +329,7 @@ public class AccountDeviceActivity extends Activity
     {
         @Override
         protected String doInBackground(Void... params)
-        {            
+        {
             String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/reset/" + mDeviceId;            
             return HttpUtils.getUrlData(url);
         }
@@ -458,46 +458,5 @@ public class AccountDeviceActivity extends Activity
                 e.printStackTrace();
             }
         }
-    }
-    
-    /*
-     * Prompt shown to the user before they leave the field list 
-     * (discard changes & quit, save changes & quit, return to form field list)
-     */
-    private void showQuitDialog()
-    {
-        String[] items = {
-                getString(R.string.do_not_save),
-                getString(R.string.keep_changes), 
-                getString(R.string.tf_abort_exit)
-        };
-    
-        mAlertDialog = new AlertDialog.Builder(this)
-            .setIcon(R.drawable.ic_dialog_alert)
-            .setTitle(getString(R.string.quit_application, "Without Saving?"))
-            .setItems(items,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        switch (which) {
-                        case 0:
-                            // Discard any changes and exit
-                            finish();
-                            break;
-    
-                        case 1:
-                            // Save and exit                            
-                            new UpdateDeviceInfoTask().execute();
-                            break;
-    
-                        case 2:
-                            // Do nothing
-                            break;    
-                        }
-                    }
-                }).create();
-    
-        mAlertDialog.show();
     }
 }
