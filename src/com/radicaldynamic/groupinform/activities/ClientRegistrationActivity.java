@@ -175,8 +175,7 @@ public class ClientRegistrationActivity extends Activity
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         // Return user to the main screen (application will be reinitialized with this information)
-                        Intent i = new Intent(getApplicationContext(), LauncherActivity.class);
-                        startActivity(i);
+                        startActivity(new Intent(getApplicationContext(), LauncherActivity.class));
                         finish();
                     }
                 });
@@ -553,7 +552,6 @@ public class ClientRegistrationActivity extends Activity
         JSONObject verify;
         
         try {            
-            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);            
             verify = (JSONObject) new JSONTokener(postResult).nextValue();
             
             String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
@@ -661,7 +659,6 @@ public class ClientRegistrationActivity extends Activity
             JSONObject verify;
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);                
                 verify = (JSONObject) new JSONTokener(postResult).nextValue();                
                 
                 String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
@@ -710,7 +707,6 @@ public class ClientRegistrationActivity extends Activity
         JSONObject verify;
         
         try {            
-            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);            
             verify = (JSONObject) new JSONTokener(postResult).nextValue();
             
             String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
@@ -773,7 +769,6 @@ public class ClientRegistrationActivity extends Activity
         JSONObject reactivation;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);
             reactivation = (JSONObject) new JSONTokener(postResult).nextValue();
             
             String result = reactivation.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
@@ -861,7 +856,6 @@ public class ClientRegistrationActivity extends Activity
         JSONObject verify;
         
         try {            
-            Log.d(Collect.LOGTAG, t + "parsing postResult " + postResult);            
             verify = (JSONObject) new JSONTokener(postResult).nextValue();
             
             String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);

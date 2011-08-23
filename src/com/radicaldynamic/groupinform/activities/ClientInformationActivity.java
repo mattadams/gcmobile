@@ -360,7 +360,8 @@ public class ClientInformationActivity extends Activity
                     try {                        
                         ReplicationStatus status = Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PUSH);
                         
-                        if (status.isOk() || status.isNoChanges()) {
+                        // Normally we would not accept a null status but in this case it is also used to mean that there is no client side DB
+                        if (status == null || status.isOk() || status.isNoChanges()) {
                             foldersSuccessfullyReplicated++;
                         }
                     } catch (Exception e) {
@@ -396,8 +397,7 @@ public class ClientInformationActivity extends Activity
             
             boolean success = false;
             
-            try {
-                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
+            try {   
                 result = (JSONObject) new JSONTokener(getResult).nextValue();
                 
                 if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK))

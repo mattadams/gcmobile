@@ -386,9 +386,29 @@ public class DatabaseService extends Service {
         // Create local instance of database
         boolean dbCreated = false;
 
+        // User may not have connected to local database yet - start up the connection for them
+        try {
+            if (mLocalDbInstance == null) {
+                connectToLocalServer();
+            }
+        } catch (DbUnavailableException e) {
+            Log.e(Collect.LOGTAG, tt + "cannot connect to local database server");
+            e.printStackTrace();
+        }
+
         if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) == -1) {
-            mLocalDbInstance.createDatabase("db_" + db);
-            dbCreated = true;
+            switch (mode) {
+            case REPLICATE_PULL:
+                Log.i(Collect.LOGTAG, tt + "creating local database " + db);
+                mLocalDbInstance.createDatabase("db_" + db);
+                dbCreated = true;
+                break;
+                
+            case REPLICATE_PUSH:
+                // If the database does not exist client side then there is no point in continuing
+                Log.w(Collect.LOGTAG, tt + "cannot find local database " + db + " to push");
+                return null;
+            }
         }
 
         // Configure replication direction
@@ -430,6 +450,10 @@ public class DatabaseService extends Service {
     
     public void setLocalDatabaseInfo(String host, int port)
     {
+        final String tt = t + "setLocalDatabaseInfo(): ";
+        
+        Log.d(Collect.LOGTAG, tt + "set host and port to " + host + ":" + port);
+        
         mLocalHost = host;
         mLocalPort = port;
     }
@@ -658,9 +682,9 @@ public class DatabaseService extends Service {
             if (folder.isReplicated()) {
                 Log.i(Collect.LOGTAG, tt + "about to begin scheduled replication of " + folder.getName());
                 
-                try {
-                    replicate(folder.getId(), REPLICATE_PUSH);
+                try {                    
                     replicate(folder.getId(), REPLICATE_PULL);
+                    replicate(folder.getId(), REPLICATE_PUSH);
                 } catch (Exception e) {
                     Log.w(Collect.LOGTAG, tt + "problem replicating " + folder.getId() + ": " + e.toString());
                     e.printStackTrace();
