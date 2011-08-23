@@ -1,5 +1,9 @@
 package com.radicaldynamic.groupinform.activities;
 
+import java.util.Iterator;
+import java.util.Set;
+
+import org.ektorp.ReplicationStatus;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -12,6 +16,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,10 +25,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.AccountDeviceActivity.ResetDeviceTask;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 /*
@@ -147,7 +157,7 @@ public class ClientInformationActivity extends Activity
             .setTitle(getString(R.string.tf_reset_inform) + "?")         
             .setPositiveButton(R.string.tf_reset, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    new ResetDeviceTask().execute();
+                    new PushFoldersTask().execute();
                 }
             })            
             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -260,6 +270,106 @@ public class ClientInformationActivity extends Activity
         }
         
         return super.onOptionsItemSelected(item);
+    }
+    
+
+    /*
+     * Go online or offline at users request; synchronize folders accordingly.
+     */
+    private class PushFoldersTask extends AsyncTask<Void, Void, Void>
+    {        
+        Boolean hasReplicatedFolders = false;        
+        ProgressDialog progressDialog = null;
+
+        int foldersToReplicate = 0;
+        int foldersSuccessfullyReplicated = 0;
+
+        final Handler progressHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                progressDialog.setMessage(getString(R.string.tf_synchronizing_folder_count_dialog_msg, msg.arg1, msg.arg2));
+            }
+        };
+
+        @Override
+        protected Void doInBackground(Void... nothing)
+        {
+            if (hasReplicatedFolders) {
+                if (Collect.getInstance().getIoService().isSignedIn() || Collect.getInstance().getIoService().goOnline()) {
+                    synchronize();
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute()
+        {
+            hasReplicatedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
+
+            if (hasReplicatedFolders) {
+                progressDialog = new ProgressDialog(ClientInformationActivity.this);
+                progressDialog.setMessage(getString(R.string.tf_synchronizing_folders_dialog_msg));  
+                progressDialog.show();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Void nothing)
+        {   
+            if (progressDialog != null)
+                progressDialog.cancel();
+
+            if (hasReplicatedFolders && foldersToReplicate == foldersSuccessfullyReplicated || foldersToReplicate == 0) {
+                new ResetDeviceTask().execute();
+            } else {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();           
+            }
+        }
+
+        private void synchronize()
+        {
+            Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
+            Iterator<String> folderIds = folderSet.iterator();
+
+            int progress = 0;
+
+            // Figure out how many folders are marked for replication
+            while (folderIds.hasNext()) {
+                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
+
+                if (folder.isReplicated())
+                    foldersToReplicate++;
+            }
+
+            // Reset iterator
+            folderIds = folderSet.iterator();    
+
+            while (folderIds.hasNext()) {
+                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());                
+
+                if (folder.isReplicated()) {
+                    Log.i(Collect.LOGTAG, t + "about to begin triggered replication of " + folder.getName());
+
+                    // Update progress dialog
+                    Message msg = progressHandler.obtainMessage();
+                    msg.arg1 = ++progress;
+                    msg.arg2 = foldersToReplicate;
+                    progressHandler.sendMessage(msg);
+
+                    try {                        
+                        ReplicationStatus status = Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PUSH);
+                        
+                        if (status.isOk() || status.isNoChanges()) {
+                            foldersSuccessfullyReplicated++;
+                        }
+                    } catch (Exception e) {
+                        Log.w(Collect.LOGTAG, t + "problem replicating " + folder.getId() + ": " + e.toString());
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
     }
     
     public class ResetDeviceTask extends AsyncTask<Void, Void, String> 
