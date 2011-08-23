@@ -354,6 +354,18 @@ public class BrowserActivity extends ListActivity
                     } else {                        
                         // Create a new form document and use an XForm template as the "xml" attachment
                         try {
+                            // Basic deduplication
+                            FormDefinitionRepo formDefinitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb(Collect.getInstance().getInformOnlineState().getSelectedDatabase()));
+                            List<FormDefinition> definitions = formDefinitionRepo.findByName(form.getName());
+
+                            if (!definitions.isEmpty()) {
+                                removeDialog(DIALOG_CREATE_FORM);
+                                Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_duplicate), Toast.LENGTH_LONG).show();
+                                showDialog(DIALOG_CREATE_FORM);
+                                return;
+                            }
+
+                            // Create empty form from template
                             InputStream is = getResources().openRawResource(R.raw.xform_template);
             
                             // Set up variables to receive data
