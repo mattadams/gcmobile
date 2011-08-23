@@ -76,7 +76,9 @@ public class LauncherActivity extends Activity
     private static final int BROWSER_ACTIVITY = 1;
     
     private ProgressDialog mProgressDialog;
-    private Toast mSplashToast;    
+    private Toast mSplashToast;
+    
+    private boolean mExitApplication = false;
 
     private final ICouchClient mCouchCallback = new ICouchClient.Stub() {
         @Override
@@ -121,11 +123,13 @@ public class LauncherActivity extends Activity
     private ServiceConnection mDatabaseConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
+            Log.v(Collect.LOGTAG, t + "mDatabaseConnection: onServiceConnected()");
             Collect.getInstance().setDbService(((DatabaseService.LocalBinder) service).getService());
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
+            Log.v(Collect.LOGTAG, t + "mDatabaseConnection: onServiceDisconnected()");
             Collect.getInstance().setDbService(null);
         }
     };    
@@ -134,11 +138,13 @@ public class LauncherActivity extends Activity
     private ServiceConnection mOnlineConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
+            Log.v(Collect.LOGTAG, t + "mOnlineConnection: onServiceConnected()");
             Collect.getInstance().setIoService(((InformOnlineService.LocalBinder) service).getService());
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
+            Log.v(Collect.LOGTAG, t + "mOnlineConnection: onServiceDisconnected()");
             Collect.getInstance().setIoService(null);
         }
     };
@@ -151,8 +157,10 @@ public class LauncherActivity extends Activity
             return;
         
         switch (requestCode) {
-        // "Exit" if the user returns from BrowserActivity
         case BROWSER_ACTIVITY:
+            if (intent instanceof Intent && intent.hasExtra("exit_app"))
+                mExitApplication = true;
+            
             finish();
             break; 
         }        
@@ -339,36 +347,44 @@ public class LauncherActivity extends Activity
      */
     @Override
     protected void onDestroy()
-    {        
+    {
+        super.onDestroy();
+        
+        final String tt = t  + "onDestroy(): ";
+        
         // Unbind from our services
         if (Collect.getInstance().getCouchService() instanceof ServiceConnection) {
             try {
-                Log.d(Collect.LOGTAG, t + "unbinding from CouchService");
+                Log.d(Collect.LOGTAG, tt + "unbinding from CouchService");
                 unbindService(Collect.getInstance().getCouchService());                
             } catch (IllegalArgumentException e) {
-                Log.w(Collect.LOGTAG, t + "CouchService not registered: " + e.toString());
+                Log.w(Collect.LOGTAG, tt + "CouchService not registered: " + e.toString());
             }
         }
 
         if (Collect.getInstance().getDbService() instanceof DatabaseService) {
             try {
-                Log.d(Collect.LOGTAG, t + "unbinding from DatabaseService");
+                Log.d(Collect.LOGTAG, tt + "unbinding from DatabaseService");
                 unbindService(mDatabaseConnection);
             } catch (IllegalArgumentException e) { 
-                Log.w(Collect.LOGTAG, t + "DatabaseService not registered: " + e.toString());    
+                Log.w(Collect.LOGTAG, tt + "DatabaseService not registered: " + e.toString());    
             }
         }
 
         if (Collect.getInstance().getIoService() instanceof InformOnlineService) {
             try {
-                Log.d(Collect.LOGTAG, t + "unbinding from InformOnlineService");
+                Log.d(Collect.LOGTAG, tt + "unbinding from InformOnlineService");
                 unbindService(mOnlineConnection);
             } catch (IllegalArgumentException e) {
-                Log.w(Collect.LOGTAG, t + "InformOnlineService not registered: " + e.toString());
+                Log.w(Collect.LOGTAG, tt + "InformOnlineService not registered: " + e.toString());
             }
         }
         
-        super.onDestroy();
+        // User has reset GC Mobile (see http://stackoverflow.com/questions/2042222/close-application)
+        if (mExitApplication) {
+            System.runFinalizersOnExit(true);
+            System.exit(0);
+        }
     }
 
     @Override
@@ -382,11 +398,19 @@ public class LauncherActivity extends Activity
     {   
         super.onResume();
         
-        if (Collect.getInstance().getIoService() == null)
-            bindService(new Intent(LauncherActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE);
+        final String tt = t  + "onResume(): ";
         
-        if (Collect.getInstance().getDbService() == null)
-            bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE);
+        if (Collect.getInstance().getIoService() == null) {
+            if (bindService(new Intent(LauncherActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE)) {
+                Log.d(Collect.LOGTAG, tt + "bound to InformOnlineService");
+            }
+        }
+        
+        if (Collect.getInstance().getDbService() == null) {
+            if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE)) {
+                Log.d(Collect.LOGTAG, tt + "bound to DatabaseService");
+            }
+        }
     }
     
     public class InitializeApplicationTask extends AsyncTask<Object, Void, Void> 

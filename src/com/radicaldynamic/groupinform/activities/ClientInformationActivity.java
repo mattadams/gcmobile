@@ -415,8 +415,9 @@ public class ClientInformationActivity extends Activity
             if (success) {
                 Collect.getInstance().getInformOnlineState().resetDevice();
                 showDialog(RESET_SUCCESSFUL_DIALOG);
-            } else
+            } else {
                 showDialog(RESET_FAILED_DIALOG);
+            }
         }
     }
     

@@ -429,15 +429,19 @@ public class InformOnlineState
         CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_FILES));
 
         // Shutdown CouchDB and remove databases & log files
-        Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), CouchService.class));
+        if (Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), CouchService.class)))
+            Log.d(Collect.LOGTAG, t + "CouchService stopped");
+        
+        // Shutdown other services to ensure a full reset off all stateful information
+        if (Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), DatabaseService.class)))
+            Log.d(Collect.LOGTAG, t + "DatabaseService stopped");
+        
+        if (Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), InformOnlineService.class)))
+            Log.d(Collect.LOGTAG, t + "InformOnlineService stopped");  
 
         // Remove DB files & log files
         if (CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_DB)))
             FileUtils.createFolder(FileUtilsExtended.EXTERNAL_DB);
-        
-        // Shutdown other services to ensure a full reset off all stateful information
-        Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), DatabaseService.class));
-        Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), InformOnlineService.class));
     }
 
     private void loadPreferences()

@@ -128,8 +128,8 @@ public class BrowserActivity extends ListActivity
     private static final String KEY_SELECTED_DB         = "selected_db";
         
     // Request codes for returning data from specified intent 
-    private static final int RESULT_ABOUT_INFORM = 1;
-    private static final int RESULT_COPY_TO_FOLDER = 2;    
+    private static final int RESULT_ABOUT = 1;
+    private static final int RESULT_COPY = 2;    
 
     private FormDefinition mFormDefinition;     // Stash for a selected form definition
     
@@ -257,13 +257,15 @@ public class BrowserActivity extends ListActivity
             return;
         
         switch (requestCode) {
-        // "Exit" if the user resets Inform
-        case RESULT_ABOUT_INFORM:
-            setResult(RESULT_OK);
+        // "Exit" if the user resets GC Mobile
+        case RESULT_ABOUT:
+            Intent i = new Intent();
+            i.putExtra("exit_app", true);
+            setResult(RESULT_OK, i);
             finish();
             break; 
             
-        case RESULT_COPY_TO_FOLDER:
+        case RESULT_COPY:
             mCopyToFolderId   = intent.getStringExtra(AccountFolderList.KEY_FOLDER_ID);
             mCopyToFolderName = intent.getStringExtra(AccountFolderList.KEY_FOLDER_NAME);
             showDialog(DIALOG_COPY_TO_FOLDER);
@@ -283,7 +285,7 @@ public class BrowserActivity extends ListActivity
             mFormDefinition = form;            
             i = new Intent(this, AccountFolderList.class);
             i.putExtra(AccountFolderList.KEY_COPY_TO_FOLDER, true);
-            startActivityForResult(i, RESULT_COPY_TO_FOLDER);
+            startActivityForResult(i, RESULT_COPY);
             return true;
             
         case R.id.edit:
@@ -840,7 +842,7 @@ public class BrowserActivity extends ListActivity
             startActivity(new Intent(this, ODKActivityTab.class));
             break;          
         case MENU_OPTION_INFO:
-            startActivityForResult(new Intent(this, ClientInformationActivity.class), RESULT_ABOUT_INFORM);
+            startActivityForResult(new Intent(this, ClientInformationActivity.class), RESULT_ABOUT);
             return true;
         }
 
