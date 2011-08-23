@@ -16,6 +16,7 @@ package com.radicaldynamic.groupinform.activities;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
@@ -53,6 +55,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
+import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -108,9 +111,8 @@ public class BrowserActivity extends ListActivity
     private static final int DIALOG_RENAME_FORM = 11;
     private static final int DIALOG_TOGGLE_ONLINE_STATE = 12;
     private static final int DIALOG_UNABLE_TO_COPY_DUPLICATE = 13;
-    private static final int DIALOG_UNABLE_TO_COPY_UNSUPPORTED = 14;
-    private static final int DIALOG_UNABLE_TO_RENAME_DUPLICATE = 15;
-    private static final int DIALOG_UPDATING_FOLDER = 16;
+    private static final int DIALOG_UNABLE_TO_RENAME_DUPLICATE = 14;
+    private static final int DIALOG_UPDATING_FOLDER = 15;
     
     // Keys for option menu items
     private static final int MENU_OPTION_REFRESH = 0;
@@ -722,22 +724,6 @@ public class BrowserActivity extends ListActivity
             mDialog = builder.create();
             break;
 
-        case DIALOG_UNABLE_TO_COPY_UNSUPPORTED:
-            builder
-            .setCancelable(false)
-            .setIcon(R.drawable.ic_dialog_alert)
-            .setTitle(R.string.tf_unable_to_copy)
-            .setMessage(R.string.tf_unable_to_copy_unsupported_definition);
-
-            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    dialog.cancel();
-                }
-            });
-
-            mDialog = builder.create();
-            break;
-            
         case DIALOG_UNABLE_TO_RENAME_DUPLICATE:
             builder
             .setCancelable(false)
@@ -893,9 +879,6 @@ public class BrowserActivity extends ListActivity
         private String copyFormAsName;
         private String copyToFolderId;
         private FormDefinition formDefinition;
-        
-        // FIXME: remove this concept and replace with full support for copying forms with media attachments
-        private boolean unsupported = false;
 
         ProgressDialog progressDialog = null;
         
@@ -937,16 +920,6 @@ public class BrowserActivity extends ListActivity
                     return null;
                 }
 
-                /*
-                 * The code below will only handle copying forms that have exactly one attachment.
-                 * Since we don't want to loose media attachments in the process we tell users
-                 * that this will be supported in a future version.
-                 */
-                if (formDefinition.getAttachments().size() != 1) {
-                    unsupported = true;
-                    return null;
-                }
-
                 ais = Collect.getInstance().getDbService().getDb().getAttachment(formDefinition.getId(), "xml");
                 
                 FormDefinition copyOfFormDefinition = new FormDefinition();
@@ -985,7 +958,56 @@ public class BrowserActivity extends ListActivity
                 copyOfFormDefinition.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(xml)).toString(), FormWriter.CONTENT_TYPE));                
                 
                 Collect.getInstance().getDbService().getDb(copyToFolderId).create(copyOfFormDefinition);
-                
+
+                // Copy all remaining attachments from the original form definition; preserve names
+                if (formDefinition.getAttachments().size() > 1) {
+                    String formCachePath = FileUtilsExtended.FORMS_PATH + File.separator + formDefinition.getId();
+                    String formCacheMediaPath = formCachePath + File.separator + FileUtilsExtended.MEDIA_DIR;
+
+                    FileUtils.createFolder(formCachePath);
+                    FileUtils.createFolder(formCacheMediaPath);
+
+                    // Download attachments
+                    for (Entry<String, Attachment> entry : formDefinition.getAttachments().entrySet()) {
+                        ais = Collect.getInstance().getDbService().getDb().getAttachment(formDefinition.getId(), entry.getKey());
+                        FileOutputStream file;
+
+                        if (!entry.getKey().equals("xml")) {
+                            file = new FileOutputStream(formCacheMediaPath + File.separator + entry.getKey());
+
+                            buffer = new byte[8192];
+                            bytesRead = 0;
+
+                            while ((bytesRead = ais.read(buffer)) != -1) {
+                                file.write(buffer, 0, bytesRead);
+                            }
+
+                            file.close();
+                        }
+
+                        ais.close();
+                    }
+
+                    // Upload to new form definition document
+                    String revision = copyOfFormDefinition.getRevision();
+
+                    for (File f : new File(formCacheMediaPath).listFiles()) {
+                        String fileName = f.getName();
+                        String attachmentName = fileName;
+
+                        Log.v(Collect.LOGTAG, t + ": attaching " + fileName + " to " + copyOfFormDefinition.getId());
+
+                        String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+                        String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
+
+                        FileInputStream fis = new FileInputStream(f);
+                        ais = new AttachmentInputStream(attachmentName, fis, contentType, f.length()); 
+                        revision = Collect.getInstance().getDbService().getDb(copyToFolderId).createAttachment(copyOfFormDefinition.getId(), revision, ais);
+                        fis.close();
+                        ais.close();
+                    }
+                }
+
                 copied = true;             
             } catch (Exception e) {
                 Log.e(Collect.LOGTAG, tt + "unexpected exception");
@@ -1013,8 +1035,6 @@ public class BrowserActivity extends ListActivity
             } else if (duplicate) {
                 // Show duplicate explanation dialog
                 showDialog(DIALOG_UNABLE_TO_COPY_DUPLICATE);
-            } else if (unsupported) {
-                showDialog(DIALOG_UNABLE_TO_COPY_UNSUPPORTED);
             } else {
                 // Some other failure
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_something_failed, getString(R.string.tf_copy)), Toast.LENGTH_LONG).show();

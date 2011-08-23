@@ -48,6 +48,7 @@ public class AccountDeviceActivity extends Activity
     public static final int RESET_PROGRESS_DIALOG = 3;
     public static final int CONFIRM_RESET_DIALOG = 4;
 
+    @SuppressWarnings("unused")
     private AlertDialog mAlertDialog;
     private ProgressDialog mProgressDialog;
     

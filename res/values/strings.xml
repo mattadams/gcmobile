@@ -251,8 +251,7 @@
 	<string name="tf_confirm_removal_msg">Are you sure you want to remove \"%s?\"</string>
 	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the GC Mobile service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
 	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the GC Mobile service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
-	<string name="tf_connection_error_unregistered_msg">Unable to connect to the GC Mobile service to register this device.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
-	<string name="tf_connection_status_notification">CONNECTION STATUS NOTIFICATION</string>	
+	<string name="tf_connection_error_unregistered_msg">Unable to connect to the GC Mobile service to register this device.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>	
 	<string name="tf_connectivity_settings">Connectivity settings</string>
 	<string name="tf_contact_account_owner">Action reserved for your account owner!</string>
 	<string name="tf_continue">Continue</string>
@@ -270,8 +269,6 @@
 	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_ionline_port">5101</string>	
 	<string name="tf_decimal_number_type">Integers and decimals</string>
-	<string name="tf_dependency_missing_dialog">Install Helper Software?</string>
-	<string name="tf_dependency_missing_dialog_msg">The following free app will help to maximize the potential of GC Mobile:\n\n</string>
 	<string name="tf_destination">Destination</string>
 	<string name="tf_device_admin_alias_label">Alias</string>
 	<string name="tf_device_admin_alias_hint">Identify this user by an alias instead of using the the email address. Examples: Joe Smith, North Warehouse or Survey Team.</string>
@@ -351,6 +348,7 @@
 	<string name="tf_form_folders">Folders</string>
 	<string name="tf_form_name">Form Name</string>
 	<string name="tf_form_name_required">Form name required</string>
+    <string name="tf_form_name_duplicate">Name already exists - please pick another</string>
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_go_offline">Go Offline</string>
 	<string name="tf_go_offline_dialog_msg">Folders selected for offline use will be synchronized prior to going offline.</string>
@@ -383,7 +381,6 @@
 	<string name="tf_inform_state_offline">GC Mobile: OFFLINE</string>
 	<string name="tf_inform_state_online">GC Mobile: Online</string>
 	<string name="tf_inform_state_transition">GC Mobile: ...</string>
-	<string name="tf_install">Install</string>
 	<string name="tf_integer_number_type">Integers only</string>
 	<string name="tf_invalid_email">Invalid email address</string>
 	<string name="tf_invalid_pin">This PIN is not registered with our system. Double check the PIN and try again.</string>
@@ -424,7 +421,6 @@
 	<string name="tf_registration_msg">GC Mobile (Group Complete Mobile) will help you to create smart forms, fill them out and share the forms &amp; results with your team.  Please register this device so that we can connect you with the rest of your team.\n\nAll mobile devices used by your team should be registered to the same account. Please have your licence number and key handy.\n\nIf you do not have an account then one will be created for you. It\'s free for up to 2 users and you\'ll be up and running in 60 seconds.\n\nPlease visit http://groupcomplete.com for more information on Group Complete &amp; GC Mobile.</string>
 	<string name="tf_regular_group_type">Regular group of fields</string>
 	<string name="tf_remind">Remind</string>
-	<string name="tf_remind_later">Remind Later</string>
 	<string name="tf_reminder_sent">Reminder sent to the account owner</string>
 	<string name="tf_removal">Removal</string>
 	<string name="tf_removal_failed">Could not remove %s: group contains fields.\n\nRemove the inner fields first.</string>
@@ -483,7 +479,6 @@
 	<string name="tf_unable_to_connect">Unable To Connect</string>
 	<string name="tf_unable_to_copy">Unable To Copy</string>
 	<string name="tf_unable_to_copy_duplicate_dialog_msg">The folder \"%1$s\" already contains a form named \"%2$s.\"\n\nPlease choose another name.</string>
-	<string name="tf_unable_to_copy_unsupported_definition">The form template that you are trying to copy uses a new template format that is not fully supported by this version of GC Mobile.\n\nSupport for copying forms with multimedia questions will be added in a future version of GC Mobile.</string>
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
