@@ -201,7 +201,11 @@ public final class FormWriter
         while (it.hasNext()) {
             Instance instance = it.next();
             
-            if (instance.getChildren().isEmpty()) {
+            // Don't write out nested XML nodes (see Item129: removal of repeated groups leaves broken XForm) 
+            if (instance.getChildren().isEmpty() &&
+                    !instance.getField().getType().equals("group") &&
+                    !instance.getField().getType().equals("repeat")) {
+
                 /*
                  * For some reason unknown to me we can only call gotoParent() when adding 
                  * an empty tag.  Calling it after adding an empty tag OR a tag with a text
@@ -211,9 +215,9 @@ public final class FormWriter
                 if (instance.getDefaultValue().length() == 0) { 
                     mFormTag.addTag(instance.getName());
                     mFormTag.gotoParent();
-                } else 
-                    mFormTag.addTag(instance.getName()).setText(instance.getDefaultValue());             
-                    
+                } else {
+                    mFormTag.addTag(instance.getName()).setText(instance.getDefaultValue());
+                }
             } else {
                 // Likely a repeated data set
                 mFormTag.addTag(instance.getName()).addAttribute("jr:template", "");      

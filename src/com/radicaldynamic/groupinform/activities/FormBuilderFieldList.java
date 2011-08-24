@@ -165,9 +165,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
              */
             if (item.getType().equals("group")) {
                 if (Field.isRepeatedGroup(item)) {
-                    if (item.getRepeat().getChildren().isEmpty())
-                        removeByXPath(item.getXPath());
-                    else {
+                    if (item.getRepeat().getChildren().isEmpty()) {
+                        removeByXPath(item.getRepeat().getXPath());
+                    } else {
                         displayRemovalFailed(getString(R.string.tf_removal_failed, item.getLabel().toString()));
                         return;
                     }
@@ -176,7 +176,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                         displayRemovalFailed(getString(R.string.tf_removal_failed, item.getLabel().toString()));
                         return;
                     }
-                }                
+                }
             } else {
                 removeByXPath(item.getXPath());
             }
@@ -189,6 +189,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         
         private void removeByXPath(String xpath)
         {
+            Log.v(Collect.LOGTAG, t + "removing instances and binds matching XPath " + xpath);
+
             // Also remove the related instance
             removeInstanceByXPath(xpath, null);
             
