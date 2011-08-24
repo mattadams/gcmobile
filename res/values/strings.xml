@@ -215,12 +215,14 @@
 	<string name="tf_about_inform_device_header">Information about the device you are currently using.</string>
 	<string name="tf_abort_exit">Abort exit</string>
 	<string name="tf_account_created">Account Created</string>
-	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About GC Mobile\" option menu.\n\nWe have sent an email to %s confirming this new account.</string>
+	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About GC\" option menu.\n\nWe have sent an email to %s confirming this new account.</string>
 	<string name="tf_account_details">If you do not know these details you can have a reminder sent to the account owner.</string>
 	<string name="tf_account_device">Registered Device</string>
 	<string name="tf_account_devices">Account Devices</string>
 	<string name="tf_account_email_label">Email Address</string>
 	<string name="tf_account_email_hint">Enter the email address of the person who will be the account owner. We will send important information to this address.</string>
+    <string name="tf_account_exists_dialog">Account Already Exists</string>
+    <string name="tf_account_exists_dialog_msg">An account is already registered to this address.\n\nPlease enter your account details to register this device with your account or associate an unused profile with this device.\n\nIf you do not have your account information handy you can request that a reminder be sent to this address.</string>
 	<string name="tf_account_folder">Folder</string>	
 	<string name="tf_account_key_label">License Key</string>
 	<string name="tf_account_number_label">Licence Number</string>

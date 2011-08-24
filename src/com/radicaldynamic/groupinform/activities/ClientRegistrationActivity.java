@@ -39,8 +39,9 @@ public class ClientRegistrationActivity extends Activity
     private static final int DIALOG_BEGIN_REGISTRATION = 1;
     private static final int DIALOG_DEVICE_REGISTRATION_METHOD = 2;
     private static final int DIALOG_ACCOUNT_CREATED = 3;
-    private static final int DIALOG_DEVICE_REGISTERED = 4;
-    private static final int DIALOG_DEVICE_ACTIVE = 5;
+    private static final int DIALOG_ACCOUNT_EXISTS = 4;
+    private static final int DIALOG_DEVICE_REGISTERED = 5;
+    private static final int DIALOG_DEVICE_ACTIVE = 6;
     private static final int DIALOG_SYSTEM_ERROR = 10;
 //    private static final int DIALOG_BETA_PREVIEW = 11;
     
@@ -165,7 +166,20 @@ public class ClientRegistrationActivity extends Activity
                         finish();
                     }
                 });
-                break;       
+                break;
+
+            case DIALOG_ACCOUNT_EXISTS:
+                builder
+                .setCancelable(false)
+                .setIcon(R.drawable.ic_dialog_info)
+                .setTitle(R.string.tf_account_exists_dialog)
+                .setMessage(getString(R.string.tf_account_exists_dialog_msg))
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        registerExistingAccountDialog();
+                    }
+                });
+                break;
                 
             case DIALOG_DEVICE_REGISTERED:
                 builder
@@ -318,7 +332,7 @@ public class ClientRegistrationActivity extends Activity
                         break;
                     case DEVICE_REGISTRATION_LIMITED:
                         // New dialog displayed by verifyDeviceRegistration()
-                        dialog.cancel();                    
+                        dialog.cancel();
                     }
                 }
             }
@@ -416,7 +430,9 @@ public class ClientRegistrationActivity extends Activity
                     if (verifyNewAccount(email)) {
                         showDialog(DIALOG_ACCOUNT_CREATED);
                     } else {
-                        registerNewAccountDialog();
+                        // If account existed, mContactEmailAddress would contain the account owner email
+                        if (mContactEmailAddress.length() == 0)
+                            registerNewAccountDialog();
                     }
                 }
             }
@@ -461,6 +477,7 @@ public class ClientRegistrationActivity extends Activity
                     requestAccountReminderDialog();
                 } else {
                     if (sendAccountReminder(email)) {
+                        mContactEmailAddress = "";
                         registerExistingAccountDialog();
                     } else {
                         requestAccountReminderDialog();
@@ -666,7 +683,9 @@ public class ClientRegistrationActivity extends Activity
                 
                 // Match
                 if (result.equals(InformOnlineState.OK)) {               
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_licence_validation_succeeded), Toast.LENGTH_SHORT).show();                    
+                    Toast.makeText(getApplicationContext(), getString(R.string.tf_licence_validation_succeeded), Toast.LENGTH_SHORT).show();
+                    // Clear email address in case it was saved after user requested new account with existing email address
+                    mContactEmailAddress = "";
                     return true;                   
                 } else if (result.equals(InformOnlineState.FAILURE)) {
                     // No match                     
@@ -876,7 +895,9 @@ public class ClientRegistrationActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_EMAIL_ASSIGNED)) {
                     Log.i(Collect.LOGTAG, t + "email address \"" + email + "\" already assigned to an account");                    
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_registration_error_email_in_use), Toast.LENGTH_LONG).show();
+                    // Share email address with reminder and explanation dialogs
+                    mContactEmailAddress = email;
+                    showDialog(DIALOG_ACCOUNT_EXISTS);
                 } else {
                     // Unhandled response
                     Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
