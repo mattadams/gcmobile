@@ -349,6 +349,7 @@
 	<string name="tf_form_details">Form Details</string>
 	<string name="tf_form_folders">Folders</string>
 	<string name="tf_form_name">Form Name</string>
+    <string name="tf_form_name_hint">Please enter a name for this form. We recommend that you use no more than a few words to name your form..</string>
 	<string name="tf_form_name_required">Form name required</string>
     <string name="tf_form_name_duplicate">Name already exists - please pick another</string>
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
