@@ -110,7 +110,7 @@
             android:layout_width="fill_parent"                    
             android:text="@string/tf_fbel_hint_hint" />
     </LinearLayout>
-        
+
     <!-- Group type selection -->
     <RelativeLayout 
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -326,6 +326,58 @@
             android:layout_width="fill_parent"                    
             android:text="@string/tf_fbel_default_hint" />        
     </LinearLayout>
+    
+        
+    <!-- Date type selection -->
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/dateFieldTypeSelection"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+        
+        <TextView
+            android:id="@+id/dateTypeLabel"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:paddingTop="10dp"
+            android:text="@string/tf_choose_date_type" 
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+        
+        <RadioGroup
+            android:id="@+id/dateRadioSelection"
+            android:layout_below="@id/dateTypeLabel"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            
+            <RadioButton 
+                android:id="@+id/dateTypeDateOnly"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_date_type_date_only" />
+                
+            <RadioButton 
+                android:id="@+id/dateTypeTimeOnly"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_date_type_time_only" />
+                
+            <RadioButton 
+                android:id="@+id/dateTypeDateAndTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_date_type_date_and_time" />                             
+        </RadioGroup>
+        
+        <TextView
+            android:id="@android:id/empty"
+            android:inputType="textMultiLine"
+            android:layout_below="@id/dateRadioSelection"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"                    
+            android:text="@string/tf_choose_date_type_hint" />    
+    </RelativeLayout>
     
     <!-- Read-only option -->
     <RelativeLayout 

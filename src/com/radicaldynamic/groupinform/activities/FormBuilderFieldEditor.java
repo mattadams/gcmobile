@@ -156,13 +156,15 @@ public class FormBuilderFieldEditor extends Activity
             }
         });
 
-        if (mFieldType.equals("barcode"))         loadBarcodeElement();                    
+        if (mFieldType.equals("barcode"))         loadBarcodeElement();
         else if (mFieldType.equals("date"))       loadDateElement();                
+        else if (mFieldType.equals("dateTime"))   loadDateElement();
         else if (mFieldType.equals("geopoint"))   loadGeopointElement();                  
         else if (mFieldType.equals("group"))      loadGroupElement();                    
         else if (mFieldType.equals("media"))      loadMediaElement();                    
         else if (mFieldType.equals("number"))     loadNumberElement();                    
-        else if (mFieldType.equals("select"))     loadSelectElement();                    
+        else if (mFieldType.equals("select"))     loadSelectElement();
+        else if (mFieldType.equals("time"))       loadDateElement();
         else if (mFieldType.equals("text"))       loadTextElement();                    
         else 
             Log.w(Collect.LOGTAG, t + "unhandled field type");
@@ -189,9 +191,11 @@ public class FormBuilderFieldEditor extends Activity
                 
                 if (specificType.equals("barcode"))     icon = getDrawable(R.drawable.element_barcode);     else
                 if (specificType.equals("date"))        icon = getDrawable(R.drawable.element_calendar);    else
+                if (specificType.equals("dateTime"))    icon = getDrawable(R.drawable.element_calendar);    else
                 if (specificType.equals("decimal"))     icon = getDrawable(R.drawable.element_number);      else
                 if (specificType.equals("geopoint"))    icon = getDrawable(R.drawable.element_location);    else
-                if (specificType.equals("int"))         icon = getDrawable(R.drawable.element_number);
+                if (specificType.equals("int"))         icon = getDrawable(R.drawable.element_number);      else
+                if (specificType.equals("time"))        icon = getDrawable(R.drawable.element_calendar);
             } catch (NullPointerException e){
                 // TODO: is this really a problem?    
             } finally {
@@ -419,6 +423,7 @@ public class FormBuilderFieldEditor extends Activity
         
         loadCommonAttributes();
         
+        disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -443,6 +448,17 @@ public class FormBuilderFieldEditor extends Activity
         disableFormComponent(R.id.numberFieldTypeSelection);
         disableFormComponent(R.id.selectFieldTypeSelection);
         
+        final RadioButton dateOnly = (RadioButton) findViewById(R.id.dateTypeDateOnly);
+        final RadioButton timeOnly = (RadioButton) findViewById(R.id.dateTypeTimeOnly);
+        final RadioButton dateAndTime = (RadioButton) findViewById(R.id.dateTypeDateAndTime);
+
+        if (mField.getBind().getType().equals("date"))
+            dateOnly.setChecked(true);
+        else if (mField.getBind().getType().equals("time"))
+            timeOnly.setChecked(true);
+        else if (mField.getBind().getType().equals("dateTime"))
+            dateAndTime.setChecked(true);
+
         // TODO: we should probably display a "default" date using the date widget
     }
     
@@ -457,6 +473,7 @@ public class FormBuilderFieldEditor extends Activity
         
         loadCommonAttributes();
         
+        disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
         disableFormComponent(R.id.groupFieldTypeSelection);        
         disableFormComponent(R.id.mediaFieldTypeSelection);
@@ -475,6 +492,7 @@ public class FormBuilderFieldEditor extends Activity
         
         loadCommonAttributes();
     
+        disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
         disableFormComponent(R.id.hintInput);
         disableFormComponent(R.id.mediaFieldTypeSelection);
@@ -505,6 +523,7 @@ public class FormBuilderFieldEditor extends Activity
         
         loadCommonAttributes();
 
+        disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
         disableFormComponent(R.id.groupFieldTypeSelection);        
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -552,6 +571,7 @@ public class FormBuilderFieldEditor extends Activity
         
         loadCommonAttributes();
         
+        disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.selectFieldTypeSelection);
@@ -611,6 +631,7 @@ public class FormBuilderFieldEditor extends Activity
         
         loadCommonAttributes();
         
+        disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
         disableFormComponent(R.id.groupFieldTypeSelection);        
         disableFormComponent(R.id.mediaFieldTypeSelection);
@@ -666,6 +687,7 @@ public class FormBuilderFieldEditor extends Activity
         
         loadCommonAttributes();
         
+        disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -711,13 +733,15 @@ public class FormBuilderFieldEditor extends Activity
         
         // Save (control) field-specific properties 
         if (mFieldType.equals("barcode"))         saveBarcodeElement();                    
-        else if (mFieldType.equals("date"))       saveDateElement();                
+        else if (mFieldType.equals("date"))       saveDateElement();
+        else if (mFieldType.equals("dateTime"))   saveDateElement();
         else if (mFieldType.equals("geopoint"))   saveGeopointElement();                  
         else if (mFieldType.equals("group"))      saveGroupElement();                    
         else if (mFieldType.equals("media"))      saveMediaElement();                    
         else if (mFieldType.equals("number"))     saveNumberElement();                    
         else if (mFieldType.equals("select"))     saveSelectElement();                    
-        else if (mFieldType.equals("text"))       saveTextElement();                    
+        else if (mFieldType.equals("text"))       saveTextElement();
+        else if (mFieldType.equals("time"))       saveDateElement();
         else 
             Log.w(Collect.LOGTAG, t + "unhandled field type");
         
@@ -736,7 +760,22 @@ public class FormBuilderFieldEditor extends Activity
     
     private void saveDateElement()
     {
+        final RadioButton dateOnly = (RadioButton) findViewById(R.id.dateTypeDateOnly);
+        final RadioButton timeOnly = (RadioButton) findViewById(R.id.dateTypeTimeOnly);
+        final RadioButton dateAndTime = (RadioButton) findViewById(R.id.dateTypeDateAndTime);
         
+        Log.v(Collect.LOGTAG, t + "saveDateElement executed");
+
+        if (dateOnly.isChecked()) {
+            Log.v(Collect.LOGTAG, t + "saveDateElement set date");
+            mField.getBind().setType("date");
+        } else if (timeOnly.isChecked()) {
+            Log.v(Collect.LOGTAG, t + "saveDateElement set time");
+            mField.getBind().setType("time");
+        } else if (dateAndTime.isChecked()) {
+            Log.v(Collect.LOGTAG, t + "saveDateElement set dateTime");
+            mField.getBind().setType("dateTime");
+        }
     }
     
     private void saveGeopointElement()

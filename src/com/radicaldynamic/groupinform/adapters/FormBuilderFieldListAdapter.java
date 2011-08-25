@@ -77,11 +77,24 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
             try {
                 String specificType = field.getBind().getType();
                 
-                if (specificType.equals("barcode"))     icon = getDrawable(R.drawable.element_barcode);     else
-                if (specificType.equals("date"))        icon = getDrawable(R.drawable.element_calendar);    else
-                if (specificType.equals("decimal"))     icon = getDrawable(R.drawable.element_number);      else
-                if (specificType.equals("geopoint"))    icon = getDrawable(R.drawable.element_location);    else
-                if (specificType.equals("int"))         icon = getDrawable(R.drawable.element_number);
+                if (specificType.equals("barcode")) {
+                    icon = getDrawable(R.drawable.element_barcode);
+                } else if (specificType.equals("date")) {
+                    icon = getDrawable(R.drawable.element_calendar);
+                    details.add("Pick date");
+                } else if (specificType.equals("dateTime")) {
+                    icon = getDrawable(R.drawable.element_calendar);
+                    details.add("Pick date & time");
+                } else if (specificType.equals("decimal")) {
+                    icon = getDrawable(R.drawable.element_number);
+                } else if (specificType.equals("geopoint")) {
+                    icon = getDrawable(R.drawable.element_location);
+                } else if (specificType.equals("int")) {
+                    icon = getDrawable(R.drawable.element_number);
+                } else if (specificType.equals("time")) {
+                    icon = getDrawable(R.drawable.element_calendar);
+                    details.add("Pick time");
+                }
             } catch (NullPointerException e){
                 // TODO: is this really a problem?    
             } finally {
@@ -109,9 +122,9 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
         }
         
         try {
-            if (field.getBind().isRequired())
+            if (field.getBind().isRequired()) {
                 details.add("Required");
-            
+            }
         } catch (NullPointerException e) {
            // TODO: is this really a problem?
         }
@@ -125,10 +138,11 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
         while (it.hasNext()) {
             String d = it.next();
             
-            if (detailText.length() > 0)
+            if (detailText.length() > 0) {
                 detailText = detailText + ", " + d;
-            else 
+            } else {
                 detailText = d;
+            }
         }
         
         detailView.setText(detailText);        
