@@ -283,7 +283,6 @@ public class InformOnlineService extends Service {
         JSONObject checkout;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
             checkout = (JSONObject) new JSONTokener(getResult).nextValue();
             
             String result = checkout.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
@@ -342,7 +341,6 @@ public class InformOnlineService extends Service {
         JSONObject ping;
         
         try {
-            Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
             ping = (JSONObject) new JSONTokener(getResult).nextValue();
             
             String result = ping.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
