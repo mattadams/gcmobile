@@ -237,7 +237,7 @@
 	<string name="tf_browse_instances_hint">Select item to %s</string>
 	<string name="tf_change_select_type">Change select type?</string>
 	<string name="tf_change_select_type_msg">This multiple select field has more than one preselected list item. A single select field can only have one preselected item.\n\nIf you choose to change to a single select field all of the preselected list items will be unselected.\n\nDo you wish to continue?</string>
-    <string name="tf_choose_date_type">Choose input type</string>
+    <string name="tf_choose_date_type">Choose date type</string>
     <string name="tf_choose_date_type_hint">Select the input controls that will appear for this date &amp; time field.</string>
 	<string name="tf_choose_group_type">Choose group type</string>
 	<string name="tf_choose_group_type_hint">Regular groups are used to organize related questions under a common label. Repeated groups loop through the questions that they contain up to a maximum number of loops.</string>
@@ -352,7 +352,7 @@
 	<string name="tf_form_details">Form Details</string>
 	<string name="tf_form_folders">Folders</string>
 	<string name="tf_form_name">Form Name</string>
-    <string name="tf_form_name_hint">Please enter a name for this form. We recommend that you use no more than a few words to name your form..</string>
+    <string name="tf_form_name_hint">Please enter a name for this form. We recommend that you use no more than a few words to name your form.</string>
 	<string name="tf_form_name_required">Form name required</string>
     <string name="tf_form_name_duplicate">Name already exists - please pick another</string>
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>

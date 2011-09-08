@@ -50,15 +50,15 @@ the License.
         android:name=".activities.AccountFolderReplicationList" />
         
     <!-- Enable Shortcuts for Command Actions -->
-    <activity
-        android:name=".activities.AndroidShortcuts"
-        android:theme="@android:style/Theme.Translucent.NoTitleBar"
-        android:label="ODK Form">
-      <intent-filter>
-        <action android:name="android.intent.action.CREATE_SHORTCUT" />
-        <category android:name="android.intent.category.DEFAULT" />
-      </intent-filter>
-    </activity>
+<!--    <activity-->
+<!--        android:name=".activities.AndroidShortcuts"-->
+<!--        android:theme="@android:style/Theme.Translucent.NoTitleBar"-->
+<!--        android:label="ODK Form">-->
+<!--      <intent-filter>-->
+<!--        <action android:name="android.intent.action.CREATE_SHORTCUT" />-->
+<!--        <category android:name="android.intent.category.DEFAULT" />-->
+<!--      </intent-filter>-->
+<!--    </activity>-->
 
     <activity 
         android:name=".activities.BrowserActivity" 
