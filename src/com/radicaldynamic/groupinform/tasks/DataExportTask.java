@@ -312,6 +312,11 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
         }
     }
     
+    public void setHandler(Handler h)
+    {
+        mHandler = h;
+    }
+
     private void generateExportHeaders(ArrayList<Instance> instances)
     {
         final String tt = t + "buildExportHeaders(): ";

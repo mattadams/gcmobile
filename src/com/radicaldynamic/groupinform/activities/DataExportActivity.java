@@ -90,9 +90,7 @@ public class DataExportActivity extends Activity implements DataExportListener
                 break;
 
             case DataExportTask.COMPLETE:
-                // We should only dismiss dialogs that are actually showing
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
+                mProgressDialog.dismiss();
                 break;
             }
         }
@@ -160,35 +158,47 @@ public class DataExportActivity extends Activity implements DataExportListener
                     mOutputRecordMetadata.setChecked(true);
             }           
         });
-        
-        Intent intent = getIntent();
-        
-        if (intent == null) {
-            // Defaults?
-        } else {
-            String id = intent.getStringExtra(FormEntryActivity.KEY_FORMPATH);
-            
-            try {
-                mFormDefinition = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, id);
-                setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_export_from) + " " + mFormDefinition.getName());
-            } catch (Exception e ){
-                Log.e(Collect.LOGTAG, t + "unexpected exception while retrieving form definition document: " + e.toString());
-                e.printStackTrace();
-                
-                showDialog(DIALOG_DEFINITION_UNAVAILABLE);
-            }
-        }
-        
+
         Object data = getLastNonConfigurationInstance();
         
         if (data instanceof HashMap<?, ?>) {
             // Continue data export
-            if (((HashMap<?, ?>) data).containsKey(KEY_DATA_EXPORT_TASK))
+            if (((HashMap<?, ?>) data).containsKey(KEY_DATA_EXPORT_TASK)) {
+                // Recreate progress handler for UI
+                mProgressDialog = new ProgressDialog(DataExportActivity.this);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setMessage("Resuming export...");
+                mProgressDialog.show();
+
                 mDataExportTask = (DataExportTask) ((HashMap<?, ?>) data).get(KEY_DATA_EXPORT_TASK);
+                mDataExportTask.setHandler(mProgressHandler);
+            }
             
             // Save us refetching from the database
-            if (((HashMap<?, ?>) data).containsKey(KEY_FORM_DEFINITION))
-                mFormDefinition = (FormDefinition) ((HashMap<?, ?>) data).get(KEY_FORM_DEFINITION); 
+            if (((HashMap<?, ?>) data).containsKey(KEY_FORM_DEFINITION)) {
+                mFormDefinition = (FormDefinition) ((HashMap<?, ?>) data).get(KEY_FORM_DEFINITION);
+            }
+        } else {
+            Intent intent = getIntent();
+
+            if (intent == null) {
+                // Defaults?
+            } else {
+                String id = intent.getStringExtra(FormEntryActivity.KEY_FORMPATH);
+
+                try {
+                    mFormDefinition = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, id);
+                } catch (Exception e ){
+                    Log.e(Collect.LOGTAG, t + "unexpected exception while retrieving form definition document: " + e.toString());
+                    e.printStackTrace();
+
+                    showDialog(DIALOG_DEFINITION_UNAVAILABLE);
+                }
+            }
+        }
+
+        if (mFormDefinition != null) {
+            setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_export_from) + " " + mFormDefinition.getName());
         }
     }
     
@@ -236,6 +246,15 @@ public class DataExportActivity extends Activity implements DataExportListener
     }
     
     @Override
+    public void onPause()
+    {
+        super.onPause();
+
+        if (mProgressDialog != null && mProgressDialog.isShowing())
+            mProgressDialog.cancel();
+    }
+
+    @Override
     public Object onRetainNonConfigurationInstance() 
     {
         HashMap<String, Object> data = new HashMap<String, Object>();
@@ -253,10 +272,6 @@ public class DataExportActivity extends Activity implements DataExportListener
     @Override
     public void exportComplete(String completeMsg) 
     {
-        // Close progress automatically
-        if (mProgressDialog != null && mProgressDialog.isShowing())
-            mProgressDialog.dismiss();        
-        
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         
         builder
