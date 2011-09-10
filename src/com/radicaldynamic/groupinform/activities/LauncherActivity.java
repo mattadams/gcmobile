@@ -637,6 +637,6 @@ public class LauncherActivity extends Activity
 
     private void startCouch() 
     {
-        Collect.getInstance().setCouchService(CouchDB.getService(getBaseContext(), null, "release-1.0.2-1", mCouchCallback));
+        Collect.getInstance().setCouchService(CouchDB.getService(getBaseContext(), null, "release-1.0.2-2", mCouchCallback));
     }
 }

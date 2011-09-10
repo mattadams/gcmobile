@@ -103,7 +103,7 @@
 <string name="longitude">Longitude</string>
 <string name="main_menu">Main Menu</string>
 <string name="main_menu_details">Magnifying human resources\nwith technology</string>
-<string name="main_menu_message">GC Mobile v1.2.4 (ODK 1.1.7)</string>
+<string name="main_menu_message">GC Mobile v1.2.5 (ODK 1.1.7)</string>
 <string name="manage_files">Manage Forms</string>
 <string name="mark_finished">Mark Form as Finished</string>
 <string name="no">No</string>
@@ -271,7 +271,7 @@
     <string name="tf_date_type_date_only">Date only</string>
     <string name="tf_date_type_time_only">Time only</string>
     <string name="tf_date_type_date_and_time">Date &amp; time</string>
-	<string name="tf_default_ionline_server">groupcomplete.com</string>
+	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_ionline_port">5101</string>	
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_destination">Destination</string>
@@ -402,7 +402,7 @@
 	<string name="tf_licence_limit_reached_dialog">All Licences In Use</string>
 	<string name="tf_licence_limit_reached_dialog_msg">All of the %1$s licences available to your %2$s account are in use.\n\nPlease contact the account owner to remove any unneeded device profiles or to add more licences to the account.\n\nAccount owners: please visit\nhttp://groupcomplete.com for more information on our plans and pricing.</string>
 	<string name="tf_licence_validation_failed">Unable to validate this licence. Double check both values and try again!</string>
-	<string name="tf_licence_validation_succeeded">Licence successfully validated!</string>
+	<string name="tf_licence_validation_succeeded">Licence checks out!</string>
 	<string name="tf_loading">Loading</string>
 	<string name="tf_loading_please_wait">Loading...</string>
 	<string name="tf_more_info">More Info</string>
