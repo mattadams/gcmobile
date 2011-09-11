@@ -78,12 +78,11 @@ public class AccountFolderActivity extends Activity
             Intent i = getIntent();
             
             if (i == null) {
-                 // New folder
-                
+                 // New folder                
             } else {
-                if (i.getBooleanExtra(KEY_NEW_FOLDER, false))
+                if (i.getBooleanExtra(KEY_NEW_FOLDER, false)) {
                     mFolder = new AccountFolder(null, null, null, "", "", "private", false);
-                else {
+                } else {
                     // Because we don't have a better way of shuffling these values around
                     mFolder = new AccountFolder(
                             i.getStringExtra(KEY_FOLDER_ID),
@@ -96,7 +95,11 @@ public class AccountFolderActivity extends Activity
                 }
             }
         } else {
-            // TODO            
+            Object data = getLastNonConfigurationInstance();
+            
+            if (data instanceof AccountFolder) {
+                mFolder = (AccountFolder) data;
+            }
         }        
 
         mFolderName = (EditText) findViewById(R.id.folderName);
@@ -203,7 +206,13 @@ public class AccountFolderActivity extends Activity
         }
         
         return super.onOptionsItemSelected(item);
-    }
+    }    
+    
+    @Override
+    public Object onRetainNonConfigurationInstance() 
+    {
+        return mFolder;
+    }    
     
     private class CommitChangesTask extends AsyncTask<Void, Void, String>
     {        
@@ -374,9 +383,7 @@ public class AccountFolderActivity extends Activity
                             if (mFolderName.getText().toString().trim().length() > 0)
                                 new CommitChangesTask().execute();
                             else
-                                Toast.makeText(
-                                        getApplicationContext(), 
-                                        getString(R.string.tf_folder_name_required), 
+                                Toast.makeText(getApplicationContext(), getString(R.string.tf_folder_name_required), 
                                         Toast.LENGTH_LONG).show();
                             
                             break;
