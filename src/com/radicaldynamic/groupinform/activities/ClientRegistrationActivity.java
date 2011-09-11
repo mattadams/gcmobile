@@ -123,7 +123,8 @@ public class ClientRegistrationActivity extends Activity
         register.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v)
-            {                
+            {        
+//                "This app is in beta" dialog no longer needed
 //                showDialog(DIALOG_BETA_PREVIEW);
                 showDialog(DIALOG_BEGIN_REGISTRATION);
             }            

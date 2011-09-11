@@ -36,9 +36,7 @@ import com.radicaldynamic.groupinform.utilities.HttpUtils;
 public class AccountDeviceActivity extends Activity
 {
     private static final String t = "AccountDeviceActivity: ";
-    
-    public static final String KEY_DEVICEID = "deviceid";    
-    
+
     private static final int MENU_RESET_DEVICE = 0;
     private static final int MENU_REMOVE_DEVICE = 1;
     
@@ -47,6 +45,9 @@ public class AccountDeviceActivity extends Activity
     public static final int CONFIRM_REMOVAL_DIALOG = 2;
     public static final int RESET_PROGRESS_DIALOG = 3;
     public static final int CONFIRM_RESET_DIALOG = 4;
+    
+    // Keys for saving and restoring activity state
+    public static final String KEY_DEVICE_ID = "key_device_id";     // Also used to accept device ID into activity
 
     @SuppressWarnings("unused")
     private AlertDialog mAlertDialog;
@@ -71,11 +72,13 @@ public class AccountDeviceActivity extends Activity
         
         if (savedInstanceState == null) {
             Intent i = getIntent();
-            mDeviceId = i.getStringExtra(KEY_DEVICEID);
-            mDevice = Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId);
+            mDeviceId = i.getStringExtra(KEY_DEVICE_ID);            
         } else {
-            // TODO            
+            if (savedInstanceState.containsKey(KEY_DEVICE_ID))
+                mDeviceId = savedInstanceState.getString(KEY_DEVICE_ID);
         }
+        
+        mDevice = Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId);
         
         mDeviceAlias = (EditText) findViewById(R.id.alias);
         mDeviceEmail = (EditText) findViewById(R.id.email);
@@ -265,6 +268,14 @@ public class AccountDeviceActivity extends Activity
         }
         
         return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState)
+    {
+        savedInstanceState.putString(KEY_DEVICE_ID, mDeviceId);
+        
+        super.onSaveInstanceState(savedInstanceState);
     }
     
     private class RemoveDeviceTask extends AsyncTask<Void, Void, String>

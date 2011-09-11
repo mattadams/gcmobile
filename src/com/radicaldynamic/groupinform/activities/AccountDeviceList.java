@@ -117,7 +117,7 @@ public class AccountDeviceList extends ListActivity
         // Only account owners should proceed to the next screen
         if (Collect.getInstance().getInformOnlineState().isAccountOwner()) {
             Intent i = new Intent(this, AccountDeviceActivity.class);
-            i.putExtra(AccountDeviceActivity.KEY_DEVICEID, device.getId());
+            i.putExtra(AccountDeviceActivity.KEY_DEVICE_ID, device.getId());
             startActivity(i);
         } else {
             Toast.makeText(getApplicationContext(), getString(R.string.tf_contact_account_owner), Toast.LENGTH_LONG).show();

@@ -388,12 +388,6 @@ public class LauncherActivity extends Activity
     }
 
     @Override
-    protected void onPause()
-    {
-        super.onPause();    
-    }
-    
-    @Override
     protected void onResume()
     {   
         super.onResume();
