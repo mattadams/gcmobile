@@ -65,25 +65,25 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private static final int REQUEST_EDITFIELD = 1;
     private static final int REQUEST_TRANSLATIONS = 2;
     
-    private static final String INSTANCE_ROOT = "instanceroot";
-    private static final String INSTANCE_ROOT_ID = "instancerootid";
-    
     private static final String KEY_ACTUALPATH = "actualpath";
+    private static final String KEY_INSTANCE_ROOT = "instanceroot";
+    private static final String KEY_INSTANCE_ROOT_ID = "instancerootid";
+    private static final String KEY_PATH = "path";
     
     private LoadFormDefinitionTask mLoadFormDefinitionTask;
     private SaveFormDefinitionTask mSaveFormDefinitionTask;
     
     private AlertDialog mAlertDialog;
+    private String mAlertDialogMsg;
     private ProgressDialog mProgressDialog;
     
     private FormBuilderFieldListAdapter mAdapter = null;  
     private Button jumpPreviousButton;
     private TextView mPathText;
-   
-    private String mAlertDialogMsg;
+
     private String mFormId;
-    private String mInstanceRoot;
-    private String mInstanceRootId;
+    private String mInstanceRoot;                                       // XForm instance root tag name
+    private String mInstanceRootId;                                     // Value of XForm instance root tag id attribute
     private FormDefinition mForm;
     private FormReader mFormReader;    
     
@@ -279,17 +279,17 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             if (savedInstanceState.containsKey(FormEntryActivity.KEY_FORMPATH))
                 mFormId = savedInstanceState.getString(FormEntryActivity.KEY_FORMPATH);
             
-            if (savedInstanceState.containsKey(FormEntryActivity.KEY_FORMPATH))
-                mPath = savedInstanceState.getStringArrayList(FormEntryActivity.KEY_FORMPATH);
+            if (savedInstanceState.containsKey(KEY_PATH))
+                mPath = savedInstanceState.getStringArrayList(KEY_PATH);
             
             if (savedInstanceState.containsKey(KEY_ACTUALPATH))
                 mActualPath = savedInstanceState.getStringArrayList(KEY_ACTUALPATH);
             
-            if (savedInstanceState.containsKey(INSTANCE_ROOT))
-                mInstanceRoot = savedInstanceState.getString(INSTANCE_ROOT);
+            if (savedInstanceState.containsKey(KEY_INSTANCE_ROOT))
+                mInstanceRoot = savedInstanceState.getString(KEY_INSTANCE_ROOT);
             
-            if (savedInstanceState.containsKey(INSTANCE_ROOT_ID))
-                mInstanceRootId = savedInstanceState.getString(INSTANCE_ROOT_ID);            
+            if (savedInstanceState.containsKey(KEY_INSTANCE_ROOT_ID))
+                mInstanceRootId = savedInstanceState.getString(KEY_INSTANCE_ROOT_ID);
             
             // Check to see if this is a screen flip or a new form load
             Object data = getLastNonConfigurationInstance();
@@ -513,9 +513,9 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     {
         super.onSaveInstanceState(outState);
         outState.putString(FormEntryActivity.KEY_FORMPATH, mFormId);
-        outState.putString(INSTANCE_ROOT, mInstanceRoot);
-        outState.putString(INSTANCE_ROOT_ID, mInstanceRootId);
-        outState.putStringArrayList(FormEntryActivity.KEY_FORMPATH, mPath);
+        outState.putString(KEY_INSTANCE_ROOT, mInstanceRoot);
+        outState.putString(KEY_INSTANCE_ROOT_ID, mInstanceRootId);
+        outState.putStringArrayList(KEY_PATH, mPath);
         outState.putStringArrayList(KEY_ACTUALPATH, mActualPath);
     }
 
