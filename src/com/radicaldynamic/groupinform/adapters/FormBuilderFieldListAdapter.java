@@ -47,10 +47,14 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
          * 
          * TODO: this might not be suitable on different devices, resolutions, orientations etc.
          */
-        if (field.getLabel().toString().length() > 30)
+        if (field.getLabel().toString().length() > 30) {
             labelView.setText(field.getLabel().toString().substring(0, 27) + "...");
-        else               
-            labelView.setText(field.getLabel().toString());
+        } else {
+            if (field.getLabel().toString().length() == 0)
+                labelView.setText("Label missing!");
+            else
+                labelView.setText(field.getLabel().toString());
+        }
 
         /*
          * Customize the row according to per-field specifics

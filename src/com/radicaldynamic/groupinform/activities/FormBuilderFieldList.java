@@ -437,7 +437,10 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
             if (field.getParent() != null && field.getParent().getParent() != null)
                 field.getParent().getParent().setActive(false);
             
-            mPath.add(field.getLabel().toString());
+            if (field.getLabel().toString().length() == 0)
+                mPath.add("Label missing");
+            else
+                mPath.add(field.getLabel().toString());
             
             // Special logic to hide the complexity of repeated groups
             if (Field.isRepeatedGroup(field)) {
@@ -851,14 +854,20 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     private void createQuitDialog()
     {
         String[] items = {
-                getString(R.string.do_not_save),
-                getString(R.string.keep_changes), 
-                getString(R.string.do_not_exit)
+                getString(R.string.keep_changes),
+                getString(R.string.do_not_save)
         };
     
         mAlertDialog = new AlertDialog.Builder(this)
             .setIcon(R.drawable.ic_dialog_alert)
             .setTitle(getString(R.string.tf_form_builder_exit))
+            .setNeutralButton(getString(R.string.do_not_exit), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id)
+                {
+                    dialog.cancel();
+                }
+            })
             .setItems(items,
                 new DialogInterface.OnClickListener() {
                     @Override
@@ -866,6 +875,15 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                     {
                         switch (which) {
                         case 0:
+                            // Save and exit
+                            mSaveFormDefinitionTask = new SaveFormDefinitionTask();
+                            mSaveFormDefinitionTask.setFormSavedListener(FormBuilderFieldList.this);
+                            mSaveFormDefinitionTask.execute(SaveToDiskTask.SAVED_AND_EXIT);
+
+                            showDialog(SAVING_DIALOG);
+                            break;
+
+                        case 1:
                             // Discard any changes and exit
                             try {
                                 if (mForm.getStatus() == FormDefinition.Status.placeholder)
@@ -877,19 +895,6 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                             
                             finish();
                             break;
-    
-                        case 1:
-                            // Save and exit
-                            mSaveFormDefinitionTask = new SaveFormDefinitionTask();
-                            mSaveFormDefinitionTask.setFormSavedListener(FormBuilderFieldList.this);
-                            mSaveFormDefinitionTask.execute(SaveToDiskTask.SAVED_AND_EXIT);
-                            
-                            showDialog(SAVING_DIALOG);
-                            break;
-    
-                        case 2:
-                            // Do nothing
-                            break;    
                         }
                     }
                 }).create();
