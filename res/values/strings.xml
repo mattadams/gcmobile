@@ -240,7 +240,7 @@
     <string name="tf_choose_date_type">Choose date type</string>
     <string name="tf_choose_date_type_hint">Select the input controls that will appear for this date &amp; time field.</string>
 	<string name="tf_choose_group_type">Choose group type</string>
-	<string name="tf_choose_group_type_hint">Regular groups are used to organize related questions under a common label. Repeated groups loop through the questions that they contain up to a maximum number of loops.</string>
+	<string name="tf_choose_group_type_hint">- Regular groups are used to organize related questions under a common label\n\n- Repeated groups loop through the questions that they contain up to a maximum number of loops\n\n- If \"display on one screen\" is selected, all of the fields that this group contains will be shown on a single screen vs. the default format of one question per screen</string>
 	<string name="tf_choose_media_type">Choose media type</string>
 	<string name="tf_choose_media_type_hint">Select the media type that this field should support.</string>
 	<string name="tf_choose_number_type">Choose number type</string>
@@ -464,6 +464,7 @@
 	<string name="tf_save_and_exit">Save and exit</string>
 	<string name="tf_saved_data">Saved!</string>
 	<string name="tf_saving_please_wait">Saving...</string>
+    <string name="tf_screen_group_type">Display fields on one screen</string>
 	<string name="tf_select_folders_for_offline_use">Select folders for offline use</string>
 	<string name="tf_select_multiple_type">Select multiple</string>
 	<string name="tf_select_single_type">Select one</string>

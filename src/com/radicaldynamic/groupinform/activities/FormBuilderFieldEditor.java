@@ -29,6 +29,7 @@ import android.widget.TextView;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.xform.Field;
+import com.radicaldynamic.groupinform.xform.XForm;
 
 public class FormBuilderFieldEditor extends Activity
 {
@@ -503,12 +504,20 @@ public class FormBuilderFieldEditor extends Activity
         
         final RadioButton groupRegular = (RadioButton) findViewById(R.id.groupTypeRegular);
         final RadioButton groupRepeated = (RadioButton) findViewById(R.id.groupTypeRepeated);
+        final RadioButton groupScreen = (RadioButton) findViewById(R.id.groupTypeScreen);
         
         // Initialize group type selection
-        if (Field.isRepeatedGroup(mField))
+        if (Field.isRepeatedGroup(mField)) {
             groupRepeated.setChecked(true);
-        else
-            groupRegular.setChecked(true);
+        } else {
+            if (mField.getAttributes().containsKey(XForm.Attribute.APPEARANCE) &&
+                    mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.FIELD_LIST))
+            {
+                groupScreen.setChecked(true);
+            } else {
+                groupRegular.setChecked(true);
+            }
+        }
     }
     
     private void loadMediaElement()
@@ -789,6 +798,8 @@ public class FormBuilderFieldEditor extends Activity
     private void saveGroupElement()
     {
         final RadioButton groupRegular = (RadioButton) findViewById(R.id.groupTypeRegular);
+        final RadioButton groupRepeated = (RadioButton) findViewById(R.id.groupTypeRepeated);
+        final RadioButton groupScreen = (RadioButton) findViewById(R.id.groupTypeScreen);
         
         if (groupRegular.isChecked()) {
             // Changing from a repeated group to a regular group involves work
@@ -800,7 +811,7 @@ public class FormBuilderFieldEditor extends Activity
                 if (mField.getChildren().size() > 0)
                     mField.getChildren().remove(0);
             }
-        } else {
+        } else if (groupRepeated.isChecked()) {
             // Changing from a regular group to a repeated group involves work
             if (!Field.isRepeatedGroup(mField)) {
                 ArrayList<Field> regularGroupChildren = new ArrayList<Field>();
@@ -820,6 +831,15 @@ public class FormBuilderFieldEditor extends Activity
 
                 if (!regularGroupChildren.isEmpty())
                     mField.getRepeat().getChildren().addAll(regularGroupChildren);
+            }
+        }
+
+        if (groupScreen.isChecked()) {
+            mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.FIELD_LIST);
+        } else {
+            // Make sure the multiple questions per screen attribute is cleared
+            if (mField.getAttributes().containsKey(XForm.Attribute.APPEARANCE)) {
+                mField.getAttributes().remove(XForm.Attribute.APPEARANCE);
             }
         }
             

@@ -81,13 +81,13 @@ public class FormReader
         mInstanceRoot = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getCurrentTagName();
         
         try {
-            mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute("id");
+            mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute(XForm.Attribute.ID);
         } catch (XMLDocumentException e) {
             Log.w(Collect.LOGTAG, t + e.toString());            
 
             try {
                 // It's possible that the ID attribute doesn't exist -- if this is the case, try and use the old-style XMLNS attribute
-                mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute("xmlns");
+                mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute(XForm.Attribute.XML_NAMESPACE);
             } catch (XMLDocumentException e1) {
                 Log.e(Collect.LOGTAG, t + e1.toString());
                 throw new Exception("Unable to find id or xmlns attribute for instance.\n\nPlease contact our support team with this message at confab@groupcomplete.com");
@@ -208,14 +208,14 @@ public class FormReader
 
             if (tag.getCurrentTagName().equals("label")) {
                 // Handle translated/untranslated labels
-                if (tag.hasAttribute("ref"))
-                    p.setLabel(tag.getAttribute("ref"));
+                if (tag.hasAttribute(XForm.Attribute.REFERENCE))
+                    p.setLabel(tag.getAttribute(XForm.Attribute.REFERENCE));
                 else
                     p.setLabel(tag.getInnerText());
             } else if (tag.getCurrentTagName().equals("hint")) {
                 // Handle translated/untranslated hints
-                if (tag.hasAttribute("ref"))
-                    p.setHint(tag.getAttribute("ref"));
+                if (tag.hasAttribute(XForm.Attribute.REFERENCE))
+                    p.setHint(tag.getAttribute(XForm.Attribute.REFERENCE));
                 else
                     p.setHint(tag.getInnerText());
             } else if (tag.getCurrentTagName().equals("value")) {
@@ -246,8 +246,8 @@ public class FormReader
     private void parseFormTranslations(XMLTag tag)
     {
         if (tag.getCurrentTagName().equals("translation")) {
-            Log.v(Collect.LOGTAG, t + "adding translations for " + tag.getAttribute("lang"));
-            Translation t = new Translation(tag.getAttribute("lang"));
+            Log.v(Collect.LOGTAG, t + "adding translations for " + tag.getAttribute(XForm.Attribute.LANGUAGE));
+            Translation t = new Translation(tag.getAttribute(XForm.Attribute.LANGUAGE));
             
             // The first translation to be parsed is considered the default/fallback translation for the form
             if (mTranslations.isEmpty())
@@ -255,8 +255,8 @@ public class FormReader
                 
             mTranslations.add(t);
         } else if (tag.getCurrentTagName().equals("text")) {
-            Log.v(Collect.LOGTAG, t + "adding translation ID " + tag.getAttribute("id"));
-            mTranslations.get(mTranslations.size() - 1).getTexts().add(new Translation(tag.getAttribute("id"), null));
+            Log.v(Collect.LOGTAG, t + "adding translation ID " + tag.getAttribute(XForm.Attribute.ID));
+            mTranslations.get(mTranslations.size() - 1).getTexts().add(new Translation(tag.getAttribute(XForm.Attribute.ID), null));
         } else if (tag.getCurrentTagName().equals("value")) {
             Log.v(Collect.LOGTAG, t + "adding translation: " + tag.getInnerText());
             mTranslations

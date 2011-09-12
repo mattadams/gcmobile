@@ -94,15 +94,19 @@ public final class FormWriter
             // Support for repeat (nodeset) references as well as regular references
             if (field.hasXPath()) {
                 if (field.getType().equals("repeat")) {
-                    mFormTag.getCurrentTag().setAttribute("nodeset", field.getXPath());
+                    mFormTag.getCurrentTag().setAttribute(XForm.Attribute.NODESET, field.getXPath());
                 } else {  
-                    mFormTag.getCurrentTag().setAttribute("ref", field.getXPath());
+                    mFormTag.getCurrentTag().setAttribute(XForm.Attribute.REFERENCE, field.getXPath());
                 }
             }
             
+            // Multiple field types
+            if (field.getAttributes().containsKey(XForm.Attribute.APPEARANCE))
+                mFormTag.getCurrentTag().setAttribute(XForm.Attribute.APPEARANCE, field.getAttributes().get(XForm.Attribute.APPEARANCE));
+
             // Upload control fields only
-            if (field.getAttributes().containsKey("mediatype"))
-                mFormTag.getCurrentTag().setAttribute("mediatype", field.getAttributes().get("mediatype"));
+            if (field.getAttributes().containsKey(XForm.Attribute.MEDIA_TYPE))
+                mFormTag.getCurrentTag().setAttribute(XForm.Attribute.MEDIA_TYPE, field.getAttributes().get(XForm.Attribute.MEDIA_TYPE));
             
             // If the label does not reference an itext translation then attempt to output a regular label
             if (field.getLabel().getRef() == null) {
@@ -115,7 +119,7 @@ public final class FormWriter
                     mFormTag.addTag(XMLDoc.from("<label>" + FieldText.encodeXMLEntities(field.getLabel().toString().replace("xmlns=\"http://www.w3.org/2002/xforms\" ", "")) + "</label>", false));                                       
                 }
             } else {
-                mFormTag.addTag("label").addAttribute("ref", "jr:itext('" + field.getLabel().getRef() + "')").gotoParent();
+                mFormTag.addTag("label").addAttribute(XForm.Attribute.REFERENCE, "jr:itext('" + field.getLabel().getRef() + "')").gotoParent();
             }
             
             // Do the same for hints
@@ -124,7 +128,7 @@ public final class FormWriter
                     mFormTag.addTag(XMLDoc.from("<hint>" + FieldText.encodeXMLEntities(field.getHint().toString().replace("xmlns=\"http://www.w3.org/2002/xforms\" ", "")) + "</hint>", false));
                 }                    
             } else {
-                mFormTag.addTag("hint").addAttribute("ref", "jr:itext('" + field.getHint().getRef() + "')").gotoParent();
+                mFormTag.addTag("hint").addAttribute(XForm.Attribute.REFERENCE, "jr:itext('" + field.getHint().getRef() + "')").gotoParent();
             }
             
             // Special support for item control fields
@@ -220,7 +224,7 @@ public final class FormWriter
                 }
             } else {
                 // Likely a repeated data set
-                mFormTag.addTag(instance.getName()).addAttribute("jr:template", "");      
+                mFormTag.addTag(instance.getName()).addAttribute(XForm.Attribute.JR_TEMPLATE, "");
                 writeInstance(instance);
                 mFormTag.gotoParent();
             }
@@ -245,14 +249,14 @@ public final class FormWriter
                 // Only write out sets that have translations
                 if (!t.getTexts().isEmpty()) {
                     mFormTag.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:itext", mDefaultPrefix);
-                    mFormTag.addTag("translation").addAttribute("lang", t.getLang());
+                    mFormTag.addTag("translation").addAttribute(XForm.Attribute.LANGUAGE, t.getLang());
                     writeTranslations(t);
                 }
             } else {
                 // Only write out translations that have content
                 if (t.getValue() instanceof String && t.getValue().length() > 0) {
                     mFormTag
-                        .addTag("text").addAttribute("id", t.getId())
+                        .addTag("text").addAttribute(XForm.Attribute.ID, t.getId())
                         .addTag("value").setText(t.getValue())
                         .gotoParent();
                 }

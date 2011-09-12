@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.xform.Field;
+import com.radicaldynamic.groupinform.xform.XForm;
 
 public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
 {
@@ -69,11 +70,17 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
                     details.add("Repeats " + field.getRepeat().getChildren().size() + " field");
                 else
                     details.add("Repeats " + field.getRepeat().getChildren().size() + " fields");
-            } else { 
-                if (field.getChildren().size() == 1)
-                    details.add("Contains " + field.getChildren().size() + " field");
-                else
-                    details.add("Contains " + field.getChildren().size() + " fields");
+            } else {
+                if (field.getAttributes().containsKey(XForm.Attribute.APPEARANCE) &&
+                        field.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.FIELD_LIST))
+                {
+                    details.add("Displays " + field.getChildren().size() + " field(s) on one screen");
+                } else {
+                    if (field.getChildren().size() == 1)
+                        details.add("Contains " + field.getChildren().size() + " field");
+                    else
+                        details.add("Contains " + field.getChildren().size() + " fields");
+                }
             }            
         } else if (field.getType().equals("input")) {
             Drawable icon = getDrawable(R.drawable.element_string);
