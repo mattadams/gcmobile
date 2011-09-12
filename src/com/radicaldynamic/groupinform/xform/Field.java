@@ -1,5 +1,6 @@
 package com.radicaldynamic.groupinform.xform;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,7 +17,7 @@ import android.util.Log;
 public class Field
 {
     private static String t = "Field: ";
-    
+
     // Any attributes found on this element
     private Map<String, String> attributes = new HashMap<String, String>();
 
@@ -56,13 +57,16 @@ public class Field
     // For fields instantiated from entries in <h:body>
     public Field(XMLTag tag, ArrayList<Bind> binds, String instanceRoot, Field parent)
     {
-        Log.v(Collect.LOGTAG, t + "created new " + tag.getCurrentTagName() + " field at " + tag.getCurrentTagLocation());
+        final String tt = t + "Field(): ";
+
+        Log.v(Collect.LOGTAG, tt + "created new " + tag.getCurrentTagName() + " field at " + tag.getCurrentTagLocation());
         
         setType(tag.getCurrentTagName());
         setLocation(tag.getCurrentTagLocation());
         
-        if (parent != null)
+        if (parent != null) {
             setParent(parent);
+        }
         
         // Read in attributes (includes "ref" to instance data output)
         for (String s : tag.getAttributeNames()) {
@@ -79,27 +83,23 @@ public class Field
                 String xpath = tag.getAttribute(s);
                 
                 // If this reference is not to an itext translation then it must be to an instance/bind
-                // FIXME: does this even happen?
-                if (!Pattern.matches("^jr:.*", xpath)) {
+                if (Pattern.matches("^jr:.*", xpath)) {
+                    // FIXME: is this sanity check required?
+                } else {
                     // If the reference is not literal then make it so
                     if (!Pattern.matches("^/.*", xpath)) {
-                        String newRef = "/" + instanceRoot + "/" + xpath;
-                        
-                        /*
-                         * This logic exists to support repeated elements.  We must ensure that their refs
-                         * are literal if binds and other items are to be properly associated with them.
-                         * 
-                         * FIXME: this assumes that the immediate parent of repeated items is a <repeat> field
-                         */
-                        if (parent != null) {
-                            if (parent.getType().equals("repeat")) {
-                                newRef = parent.getXPath() + "/" + xpath;
-                            }
+                        String ref = determineXPath(parent, instanceRoot, xpath);
+
+                        if (ref.length() > 0) {
+                            Log.v(Collect.LOGTAG, tt + "changed non-literal XPath from " + xpath + " to " + ref);
+                            xpath = ref;
                         }
-                        
-                        xpath = newRef;                        
                     }
 
+                    /*
+                     * Iterate through the known list of binds and form a relationship 
+                     * with those that have the same XPath as the current field.
+                     */
                     Iterator<Bind> it = binds.iterator();                    
                     
                     while (it.hasNext()) {
@@ -112,6 +112,7 @@ public class Field
                             
                             // Not all binds will have an associated type but our code (may) expect them to
                             if (b.getType() == null) {
+                                // FIXME: can this be removed?
 //                                if (getType().equals("input"))
 //                                    b.setType("string");
 //                                else 
@@ -119,6 +120,9 @@ public class Field
                                 
                                 Log.w(Collect.LOGTAG, t + "bind for " + b.getXPath() + " missing an explicit type");
                             }
+
+                            // No point in looking further, right?
+                            break;
                         }
                     }
                 }
@@ -138,12 +142,11 @@ public class Field
      */
     public Field getRepeat()
     {
-        if (type.equals("group")
-                && children.size() == 1 
-                && children.get(0).getType().equals("repeat"))
+        if (type.equals("group") && children.size() == 1 && children.get(0).getType().equals("repeat")) {
             return children.get(0);
-        else
+        } else {
             return null;
+        }
     }
 
     public void setLabel(String label)
@@ -207,6 +210,24 @@ public class Field
     public void setNewField(boolean newField) { this.newField = newField; }
     public boolean isNewField() { return newField; }    
     
+    /*
+     * Traverse the tree upwards until an XPath can be determined 
+     */
+    private String determineXPath(Field parent, String instanceRoot, String xpath)
+    {
+        if (parent == null) {
+            xpath = File.separator + instanceRoot + File.separator + xpath;
+        } else {
+            if (Field.isRepeatedGroup(parent)) {
+                xpath = parent.getRepeat().getXPath() + File.separator + xpath;
+            } else {
+                xpath = determineXPath(parent.getParent(), instanceRoot, xpath);
+            }
+        }
+
+        return xpath;
+    }
+
     /*
      * Returns true if the field it has been passed is a repeated group, otherwise false
      */

@@ -153,7 +153,7 @@ public class FormReader
         Log.d(Collect.LOGTAG, t + "parsing form binds...");
         parseFormBinds(mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix));
 
-        Log.d(Collect.LOGTAG, t + "parsing form fields...");
+        Log.d(Collect.LOGTAG, t + "parsing form body...");
         parseFormFields(mForm.gotoRoot().gotoTag("h:body"));
         
         Log.d(Collect.LOGTAG, t + "parsing form instance...");
@@ -169,14 +169,21 @@ public class FormReader
 
         Log.v(Collect.LOGTAG, t + "visiting <" + tag.getCurrentTagName() + "> at " + ctl);
         
+        // Is the tag name a field type that we understand?
         if (mFieldList.contains(tag.getCurrentTagName())) {
             Field f = null;
 
             if (ctl.split("/").length == 2) {
-                // Add a top level field
+                // Top level field based on a current tag location of say *[2]/*[1]
                 f = new Field(tag, mBinds, mInstanceRoot, null);
                 mFields.add(f);
             } else {
+                // Should belong to an existing parent field that has already been parsed
+
+                /*
+                 * Attempt to look up parent field from index.  E.g., if current field is *[2]/*[1]/*[1] 
+                 * then we're looking for a field with the location *[2]/*[1].
+                 */
                 String ptl = StringUtils.join(ctl.split("/"), "/", ctl.split("/").length - 1);
                 Field p = mFlatFieldIndex.get(ptl);
 
@@ -200,16 +207,19 @@ public class FormReader
             }
 
             if (tag.getCurrentTagName().equals("label")) {
+                // Handle translated/untranslated labels
                 if (tag.hasAttribute("ref"))
                     p.setLabel(tag.getAttribute("ref"));
                 else
                     p.setLabel(tag.getInnerText());
             } else if (tag.getCurrentTagName().equals("hint")) {
+                // Handle translated/untranslated hints
                 if (tag.hasAttribute("ref"))
                     p.setHint(tag.getAttribute("ref"));
                 else
                     p.setHint(tag.getInnerText());
             } else if (tag.getCurrentTagName().equals("value")) {
+                // Handle select item values
                 p.setItemValue(tag.getInnerText());
             }
         }
