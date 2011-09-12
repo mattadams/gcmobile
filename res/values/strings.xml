@@ -464,6 +464,7 @@
 	<string name="tf_save_and_exit">Save and exit</string>
 	<string name="tf_saved_data">Saved!</string>
 	<string name="tf_saving_please_wait">Saving...</string>
+    <string name="tf_send">Send</string>
     <string name="tf_screen_group_type">Display fields on one screen</string>
 	<string name="tf_select_folders_for_offline_use">Select folders for offline use</string>
 	<string name="tf_select_multiple_type">Select multiple</string>
@@ -489,7 +490,9 @@
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
-	<string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one output option must be selected for export.</string>
+	<string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one export destination must be selected for export.</string>
+    <string name="tf_unable_to_export_send_dependency">Sending Requires ZIP</string>
+    <string name="tf_unable_to_export_send_dependency_msg">All exported data must be compressed into a single ZIP file before it can be emailed or transferred via Bluetooth.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">GC Mobile was unable to connect to the Group Complete service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	

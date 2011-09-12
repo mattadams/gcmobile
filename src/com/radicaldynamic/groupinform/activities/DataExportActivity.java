@@ -8,6 +8,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,19 +35,22 @@ public class DataExportActivity extends Activity implements DataExportListener
     public static final String KEY_PROGRESS_MSG = "key_progress_msg";
     
     // Export options
-    public static final String KEY_EXPORT_DRAFT = "key_export_draft";
-    public static final String KEY_EXPORT_COMPLETED = "key_export_complete";
-    public static final String KEY_OUTPUT_EXTERNAL = "key_output_external";
-    public static final String KEY_OUTPUT_EXTERNAL_ZIP = "key_output_external_zip";
-    public static final String KEY_OUTPUT_MEDIA_FILES = "key_output_media_files";
-    public static final String KEY_OUTPUT_XFORM_FILES = "key_output_xform_files";
-    public static final String KEY_OUTPUT_RECORD_METADATA = "key_output_record_metadata";
+    public static final String KEY_EXPORT_DRAFT = "export_draft";
+    public static final String KEY_EXPORT_COMPLETED = "export_complete";
+    public static final String KEY_OUTPUT_EXTERNAL = "output_external";
+    public static final String KEY_OUTPUT_SEND = "output_send";
+    public static final String KEY_OUTPUT_ZIP = "external_zip";
+    public static final String KEY_OUTPUT_MEDIA_FILES = "output_media_files";
+    public static final String KEY_OUTPUT_XFORM_FILES = "output_xform_files";
+    public static final String KEY_OUTPUT_RECORD_METADATA = "output_record_metadata";
     
-    private static final String KEY_DATA_EXPORT_TASK = "key_data_export_task";
-    private static final String KEY_FORM_DEFINITION  = "key_form_definition";
+    // For handling activity restarts
+    private static final String KEY_DATA_EXPORT_TASK = "data_export_task";
+    private static final String KEY_FORM_DEFINITION  = "form_definition";
     
     private static final int DIALOG_DEFINITION_UNAVAILABLE = 1;
-    private static final int DIALOG_OPTIONS_REQUIRED = 2;
+    private static final int DIALOG_EMAIL_DEPENDENCY = 2;
+    private static final int DIALOG_OPTIONS_REQUIRED = 3;    
     
     private Dialog mDialog;
     private ProgressDialog mProgressDialog;
@@ -56,7 +60,8 @@ public class DataExportActivity extends Activity implements DataExportListener
     private CheckBox mExportDraft;
     private CheckBox mExportCompleted;
     private CheckBox mOutputExternal;
-    private CheckBox mOutputExternalZip;
+    private CheckBox mOutputSend;
+    private CheckBox mOutputZip;
     private CheckBox mOutputMediaFiles;
     private CheckBox mOutputXFormFiles;
     private CheckBox mOutputRecordMetadata;
@@ -106,7 +111,8 @@ public class DataExportActivity extends Activity implements DataExportListener
         mExportDraft        = (CheckBox) findViewById(R.id.exportDraft);
         mExportCompleted    = (CheckBox) findViewById(R.id.exportCompleted);
         mOutputExternal     = (CheckBox) findViewById(R.id.outputExternal);
-        mOutputExternalZip  = (CheckBox) findViewById(R.id.outputExternalZip);
+        mOutputSend         = (CheckBox) findViewById(R.id.outputSend);
+        mOutputZip          = (CheckBox) findViewById(R.id.outputZip);
         mOutputMediaFiles   = (CheckBox) findViewById(R.id.outputMediaFiles);
         mOutputXFormFiles   = (CheckBox) findViewById(R.id.outputXFormFiles);
         mOutputRecordMetadata = (CheckBox) findViewById(R.id.outputRecordMetadata);
@@ -117,7 +123,7 @@ public class DataExportActivity extends Activity implements DataExportListener
             @Override
             public void onClick(View v)
             {
-                if (!verifyFilterOptions() || !verifyOutputOptions()) {
+                if (!verifyFilterOptions() || !verifyDestionationOptions()) {
                     showDialog(DIALOG_OPTIONS_REQUIRED);
                 } else {
                     mProgressDialog = new ProgressDialog(DataExportActivity.this);
@@ -146,17 +152,54 @@ public class DataExportActivity extends Activity implements DataExportListener
         mOutputExternal.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mOutputExternalZip.setEnabled(isChecked);
-                mOutputMediaFiles.setEnabled(isChecked);
-                mOutputXFormFiles.setEnabled(isChecked);
-                mOutputRecordMetadata.setEnabled(isChecked);
-                
+                if (!mOutputSend.isChecked()) {
+                    mOutputZip.setEnabled(isChecked);
+                    mOutputMediaFiles.setEnabled(isChecked);
+                    mOutputXFormFiles.setEnabled(isChecked);
+                    mOutputRecordMetadata.setEnabled(isChecked);
+                }
+
                 if (!mOutputMediaFiles.isChecked() && isChecked)
                     mOutputMediaFiles.setChecked(true);
 
                 if (!mOutputRecordMetadata.isChecked() && isChecked)
                     mOutputRecordMetadata.setChecked(true);
             }           
+        });
+        
+        // Handle dependencies
+        mOutputSend.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (!mOutputExternal.isChecked()) {
+                    mOutputZip.setEnabled(isChecked);
+                    mOutputMediaFiles.setEnabled(isChecked);
+                    mOutputXFormFiles.setEnabled(isChecked);
+                    mOutputRecordMetadata.setEnabled(isChecked);
+                }
+                
+                if (!mOutputZip.isChecked() && isChecked)
+                    mOutputZip.setChecked(true);
+
+                if (!mOutputMediaFiles.isChecked() && isChecked)
+                    mOutputMediaFiles.setChecked(true);
+
+                if (!mOutputRecordMetadata.isChecked() && isChecked)
+                    mOutputRecordMetadata.setChecked(true);
+            }           
+        });
+        
+        // Handle dependencies
+        mOutputZip.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (!isChecked) {
+                    if (mOutputSend.isChecked()) {
+                        showDialog(DIALOG_EMAIL_DEPENDENCY);
+                        mOutputZip.setChecked(true);
+                    }
+                }
+            }
         });
 
         Object data = getLastNonConfigurationInstance();
@@ -224,6 +267,22 @@ public class DataExportActivity extends Activity implements DataExportListener
     
             mDialog = builder.create();
             break;
+            
+        case DIALOG_EMAIL_DEPENDENCY:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_unable_to_export_send_dependency)
+            .setMessage(R.string.tf_unable_to_export_send_dependency_msg);
+            
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    dialog.cancel();
+                }
+            });
+            
+            mDialog = builder.create();
+            break;
         
         case DIALOG_OPTIONS_REQUIRED:
             builder
@@ -270,21 +329,40 @@ public class DataExportActivity extends Activity implements DataExportListener
     }
     
     @Override
-    public void exportComplete(String completeMsg) 
+    public void exportComplete(final Bundle data) 
     {
+        final String tt = t + "exportComplete(): ";
+        
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         
         builder
         .setCancelable(false)
         .setIcon(R.drawable.ic_dialog_info)
         .setTitle("Export Successful")
-        .setMessage(completeMsg);
+        .setMessage(data.getString(DataExportListener.KEY_MESSAGE));
         
         builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 dialog.cancel();
             }
         });
+        
+        mOutputSend = (CheckBox) findViewById(R.id.outputSend);
+        
+        if (mOutputSend.isChecked()) {
+            builder.setNeutralButton(getString(R.string.tf_send), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {                    
+                    String attachment = "file://" + data.getString(DataExportListener.KEY_EMAIL_ATTACHMENT);
+                    Log.d(Collect.LOGTAG, tt + "Path to exported attachment is " + attachment);
+                    
+                    Intent i = new Intent(Intent.ACTION_SEND);
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    i.setType("application/zip");
+                    i.putExtra(Intent.EXTRA_STREAM, Uri.parse(attachment));
+                    startActivity(i);
+                }
+            });
+        }
         
         mDialog = builder.create();
         mDialog.show();        
@@ -332,8 +410,12 @@ public class DataExportActivity extends Activity implements DataExportListener
         if (mOutputExternal.isEnabled() && mOutputExternal.isChecked())
             data.putBoolean(KEY_OUTPUT_EXTERNAL, true);
         
-        if (mOutputExternalZip.isEnabled() && mOutputExternalZip.isChecked())
-            data.putBoolean(KEY_OUTPUT_EXTERNAL_ZIP, true);
+        if (mOutputSend.isEnabled() && mOutputSend.isChecked()) {
+            data.putBoolean(KEY_OUTPUT_SEND, true);
+        }
+        
+        if (mOutputZip.isEnabled() && mOutputZip.isChecked())
+            data.putBoolean(KEY_OUTPUT_ZIP, true);
         
         if (mOutputMediaFiles.isEnabled() && mOutputMediaFiles.isChecked())
             data.putBoolean(KEY_OUTPUT_MEDIA_FILES, true);
@@ -345,6 +427,17 @@ public class DataExportActivity extends Activity implements DataExportListener
             data.putBoolean(KEY_OUTPUT_RECORD_METADATA, true);
         
         return data;        
+    }    
+    
+    /*
+     * Ensure that at least one output option is selected
+     */
+    private boolean verifyDestionationOptions()
+    {
+        if (mOutputExternal.isChecked() || mOutputSend.isChecked())
+            return true;
+        
+        return false;  
     }
 
     /*
@@ -356,16 +449,5 @@ public class DataExportActivity extends Activity implements DataExportListener
             return true;
 
         return false;
-    }
-    
-    /*
-     * Ensure that at least one output option is selected
-     */
-    private boolean verifyOutputOptions()
-    {
-        if (mOutputExternal.isChecked())
-            return true;
-        
-        return false;  
     }
 }

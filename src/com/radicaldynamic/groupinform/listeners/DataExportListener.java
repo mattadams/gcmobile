@@ -14,9 +14,14 @@
 
 package com.radicaldynamic.groupinform.listeners;
 
+import android.os.Bundle;
+
 
 public interface DataExportListener 
 {
-    void exportComplete(String completeMsg);
+    public static final String KEY_MESSAGE = "message";
+    public static final String KEY_EMAIL_ATTACHMENT = "email_attachment";
+    
+    void exportComplete(Bundle data);
     void exportError(String errorMsg);
 }

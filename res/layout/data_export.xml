@@ -23,13 +23,13 @@
         android:id="@+id/exportDraft"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
-        android:text="Export draft forms" />
+        android:text="Draft forms" />
         
     <CheckBox             
         android:id="@+id/exportCompleted"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
-        android:text="Export completed forms" />        
+        android:text="Completed forms" />        
         
     <TextView 
         android:id="@android:id/empty"
@@ -37,21 +37,36 @@
         android:layout_width="fill_parent"
         android:layout_marginBottom="3dp"
         android:paddingTop="10dp"
-        android:text="Output Options"
+        android:text="Export Destinations"
         android:textAppearance="?android:attr/textAppearanceLarge" />
         
     <CheckBox             
         android:id="@+id/outputExternal"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
-        android:text="Output exported data to SD card" />
+        android:text="Save data to SD card" />
+        
+    <CheckBox
+        android:id="@+id/outputSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send data via email/Bluetooth" />
+        
+    <TextView 
+        android:id="@android:id/empty"
+        android:layout_height="wrap_content" 
+        android:layout_width="fill_parent"
+        android:layout_marginBottom="3dp"
+        android:paddingTop="10dp"
+        android:text="Export Options"
+        android:textAppearance="?android:attr/textAppearanceLarge" />        
         
     <CheckBox             
-        android:id="@+id/outputExternalZip"
+        android:id="@+id/outputZip"
         android:enabled="false"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
-        android:text="ZIP exported data on SD card" />
+        android:text="ZIP exported data" />
         
     <CheckBox             
         android:id="@+id/outputMediaFiles"
@@ -65,7 +80,7 @@
         android:enabled="false"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
-        android:text="Include XForm instance files" />
+        android:text="Include XForm files" />
         
     <CheckBox
         android:id="@+id/outputRecordMetadata"
@@ -73,12 +88,13 @@
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:text="Include record metadata" />
-
+        
     <Button
         android:id="@+id/beginExport"
+        android:gravity="center"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_width="fill_parent"
+        android:layout_marginTop="10dp"
         android:text="Begin export" />
 </LinearLayout>
 </ScrollView>

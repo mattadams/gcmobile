@@ -56,7 +56,8 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
     
     private static final String DATETIME = "yyyy_MM_dd-HH_mm_ss";
     
-    private String mCompleteMsg;
+    private String mAttachmentPath;
+    private String mCompleteMsg;    
     private String mErrorMsg;
     
     private Bundle mExportOptions;
@@ -230,7 +231,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
             String exportTally = mExportData.size() + "/" + mExportList.size();
 
             // Create a ZIP archive containing the requested file
-            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_EXTERNAL_ZIP, false)) {
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_ZIP, false)) {
                 publishProgress("Compressing exported data...");
                 
                 String zip = Environment.getExternalStorageDirectory() + File.separator + prefix + ".zip";
@@ -260,9 +261,28 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 // Remove export data directory
                 FileUtilsExtended.deleteFolder(exportPath);
                 
-                mCompleteMsg = exportTally + " records have been successfully exported to your device's external storage (SD card or other).\n\nPlease look for a ZIP file with the following name:\n\n" + prefix;
+                mCompleteMsg = exportTally + " records have been successfully exported the external storage on this device.\n\nPlease look for a ZIP file with the following name:\n\n" + prefix;
             } else {
-                mCompleteMsg = exportTally + " records have been successfully exported to your device's external storage (SD card or other).\n\nPlease look for a folder with the following name:\n\n" + prefix;
+                mCompleteMsg = exportTally + " records have been successfully exported the external storage on this device.\n\nPlease look for a folder with the following name:\n\n" + prefix;
+            }
+            
+            // If emailing, make a copy of the exported ZIP in the cache directory
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_SEND, false)) {
+                mAttachmentPath = FileUtilsExtended.EXTERNAL_CACHE + File.separator + prefix + ".zip";
+                
+                org.apache.commons.io.FileUtils.copyFile(
+                        new File(Environment.getExternalStorageDirectory() + File.separator + prefix + ".zip"), 
+                        new File(mAttachmentPath));
+
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_EXTERNAL, false)) {
+                    mCompleteMsg = mCompleteMsg + "\n\nSelect \"Send\" to compose an email with the exported data attached in a ZIP file or to transfer the file via Bluetooth.";
+                } else {
+                    // Remove from /sdcard if user didn't ask for it to be there
+                    new File(Environment.getExternalStorageDirectory() + File.separator + prefix + ".zip").delete();
+                    
+                    // Modify complete message
+                    mCompleteMsg = exportTally + " records have been successfully exported.\n\nSelect \"Send\" to compose an email with the exported data attached in a ZIP file or to transfer the file via Bluetooth.";
+                }
             }
         } catch (Exception e) {
             Log.e(Collect.LOGTAG, t + "problem retreiving form template: " + e.toString());
@@ -297,10 +317,14 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 done.what = COMPLETE;
                 mHandler.sendMessage(done);
                 
-                if (mErrorMsg == null)
-                    mStateListener.exportComplete(mCompleteMsg);
-                else
+                if (mErrorMsg == null) {
+                    Bundle b = new Bundle();
+                    b.putString(DataExportListener.KEY_MESSAGE, mCompleteMsg);
+                    b.putString(DataExportListener.KEY_EMAIL_ATTACHMENT, mAttachmentPath);
+                    mStateListener.exportComplete(b);
+                } else {
                     mStateListener.exportError(mErrorMsg);
+                }
             }
         }
     }
