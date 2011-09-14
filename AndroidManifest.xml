@@ -14,8 +14,8 @@ the License.
 -->
 <manifest 
     xmlns:android="http://schemas.android.com/apk/res/android" 
-    android:versionCode="8" 
-    android:versionName="1.2.5"
+    android:versionCode="9" 
+    android:versionName="1.2.6"
     package="com.radicaldynamic.groupinform"
     >
   <!-- android:debuggable="true" -->
