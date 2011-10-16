@@ -208,17 +208,17 @@ public class AccountDeviceList extends ListActivity
                 // Write out list of jsonDevices for later retrieval by loadDevicesList() and InformOnlineService.loadDevicesHash()                
                 JSONArray jsonDevices = jsonDeviceList.getJSONArray("devices");
                 
-                // Record the number of seats that this account is licenced for
-                Collect
-                    .getInstance()
-                    .getInformOnlineState()
-                    .setAccountLicencedSeats(jsonDeviceList.getInt("licencedSeats"));       
+//                // Record the number of seats that this account is licenced for
+//                Collect
+//                    .getInstance()
+//                    .getInformOnlineState()
+//                    .setAccountLicencedSeats(jsonDeviceList.getInt("licencedSeats"));       
                 
-                // Record the plan type for this account (this is a weird place to do it in but it makes sense to piggyback)
-                Collect
-                    .getInstance()
-                    .getInformOnlineState()
-                    .setAccountPlan(jsonDeviceList.getString("planType"));
+//                // Record the plan type for this account (this is a weird place to do it in but it makes sense to piggyback)
+//                Collect
+//                    .getInstance()
+//                    .getInformOnlineState()
+//                    .setAccountPlan(jsonDeviceList.getString("planType"));
                 try {
                     // Write out a device list cache file
                     FileOutputStream fos = new FileOutputStream(new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE));
@@ -270,7 +270,7 @@ public class AccountDeviceList extends ListActivity
             fis.close();
             
             try {
-                int assignedSeats = 0;
+//                int assignedSeats = 0;
                 
                 JSONArray jsonDevices = (JSONArray) new JSONTokener(sb.toString()).nextValue();
                 
@@ -294,12 +294,12 @@ public class AccountDeviceList extends ListActivity
                     // Show a device so long as it hasn't been marked as removed
                     if (!device.getStatus().equals("removed")) {                        
                         devices.add(device);
-                        assignedSeats++;
+//                        assignedSeats++;
                     }
                 }
                 
-                // Record the number of seats in this account that are assigned & allocated (not necessarily "active")
-                Collect.getInstance().getInformOnlineState().setAccountAssignedSeats(assignedSeats);
+//                // Record the number of seats in this account that are assigned & allocated (not necessarily "active")
+//                Collect.getInstance().getInformOnlineState().setAccountAssignedSeats(assignedSeats);
             } catch (JSONException e) {
                 // Parse error (malformed result)
                 Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());

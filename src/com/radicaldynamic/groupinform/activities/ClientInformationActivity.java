@@ -94,22 +94,22 @@ public class ClientInformationActivity extends Activity
             
             TextView accountNumber = (TextView) findViewById(R.id.accountNumber);
             TextView accountKey = (TextView) findViewById(R.id.accountKey);
-            TextView accountSeats = (TextView) findViewById(R.id.accountSeats);
-            TextView accountPlan = (TextView) findViewById(R.id.accountPlan);
+//            TextView accountSeats = (TextView) findViewById(R.id.accountSeats);
+//            TextView accountPlan = (TextView) findViewById(R.id.accountPlan);
 
             header.setText(getString(R.string.tf_about_inform_account_header));
             accountNumber.setText(Collect.getInstance().getInformOnlineState().getAccountNumber());
             accountKey.setText(Collect.getInstance().getInformOnlineState().getAccountKey());
-            accountPlan.setText(Collect.getInstance().getInformOnlineState().getAccountPlan());
-            
-            int seatsLicenced = Collect.getInstance().getInformOnlineState().getAccountLicencedSeats();
-            int seatsAssigned = Collect.getInstance().getInformOnlineState().getAccountAssignedSeats();
-            int seatsRemaining = seatsLicenced - seatsAssigned;
-            
-            accountSeats.setText(
-                    "Licenced (" + seatsLicenced + ")   " +
-                    "Assigned (" + seatsAssigned + ")   " +
-                    "Remaining (" + seatsRemaining + ")");
+//            accountPlan.setText(Collect.getInstance().getInformOnlineState().getAccountPlan());
+//            
+//            int seatsLicenced = Collect.getInstance().getInformOnlineState().getAccountLicencedSeats();
+//            int seatsAssigned = Collect.getInstance().getInformOnlineState().getAccountAssignedSeats();
+//            int seatsRemaining = seatsLicenced - seatsAssigned;
+//            
+//            accountSeats.setText(
+//                    "Licenced (" + seatsLicenced + ")   " +
+//                    "Assigned (" + seatsAssigned + ")   " +
+//                    "Remaining (" + seatsRemaining + ")");
 
             break;
 

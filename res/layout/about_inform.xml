@@ -57,36 +57,36 @@
             android:layout_marginBottom="15dp" />
             
         <!-- Account plan -->
-        <TextView
-            android:id="@android:id/empty" 
-            android:text="Account Plan"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/accountPlan"  
-            android:text="@string/tf_unavailable"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="15dp" />               
+<!--        <TextView-->
+<!--            android:id="@android:id/empty" -->
+<!--            android:text="Account Plan"-->
+<!--            android:layout_width="wrap_content" -->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginBottom="3dp"-->
+<!--            android:textSize="20sp" />-->
+<!---->
+<!--        <TextView-->
+<!--            android:id="@+id/accountPlan"  -->
+<!--            android:text="@string/tf_unavailable"-->
+<!--            android:layout_width="wrap_content" -->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginBottom="15dp" />               -->
             
         <!-- Account seat counts -->
-        <TextView
-            android:id="@android:id/empty" 
-            android:text="Account Device Usage"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/accountSeats"  
-            android:text="@string/tf_unavailable"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="15dp" />            
+<!--        <TextView-->
+<!--            android:id="@android:id/empty" -->
+<!--            android:text="Account Device Usage"-->
+<!--            android:layout_width="wrap_content" -->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginBottom="3dp"-->
+<!--            android:textSize="20sp" />-->
+<!---->
+<!--        <TextView-->
+<!--            android:id="@+id/accountSeats"  -->
+<!--            android:text="@string/tf_unavailable"-->
+<!--            android:layout_width="wrap_content" -->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginBottom="15dp" />            -->
     </LinearLayout> 
         
     <LinearLayout

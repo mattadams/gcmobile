@@ -44,10 +44,10 @@ public class InformOnlineState
     public static final String ACCOUNT_KEY = "informonline_accountkey";                         // Accessible
     public static final String ACCOUNT_NUM = "informonline_accountnum";                         // Accessible
     private static final String ACCOUNT_OWNER = "informonline_accountown";                      // Invisible
-    private static final String ACCOUNT_PLAN = "informonline_accountplan";                      // Accessible
+//    private static final String ACCOUNT_PLAN = "informonline_accountplan";                      // Accessible
     
-    private static final String ACCOUNT_LICENCED_SEATS = "informonline_accountlicencedseats";   // Accessible
-    private static final String ACCOUNT_ASSIGNED_SEATS = "informonline_accountassignedseats";   // Accessible
+//    private static final String ACCOUNT_LICENCED_SEATS = "informonline_accountlicencedseats";   // Accessible
+//    private static final String ACCOUNT_ASSIGNED_SEATS = "informonline_accountassignedseats";   // Accessible
     
     // Constants for device information stored in preferences
     public static final String DEVICE_ID   = "informonline_deviceid";       // Invisible 
@@ -73,10 +73,10 @@ public class InformOnlineState
     private String accountNumber;           // The licence number
     private String accountKey;              // The licence key
     private boolean accountOwner;           // Is the user also the account owner?
-    private String accountPlan;             // Plan type
+//    private String accountPlan;             // Plan type
     
-    private int accountLicencedSeats;       // The number of licenced seats for the account
-    private int accountAssignedSeats;       // The number of seats allocated and assigned (not necessarily active)
+//    private int accountLicencedSeats;       // The number of licenced seats for the account
+//    private int accountAssignedSeats;       // The number of seats allocated and assigned (not necessarily active)
     
     private String deviceId;
     private String deviceKey;
@@ -153,37 +153,37 @@ public class InformOnlineState
         return accountKey;
     }
     
-    public void setAccountAssignedSeats(int accountAssignedSeats)
-    {
-        Log.d(Collect.LOGTAG, t + "setAccountAssignedSeats() " + accountAssignedSeats);
-        
-        SharedPreferences.Editor editor = mPrefs.edit();
-        editor.putInt(ACCOUNT_ASSIGNED_SEATS, accountAssignedSeats);
-        editor.commit();  
-        
-        this.accountAssignedSeats = accountAssignedSeats;
-    }
-
-    public int getAccountAssignedSeats()
-    {
-        return accountAssignedSeats;
-    }
-    
-    public void setAccountLicencedSeats(int accountLicencedSeats)
-    {
-        Log.d(Collect.LOGTAG, t + "setAccountLicencedSeats() " + accountLicencedSeats);
-        
-        SharedPreferences.Editor editor = mPrefs.edit();
-        editor.putInt(ACCOUNT_LICENCED_SEATS, accountLicencedSeats);
-        editor.commit();  
-        
-        this.accountLicencedSeats = accountLicencedSeats;
-    }
-
-    public int getAccountLicencedSeats()
-    {
-        return accountLicencedSeats;
-    }
+//    public void setAccountAssignedSeats(int accountAssignedSeats)
+//    {
+//        Log.d(Collect.LOGTAG, t + "setAccountAssignedSeats() " + accountAssignedSeats);
+//        
+//        SharedPreferences.Editor editor = mPrefs.edit();
+//        editor.putInt(ACCOUNT_ASSIGNED_SEATS, accountAssignedSeats);
+//        editor.commit();  
+//        
+//        this.accountAssignedSeats = accountAssignedSeats;
+//    }
+//
+//    public int getAccountAssignedSeats()
+//    {
+//        return accountAssignedSeats;
+//    }
+//    
+//    public void setAccountLicencedSeats(int accountLicencedSeats)
+//    {
+//        Log.d(Collect.LOGTAG, t + "setAccountLicencedSeats() " + accountLicencedSeats);
+//        
+//        SharedPreferences.Editor editor = mPrefs.edit();
+//        editor.putInt(ACCOUNT_LICENCED_SEATS, accountLicencedSeats);
+//        editor.commit();  
+//        
+//        this.accountLicencedSeats = accountLicencedSeats;
+//    }
+//
+//    public int getAccountLicencedSeats()
+//    {
+//        return accountLicencedSeats;
+//    }
     
     public void setAccountNumber(String accountNumber)
     {
@@ -218,21 +218,21 @@ public class InformOnlineState
         return accountOwner;
     }    
 
-    public void setAccountPlan(String accountPlan)
-    {
-        Log.d(Collect.LOGTAG, t + "setAccountPlan() " + accountPlan);
-        
-        SharedPreferences.Editor editor = mPrefs.edit();
-        editor.putString(ACCOUNT_PLAN, accountPlan);
-        editor.commit();  
-        
-        this.accountPlan = accountPlan;
-    }
-
-    public String getAccountPlan()
-    {
-        return accountPlan;
-    }
+//    public void setAccountPlan(String accountPlan)
+//    {
+//        Log.d(Collect.LOGTAG, t + "setAccountPlan() " + accountPlan);
+//        
+//        SharedPreferences.Editor editor = mPrefs.edit();
+//        editor.putString(ACCOUNT_PLAN, accountPlan);
+//        editor.commit();  
+//        
+//        this.accountPlan = accountPlan;
+//    }
+//
+//    public String getAccountPlan()
+//    {
+//        return accountPlan;
+//    }
 
     public void setDeviceId(String deviceId)
     {
@@ -405,11 +405,11 @@ public class InformOnlineState
     public void resetDevice()
     {
         setAccountKey(null);
-        setAccountAssignedSeats(0);
-        setAccountLicencedSeats(0);
+//        setAccountAssignedSeats(0);
+//        setAccountLicencedSeats(0);
         setAccountNumber(null);
         setAccountOwner(false);
-        setAccountPlan(null);
+//        setAccountPlan(null);
         
         setDeviceId(null);
         setDeviceKey(null);
@@ -447,11 +447,11 @@ public class InformOnlineState
     private void loadPreferences()
     {
         setAccountKey(mPrefs.getString(ACCOUNT_KEY, null));
-        setAccountAssignedSeats(mPrefs.getInt(ACCOUNT_ASSIGNED_SEATS, 0));
-        setAccountLicencedSeats(mPrefs.getInt(ACCOUNT_LICENCED_SEATS, 0));
+//        setAccountAssignedSeats(mPrefs.getInt(ACCOUNT_ASSIGNED_SEATS, 0));
+//        setAccountLicencedSeats(mPrefs.getInt(ACCOUNT_LICENCED_SEATS, 0));
         setAccountNumber(mPrefs.getString(ACCOUNT_NUM, null));
         setAccountOwner(mPrefs.getBoolean(ACCOUNT_OWNER, false));
-        setAccountPlan(mPrefs.getString(ACCOUNT_PLAN, null));
+//        setAccountPlan(mPrefs.getString(ACCOUNT_PLAN, null));
         
         setDeviceId(mPrefs.getString(DEVICE_ID, null));
         setDeviceKey(mPrefs.getString(DEVICE_KEY, null));
