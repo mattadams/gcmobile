@@ -65,10 +65,12 @@ public class LauncherActivity extends Activity
     // Dialog constants
     private static final int DIALOG_COUCH_ERROR = 1;
     private static final int DIALOG_EXTERNAL_STORAGE_UNAVAILABLE = 2;
-    private static final int DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED = 3;
-    private static final int DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED = 4;
-    private static final int DIALOG_UNABLE_TO_REGISTER = 5;    
-    private static final int DIALOG_UPGRADE_FAILED = 6;
+    private static final int DIALOG_EXPIRED = 3;
+    private static final int DIALOG_EXPIRED_CANNOT_CONNECT = 4;
+    private static final int DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED = 5;
+    private static final int DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED = 6;
+    private static final int DIALOG_UNABLE_TO_REGISTER = 7;    
+    private static final int DIALOG_UPGRADE_FAILED = 8;
     
     // Intent status codes
     private static final String KEY_REINIT_IOSERVICE = "key_reinit_ioservice";
@@ -220,7 +222,40 @@ public class LauncherActivity extends Activity
             
             dialog = builder.create();
             break;
-        
+            
+            
+        case DIALOG_EXPIRED:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle("Subscription Expired")
+            .setMessage("The subscription for this device profile has expired.\n\nPlease see your account owner to have the subscription renewed or this profile transferred to an active subscription or email our support team at\n\nsupport@groupcomplete.com");
+
+            builder.setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    exitApplication();
+                }
+            });
+
+            dialog = builder.create();
+            break;
+            
+        case DIALOG_EXPIRED_CANNOT_CONNECT:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle("Subscription Expired")
+            .setMessage("The subscription for this device profile has expired.\n\nPlease see your account owner to have the subscription renewed or this profile transferred to an active subscription or email our support team at\n\nsupport@groupcomplete.com\n\nPlease note that the Group Complete service could not be contacted so this message may not reflect up-to-date changes to your Group Complete account.  Please ensure that this device can access the Internet and restart GC Mobile.");
+
+            builder.setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    exitApplication();
+                }
+            });
+            
+            dialog = builder.create();
+            break;
+            
         case DIALOG_EXTERNAL_STORAGE_UNAVAILABLE:
             builder
                 .setCancelable(false)
@@ -382,8 +417,7 @@ public class LauncherActivity extends Activity
         
         // User has reset GC Mobile (see http://stackoverflow.com/questions/2042222/close-application)
         if (mExitApplication) {
-            System.runFinalizersOnExit(true);
-            System.exit(0);
+            exitApplication();
         }
     }
 
@@ -477,21 +511,28 @@ public class LauncherActivity extends Activity
             if (upgradeFailed) {
                 showDialog(DIALOG_UPGRADE_FAILED);
                 return;
-            }            
+            }
             
             if (pinged) {
                 if (registered) {
-                    startCouch();
+                    if (Collect.getInstance().getInformOnlineState().isExpired())
+                        showDialog(DIALOG_EXPIRED);
+                    else 
+                        startCouch();
                 } else {
                     startActivity(new Intent(getApplicationContext(), ClientRegistrationActivity.class));
                     finish();
                 }
             } else {
                 if (registered) {
-                    if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
-                        showDialog(DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED);
-                    else
-                        showDialog(DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED);
+                    if (Collect.getInstance().getInformOnlineState().isExpired()) {
+                        showDialog(DIALOG_EXPIRED_CANNOT_CONNECT);
+                    } else {
+                        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
+                            showDialog(DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED);
+                        else
+                            showDialog(DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED);                    
+                    }
                 } else {
                     showDialog(DIALOG_UNABLE_TO_REGISTER);
                 }
@@ -506,7 +547,7 @@ public class LauncherActivity extends Activity
         {
             /*
              * Only copy the actual Couch databases (view index directories named .dbname_design and the
-             * contents thereof will be automatically regenerated 
+             * contents thereof will be automatically regenerated)
              */
             class DbFilesFilter implements FilenameFilter 
             {
@@ -614,6 +655,12 @@ public class LauncherActivity extends Activity
         mSplashToast.setView(layout);
         mSplashToast.setGravity(Gravity.CENTER, 0, 0);
         mSplashToast.show();
+    }
+    
+    private void exitApplication()
+    {
+        System.runFinalizersOnExit(true);
+        System.exit(0);
     }
     
     // Restart this activity, optionally requesting a complete restart

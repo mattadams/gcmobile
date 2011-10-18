@@ -242,6 +242,10 @@ public class InformOnlineService extends Service {
             
             if (result.equals(InformOnlineState.OK)) {
                 Log.i(Collect.LOGTAG, t + "successful checkin");
+                Collect.getInstance().getInformOnlineState().setExpired(false);
+            } else if (result.equals(InformOnlineState.EXPIRED)) {
+                Log.i(Collect.LOGTAG, t + "associated order is expired; marking device as expired");
+                Collect.getInstance().getInformOnlineState().setExpired(true);
             } else if (result.equals(InformOnlineState.FAILURE)) {
                 Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
                 registered = false;

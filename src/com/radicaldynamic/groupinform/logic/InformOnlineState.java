@@ -36,6 +36,7 @@ public class InformOnlineState
     // Constants for strings commonly encountered when interacting with the Inform Online service
     public static final String OK = "ok";
     public static final String ERROR = "error";
+    public static final String EXPIRED = "expired";
     public static final String FAILURE = "failure";
     public static final String RESULT = "result";
     public static final String REASON = "reason";
@@ -55,6 +56,10 @@ public class InformOnlineState
     public static final String DEVICE_PIN  = "informonline_devicepin";      // Accessible
     
     public static final String DEFAULT_DATABASE = "informonline_defaultdb"; // Invisible
+    
+    // The order associated to this device is expired - the account owner needs to fix it 
+    // (either by renewing the order or associating the device profile with a new, unexpired order)
+    public static final String EXPIRED_ORDER = "informonline_expired";
     
     // Dictates whether or not the app was put into offline mode manually
     public static final String OFFLINE_MODE = "informonline_offlinemode";   // Invisible
@@ -91,6 +96,7 @@ public class InformOnlineState
     private CookieStore session = null;
     
     private boolean offlineModeEnabled = false;
+    private boolean expired = false;
     
     private Context mContext = null;    
     private SharedPreferences mPrefs = null;
@@ -282,6 +288,21 @@ public class InformOnlineState
         return devicePin;
     }
 
+    public void setExpired(boolean expired) 
+    {
+        Log.d(Collect.LOGTAG, t + "setExpired() " + expired);
+        
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putBoolean(EXPIRED_ORDER, expired);
+        editor.commit();
+        
+        this.expired = expired;
+    }
+
+    public boolean isExpired() {
+        return expired;
+    }
+
     public void setServerUrl(String serverUrl)
     {
         this.serverUrl = serverUrl;
@@ -416,6 +437,7 @@ public class InformOnlineState
         setDevicePin(null);
         
         setDefaultDatabase(null);
+        setExpired(false);
         setOfflineModeEnabled(false);
         setSession(null);
                 
@@ -458,6 +480,7 @@ public class InformOnlineState
         setDevicePin(mPrefs.getString(DEVICE_PIN, null));
         
         setDefaultDatabase(mPrefs.getString(DEFAULT_DATABASE, null));
+        setExpired(mPrefs.getBoolean(EXPIRED_ORDER, false));
         setSelectedDatabase(getDefaultDatabase());
         setOfflineModeEnabled(mPrefs.getBoolean(OFFLINE_MODE, false));
         
