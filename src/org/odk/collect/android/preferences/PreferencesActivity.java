@@ -16,6 +16,7 @@ package org.odk.collect.android.preferences;
 
 import com.radicaldynamic.groupinform.R;
 import org.odk.collect.android.utilities.UrlUtils;
+import org.odk.collect.android.utilities.WebUtils;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -59,12 +60,15 @@ public class PreferencesActivity extends PreferenceActivity implements
     public static String KEY_FORMLIST_URL = "formlist_url";
     public static String KEY_SUBMISSION_URL = "submission_url";
 
+    public static String KEY_COMPLETED_DEFAULT = "default_completed";
+
     private PreferenceScreen mSplashPathPreference;
     private EditTextPreference mSubmissionUrlPreference;
     private EditTextPreference mFormListUrlPreference;
     private EditTextPreference mServerUrlPreference;
     private EditTextPreference mUsernamePreference;
     private EditTextPreference mPasswordPreference;
+
     private Context mContext;
 
 
@@ -179,33 +183,34 @@ public class PreferencesActivity extends PreferenceActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
-
         if (resultCode == RESULT_CANCELED) {
             // request was canceled, so do nothing
             return;
         }
 
         switch (requestCode) {
-
             case IMAGE_CHOOSER:
+                String sourceImagePath = null;
 
                 // get gp of chosen file
                 Uri uri = intent.getData();
-                String[] projection = {
-                    Images.Media.DATA
-                };
-
-                Cursor c = managedQuery(uri, projection, null, null, null);
-                startManagingCursor(c);
-                int i = c.getColumnIndexOrThrow(Images.Media.DATA);
-                c.moveToFirst();
+                if (uri.toString().startsWith("file")) {
+                    sourceImagePath = uri.toString().substring(6);
+                } else {
+                    String[] projection = {
+                        Images.Media.DATA
+                    };
+                    Cursor c = managedQuery(uri, projection, null, null, null);
+                    startManagingCursor(c);
+                    int i = c.getColumnIndexOrThrow(Images.Media.DATA);
+                    c.moveToFirst();
+                    sourceImagePath = c.getString(i);
+                }
 
                 // setting image path
-                setSplashPath(c.getString(i));
+                setSplashPath(sourceImagePath);
                 updateSplashPath();
-
                 break;
-
         }
     }
 
@@ -234,7 +239,6 @@ public class PreferencesActivity extends PreferenceActivity implements
         } else if (key.equals(KEY_FONT_SIZE)) {
             updateFontSize();
         }
-
     }
 
 
@@ -275,12 +279,14 @@ public class PreferencesActivity extends PreferenceActivity implements
     private void updateUsername() {
         mUsernamePreference = (EditTextPreference) findPreference(KEY_USERNAME);
         mUsernamePreference.setSummary(mUsernamePreference.getText());
+        WebUtils.clearAllCredentials();
     }
 
 
     private void updatePassword() {
         mPasswordPreference = (EditTextPreference) findPreference(KEY_PASSWORD);
         mPasswordPreference.setSummary("***************");
+        WebUtils.clearAllCredentials();
     }
 
 

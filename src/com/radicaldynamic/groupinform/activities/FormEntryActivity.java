@@ -23,6 +23,7 @@ import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.model.xform.XFormsModule;
+import org.javarosa.xpath.XPathTypeMismatchException;
 import org.odk.collect.android.listeners.AdvanceToNextListener;
 import org.odk.collect.android.logic.FormController;
 import org.odk.collect.android.logic.PropertyManager;
@@ -39,17 +40,18 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.GestureDetector;
-import android.view.GestureDetector.OnGestureListener;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -58,6 +60,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.GestureDetector.OnGestureListener;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
@@ -1076,7 +1079,12 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             public void onClick(DialogInterface dialog, int i) {
                 switch (i) {
                     case DialogInterface.BUTTON1: // yes, repeat
-                        mFormController.newRepeat();
+                        try {
+                            mFormController.newRepeat();
+                        } catch (XPathTypeMismatchException e) {
+                            FormEntryActivity.this.createErrorDialog(e.getMessage(), EXIT);
+                            return;
+                        }
                         showNextView();
                         break;
                     case DialogInterface.BUTTON2: // no, no repeat
@@ -1750,8 +1758,12 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      */
     private boolean isInstanceComplete() {
         // BEGIN custom
+        // First get the value from the preferences
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean complete = sharedPreferences.getBoolean(PreferencesActivity.KEY_COMPLETED_DEFAULT, true);
 //        boolean complete = false;
 //
+//        // Then see if we've already marked this form as complete
 //        String selection = InstanceColumns.INSTANCE_FILE_PATH + "=?";
 //        String[] selectionArgs = {
 //            mInstancePath
@@ -1769,10 +1781,11 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 //        }
 //        return complete;
         
-        if (mFormInstance != null)
+        if (mFormInstance == null) {
+            return complete;
+        } else {
             return mFormInstance.getStatus().equals(FormInstance.Status.complete);
-        else
-            return false;
+        }
         // END custom
 
     }

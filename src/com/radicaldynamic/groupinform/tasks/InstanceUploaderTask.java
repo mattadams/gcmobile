@@ -20,6 +20,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
@@ -52,10 +53,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -169,7 +172,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 ContentValues cv = new ContentValues();
                 URI u = null;
                 try {
-                    URL url = new URL(urlString);
+                    URL url = new URL(URLDecoder.decode(urlString, "utf-8"));
                     u = url.toURI();
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -191,6 +194,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     e.printStackTrace();
                     mResults.put(id,
                         fail + "invalid uri: " + urlString + " :: details: " + e.getMessage());
+                    // BEGIN custom
 //                    cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                    Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
                     
@@ -200,6 +204,22 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     } catch (Exception e1) {
                         Log.e(Collect.LOGTAG, t + ": could not record upload failed because of URISyntaxException for " + id + ": " + e1.toString());
                     }   
+                    // END custom
+                    continue;
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                    mResults.put(id,
+                        fail + "invalid url: " + urlString + " :: details: " + e.getMessage());
+                    // BEGIN custom
+//                    cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
+//                    Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
+                    
+                    try {
+                        instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
+                        Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
+                    } catch (Exception e1) {
+                        Log.e(Collect.LOGTAG, t + ": could not record upload failed because of URISyntaxException for " + id + ": " + e1.toString());
+                    } 
                     // END custom
                     continue;
                 }
@@ -225,11 +245,12 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             // we need authentication, so stop and return what we've
                             // done so far.
                             mAuthRequestingServer = u;
+                            return null;
                         } else if (statusCode == 204) {
                             Header[] locations = response.getHeaders("Location");
                             if (locations != null && locations.length == 1) {
                                 try {
-                                    URL url = new URL(locations[0].getValue());
+                                    URL url = new URL(URLDecoder.decode(locations[0].getValue(), "utf-8"));
                                     URI uNew = url.toURI();
                                     if (u.getHost().equalsIgnoreCase(uNew.getHost())) {
                                         openRosaServer = true;
@@ -297,7 +318,10 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
 
                             Log.w(t, "Status code on Head request: " + statusCode);
                             if (statusCode >= 200 && statusCode <= 299) {
-                                mResults.put(id, fail + "network login? ");
+                                mResults.put(
+                                        id,
+                                        fail
+                                                + "Invalid status code on Head request.  If you have a web proxy, you may need to login to your network. ");
                                 // BEGIN custom
 //                                cv.put(InstanceColumns.STATUS,
 //                                    InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
@@ -315,8 +339,10 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             }
                         }
                     } catch (ClientProtocolException e) {
-                        e.printStackTrace();
-                        mResults.put(id, fail + "client protocol exeption?");
+                        e.printStackTrace();                        
+                        Log.e(t, e.getMessage());
+                        mResults.put(id, fail + "Client Protocol Exception");
+                        
                         // BEGIN custom
 //                        cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                        Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
@@ -329,9 +355,26 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         }
                         // END custom
                         continue;
+                    } catch (ConnectTimeoutException e) {
+                        e.printStackTrace();
+                        Log.e(t, e.getMessage());
+                        mResults.put(id, fail + "Connection Timeout");
+                        // BEGIN custom
+//                        cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
+//                        Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
+                        
+                        try {
+                            instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
+                            Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
+                        } catch (Exception e1) {
+                            Log.e(Collect.LOGTAG, t + ": could not record upload failed because of connection timeout exception for " + id + ": " + e1.toString());
+                        }                        
+                        // END custom
+                        continue;
                     } catch (Exception e) {
                         e.printStackTrace();
-                        mResults.put(id, fail + "generic excpetion.  great");
+                        mResults.put(id, fail + "Generic Exception.");
+                        Log.e(t, e.getMessage());
 //                        cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                        Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
                         
@@ -586,8 +629,8 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             if (responseCode == 200) {
                                 mResults.put(id, fail + "Network login failure?  again?");
                             } else {
-                                mResults.put(id, fail + urlString + " returned " + responseCode + " " + 
-                                        response.getStatusLine().getReasonPhrase());
+                                mResults.put(id, fail + urlString + " returned " + responseCode
+                                        + " " + response.getStatusLine().getReasonPhrase());
                             }
                             // BEGIN custom
 //                            cv.put(InstanceColumns.STATUS,

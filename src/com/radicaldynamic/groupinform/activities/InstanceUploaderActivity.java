@@ -151,6 +151,9 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
             // setup dialog and upload task
             showDialog(PROGRESS_DIALOG);
             mInstanceUploaderTask = new InstanceUploaderTask();
+            
+            // register this activity with the new uploader task
+            mInstanceUploaderTask.setUploaderListener(InstanceUploaderActivity.this);
 
             // BEGIN custom
 //            Long[] toSendArray = new Long[mInstancesToSend.size()];
@@ -333,6 +336,9 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
                                 .toString(), u.getHost());
 
                         mInstanceUploaderTask = new InstanceUploaderTask();
+                        
+                        // register this activity with the new uploader task
+                        mInstanceUploaderTask.setUploaderListener(InstanceUploaderActivity.this);
 
                         // BEGIN custom
 //                        Long[] toSendArray = new Long[mInstancesToSend.size()];
@@ -438,9 +444,9 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
             mUploadedInstances.putAll(doneSoFar);
         }
 
-//        Bundle b = new Bundle();
-//        b.putString(AUTH_URI, url.toString());
-//        showDialog(AUTH_DIALOG, b);
+        // Bundle b = new Bundle();
+        // b.putString(AUTH_URI, url.toString());
+        // showDialog(AUTH_DIALOG, b);
         mUrl = url.toString();
         showDialog(AUTH_DIALOG);
     }
