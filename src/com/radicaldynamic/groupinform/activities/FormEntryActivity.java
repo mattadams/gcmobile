@@ -261,9 +261,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
             // Not a restart from a screen orientation change (or other).
             mFormController = null;
-            // BEGIN custom
             mInstancePath = null;
-            // END custom
 
             Intent intent = getIntent();
             if (intent != null) {         
@@ -427,15 +425,20 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                  */
 
                 // get gp of chosen file
+                String sourceImagePath = null;
                 Uri selectedImage = intent.getData();
-                String[] projection = {
-                    Images.Media.DATA
-                };
-                Cursor cursor = managedQuery(selectedImage, projection, null, null, null);
-                startManagingCursor(cursor);
-                int column_index = cursor.getColumnIndexOrThrow(Images.Media.DATA);
-                cursor.moveToFirst();
-                String sourceImagePath = cursor.getString(column_index);
+                if (selectedImage.toString().startsWith("file")) {
+                    sourceImagePath = selectedImage.toString().substring(6);
+                } else {
+                    String[] projection = {
+                        Images.Media.DATA
+                    };
+                    Cursor cursor = managedQuery(selectedImage, projection, null, null, null);
+                    startManagingCursor(cursor);
+                    int column_index = cursor.getColumnIndexOrThrow(Images.Media.DATA);
+                    cursor.moveToFirst();
+                    sourceImagePath = cursor.getString(column_index);
+                }
 
                 // Copy file to sdcard
                 String mInstanceFolder1 =
@@ -907,7 +910,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                         createRepeatDialog();
                         break group_skip;
                     case FormEntryController.EVENT_GROUP:
-                        if (mFormController.indexIsInFieldList()) {
+                        if (mFormController.indexIsInFieldList() && mFormController.getQuestionPrompts().length != 0) {
                             View nextGroupView = createView(event);
                             showView(nextGroupView, AnimationType.RIGHT);
                             break group_skip;
@@ -952,7 +955,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             while (event != FormEntryController.EVENT_BEGINNING_OF_FORM
                     && event != FormEntryController.EVENT_QUESTION
                     && !(event == FormEntryController.EVENT_GROUP && mFormController
-                            .indexIsInFieldList())) {
+                            .indexIsInFieldList() && mFormController.getQuestionPrompts().length != 0)) {
                 event = mFormController.stepToPreviousEvent();
             }
             View next = createView(event);
@@ -1554,10 +1557,6 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             }
         }
 
-        // BEGIN custom
-//        mFormController = null;
-//        mInstancePath = null;
-        // END custom
         super.onDestroy();
 
     }

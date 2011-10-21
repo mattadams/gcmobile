@@ -42,6 +42,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -66,6 +67,7 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
     private String mInstanceFolder;
     private boolean mWaitingForData;
 
+    private TextView mErrorTextView;
 
     public ImageWidget(Context context, FormEntryPrompt prompt) {
         super(context, prompt);
@@ -76,6 +78,9 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
                 FormEntryActivity.mInstancePath.lastIndexOf("/") + 1);
 
         setOrientation(LinearLayout.VERTICAL);
+        
+        mErrorTextView = new TextView(context);
+        mErrorTextView.setText("Selected file is not a valid image");
 
         // setup capture button
         mCaptureButton = new Button(getContext());
@@ -88,6 +93,7 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
         mCaptureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mErrorTextView.setVisibility(View.GONE);
                 Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                 // We give the camera an absolute filename/path where to put the
                 // picture because of bug:
@@ -123,6 +129,7 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
         mChooseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mErrorTextView.setVisibility(View.GONE);
                 Intent i = new Intent(Intent.ACTION_GET_CONTENT);
                 i.setType("image/*");
 
@@ -136,6 +143,9 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
         // finish complex layout
         addView(mCaptureButton);
         addView(mChooseButton);
+        addView(mErrorTextView);
+        mErrorTextView.setVisibility(View.GONE);
+        
 
         // retrieve answer from data model and update ui
         mBinaryName = prompt.getAnswerText();
@@ -153,6 +163,9 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
 
             if (f.exists()) {
                 Bitmap bmp = FileUtils.getBitmapScaledToDisplay(f, screenHeight, screenWidth);
+                if (bmp == null) {
+                    mErrorTextView.setVisibility(View.VISIBLE);
+                }
                 mImageView.setImageBitmap(bmp);
             } else {
                 mImageView.setImageBitmap(null);
@@ -240,6 +253,7 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
         // remove the file
         deleteMedia();
         mImageView.setImageBitmap(null);
+        mErrorTextView.setVisibility(View.GONE);
 
         // reset buttons
         mCaptureButton.setText(getContext().getString(R.string.capture_image));
@@ -257,14 +271,18 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
 
 
     private String getPathFromUri(Uri uri) {
-        // find entry in content provider
-        Cursor c = getContext().getContentResolver().query(uri, null, null, null, null);
-        c.moveToFirst();
+        if (uri.toString().startsWith("file")) {
+            return uri.toString().substring(6);
+        } else {
+            // find entry in content provider
+            Cursor c = getContext().getContentResolver().query(uri, null, null, null, null);
+            c.moveToFirst();
 
-        // get data path
-        String colString = c.getString(c.getColumnIndex("_data"));
-        c.close();
-        return colString;
+            // get data path
+            String colString = c.getString(c.getColumnIndex("_data"));
+            c.close();
+            return colString;
+        }
     }
 
 
