@@ -24,7 +24,6 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -314,7 +313,7 @@ public class DownloadFormsTask extends
     private void downloadFile(File f, String downloadUrl) throws Exception {
         URI uri = null;
         try {
-            URL url = new URL(URLDecoder.decode(downloadUrl, "utf-8"));
+            URL url = new URL(downloadUrl);
             uri = url.toURI();
         } catch (MalformedURLException e) {
             e.printStackTrace();
