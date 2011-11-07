@@ -24,10 +24,12 @@ import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.model.xform.XFormsModule;
 import org.javarosa.xpath.XPathTypeMismatchException;
+import org.odk.collect.android.activities.FormEntryActivity;
 import org.odk.collect.android.listeners.AdvanceToNextListener;
 import org.odk.collect.android.logic.FormController;
 import org.odk.collect.android.logic.PropertyManager;
 import org.odk.collect.android.preferences.PreferencesActivity;
+import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
 import org.odk.collect.android.utilities.FileUtils;
 import org.odk.collect.android.views.ODKView;
 import org.odk.collect.android.widgets.QuestionWidget;
@@ -48,6 +50,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -913,7 +916,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                         createRepeatDialog();
                         break group_skip;
                     case FormEntryController.EVENT_GROUP:
-                        if (mFormController.indexIsInFieldList() && mFormController.getQuestionPrompts().length != 0) {
+                        if (mFormController.indexIsInFieldList()
+                                && mFormController.getQuestionPrompts().length != 0) {
                             View nextGroupView = createView(event);
                             showView(nextGroupView, AnimationType.RIGHT);
                             break group_skip;
@@ -957,8 +961,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
             while (event != FormEntryController.EVENT_BEGINNING_OF_FORM
                     && event != FormEntryController.EVENT_QUESTION
-                    && !(event == FormEntryController.EVENT_GROUP && mFormController
-                            .indexIsInFieldList() && mFormController.getQuestionPrompts().length != 0)) {
+                    && !(event == FormEntryController.EVENT_GROUP
+                            && mFormController.indexIsInFieldList() && mFormController
+                            .getQuestionPrompts().length != 0)) {
                 event = mFormController.stepToPreviousEvent();
             }
             View next = createView(event);
@@ -1230,7 +1235,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                                     
                                 case 1: // discard changes and exit
                                      // BEGIN custom
-
+                                    
 //                                    String selection =
 //                                        InstanceColumns.INSTANCE_FILE_PATH + " like '"
 //                                                + mInstancePath + "'";
@@ -1238,28 +1243,106 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 //                                        FormEntryActivity.this.managedQuery(
 //                                            InstanceColumns.CONTENT_URI, null, selection, null,
 //                                            null);
+//
 //                                    // if it's not already saved, erase everything
 //                                    if (c.getCount() < 1) {
+//                                        int images = 0;
+//                                        int audio = 0;
+//                                        int video = 0;
 //                                        // delete media first
 //                                        String instanceFolder =
 //                                            mInstancePath.substring(0,
 //                                                mInstancePath.lastIndexOf("/") + 1);
 //                                        Log.i(t, "attempting to delete: " + instanceFolder);
+//
 //                                        String where =
 //                                            Images.Media.DATA + " like '" + instanceFolder + "%'";
-//                                        int images =
-//                                            getContentResolver().delete(
-//                                                Images.Media.EXTERNAL_CONTENT_URI, where, null);
-//                                        int audio =
-//                                            getContentResolver().delete(
-//                                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, where,
-//                                                null);
-//                                        int video =
-//                                            getContentResolver().delete(
-//                                                MediaStore.Video.Media.EXTERNAL_CONTENT_URI, where,
-//                                                null);
-//                                        Log.i(t, "revmoved from content providers: " + images
-//                                                + " image files, " + audio + " audio files"
+//
+//                                        String[] projection = {
+//                                            Images.ImageColumns._ID
+//                                        };
+//
+//                                        // images
+//                                        Cursor imageCursor =
+//                                            getContentResolver()
+//                                                    .query(
+//                                                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//                                                        projection, where, null, null);
+//                                        if (imageCursor.getCount() > 0) {
+//                                            imageCursor.moveToFirst();
+//                                            String id =
+//                                                imageCursor.getString(imageCursor
+//                                                        .getColumnIndex(Images.ImageColumns._ID));
+//
+//                                            Log.i(
+//                                                t,
+//                                                "attempting to delete: "
+//                                                        + Uri.withAppendedPath(
+//                                                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//                                                            id));
+//                                            images =
+//                                                getContentResolver()
+//                                                        .delete(
+//                                                            Uri.withAppendedPath(
+//                                                                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//                                                                id), null, null);
+//                                        }
+//                                        imageCursor.close();
+//
+//                                        // audio
+//                                        Cursor audioCursor =
+//                                            getContentResolver().query(
+//                                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+//                                                projection, where, null, null);
+//                                        if (audioCursor.getCount() > 0) {
+//                                            audioCursor.moveToFirst();
+//                                            String id =
+//                                                audioCursor.getString(imageCursor
+//                                                        .getColumnIndex(Images.ImageColumns._ID));
+//
+//                                            Log.i(
+//                                                t,
+//                                                "attempting to delete: "
+//                                                        + Uri.withAppendedPath(
+//                                                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+//                                                            id));
+//                                            audio =
+//                                                getContentResolver()
+//                                                        .delete(
+//                                                            Uri.withAppendedPath(
+//                                                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+//                                                                id), null, null);
+//                                        }
+//                                        audioCursor.close();
+//
+//                                        // video
+//                                        Cursor videoCursor =
+//                                            getContentResolver().query(
+//                                                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+//                                                projection, where, null, null);
+//                                        if (videoCursor.getCount() > 0) {
+//                                            videoCursor.moveToFirst();
+//                                            String id =
+//                                                videoCursor.getString(imageCursor
+//                                                        .getColumnIndex(Images.ImageColumns._ID));
+//
+//                                            Log.i(
+//                                                t,
+//                                                "attempting to delete: "
+//                                                        + Uri.withAppendedPath(
+//                                                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+//                                                            id));
+//                                            video =
+//                                                getContentResolver()
+//                                                        .delete(
+//                                                            Uri.withAppendedPath(
+//                                                                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+//                                                                id), null, null);
+//                                        }
+//                                        audioCursor.close();
+//
+//                                        Log.i(t, "removed from content providers: " + images
+//                                                + " image files, " + audio + " audio files,"
 //                                                + " and " + video + " video files.");
 //                                        File f = new File(instanceFolder);
 //                                        if (f.exists() && f.isDirectory()) {
@@ -1270,6 +1353,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 //                                            f.delete();
 //                                        }
 //                                    }
+//
+//                                    finishReturnInstance();
+
                                     
                                     tidyBeforeFinish();
                                     // END custom
@@ -1279,7 +1365,6 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
                                 case 2:// do nothing
                                     break;
-
                             }
                         }
                     }).create();
@@ -1757,12 +1842,12 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      * @return true if form has been marked completed, false otherwise.
      */
     private boolean isInstanceComplete() {
-        // BEGIN custom
         // First get the value from the preferences
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean complete = sharedPreferences.getBoolean(PreferencesActivity.KEY_COMPLETED_DEFAULT, true);
-//        boolean complete = false;
-//
+        boolean complete = 
+            sharedPreferences.getBoolean(PreferencesActivity.KEY_COMPLETED_DEFAULT, true);
+        
+        // BEGIN custom
 //        // Then see if we've already marked this form as complete
 //        String selection = InstanceColumns.INSTANCE_FILE_PATH + "=?";
 //        String[] selectionArgs = {
