@@ -219,13 +219,11 @@ the License.
   
   <supports-screens 
       android:anyDensity="true"
-      android:largeScreens="true" 
+      android:largeScreens="true"
+      android:xlargeScreens="true" 
       android:normalScreens="true" 
       android:resizeable="true"
       android:smallScreens="true" />
-      
-  <!-- not available until sdk 9/10 Android 2.3 -->
-  <!-- android:xlargeScreens="true" -->
 
   <uses-sdk 
       android:minSdkVersion="8" 

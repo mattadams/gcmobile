@@ -81,7 +81,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
     private static String t = "InstanceUploaderTask";
     private InstanceUploaderListener mStateListener;
     private static final int CONNECTION_TIMEOUT = 30000;
-    private static final String fail = "FAILED: ";
+    private static final String fail = "Error: ";
 
     private URI mAuthRequestingServer;
     HashMap<String, String> mResults;
@@ -390,7 +390,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         continue;
                     } catch (Exception e) {
                         e.printStackTrace();
-                        mResults.put(id, fail + "Generic Exception.");
+                        mResults.put(id, fail + "Generic Exception");
                         Log.e(t, e.getMessage());
 //                        cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                        Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
@@ -644,10 +644,10 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         // If it wasn't, the submission has failed.
                         if (responseCode != 201 && responseCode != 202) {
                             if (responseCode == 200) {
-                                mResults.put(id, fail + "Network login failure?  again?");
+                                mResults.put(id, fail + "Network login failure? Again?");
                             } else {
-                                mResults.put(id, fail + urlString + " returned " + responseCode
-                                        + " " + response.getStatusLine().getReasonPhrase());
+                                mResults.put(id, fail + response.getStatusLine().getReasonPhrase() + " (" + responseCode
+                                    + ") at " + urlString);
                             }
                             // BEGIN custom
 //                            cv.put(InstanceColumns.STATUS,
@@ -666,7 +666,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        mResults.put(id, fail + "generic exception... " + e.getMessage());
+                        mResults.put(id, fail + "Generic Exception. " + e.getMessage());
                         // BEGIN custom
 //                        cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
 //                        Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);

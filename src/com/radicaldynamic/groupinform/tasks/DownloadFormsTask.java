@@ -64,7 +64,7 @@ import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 public class DownloadFormsTask extends
         AsyncTask<ArrayList<FormDetails>, String, HashMap<String, String>> {
 
-    private static final String t = "DownlaodFormsTask";
+    private static final String t = "DownloadFormsTask";
 
     private static final String MD5_COLON_PREFIX = "md5:";
 
@@ -340,7 +340,7 @@ public class DownloadFormsTask extends
             if (statusCode != 200) {
                 String errMsg =
                     Collect.getInstance()
-                            .getString(R.string.file_fetch_failed, downloadUrl,
+                            .getString(R.string.file_fetch_failed,downloadUrl,
                                 response.getStatusLine().getReasonPhrase(), statusCode);
                 Log.e(t, errMsg);
                 throw new Exception(errMsg);

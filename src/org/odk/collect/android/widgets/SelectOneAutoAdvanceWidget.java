@@ -26,7 +26,6 @@ import org.odk.collect.android.views.MediaLayout;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.inputmethod.InputMethodManager;
@@ -92,7 +91,7 @@ public class SelectOneAutoAdvanceWidget extends QuestionWidget implements OnChec
                 r.setEnabled(!prompt.isReadOnly());
                 r.setFocusable(!prompt.isReadOnly());
 
-                Drawable image = getResources().getDrawable(R.drawable.right_arrow);
+                Drawable image = getResources().getDrawable(R.drawable.expander_ic_right);
                 rightArrow.setImageDrawable(image);
 
                 buttons.add(r);

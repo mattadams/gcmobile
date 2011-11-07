@@ -52,17 +52,20 @@ public class DecimalWidget extends StringWidget {
         fa[0] = new InputFilter.LengthFilter(15);
         mAnswer.setFilters(fa);
 
-        // in case xforms calcuate returns a double, convert to integer
         Double d = null;
-        if (prompt.getAnswerValue() != null)
+        if (prompt.getAnswerValue() != null) {
             d = (Double) prompt.getAnswerValue().getValue();
+        }
 
         NumberFormat nf = NumberFormat.getNumberInstance();
         nf.setMaximumFractionDigits(15);
         nf.setMaximumIntegerDigits(15);
         nf.setGroupingUsed(false);
         if (d != null) {
-            mAnswer.setText(nf.format(d));
+            Double dAnswer = (Double) prompt.getAnswerValue().getValue();
+            String dString = nf.format(dAnswer);
+            d = Double.parseDouble(dString.replace(',', '.'));
+            mAnswer.setText(d.toString());
         }
 
         // disable if read only

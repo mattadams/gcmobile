@@ -22,7 +22,6 @@ import org.javarosa.form.api.FormEntryPrompt;
 import com.radicaldynamic.groupinform.R;
 
 import android.content.Context;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
