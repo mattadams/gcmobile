@@ -90,7 +90,7 @@
             android:dependency="use_custom_server"               
             android:defaultValue=""
             android:title="@string/username"
-            android:dialogTitle="@string/change_user" />
+            android:dialogTitle="@string/username" />
             
         <EditTextPreference    
             android:key="server_password_preference"        

@@ -584,7 +584,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 return true;
             case MENU_SAVE:
                 // don't exit
-                saveDataToDisk(DO_NOT_EXIT, isInstanceComplete(), null);
+                saveDataToDisk(DO_NOT_EXIT, isInstanceComplete(false), null);
                 return true;
             case MENU_HIERARCHY_VIEW:
                 if (currentPromptIsQuestion()) {
@@ -784,7 +784,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 // checkbox for if finished or ready to send
                 final CheckBox instanceComplete =
                     ((CheckBox) endView.findViewById(R.id.mark_finished));
-                instanceComplete.setChecked(isInstanceComplete());
+                instanceComplete.setChecked(isInstanceComplete(true));
 
                 // edittext to change the displayed name of the instance
                 final EditText saveAs = (EditText) endView.findViewById(R.id.save_name);
@@ -1229,7 +1229,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                             switch (which) {
 
                                 case 0: // save and exit
-                                    saveDataToDisk(EXIT, isInstanceComplete(), null);
+                                    saveDataToDisk(EXIT, isInstanceComplete(false), null);
                                     break;
                                     
                                 case 1: // discard changes and exit
@@ -1517,7 +1517,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 Dialog dialog = null;
                 String message;
                 
-                if (isInstanceComplete()) 
+                if (isInstanceComplete(false)) 
                     message = getString(R.string.tf_confirm_complete_instance_removal_dialog_msg);
                 else
                     message = getString(R.string.tf_confirm_instance_removal_dialog_msg);
@@ -1840,14 +1840,20 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      * 
      * @return true if form has been marked completed, false otherwise.
      */
-    private boolean isInstanceComplete() {
-        // First get the value from the preferences
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean complete = 
-            sharedPreferences.getBoolean(PreferencesActivity.KEY_COMPLETED_DEFAULT, true);
+    private boolean isInstanceComplete(boolean end) {
+        // default to false if we're mid form
+        boolean complete = false;
+
+        // if we're at the end of the form, then check the preferences
+        if (end) {
+            // First get the value from the preferences
+            SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(this);
+            complete =
+                sharedPreferences.getBoolean(PreferencesActivity.KEY_COMPLETED_DEFAULT, true);
+        }
         
-        // BEGIN custom
-//        // Then see if we've already marked this form as complete
+//        // Then see if we've already marked this form as complete before
 //        String selection = InstanceColumns.INSTANCE_FILE_PATH + "=?";
 //        String[] selectionArgs = {
 //            mInstancePath
@@ -1960,6 +1966,11 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         return false;
     }
 
+
+    @Override
+    public void advance() {
+        next();
+    }
 
     // BEGIN custom
     private void browseToInstance(String instanceId) 
