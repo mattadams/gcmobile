@@ -210,8 +210,17 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     e.printStackTrace();
                     mResults.put(id,
                         fail + "invalid url: " + urlString + " :: details: " + e.getMessage());
-                    cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
-                    Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
+                    // BEGIN custom
+//                    cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
+//                    Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
+                    
+                    try {
+                        instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
+                        Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
+                    } catch (Exception e1) {
+                        Log.e(Collect.LOGTAG, t + ": could not record upload failed because of UnsupportedEncodingException for " + id + ": " + e1.toString());
+                    }   
+                    // END custom
                     continue;
                 }
 
