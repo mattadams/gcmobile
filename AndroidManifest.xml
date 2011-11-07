@@ -181,6 +181,14 @@ the License.
     </service>
     
     <!-- Native ODK code -->
+    <activity
+        android:label="@string/app_name"
+        android:name="org.odk.collect.android.activities.AccountList" />
+    
+    <activity
+        android:label="@string/app_name"
+        android:name="org.odk.collect.android.activities.AccountInfo" />
+        
     <activity 
         android:label="@string/app_name"
         android:name="org.odk.collect.android.activities.FormDownloadList" /> 
@@ -216,6 +224,14 @@ the License.
   <uses-permission 
       xmlns:android="http://schemas.android.com/apk/res/android" 
       android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  
+  <!-- See 669:1fe26128b71d -->
+  <uses-permission
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      android:name="android.permission.GET_ACCOUNTS" />
+  <uses-permission
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      android:name="android.permission.USE_CREDENTIALS" />
   
   <supports-screens 
       android:anyDensity="true"

@@ -150,6 +150,8 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         if (mInstanceUploaderTask == null) {
             // setup dialog and upload task
             showDialog(PROGRESS_DIALOG);
+            SharedPreferences settings =
+                PreferenceManager.getDefaultSharedPreferences(getBaseContext());
             mInstanceUploaderTask = new InstanceUploaderTask();
             
             // register this activity with the new uploader task
@@ -159,6 +161,8 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
 //            Long[] toSendArray = new Long[mInstancesToSend.size()];
 //            mInstancesToSend.toArray(toSendArray);
 //            mInstanceUploaderTask.execute(toSendArray);
+            String auth = settings.getString(PreferencesActivity.KEY_AUTH, "");
+            mInstanceUploaderTask.setAuth(auth);
 
             String [] instances = mInstancesToSend.toArray(new String[mInstancesToSend.size()]);
             mInstanceUploaderTask.execute(instances);

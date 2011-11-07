@@ -82,10 +82,14 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
     private InstanceUploaderListener mStateListener;
     private static final int CONNECTION_TIMEOUT = 30000;
     private static final String fail = "Error: ";
+    private String mAuth = "";
 
     private URI mAuthRequestingServer;
     HashMap<String, String> mResults;
-
+    
+    public void setAuth(String auth) {
+        this.mAuth = auth;
+    }
 
     // TODO: This method is like 350 lines long, down from 400.
     // still. ridiculous. make it smaller.
@@ -521,7 +525,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 while (j < files.size() || first) {
                     first = false;
 
-                    HttpPost httppost = WebUtils.createOpenRosaHttpPost(u);
+                    HttpPost httppost = WebUtils.createOpenRosaHttpPost(u, mAuth);
 
                     MimeTypeMap m = MimeTypeMap.getSingleton();
 

@@ -52,6 +52,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+
 /**
  * Responsible for displaying, adding and deleting all the valid forms in the forms directory. One
  * caveat. If the server requires authentication, a dialog will pop up asking when you request the
@@ -435,6 +439,10 @@ public class FormDownloadList extends ListActivity implements FormListDownloader
             showDialog(PROGRESS_DIALOG);
 
             mDownloadFormsTask = new DownloadFormsTask();
+            SharedPreferences settings =
+                PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+            String auth = settings.getString(PreferencesActivity.KEY_AUTH, "");
+            mDownloadFormsTask.setAuth(auth);
             mDownloadFormsTask.setDownloaderListener(this);
             mDownloadFormsTask.execute(filesToDownload);
         } else {
