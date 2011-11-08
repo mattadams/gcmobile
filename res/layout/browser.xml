@@ -24,7 +24,7 @@ the License.
         android:id="@id/android:list"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_above="@+id/form_filter" />
+        android:layout_above="@+id/taskSpinner" />
         
     <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -63,6 +63,8 @@ the License.
         android:id="@+id/taskSpinner"        
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"                  
+        android:layout_alignParentBottom="true"   
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"               
         android:prompt="@string/tf_select_task" /> 
 </RelativeLayout>
