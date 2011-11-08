@@ -224,7 +224,7 @@ public class FormBuilderSelectItemList extends ListActivity
                     if (value.getText().toString().length() == 0 && label.getText().toString().length() > 0)
                         value.setText(label.getText().toString().replaceAll("[^a-zA-Z0-9]", "").toLowerCase());
                 }
-            });        
+            });
             
             if (mItem.isEmpty()) {
                 mAlertDialog.setTitle(getText(R.string.tf_create_list_item));            
@@ -310,8 +310,17 @@ public class FormBuilderSelectItemList extends ListActivity
                             Collect.getInstance().getFormBuilderState().getField().getChildren().add(mItem);
                         }
                         
+                        removeDialog(DIALOG_EDIT_ITEM);
+                        
                         refreshView();
                     }
+                }
+            });
+            
+            mAlertDialog.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    removeDialog(DIALOG_EDIT_ITEM);                    
                 }
             });
 
