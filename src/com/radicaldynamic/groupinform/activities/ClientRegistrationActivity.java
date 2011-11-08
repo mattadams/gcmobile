@@ -64,7 +64,7 @@ public class ClientRegistrationActivity extends Activity
     private static final String REASON_INVALID_PIN = "invalid pin";                         // Reactivation failure
     private static final String REASON_DEVICE_ACTIVE = "device active";                     // Reactivation failure
     private static final String REASON_REACTIVATION_DELAYED = "activation delayed";         // Reactivation failure
-    private static final String REASON_UNKNOWN_ACCOUNT_CONTACT = "unknown account contact"; // Remind failure
+    private static final String REASON_UNKNOWN_ACCOUNT_CONTACT = "unknown account owner email"; // Remind failure
     
     // Keys for saving and restoring activity state
     private static final String KEY_ACCOUNT_NUMBER = "key_account_number";
