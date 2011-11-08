@@ -174,6 +174,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                     urlString = urlString + submissionUrl;
                 }
 
+                @SuppressWarnings("unused")
                 ContentValues cv = new ContentValues();
                 URI u = null;
                 try {

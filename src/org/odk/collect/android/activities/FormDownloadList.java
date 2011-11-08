@@ -14,13 +14,15 @@
 
 package org.odk.collect.android.activities;
 
-import com.radicaldynamic.groupinform.R;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+
 import org.odk.collect.android.listeners.FormDownloaderListener;
 import org.odk.collect.android.listeners.FormListDownloaderListener;
 import org.odk.collect.android.logic.FormDetails;
 import org.odk.collect.android.preferences.PreferencesActivity;
 import org.odk.collect.android.tasks.DownloadFormListTask;
-import com.radicaldynamic.groupinform.tasks.DownloadFormsTask;
 import org.odk.collect.android.utilities.WebUtils;
 
 import android.app.AlertDialog;
@@ -48,13 +50,8 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.tasks.DownloadFormsTask;
 
 /**
  * Responsible for displaying, adding and deleting all the valid forms in the forms directory. One
