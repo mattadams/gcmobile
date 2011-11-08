@@ -45,6 +45,7 @@ public class AccountDeviceActivity extends Activity
     public static final int CONFIRM_REMOVAL_DIALOG = 2;
     public static final int RESET_PROGRESS_DIALOG = 3;
     public static final int CONFIRM_RESET_DIALOG = 4;
+    public static final int CANNOT_RESET_OWN_DEVICE = 5;
     
     // Keys for saving and restoring activity state
     public static final String KEY_DEVICE_ID = "key_device_id";     // Also used to accept device ID into activity
@@ -212,6 +213,17 @@ public class AccountDeviceActivity extends Activity
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);            
             return mProgressDialog;
+            
+        case CANNOT_RESET_OWN_DEVICE:
+            mAlertDialog = new AlertDialog.Builder(this)
+            .setCancelable(false)
+            .setMessage(R.string.tf_unable_to_reset_self)         
+            .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    dialog.cancel();
+                }
+            })         
+            .show(); 
         }
 
         return null;
@@ -374,7 +386,7 @@ public class AccountDeviceActivity extends Activity
                     // Get out of here
                     finish();                    
                 } else if (result.equals(InformOnlineState.FAILURE)) {
-                    Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_reset_self), Toast.LENGTH_LONG).show();
+                    showDialog(CANNOT_RESET_OWN_DEVICE);
                 } else {
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                     Log.e(Collect.LOGTAG, t + "system error while processing getResult"); 
