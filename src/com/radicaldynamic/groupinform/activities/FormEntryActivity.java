@@ -666,11 +666,13 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        menu.add(0, v.getId(), 0, "Clear Answer");
-        menu.add(0, v.getId(), 0, getString(R.string.clear_answer));
+        if (!mFormController.getQuestionPrompt().isReadOnly()) {
+            menu.add(0, v.getId(), 0, getString(R.string.clear_answer));
+        }
         if (mFormController.indexContainsRepeatableGroup()) {
             menu.add(0, DELETE_REPEAT, 0, getString(R.string.delete_repeat));
         }
+        menu.setHeaderTitle(getString(R.string.edit_prompt));
     }
 
 
@@ -774,10 +776,14 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
                 if (image == null) {
                     // show the opendatakit zig...
-                    image = getResources().getDrawable(R.drawable.opendatakit_zig);
+                    // image = getResources().getDrawable(R.drawable.opendatakit_zig);
+                    ((ImageView) startView.findViewById(R.id.form_start_bling))
+                            .setVisibility(View.GONE);
+                } else {
+                    ((ImageView) startView.findViewById(R.id.form_start_bling))
+                            .setImageDrawable(image);
                 }
 
-                ((ImageView) startView.findViewById(R.id.form_start_bling)).setImageDrawable(image);
                 return startView;
             case FormEntryController.EVENT_END_OF_FORM:
                 View endView = View.inflate(this, R.layout.form_entry_end, null);
@@ -1061,7 +1067,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 break;
         }
 
-        showCustomToast(constraintText);
+        showCustomToast(constraintText, Toast.LENGTH_SHORT);
         mBeenSwiped = false;
     }
 
@@ -1071,7 +1077,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      * 
      * @param message
      */
-    private void showCustomToast(String message) {
+    private void showCustomToast(String message, int duration) {
         LayoutInflater inflater =
             (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -1083,7 +1089,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
         Toast t = new Toast(this);
         t.setView(view);
-        t.setDuration(Toast.LENGTH_SHORT);
+        t.setDuration(duration);
         t.setGravity(Gravity.CENTER, 0, 0);
         t.show();
     }
@@ -1167,7 +1173,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      */
     private void createDeleteRepeatConfirmDialog() {
         mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+        mAlertDialog.setIcon(android.R.drawable.ic_dialog_info);
         String name = mFormController.getLastRepeatedGroupName();
         int repeatcount = mFormController.getLastRepeatedGroupRepeatCount();
         if (repeatcount != -1) {
@@ -1231,7 +1237,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
         mAlertDialog =
             new AlertDialog.Builder(this)
-                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setIcon(android.R.drawable.ic_dialog_info)
                     .setTitle(getString(R.string.quit_application, mFormController.getFormTitle()))
                     .setNeutralButton(getString(R.string.do_not_exit),
                         new DialogInterface.OnClickListener() {
@@ -1394,7 +1400,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      */
     private void createClearDialog(final QuestionWidget qw) {
         mAlertDialog = new AlertDialog.Builder(this).create();
-        mAlertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+        mAlertDialog.setIcon(android.R.drawable.ic_dialog_info);
 
         mAlertDialog.setTitle(getString(R.string.clear_answer_ask));
 
@@ -1951,7 +1957,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         int xPixelLimit = (int) (dm.xdpi * .25);
         int yPixelLimit = (int) (dm.ydpi * .25);
-        
+
         if ((Math.abs(e1.getX() - e2.getX()) > xPixelLimit && Math.abs(e1.getY() - e2.getY()) < yPixelLimit)
                 || Math.abs(e1.getX() - e2.getX()) > xPixelLimit * 2) {
             if (velocityX > 0) {
