@@ -255,7 +255,8 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             Header[] locations = response.getHeaders("Location");
                             if (locations != null && locations.length == 1) {
                                 try {
-                                    URL url = new URL(URLDecoder.decode(locations[0].getValue(), "utf-8"));
+                                    URL url =
+                                        new URL(URLDecoder.decode(locations[0].getValue(), "utf-8"));
                                     URI uNew = url.toURI();
                                     if (u.getHost().equalsIgnoreCase(uNew.getHost())) {
                                         openRosaServer = true;
@@ -650,8 +651,8 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             if (responseCode == 200) {
                                 mResults.put(id, fail + "Network login failure? Again?");
                             } else {
-                                mResults.put(id, fail + response.getStatusLine().getReasonPhrase() + " (" + responseCode
-                                    + ") at " + urlString);
+                                mResults.put(id, fail + response.getStatusLine().getReasonPhrase()
+                                        + " (" + responseCode + ") at " + urlString);
                             }
                             // BEGIN custom
 //                            cv.put(InstanceColumns.STATUS,

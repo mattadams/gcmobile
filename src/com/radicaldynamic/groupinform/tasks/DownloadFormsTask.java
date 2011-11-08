@@ -24,7 +24,6 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -345,9 +344,8 @@ public class DownloadFormsTask extends
 
             if (statusCode != 200) {
                 String errMsg =
-                    Collect.getInstance()
-                            .getString(R.string.file_fetch_failed,downloadUrl,
-                                response.getStatusLine().getReasonPhrase(), statusCode);
+                    Collect.getInstance().getString(R.string.file_fetch_failed, downloadUrl,
+                        response.getStatusLine().getReasonPhrase(), statusCode);
                 Log.e(t, errMsg);
                 throw new Exception(errMsg);
             }
