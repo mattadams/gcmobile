@@ -44,8 +44,8 @@
 <string name="data">Saved Forms</string>
 <string name="data_saved_error">Sorry, form save failed!</string>
 <string name="data_saved_ok">Form successfully saved!</string>
-<string name="default_completed">Default to Finalized</string>
-<string name="default_completed_summary">Mark form as finalized by default</string>
+<string name="default_completed">Default to Completed</string>
+<string name="default_completed_summary">Mark form as completed by default</string>
 <string name="default_server_url">https://opendatakit.appspot.com</string>
 <string name="delete_confirm">Delete %s form(s)?</string>
 <string name="delete_file">Delete Selected</string>
@@ -108,7 +108,7 @@
 <string name="main_menu_details">Data collection made easier...</string>
 <string name="main_menu_message">GC Mobile v1.2.6</string>
 <string name="manage_files">Delete Form on Device</string>
-<string name="mark_finished">Mark form as finalized</string>
+<string name="mark_finished">Mark form as completed</string>
 <string name="no">No</string>
 <string name="noselect_error">Sorry, you have not selected any forms!</string>
 <string name="no_capture">Nothing recorded yet.</string>
@@ -144,8 +144,8 @@
 <string name="saving_form">Saving Form</string>
 <string name="send">send</string>
 <string name="sending_items">Sending %1$s of %2$s form(s)</string>
-<string name="send_data">Send Finalized Form</string>
-<string name="send_data_button">Send Finalized Form</string>
+<string name="send_data">Send Completed Form</string>
+<string name="send_data_button">Send Completed Form</string>
 <string name="send_selected_data">Send Selected</string>
 <string name="server_auth_credentials">Please enter username and password for server:\n%s</string>
 <string name="server_requires_auth">Server Requires Authentication</string>

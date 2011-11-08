@@ -385,6 +385,9 @@ public class BrowserActivity extends ListActivity
                             is.close();
                             data.close();
                             
+                            // Ensure that dialog is reset
+                            removeDialog(DIALOG_CREATE_FORM);
+                            
                             // Launch the form builder with the NEWFORM option set to true
                             Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
                             i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
