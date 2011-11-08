@@ -14,17 +14,18 @@
 
 package com.radicaldynamic.groupinform.activities;
 
-import com.radicaldynamic.groupinform.R;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.ektorp.DbAccessException;
 import org.odk.collect.android.preferences.PreferencesActivity;
 
-import com.radicaldynamic.groupinform.activities.FormEntryActivity;
-import com.radicaldynamic.groupinform.adapters.UploaderListAdapter;
-import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.documents.FormDefinition;
-import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
-import com.radicaldynamic.groupinform.utilities.DocumentUtils;
-
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -35,12 +36,16 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.adapters.UploaderListAdapter;
+import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.documents.FormDefinition;
+import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
+import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 
 /**
  * Responsible for displaying all the valid forms in the forms directory. Stores the path to
@@ -70,6 +75,12 @@ public class InstanceUploaderList extends ListActivity {
     // Tallies
     private Map<String, List<String>> mInstances = new HashMap<String, List<String>>();
     private ArrayList<String> mSelected = new ArrayList<String>();
+    
+    private Dialog mDialog;
+    private String mDialogMessage;              // Custom message consumed by onCreateDialog()    
+    
+    // Could not access database (for whatever reason)
+    private static final int DIALOG_FOLDER_UNAVAILABLE = 0;
     // END custom
 
 
@@ -307,16 +318,65 @@ public class InstanceUploaderList extends ListActivity {
 
     // BEGIN custom
     @Override
-    protected void onResume() {
+    public Dialog onCreateDialog(int id) 
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        mDialog = null;
+        
+        switch (id) {
+        case DIALOG_FOLDER_UNAVAILABLE:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_folder_unavailable)
+            .setMessage(mDialogMessage);
+
+            builder.setPositiveButton(getString(R.string.tf_try_again), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {                    
+                    removeDialog(DIALOG_FOLDER_UNAVAILABLE);
+                    refreshData();
+                }
+            });
+
+            builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_FOLDER_UNAVAILABLE);
+                }
+            });
+
+            mDialog = builder.create();
+        }
+        
+        return mDialog;
+    }
+    
+    @Override
+    protected void onResume() 
+    {
         refreshData();
         super.onResume();
     }
     
-    private void refreshData() {
-        if (!mRestored)
+    private void refreshData() 
+    {
+        if (!mRestored) {
             mSelected.clear();
+        }
 
         new RefreshViewTask().execute();
+    }
+    
+    private void setProgressVisibility(boolean visible)
+    {
+        ProgressBar pb = (ProgressBar) getParent().getWindow().findViewById(R.id.titleProgressBar);
+        
+        if (pb != null) {
+            if (visible) {
+                pb.setVisibility(View.VISIBLE);
+            } else {
+                pb.setVisibility(View.GONE);
+            }
+        }
     }
     
     /*
@@ -325,20 +385,24 @@ public class InstanceUploaderList extends ListActivity {
     private class RefreshViewTask extends AsyncTask<Void, Void, Void>
     {
         private ArrayList<FormDefinition> documents = new ArrayList<FormDefinition>();
+        private TextView loading = (TextView) findViewById(android.R.id.empty);
+        private boolean folderUnavailable = false;
     
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            mInstances = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getByAggregateReadiness();
-            
-            if (!mInstances.isEmpty()) {
-                try {
+            try {
+                mInstances = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getByAggregateReadiness();
+                
+                if (!mInstances.isEmpty()) {                
                     documents = (ArrayList<FormDefinition>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAllActiveByKeys(new ArrayList<Object>(mInstances.keySet()));            
                     DocumentUtils.sortByName(documents);
-                } catch (ClassCastException e) {
-                    // TODO: is there a better way to handle empty lists?
-                    Log.w(Collect.LOGTAG, e.toString());
                 }
+            } catch (DbAccessException e) {
+                folderUnavailable = true;
+            } catch (ClassCastException e) {
+                // TODO: is there a better way to handle empty lists?
+                Log.w(Collect.LOGTAG, e.toString());
             }
             
             return null;
@@ -346,13 +410,24 @@ public class InstanceUploaderList extends ListActivity {
     
         @Override
         protected void onPreExecute()
-        {
-            setProgressBarIndeterminateVisibility(true);
+        {            
+            if (loading != null)
+                loading.setText(R.string.tf_loading_please_wait);
+            
+            setProgressVisibility(true);
         }
     
         @Override
         protected void onPostExecute(Void nothing)
         {
+            if (loading != null)
+                loading.setText(R.string.no_items_display);
+
+            if (folderUnavailable) {
+                mDialogMessage = getString(R.string.tf_unable_to_access_folder_for_instance_upload, BrowserActivity.getSelectedFolderName());
+                showDialog(DIALOG_FOLDER_UNAVAILABLE);
+            }
+            
             UploaderListAdapter adapter = new UploaderListAdapter(getApplicationContext(), R.layout.two_item_multiple_choice, documents, mInstances);
             setListAdapter(adapter);
             
@@ -375,7 +450,7 @@ public class InstanceUploaderList extends ListActivity {
                 mRestored = false;
             }
     
-            setProgressBarIndeterminateVisibility(false);
+            setProgressVisibility(false);
         }
     }
     // END custom
