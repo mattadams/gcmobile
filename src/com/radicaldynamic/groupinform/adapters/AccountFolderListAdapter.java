@@ -27,6 +27,11 @@ public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
     @Override
     public View getView(int position, View convertView, ViewGroup parent)
     {
+        String selectedDb = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
+
+        if (selectedDb == null)
+            selectedDb = ""; 
+                
         View v = convertView;        
 
         if (v == null) {            
@@ -45,24 +50,24 @@ public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
             if (fi != null) {
                 if (f.getVisibility().equals(AccountFolderActivity.PRIVATE_FOLDER)) {
                     if (f.isReplicated()) {
-                        if (Collect.getInstance().getInformOnlineState().getSelectedDatabase().equals(f.getId()))
+                        if (selectedDb.equals(f.getId()))
                             icon = R.drawable.folder_remote_backup_blue;
                         else    
                             icon = R.drawable.folder_blue_backup;
                     } else { 
-                        if (Collect.getInstance().getInformOnlineState().getSelectedDatabase().equals(f.getId()))
+                        if (selectedDb.equals(f.getId()))
                             icon = R.drawable.folder_remote_blue;
                         else    
                             icon = R.drawable.folder_blue;
                     }
                 } else {
                     if (f.isReplicated()) {
-                        if (Collect.getInstance().getInformOnlineState().getSelectedDatabase().equals(f.getId()))
+                        if (selectedDb.equals(f.getId()))
                             icon = R.drawable.folder_remote_backup_green;
                         else 
                             icon = R.drawable.folder_green_backup;
                     } else {                         
-                        if (Collect.getInstance().getInformOnlineState().getSelectedDatabase().equals(f.getId()))
+                        if (selectedDb.equals(f.getId()))
                             icon = R.drawable.folder_remote_green;
                         else
                             icon = R.drawable.folder_green;
