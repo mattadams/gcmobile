@@ -1044,6 +1044,11 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
      */
     private void refreshView()
     {
+        // Don't attempt to refresh the view if loading or saving
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            return;
+        }
+        
         Field destination = returnActiveField(null);
 
         if (destination == null)

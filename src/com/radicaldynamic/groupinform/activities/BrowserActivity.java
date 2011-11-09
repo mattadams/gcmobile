@@ -353,49 +353,9 @@ public class BrowserActivity extends ListActivity
                         removeDialog(DIALOG_CREATE_FORM);
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_required), Toast.LENGTH_LONG).show();                        
                         showDialog(DIALOG_CREATE_FORM);
-                    } else {                        
-                        // Create a new form document and use an XForm template as the "xml" attachment
-                        try {
-                            // Basic deduplication
-                            FormDefinitionRepo formDefinitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb(Collect.getInstance().getInformOnlineState().getSelectedDatabase()));
-                            List<FormDefinition> definitions = formDefinitionRepo.findByName(form.getName());
-
-                            if (!definitions.isEmpty()) {
-                                removeDialog(DIALOG_CREATE_FORM);
-                                Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_duplicate), Toast.LENGTH_LONG).show();
-                                showDialog(DIALOG_CREATE_FORM);
-                                return;
-                            }
-
-                            // Create empty form from template
-                            InputStream is = getResources().openRawResource(R.raw.xform_template);
-            
-                            // Set up variables to receive data
-                            ByteArrayOutputStream data = new ByteArrayOutputStream();
-                            byte[] inputbuf = new byte[8192];            
-                            int inputlen;
-            
-                            while ((inputlen = is.read(inputbuf)) > 0) {
-                                data.write(inputbuf, 0, inputlen);
-                            }
-
-                            form.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data.toByteArray())).toString(), FormWriter.CONTENT_TYPE));
-                            Collect.getInstance().getDbService().getDb().create(form);
-                            
-                            is.close();
-                            data.close();
-                            
-                            // Ensure that dialog is reset
-                            removeDialog(DIALOG_CREATE_FORM);
-                            
-                            // Launch the form builder with the NEWFORM option set to true
-                            Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
-                            i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
-                            startActivity(i);
-                        } catch (Exception e) {
-                            Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
-                            e.printStackTrace();
-                        }          
+                    } else {
+                        removeDialog(DIALOG_CREATE_FORM);
+                        new CreateFormDefinitionTask().execute(form);
                     }
                 }
             });
@@ -1031,7 +991,12 @@ public class BrowserActivity extends ListActivity
         @Override
         protected void onPostExecute(Void nothing)
         {   
-            progressDialog.cancel();
+            try {
+                progressDialog.dismiss();
+                progressDialog = null;
+            } catch (Exception e) {
+                // Do nothing if view is no longer attached
+            }
             
             if (copied) {
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_something_was_successful, getString(R.string.tf_copy)), Toast.LENGTH_SHORT).show();
@@ -1041,6 +1006,96 @@ public class BrowserActivity extends ListActivity
             } else {
                 // Some other failure
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_something_failed, getString(R.string.tf_copy)), Toast.LENGTH_LONG).show();
+            }
+        }        
+    }
+    
+    /*
+     * Create a new form definition and launch the built-in form editor
+     */
+    private class CreateFormDefinitionTask extends AsyncTask<Object, Void, Void>
+    {
+        private boolean isDuplicate = false;
+        private boolean isSuccessful = true;
+        
+        private FormDefinition f;
+        
+        private ProgressDialog progressDialog = null;
+        
+        @Override
+        protected Void doInBackground(Object... params) 
+        {
+            f = (FormDefinition) params[0];
+            
+            try {
+                // Basic deduplication
+                FormDefinitionRepo formDefinitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb(Collect.getInstance().getInformOnlineState().getSelectedDatabase()));
+                List<FormDefinition> definitions = formDefinitionRepo.findByName(f.getName());
+
+                if (!definitions.isEmpty()) {
+                    isDuplicate = true;
+                    return null;
+                }
+
+                // Create empty form from template
+                InputStream is = getResources().openRawResource(R.raw.xform_template);
+
+                // Set up variables to receive data
+                ByteArrayOutputStream data = new ByteArrayOutputStream();
+                byte[] inputbuf = new byte[8192];            
+                int inputlen;
+
+                while ((inputlen = is.read(inputbuf)) > 0) {
+                    data.write(inputbuf, 0, inputlen);
+                }
+
+                // Add initial XForm template
+                f.addInlineAttachment(new Attachment("xml", new String(Base64Coder.encode(data.toByteArray())).toString(), FormWriter.CONTENT_TYPE));
+                
+                // Create form definition
+                Collect.getInstance().getDbService().getDb().create(f);
+                
+                is.close();
+                data.close();
+            } catch (Exception e) {
+                Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
+                e.printStackTrace();
+                isSuccessful = false;
+            }
+            
+            return null;
+        }
+        
+        @Override
+        protected void onPreExecute()
+        {
+            progressDialog = new ProgressDialog(BrowserActivity.this);
+            progressDialog.setMessage(getString(R.string.tf_creating_form_please_wait));  
+            progressDialog.show();
+        }
+        
+        @Override
+        protected void onPostExecute(Void nothing)
+        {
+            try {
+                progressDialog.dismiss();
+                progressDialog = null;
+            } catch (Exception e) {
+                // Do nothing if view is no longer attached
+            }            
+            
+            if (isDuplicate) {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_duplicate), Toast.LENGTH_LONG).show();
+                showDialog(DIALOG_CREATE_FORM);
+            } else {
+                if (isSuccessful) {
+                    Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
+                    i.putExtra(FormEntryActivity.KEY_FORMPATH, f.getId());
+                    startActivity(i);                    
+                } else {
+                    mDialogMessage = getString(R.string.tf_unable_to_open_folder, getSelectedFolderName());
+                    showDialog(DIALOG_FOLDER_UNAVAILABLE);
+                }
             }
         }        
     }
@@ -1299,7 +1354,12 @@ public class BrowserActivity extends ListActivity
         @Override
         protected void onPostExecute(Void nothing)
         {   
-            progressDialog.cancel();
+            try {
+                progressDialog.dismiss();
+                progressDialog = null;
+            } catch (Exception e) {
+                // Do nothing if view is no longer attached
+            }
             
             // TODO
             if (removed) {
@@ -1402,7 +1462,12 @@ public class BrowserActivity extends ListActivity
         @Override
         protected void onPostExecute(Void nothing)
         {   
-            progressDialog.cancel();
+            try {
+                progressDialog.dismiss();
+                progressDialog = null;
+            } catch (Exception e) {
+                // Do nothing if view is no longer attached
+            }
             
             if (renamed) {
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_something_was_successful, getString(R.string.tf_rename)), Toast.LENGTH_SHORT).show();
