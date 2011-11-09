@@ -10,7 +10,7 @@
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
 		android:clickable="true"
-		android:apiKey="0uNR4ci91XSshVJjCpIOGyM9L3RufyCsueg-PFQ"/>
+		android:apiKey="0uNR4ci91XSvQEj0uljmhOI9dJcYFD6k3ncgQ4A" />
 	<LinearLayout
 		android:id="@+id/location_buttons"
 		android:orientation="vertical"
