@@ -549,8 +549,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         menu.removeItem(MENU_LANGUAGES);
         menu.removeItem(MENU_HIERARCHY_VIEW);
         menu.removeItem(MENU_SAVE);
-        menu.removeItem(MENU_PREFERENCES);
         // BEGIN custom
+//        menu.removeItem(MENU_PREFERENCES);
         menu.removeItem(MENU_REMOVE);
         menu.removeItem(MENU_INFO);
         // END custom
@@ -568,9 +568,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 .setEnabled(
                     (mFormController.getLanguages() == null || mFormController.getLanguages().length == 1) ? false
                             : true);
-        menu.add(0, MENU_PREFERENCES, 0, getString(R.string.general_preferences)).setIcon(
-            android.R.drawable.ic_menu_preferences);
         // BEGIN custom
+//        menu.add(0, MENU_PREFERENCES, 0, getString(R.string.general_preferences)).setIcon(
+//            android.R.drawable.ic_menu_preferences);
         menu.add(0, MENU_REMOVE, 0, getString(R.string.tf_remove_form)).setIcon(R.drawable.ic_menu_delete);
         // END custom
         return true;
