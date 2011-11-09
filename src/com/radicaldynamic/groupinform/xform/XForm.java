@@ -26,5 +26,6 @@ public class XForm
     public static class Value
     {
         public static final String FIELD_LIST = "field-list";
+        public static final String MAPS = "maps";
     }
 }

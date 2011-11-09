@@ -425,6 +425,7 @@ public class FormBuilderFieldEditor extends Activity
         loadCommonAttributes();
         
         disableFormComponent(R.id.dateFieldTypeSelection);
+        disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -444,6 +445,7 @@ public class FormBuilderFieldEditor extends Activity
         
         loadCommonAttributes();
      
+        disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -472,6 +474,12 @@ public class FormBuilderFieldEditor extends Activity
             mField.setEmpty(false);
         }
         
+        if (mField.getAttributes().containsKey(XForm.Attribute.APPEARANCE) &&
+                mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.MAPS)) {
+            CheckBox mapsOption = (CheckBox) findViewById(R.id.geopointMaps);
+            mapsOption.setChecked(true);
+        }
+        
         loadCommonAttributes();
         
         disableFormComponent(R.id.dateFieldTypeSelection);
@@ -495,6 +503,7 @@ public class FormBuilderFieldEditor extends Activity
     
         disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.hintInput);
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -534,6 +543,7 @@ public class FormBuilderFieldEditor extends Activity
 
         disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);        
         disableFormComponent(R.id.numberFieldTypeSelection);
         disableFormComponent(R.id.selectFieldTypeSelection);
@@ -581,6 +591,7 @@ public class FormBuilderFieldEditor extends Activity
         loadCommonAttributes();
         
         disableFormComponent(R.id.dateFieldTypeSelection);
+        disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.selectFieldTypeSelection);
@@ -642,6 +653,7 @@ public class FormBuilderFieldEditor extends Activity
         
         disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);        
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -697,6 +709,7 @@ public class FormBuilderFieldEditor extends Activity
         loadCommonAttributes();
         
         disableFormComponent(R.id.dateFieldTypeSelection);
+        disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -789,7 +802,13 @@ public class FormBuilderFieldEditor extends Activity
     
     private void saveGeopointElement()
     {
+        CheckBox mapsOption = (CheckBox) findViewById(R.id.geopointMaps);
         
+        if (mapsOption.isChecked()) {
+            mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.MAPS);
+        } else {
+            mField.getAttributes().remove(XForm.Attribute.APPEARANCE);
+        }
     }
 
     /*

@@ -60,7 +60,6 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
         /*
          * Customize the row according to per-field specifics
          */
-        
         if (field.getType().equals("group")) {
             fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_group));            
             
@@ -100,6 +99,10 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
                     icon = getDrawable(R.drawable.element_number);
                 } else if (specificType.equals("geopoint")) {
                     icon = getDrawable(R.drawable.element_location);
+                    
+                    if (field.getAttributes().containsKey(XForm.Attribute.APPEARANCE) 
+                            && field.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.MAPS))
+                        details.add("With map");
                 } else if (specificType.equals("int")) {
                     icon = getDrawable(R.drawable.element_number);
                 } else if (specificType.equals("time")) {

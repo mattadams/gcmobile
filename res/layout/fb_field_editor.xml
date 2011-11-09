@@ -331,8 +331,7 @@
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"                    
             android:text="@string/tf_fbel_default_hint" />        
-    </LinearLayout>
-    
+    </LinearLayout>    
         
     <!-- Date type selection -->
     <RelativeLayout 
@@ -383,6 +382,51 @@
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"                    
             android:text="@string/tf_choose_date_type_hint" />    
+    </RelativeLayout>
+    
+    <!-- Geopoint field options -->
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/geopointFieldTypeSelection"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+        
+        <!-- Read-only option -->
+        <RelativeLayout 
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/geopointTypeSelection"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp">
+        
+            <CheckBox             
+                android:id="@+id/geopointMaps"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true" 
+                android:layout_width="wrap_content" 
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:gravity="top" />
+
+            <TextView
+                android:id="@+id/geopointMapsLabel"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@id/geopointMaps"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:text="@string/tf_fbel_geopointmap"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+                
+            <TextView
+                android:id="@android:id/empty"
+                android:inputType="textMultiLine"            
+                android:layout_toRightOf="@id/geopointMaps"
+                android:layout_below="@id/geopointMapsLabel"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"                    
+                android:text="@string/tf_fbel_geopointmap_hint" />
+        </RelativeLayout>  
     </RelativeLayout>
     
     <!-- Read-only option -->
