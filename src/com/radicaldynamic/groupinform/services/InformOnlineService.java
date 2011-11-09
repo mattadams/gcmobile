@@ -269,8 +269,6 @@ public class InformOnlineService extends Service {
             Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);
             e.printStackTrace();
         }
-        
-        Log.d(Collect.LOGTAG, t + "device registration state is " + registered);
 
         // Clear the session for subsequent requests and reset stored state
         if (registered == false)          

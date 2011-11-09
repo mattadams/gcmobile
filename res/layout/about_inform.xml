@@ -87,6 +87,15 @@
 <!--            android:layout_width="wrap_content" -->
 <!--            android:layout_height="wrap_content"-->
 <!--            android:layout_marginBottom="15dp" />            -->
+
+        <TextView
+            android:id="@android:id/empty"  
+            android:text="Help, tutorials and more at\ngroupcomplete.com\n\nEmail us at\nsupport@groupcomplete.com"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:textSize="20sp"
+            android:autoLink="all" />
     </LinearLayout> 
         
     <LinearLayout
