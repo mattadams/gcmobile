@@ -172,6 +172,13 @@ public class DatabaseService extends Service {
         return mBinder;
     }
     
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
+        Log.d(Collect.LOGTAG, t + "received start ID " + startId + ": " + intent);
+        return START_STICKY;
+    }
+    
     /**
      * Class for clients to access.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with

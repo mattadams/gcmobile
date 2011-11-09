@@ -136,6 +136,13 @@ public class InformOnlineService extends Service {
         return mBinder;
     }
     
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
+        Log.d(Collect.LOGTAG, t + "received start ID " + startId + ": " + intent);
+        return START_STICKY;
+    }    
+    
     // Triggered by UI button when the user wants to manually switch to OFFLINE mode
     public boolean goOffline()
     {

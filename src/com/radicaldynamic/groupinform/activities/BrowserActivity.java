@@ -1625,6 +1625,18 @@ public class BrowserActivity extends ListActivity
      */
     private void loadScreen()
     {
+        // If we can't contact one of the services there's no point in running - restart */
+        if (Collect.getInstance().getIoService() == null || Collect.getInstance().getDbService() == null) {            
+            Intent exit = new Intent();
+            exit.putExtra("exit_app", true);
+            setResult(RESULT_OK, exit);
+            finish();            
+            
+            Intent i = getBaseContext().getPackageManager().getLaunchIntentForPackage(getBaseContext().getPackageName());
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(i);
+        }
+        
         // Reflect the online/offline status (may be disabled thanks to toggling state)
         Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
         b1.setEnabled(true);
