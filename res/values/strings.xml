@@ -235,6 +235,7 @@
 	<string name="tf_account_key_label">License Key</string>
 	<string name="tf_account_number_label">Licence Number</string>
 	<string name="tf_add_form_field">Add Field</string>
+    <string name="tf_add_language">Add a language to begin translating</string>
 	<string name="tf_add_new">Add New</string>
 	<string name="tf_advanced">Advanced</string>
 	<string name="tf_alias_not_assigned">Alias not assigned</string>

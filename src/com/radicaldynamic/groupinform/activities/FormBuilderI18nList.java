@@ -617,5 +617,9 @@ public class FormBuilderI18nList extends ExpandableListActivity
             Collections.sort(mTranslations, new TranslationSortByLang(mLanguages, mAbbreviations));
             mAdapter.notifyDataSetChanged();
         }
+        
+        if (mTranslations.isEmpty()) {
+            Toast.makeText(FormBuilderI18nList.this, getString(R.string.tf_add_language), Toast.LENGTH_LONG).show();
+        }
     }
 }
