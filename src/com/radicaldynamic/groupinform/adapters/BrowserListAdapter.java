@@ -60,14 +60,50 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
                 
                 switch (mSpinner.getSelectedItemPosition()) {
                 case 0:
-                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list));
+                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list));                    
+                    
+                    if (mTallies.containsKey(f.getId())) {
+                        draft    = mTallies.get(f.getId()).get(FormInstance.Status.draft.toString());
+                        complete = mTallies.get(f.getId()).get(FormInstance.Status.complete.toString());
+                    }
+                    
+                    if (draft == null) 
+                        draft = "0";
+                    
+                    if (complete == null)
+                        complete = "0";
+                    
+                    tallies = draft + " draft(s), " + complete + " complete";                    
+                    break;
                     
                 case 1:
-                    if (mSpinner.getSelectedItemPosition() == 1)
-                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_edit));
+                    complete = mTallies.get(f.getId()).get(FormInstance.Status.complete.toString());
+                    
+                    if (complete == null)
+                        complete = "0";
+                    
+                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked3));
+                    tallies = complete + " completed forms";
+                    
+                    if (mTallies.get(f.getId()).get(FormInstance.Status.complete.toString()).equals("1"))
+                        tallies = tallies.substring(0, tallies.length() - 1);
+                    break;
+
                 case 2:
-                    if (mSpinner.getSelectedItemPosition() == 2)
-                        fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.clipboard_download));
+                    draft = mTallies.get(f.getId()).get(FormInstance.Status.draft.toString());
+                    
+                    if (draft == null)
+                        draft = "0";
+                    
+                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked1));
+                    tallies = draft + " drafts";
+                    
+                    if (mTallies.get(f.getId()).get(FormInstance.Status.draft.toString()).equals("1"))
+                        tallies = tallies.substring(0, tallies.length() - 1);
+                    break;
+                    
+                case 3:
+                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.clipboard_download));
                     
                     if (mTallies.containsKey(f.getId())) {
                         draft    = mTallies.get(f.getId()).get(FormInstance.Status.draft.toString());
@@ -83,30 +119,21 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
                     tallies = draft + " draft(s), " + complete + " complete";
                     break;
                     
-                case 3:
-                    draft = mTallies.get(f.getId()).get(FormInstance.Status.draft.toString());
-                    
-                    if (draft == null)
-                        draft = "0";
-                    
-                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked1));
-                    tallies = draft + " drafts";
-                    
-                    if (mTallies.get(f.getId()).get(FormInstance.Status.draft.toString()).equals("1"))
-                        tallies = tallies.substring(0, tallies.length() - 1);
-                    break;
-                    
                 case 4:
-                    complete = mTallies.get(f.getId()).get(FormInstance.Status.complete.toString());
+                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_edit));
+                    
+                    if (mTallies.containsKey(f.getId())) {
+                        draft    = mTallies.get(f.getId()).get(FormInstance.Status.draft.toString());
+                        complete = mTallies.get(f.getId()).get(FormInstance.Status.complete.toString());
+                    }
+                    
+                    if (draft == null) 
+                        draft = "0";
                     
                     if (complete == null)
                         complete = "0";
                     
-                    fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked3));
-                    tallies = complete + " completed forms";
-                    
-                    if (mTallies.get(f.getId()).get(FormInstance.Status.complete.toString()).equals("1"))
-                        tallies = tallies.substring(0, tallies.length() - 1);
+                    tallies = draft + " draft(s), " + complete + " complete";
                     break;
                 }                
                 

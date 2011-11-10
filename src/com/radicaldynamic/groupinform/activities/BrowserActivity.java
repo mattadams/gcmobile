@@ -194,8 +194,8 @@ public class BrowserActivity extends ListActivity
         }
 
         // Initiate and populate spinner to filter forms displayed by instances types
-        ArrayAdapter<CharSequence> instanceStatus = ArrayAdapter
-            .createFromResource(this, R.array.tf_task_spinner_values, android.R.layout.simple_spinner_item);        
+        ArrayAdapter<CharSequence> instanceStatus = 
+            ArrayAdapter.createFromResource(this, R.array.tf_task_spinner_values, android.R.layout.simple_spinner_item);        
         instanceStatus.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
@@ -635,7 +635,7 @@ public class BrowserActivity extends ListActivity
             
             builder.setView(view);
             builder.setInverseBackgroundForced(true);
-            builder.setTitle(getText(R.string.tf_rename_form_dialog));
+            builder.setTitle(getText(R.string.tf_rename_template));
             
             renamedFormName.setText(mFormDefinition.getName());
             
@@ -755,33 +755,37 @@ public class BrowserActivity extends ListActivity
         Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
         
         switch (s1.getSelectedItemPosition()) {
-        // When showing all forms in folder... start a new form
         case 0:
+            // When showing all forms in folder... start a new form
             i = new Intent(this, FormEntryActivity.class);
             i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, new ArrayList<String>());
             i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
             startActivity(i);
             break;
-        // When showing all forms in folder... edit a form
+
         case 1:
-            FormBuilderLauncherTask fbl = new FormBuilderLauncherTask();
-            fbl.execute(form.getId());
+            // When showing all completed forms in folder... browse selected form instances
+            ilp = new InstanceLoadPathTask();
+            ilp.execute(form.getId(), FormInstance.Status.complete);
             break;
-        // When showing all forms in folder... export records
+
         case 2:
+            // When showing all draft forms in folder... browse selected form instances
+            ilp = new InstanceLoadPathTask();
+            ilp.execute(form.getId(), FormInstance.Status.draft);
+            break;
+
+        case 3:
+            // When showing all forms in folder... export records
             Intent dea = new Intent(this, DataExportActivity.class);
             dea.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
             startActivity(dea);
             break;
-        // When showing all draft forms in folder... browse selected form instances
-        case 3:
-            ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), FormInstance.Status.draft);
-            break;
-        // When showing all completed forms in folder... browse selected form instances
-        case 4:
-            ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), FormInstance.Status.complete);
+
+        case 4:           
+            // When showing all forms in folder... edit a form
+            FormBuilderLauncherTask fbl = new FormBuilderLauncherTask();
+            fbl.execute(form.getId());
             break;
         }
     }
@@ -1303,14 +1307,17 @@ public class BrowserActivity extends ListActivity
                             Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
                             break;
                         case 1:
-                            Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
                             break;
                         case 2:
-                            Toast.makeText(getApplicationContext(), getString(R.string.tf_export_records_hint), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
                             break;
                         case 3:
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_export_records_hint), Toast.LENGTH_SHORT).show();
+                            break;
                         case 4:
-                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_SHORT).show();
+                            break;
                         }
                     }
                 }
@@ -1778,19 +1785,23 @@ public class BrowserActivity extends ListActivity
             mRefreshViewTask = new RefreshViewTask();
 
             switch (position) {
-            // Show all forms (in folder)
             case 0:
-            case 1:
-            case 2:
+                // Show all forms
                 mRefreshViewTask.execute(FormInstance.Status.any);
                 break;
-            // Show all draft forms
-            case 3:
+            case 1:
+                // Show all completed forms
+                mRefreshViewTask.execute(FormInstance.Status.complete);
+                break;
+            case 2:
+                // Show all draft forms
                 mRefreshViewTask.execute(FormInstance.Status.draft);
                 break;
-            // Show all completed forms
+            case 3:
+                // Show all forms
             case 4:
-                mRefreshViewTask.execute(FormInstance.Status.complete);
+                // Show all forms
+                mRefreshViewTask.execute(FormInstance.Status.any);
                 break;
             }
         } catch (DatabaseService.DbUnavailableDueToMetadataException e) {            

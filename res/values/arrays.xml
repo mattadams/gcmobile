@@ -64,10 +64,10 @@
     <!-- Begin customizations for Inform --> 
     <string-array name="tf_task_spinner_values">
         <item>Start New Form</item>        
-        <item>Edit Forms</item>
-        <item>Export Records</item>
-        <item>Browse Drafts</item>
-        <item>Browse Completed Forms</item>
+        <item>Browse Completed Data</item>
+        <item>Browse Draft Data</item>
+        <item>Export Records</item>    
+        <item>Edit Form Templates</item>        
     </string-array>
     
     <string-array name="tf_select_appearance_single_options">
