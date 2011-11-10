@@ -25,7 +25,15 @@ public class XForm
 
     public static class Value
     {
+        public static final String AUTOCOMPLETE = "autocomplete";
+        public static final String COMPACT = "compact";
+        public static final String COMPACT_QUICK = "compact quick";
         public static final String FIELD_LIST = "field-list";
-        public static final String MAPS = "maps";
+        public static final String LABEL = "label";
+        public static final String LIST = "list";
+        public static final String LIST_NOLABEL = "list-nolabel";
+        public static final String MAP = "maps";
+        public static final String MINIMAL = "minimal";
+        public static final String QUICK = "quick";        
     }
 }

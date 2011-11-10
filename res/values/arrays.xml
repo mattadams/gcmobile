@@ -68,7 +68,28 @@
         <item>Export Records</item>
         <item>Browse Drafts</item>
         <item>Browse Completed Forms</item>
-    </string-array>    
+    </string-array>
+    
+    <string-array name="tf_select_appearance_single_options">
+        <item>Regular</item>
+        <item>Minimal (spinner)</item>
+        <item>Horizontal list</item>
+        <item>Horizontal list (no labels)</item>        
+        <item>Select option &amp; advance</item>
+        <!-- <item>Autocomplete from list</item> -->
+        <!-- <item>compact</item> -->
+        <!-- <item>compact quick (single only)</item> -->
+        <!-- <item>label</item> -->        
+    </string-array>
+    
+    <string-array name="tf_select_appearance_multiple_options">
+        <item>Regular</item>
+        <item>Minimal (spinner)</item>
+        <item>Horizontal list</item>
+        <item>Horizontal list (no labels)</item>        
+        <!-- <item>compact</item> -->
+        <!-- <item>label</item> -->        
+    </string-array>        
         
     <string-array name="tf_time_period_entry_preferences">
         <item>Ever 5 minutes</item>

@@ -246,6 +246,7 @@
 	<string name="tf_browse_instances_hint">Select item to %s</string>
 	<string name="tf_change_select_type">Change select type?</string>
 	<string name="tf_change_select_type_msg">This multiple select field has more than one preselected list item. A single select field can only have one preselected item.\n\nIf you choose to change to a single select field all of the preselected list items will be unselected.\n\nDo you wish to continue?</string>
+    <string name="tf_choose_appearance">Choose Appearance</string>
     <string name="tf_choose_date_type">Choose date type</string>
     <string name="tf_choose_date_type_hint">Select the input controls that will appear for this date &amp; time field.</string>
 	<string name="tf_choose_group_type">Choose group type</string>
@@ -344,7 +345,8 @@
 	<string name="tf_fbel_required_hint">Require the user to respond to this field before marking the form as complete.</string>
     <string name="tf_fbel_selectmultiple">Allow multiple select</string>
     <string name="tf_fbel_selectmultiple_hint">Permit the user to select multiple options from the list of items.</string>
-    <string name="tf_fbel_single_select_appearance">Single select appearance</string>
+    <string name="tf_fbel_select_appearance">Select appearance</string>
+    <string name="tf_fbel_select_appearance_hint">Adjust the appearance and behavior of the select field.</string>
 	<string name="tf_field">Field</string>
 	<string name="tf_folder_admin_name_label">Name</string>
 	<string name="tf_folder_admin_name_hint">A concise name for this folder.</string>

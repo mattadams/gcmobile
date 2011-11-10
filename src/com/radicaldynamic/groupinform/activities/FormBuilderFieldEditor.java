@@ -19,11 +19,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
@@ -65,6 +67,8 @@ public class FormBuilderFieldEditor extends Activity
     
     // Special hack to deal with the added complexity of select fields
     private String mSelectInstanceDefault = "";
+    private ArrayAdapter<CharSequence> mSelectAppearanceSingleOptions;
+    private ArrayAdapter<CharSequence> mSelectAppearanceMultipleOptions;
     
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -156,6 +160,15 @@ public class FormBuilderFieldEditor extends Activity
                     mReadonly.setChecked(false);                 
             }
         });
+        
+        // Prepare adapters for select appearance options
+        mSelectAppearanceSingleOptions = 
+            ArrayAdapter.createFromResource(this, R.array.tf_select_appearance_single_options, android.R.layout.simple_spinner_item);        
+        mSelectAppearanceSingleOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        
+        mSelectAppearanceMultipleOptions = 
+            ArrayAdapter.createFromResource(this, R.array.tf_select_appearance_multiple_options, android.R.layout.simple_spinner_item);        
+        mSelectAppearanceMultipleOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         if (mFieldType.equals("barcode"))         loadBarcodeElement();
         else if (mFieldType.equals("date"))       loadDateElement();                
@@ -346,7 +359,7 @@ public class FormBuilderFieldEditor extends Activity
     
     // See loadSelectElement() for further information on this dialog
     private void createSelectChangeDialog()
-    {
+    {        
         mAlertDialog = new AlertDialog.Builder(this)
             .setCancelable(false)
             .setIcon(R.drawable.ic_dialog_alert)
@@ -355,6 +368,8 @@ public class FormBuilderFieldEditor extends Activity
             .setPositiveButton(R.string.tf_yes, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
+                    Spinner optionAppearance = (Spinner) findViewById(R.id.selectFieldAppearance);
+                    optionAppearance.setAdapter(mSelectAppearanceSingleOptions);
                     mSelectInstanceDefault = "";
                 }
             })
@@ -475,7 +490,7 @@ public class FormBuilderFieldEditor extends Activity
         }
         
         if (mField.getAttributes().containsKey(XForm.Attribute.APPEARANCE) &&
-                mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.MAPS)) {
+                mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.MAP)) {
             CheckBox mapsOption = (CheckBox) findViewById(R.id.geopointMaps);
             mapsOption.setChecked(true);
         }
@@ -659,32 +674,53 @@ public class FormBuilderFieldEditor extends Activity
         disableFormComponent(R.id.numberFieldTypeSelection);
         disableFormComponent(R.id.readonlyLayout);
         
-        CheckBox optionMultiple = (CheckBox) findViewById(R.id.selectFieldMultiple);
+        final CheckBox optionMultiple = (CheckBox) findViewById(R.id.selectFieldMultiple);
+        final Spinner optionAppearance = (Spinner) findViewById(R.id.selectFieldAppearance);
         
         // Set up listener to detect changes to read-only input element
         optionMultiple.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {                
                 if (((CheckBox) v).isChecked()) {
-                    mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectmulti));     
+                    mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectmulti));
+                    optionAppearance.setAdapter(mSelectAppearanceMultipleOptions);
                 } else {
                     /* 
                      * Single selects may only have one preselected default.  This presents a problem
                      * if the user is switching from a multiple to a single default and requires user
                      * intervention.
                      */
-                    if (mSelectInstanceDefault.split("\\s+").length > 1)
+                    if (mSelectInstanceDefault.split("\\s+").length > 1) {
                         createSelectChangeDialog();
-                    else
+                    } else {
                         mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
+                        optionAppearance.setAdapter(mSelectAppearanceSingleOptions);
+                    }
                 }
             }
         });
 
         // Initialize select type 
-        if (mField.getType().equals("select"))
+        if (mField.getType().equals("select")) {
             optionMultiple.setChecked(true);
-        else
-            optionMultiple.setChecked(false);    
+            optionAppearance.setAdapter(mSelectAppearanceMultipleOptions);
+        } else {
+            optionMultiple.setChecked(false);
+            optionAppearance.setAdapter(mSelectAppearanceSingleOptions);
+        }
+        
+        // Default appearance
+        optionAppearance.setSelection(0);
+        
+        // Switch to selected appearance option
+        if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.MINIMAL)) {
+            optionAppearance.setSelection(1);
+        } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.LIST)) {
+            optionAppearance.setSelection(2);
+        } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.LIST_NOLABEL)) {
+            optionAppearance.setSelection(3);
+        } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.QUICK)) {
+            optionAppearance.setSelection(4);
+        }
     }
     
     private void loadTextElement()
@@ -795,7 +831,7 @@ public class FormBuilderFieldEditor extends Activity
         CheckBox mapsOption = (CheckBox) findViewById(R.id.geopointMaps);
         
         if (mapsOption.isChecked()) {
-            mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.MAPS);
+            mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.MAP);
         } else {
             mField.getAttributes().remove(XForm.Attribute.APPEARANCE);
         }
@@ -883,6 +919,7 @@ public class FormBuilderFieldEditor extends Activity
     private void saveSelectElement()
     {
         final CheckBox optionMultiple = (CheckBox) findViewById(R.id.selectFieldMultiple);
+        final Spinner optionAppearance = (Spinner) findViewById(R.id.selectFieldAppearance);
         
         if (optionMultiple.isChecked()) {
             mField.setType("select");
@@ -890,8 +927,16 @@ public class FormBuilderFieldEditor extends Activity
         } else {
             mField.setType("select1");
             mField.getBind().setType("select1");
-        }   
+        }
         
+        switch (optionAppearance.getSelectedItemPosition()) {
+        case 0: mField.getAttributes().remove(XForm.Attribute.APPEARANCE); break;
+        case 1: mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.MINIMAL); break;
+        case 2: mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.LIST); break;
+        case 3: mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.LIST_NOLABEL); break;
+        case 4: mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.QUICK); break;
+        }
+                
         mField.getInstance().setDefaultValue(mSelectInstanceDefault);
     }
     

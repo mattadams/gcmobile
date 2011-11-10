@@ -101,7 +101,7 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
                     icon = getDrawable(R.drawable.element_location);
                     
                     if (field.getAttributes().containsKey(XForm.Attribute.APPEARANCE) 
-                            && field.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.MAPS))
+                            && field.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.MAP))
                         details.add("With map");
                 } else if (specificType.equals("int")) {
                     icon = getDrawable(R.drawable.element_number);
