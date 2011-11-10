@@ -255,8 +255,6 @@
 	<string name="tf_choose_number_type">Choose number type</string>
 	<string name="tf_choose_number_type_hint">Select the number type that this field should support.</string>
 	<string name="tf_choose_one">Choose one</string>
-	<string name="tf_choose_select_type">Choose selection type</string>
-	<string name="tf_choose_select_type_hint">Choose whether to allow the user to select one or more items from the selection list</string>
 	<string name="tf_communication_error_try_again">Communication error - please try later</string>
 	<string name="tf_confirm_complete_instance_removal_dialog_msg">This is a completed form.\n\nAre you sure that you want to remove it?\n\nThis action can not be undone.</string>
 	<string name="tf_confirm_instance_removal_dialog_msg">Do you want to remove this form?\n\nThis action can not be undone.</string>
@@ -326,7 +324,7 @@
 	<string name="tf_element_text">Text field</string>
 	<string name="tf_email_address_required">An email address is required</string>
 	<string name="tf_email_not_available">Email address not available</string>
-	<string name="tf_exit_inform">Exit GC Mobile</string>
+	<string name="tf_exit_inform">Exit</string>
 	<string name="tf_export_from">Export from</string>
 	<string name="tf_export_records">Export Records</string>
 	<string name="tf_export_records_hint">Select an item to export records</string>
@@ -344,6 +342,9 @@
 	<string name="tf_fbel_readonly_hint">Read-only fields will be visible to the user but they will not be able to modify them directly. The values of read-only fields may be manipulated by advanced properties.</string>
 	<string name="tf_fbel_required">Required</string>
 	<string name="tf_fbel_required_hint">Require the user to respond to this field before marking the form as complete.</string>
+    <string name="tf_fbel_selectmultiple">Allow multiple select</string>
+    <string name="tf_fbel_selectmultiple_hint">Permit the user to select multiple options from the list of items.</string>
+    <string name="tf_fbel_single_select_appearance">Single select appearance</string>
 	<string name="tf_field">Field</string>
 	<string name="tf_folder_admin_name_label">Name</string>
 	<string name="tf_folder_admin_name_hint">A concise name for this folder.</string>

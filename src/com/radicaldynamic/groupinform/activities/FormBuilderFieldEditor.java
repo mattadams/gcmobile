@@ -319,8 +319,8 @@ public class FormBuilderFieldEditor extends Activity
              * This makes sense because the user may have switched select modes but may
              * not have saved the field yet, so we cannot determine this from the field itself.
              */
-            final RadioButton radioSingle = (RadioButton) findViewById(R.id.selectTypeSingle);            
-            i.putExtra(FormBuilderSelectItemList.KEY_SINGLE, radioSingle.isChecked());
+            final CheckBox optionMultiple = (CheckBox) findViewById(R.id.selectFieldMultiple);
+            i.putExtra(FormBuilderSelectItemList.KEY_SINGLE, !optionMultiple.isChecked());            
             i.putExtra(FormBuilderSelectItemList.KEY_DEFAULT, mSelectInstanceDefault);
             startActivityForResult(i, REQUEST_ITEMLIST);
             break;
@@ -354,15 +354,15 @@ public class FormBuilderFieldEditor extends Activity
             .setMessage(R.string.tf_change_select_type_msg)            
             .setPositiveButton(R.string.tf_yes, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
+                    mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
                     mSelectInstanceDefault = "";
                 }
             })
             .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     // Return to a multiple select field type
-                    RadioButton radioMultiple = (RadioButton) findViewById(R.id.selectTypeMultiple);
-                    radioMultiple.setChecked(true);
-                    
+                    CheckBox optionMultiple = (CheckBox) findViewById(R.id.selectFieldMultiple);
+                    optionMultiple.setChecked(true);
                     dialog.cancel();
                 }
             }).create();
@@ -659,18 +659,14 @@ public class FormBuilderFieldEditor extends Activity
         disableFormComponent(R.id.numberFieldTypeSelection);
         disableFormComponent(R.id.readonlyLayout);
         
-        // Set up listener for radio buttons so that they influence the field type
-        OnClickListener radioListener = new OnClickListener() {
-            public void onClick(View v) {
-                RadioButton rb = (RadioButton) v;
-                
-                switch (rb.getId()) {
-                case R.id.selectTypeMultiple:
-                    mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectmulti));                    
-                    break;                    
-                case R.id.selectTypeSingle:
-                    mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
-                    
+        CheckBox optionMultiple = (CheckBox) findViewById(R.id.selectFieldMultiple);
+        
+        // Set up listener to detect changes to read-only input element
+        optionMultiple.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {                
+                if (((CheckBox) v).isChecked()) {
+                    mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectmulti));     
+                } else {
                     /* 
                      * Single selects may only have one preselected default.  This presents a problem
                      * if the user is switching from a multiple to a single default and requires user
@@ -678,23 +674,17 @@ public class FormBuilderFieldEditor extends Activity
                      */
                     if (mSelectInstanceDefault.split("\\s+").length > 1)
                         createSelectChangeDialog();
-                                        
-                    break;
+                    else
+                        mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
                 }
             }
-        };
-        
-        final RadioButton radioMultiple = (RadioButton) findViewById(R.id.selectTypeMultiple);
-        final RadioButton radioSingle = (RadioButton) findViewById(R.id.selectTypeSingle);
-        
-        radioMultiple.setOnClickListener(radioListener);
-        radioSingle.setOnClickListener(radioListener);
+        });
 
         // Initialize select type 
         if (mField.getType().equals("select"))
-            radioMultiple.setChecked(true);
+            optionMultiple.setChecked(true);
         else
-            radioSingle.setChecked(true);        
+            optionMultiple.setChecked(false);    
     }
     
     private void loadTextElement()
@@ -892,14 +882,14 @@ public class FormBuilderFieldEditor extends Activity
     
     private void saveSelectElement()
     {
-        final RadioButton radioSingle = (RadioButton) findViewById(R.id.selectTypeSingle);
+        final CheckBox optionMultiple = (CheckBox) findViewById(R.id.selectFieldMultiple);
         
-        if (radioSingle.isChecked()) {
+        if (optionMultiple.isChecked()) {
+            mField.setType("select");
+            mField.getBind().setType("select");
+        } else {
             mField.setType("select1");
             mField.getBind().setType("select1");
-        } else {
-            mField.setType("select");
-            mField.getBind().setType("select");                        
         }   
         
         mField.getInstance().setDefaultValue(mSelectInstanceDefault);

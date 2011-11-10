@@ -265,42 +265,41 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:paddingTop="10dp">
-        
-        <TextView
-            android:id="@+id/selectTypeLabel"
-            android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
-            android:paddingTop="10dp"
-            android:text="@string/tf_choose_select_type" 
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-        
-        <RadioGroup
-            android:id="@+id/selectRadioSelection"
-            android:layout_below="@id/selectTypeLabel"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">            
 
-            <RadioButton 
-                android:id="@+id/selectTypeSingle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/tf_select_single_type" /> 
-                                
-            <RadioButton 
-                android:id="@+id/selectTypeMultiple"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/tf_select_multiple_type" />    
-        </RadioGroup>
-        
-        <TextView
-            android:id="@android:id/empty"
-            android:inputType="textMultiLine"
-            android:layout_below="@id/selectRadioSelection"
+        <!-- Multiple option -->
+        <RelativeLayout 
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_width="fill_parent"                    
-            android:text="@string/tf_choose_select_type_hint" />    
+            android:paddingTop="10dp">
+        
+            <CheckBox             
+                android:id="@+id/selectFieldMultiple"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true" 
+                android:layout_width="wrap_content" 
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:gravity="top" />
+
+            <TextView
+                android:id="@+id/selectFieldMultipleLabel"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@id/selectFieldMultiple"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:text="@string/tf_fbel_selectmultiple"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+                
+            <TextView
+                android:id="@android:id/empty"
+                android:inputType="textMultiLine"            
+                android:layout_toRightOf="@id/selectFieldMultiple"
+                android:layout_below="@id/selectFieldMultipleLabel"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"                    
+                android:text="@string/tf_fbel_selectmultiple_hint" />
+        </RelativeLayout>
     </RelativeLayout>
     
     <!-- Default value -->
@@ -392,10 +391,9 @@
         android:layout_height="wrap_content"
         android:paddingTop="10dp">
         
-        <!-- Read-only option -->
+        <!-- Map option -->
         <RelativeLayout 
             xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/geopointTypeSelection"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dp">
