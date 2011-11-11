@@ -47,7 +47,6 @@ public class Bind
         // Read in attributes (includes "ref" to instance data output)
         for (String s : tag.getAttributeNames()) {            
             // Special handling for certain attributes
-            Object String;
             if (s.equals("nodeset")) {
                 String nodeset = tag.getAttribute(s);
 

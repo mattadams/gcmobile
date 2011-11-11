@@ -22,7 +22,7 @@
 
     <TextView
         android:id="@android:id/empty"
-        android:text="@string/tf_form_name_hint"
+        android:text="@string/tf_add_template_hint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 </LinearLayout>

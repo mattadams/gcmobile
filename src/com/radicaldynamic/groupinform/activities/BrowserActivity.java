@@ -75,10 +75,12 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
 import com.radicaldynamic.groupinform.documents.Generic;
+import com.radicaldynamic.groupinform.listeners.DefinitionImportListener;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
 import com.radicaldynamic.groupinform.repositories.FormInstanceRepo;
 import com.radicaldynamic.groupinform.services.DatabaseService;
+import com.radicaldynamic.groupinform.tasks.DefinitionImportTask;
 import com.radicaldynamic.groupinform.utilities.Base64Coder;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
@@ -92,27 +94,29 @@ import com.radicaldynamic.groupinform.xform.FormWriter;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class BrowserActivity extends ListActivity
+public class BrowserActivity extends ListActivity implements DefinitionImportListener
 {
     private static final String t = "BrowserActivity: ";
     
-    // Dialog status codes
-    private static final int DIALOG_CREATE_FORM = 0;
-    private static final int DIALOG_COPY_TO_FOLDER = 1;
+    // Dialog status codes    
+    private static final int DIALOG_COPY_TO_FOLDER = 0;
+    private static final int DIALOG_CREATE_TEMPLATE = 1;
     private static final int DIALOG_FOLDER_OUTDATED = 2;
     private static final int DIALOG_FOLDER_UNAVAILABLE = 3;
-    private static final int DIALOG_FORM_BUILDER_LAUNCH_ERROR = 4;
-    private static final int DIALOG_INSTANCES_UNAVAILABLE = 5;
-    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 6;
-    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 7;
-    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 8;
-    private static final int DIALOG_ONLINE_STATE_CHANGING = 9;
-    private static final int DIALOG_REMOVE_FORM = 10;
-    private static final int DIALOG_RENAME_FORM = 11;
-    private static final int DIALOG_TOGGLE_ONLINE_STATE = 12;
-    private static final int DIALOG_UNABLE_TO_COPY_DUPLICATE = 13;
-    private static final int DIALOG_UNABLE_TO_RENAME_DUPLICATE = 14;
-    private static final int DIALOG_UPDATING_FOLDER = 15;
+    private static final int DIALOG_FORM_BUILDER_LAUNCH_ERROR = 4; 
+    private static final int DIALOG_IMPORTING_TEMPLATE = 5;
+    private static final int DIALOG_INSTANCES_UNAVAILABLE = 6;
+    private static final int DIALOG_OFFLINE_ATTEMPT_FAILED = 7;
+    private static final int DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS = 8;
+    private static final int DIALOG_ONLINE_ATTEMPT_FAILED = 9;
+    private static final int DIALOG_ONLINE_STATE_CHANGING = 10;
+    private static final int DIALOG_REMOVE_FORM = 11;
+    private static final int DIALOG_RENAME_TEMPLATE = 12;
+    private static final int DIALOG_TOGGLE_ONLINE_STATE = 13;
+    private static final int DIALOG_UNABLE_TO_COPY_DUPLICATE = 14;
+    private static final int DIALOG_UNABLE_TO_IMPORT_TEMPLATE = 15;
+    private static final int DIALOG_UNABLE_TO_RENAME_DUPLICATE = 16;
+    private static final int DIALOG_UPDATING_FOLDER = 17;
     
     // Keys for option menu items
     private static final int MENU_OPTION_REFRESH = 0;
@@ -132,6 +136,7 @@ public class BrowserActivity extends ListActivity
     // Request codes for returning data from specified intent 
     private static final int RESULT_ABOUT = 1;
     private static final int RESULT_COPY = 2;    
+    private static final int RESULT_IMPORT = 3;
 
     private FormDefinition mFormDefinition;     // Stash for a selected form definition
     
@@ -142,6 +147,7 @@ public class BrowserActivity extends ListActivity
     private boolean mSpinnerInit = false;       // See s1...OnItemSelectedListener() where this is used in a horrid workaround
     
     private CopyToFolderTask mCopyToFolderTask;
+    private DefinitionImportTask mDefinitionImportTask;
     private RefreshViewTask mRefreshViewTask;
     private RemoveTask mRemoveTask;
     private RenameTask mRenameTask;
@@ -149,6 +155,7 @@ public class BrowserActivity extends ListActivity
     
     private Dialog mDialog;
     private String mDialogMessage;              // Custom message consumed by onCreateDialog()
+    private ProgressDialog mProgressDialog;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -178,28 +185,29 @@ public class BrowserActivity extends ListActivity
 
             if (savedInstanceState.containsKey(KEY_DIALOG_MESSAGE))
                 mDialogMessage = savedInstanceState.getString(KEY_DIALOG_MESSAGE);
-            
-            // Restore custom dialog message
-            if (savedInstanceState.containsKey(KEY_DIALOG_MESSAGE))
-                mDialogMessage = savedInstanceState.getString(KEY_DIALOG_MESSAGE);
-            
+
             if (savedInstanceState.containsKey(KEY_SELECTED_DB))
                 mSelectedDatabase = savedInstanceState.getString(KEY_SELECTED_DB);
-            
-            Object data = getLastNonConfigurationInstance();
-            
-            if (data instanceof HashMap<?, ?>) {
-                mFormDefinition = (FormDefinition) ((HashMap<String, Generic>) data).get(KEY_FORM_DEFINITION);
-            }
         }
+        
+        // Retrieve persistent data structures and processes
+        Object data = getLastNonConfigurationInstance();
+        
+        if (data instanceof DefinitionImportTask)
+            mDefinitionImportTask = (DefinitionImportTask) data;
+        else if (data instanceof HashMap<?, ?>)
+            mFormDefinition = (FormDefinition) ((HashMap<String, Generic>) data).get(KEY_FORM_DEFINITION);
 
-        // Initiate and populate spinner to filter forms displayed by instances types
-        ArrayAdapter<CharSequence> instanceStatus = 
-            ArrayAdapter.createFromResource(this, R.array.tf_task_spinner_values, android.R.layout.simple_spinner_item);        
-        instanceStatus.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Initiate and populate spinner to filter form browser on the basis of the currently selected task
+        ArrayAdapter<CharSequence> taskSpinnerOptions = ArrayAdapter.createFromResource(this, 
+                R.array.tf_task_spinner_values, 
+                android.R.layout.simple_spinner_item);
+        
+        taskSpinnerOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
-        s1.setAdapter(instanceStatus);
+        // Associate task spinner with options, set up listener for spinner
+        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);        
+        s1.setAdapter(taskSpinnerOptions);
         s1.setOnItemSelectedListener(new OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
@@ -214,16 +222,17 @@ public class BrowserActivity extends ListActivity
                  * and http://stackoverflow.com/questions/2562248/android-how-to-keep-onitemselected-from-firing-off-on-a-newly-instantiated-spinn
                  * for more on this disgusting issue. 
                  */
-                if (mSpinnerInit == false)
+                if (mSpinnerInit == false) {
                     mSpinnerInit = true;
-                else
+                } else {
                     loadScreen();
+                }
             }
 
             public void onNothingSelected(AdapterView<?> parent) { }
         });
 
-        // Set up listener for Folder Selector button in title
+        // Set up listener for Folder title button
         Button b1 = (Button) findViewById(R.id.folderTitleButton);
         b1.setOnClickListener(new OnClickListener() {
             @Override
@@ -233,7 +242,7 @@ public class BrowserActivity extends ListActivity
             }
         });
 
-        // Set up listener for Online Status button in title
+        // Set up listener for Online/Offline title button
         Button b2 = (Button) findViewById(R.id.onlineStatusTitleButton);
         b2.setOnClickListener(new OnClickListener() {
             @Override
@@ -243,24 +252,48 @@ public class BrowserActivity extends ListActivity
             }
         });
     }
+    
+    @Override
+    protected void onDestroy() 
+    {
+        if (mDefinitionImportTask != null) {
+            mDefinitionImportTask.setImportListener(null);
+            if (mDefinitionImportTask.getStatus() == AsyncTask.Status.FINISHED) {
+                mDefinitionImportTask.cancel(true);
+            }
+        }
+
+        super.onDestroy();
+
+    }
 
     @Override
     protected void onResume()
     {
         super.onResume();
+        
+        if (mDefinitionImportTask != null) {
+            mDefinitionImportTask.setImportListener(this);
+            
+            if (mDefinitionImportTask != null && mDefinitionImportTask.getStatus() == AsyncTask.Status.FINISHED) {
+                dismissDialog(DIALOG_IMPORTING_TEMPLATE);  
+            }
+        }
+        
         loadScreen();
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) 
+    {
         super.onActivityResult(requestCode, resultCode, intent);
         
         if (resultCode == RESULT_CANCELED)
             return;
         
         switch (requestCode) {
-        // "Exit" if the user resets GC Mobile
         case RESULT_ABOUT:
+            // "Exit" if the user resets GC Mobile
             Intent i = new Intent();
             i.putExtra("exit_app", true);
             setResult(RESULT_OK, i);
@@ -271,6 +304,13 @@ public class BrowserActivity extends ListActivity
             mCopyToFolderId   = intent.getStringExtra(AccountFolderList.KEY_FOLDER_ID);
             mCopyToFolderName = intent.getStringExtra(AccountFolderList.KEY_FOLDER_NAME);
             showDialog(DIALOG_COPY_TO_FOLDER);
+            break;
+            
+        case RESULT_IMPORT:
+            showDialog(DIALOG_IMPORTING_TEMPLATE);
+            mDefinitionImportTask = new DefinitionImportTask();
+            mDefinitionImportTask.setImportListener(this);
+            mDefinitionImportTask.execute(intent.getStringExtra(FileDialog.RESULT_PATH));
             break;
         }
     }
@@ -308,7 +348,7 @@ public class BrowserActivity extends ListActivity
             
         case R.id.rename:
             mFormDefinition = form;
-            showDialog(DIALOG_RENAME_FORM);
+            showDialog(DIALOG_RENAME_TEMPLATE);
             return true;    
             
         default:
@@ -333,7 +373,7 @@ public class BrowserActivity extends ListActivity
         
         switch (id) {
         // User wishes to make a new form
-        case DIALOG_CREATE_FORM:
+        case DIALOG_CREATE_TEMPLATE:
             view = inflater.inflate(R.layout.dialog_create_or_rename_form, null);
             
             // Set an EditText view to get user input 
@@ -341,28 +381,39 @@ public class BrowserActivity extends ListActivity
             
             builder.setView(view);
             builder.setInverseBackgroundForced(true);
-            builder.setTitle(getText(R.string.tf_create_form_dialog));
+            builder.setTitle(getText(R.string.tf_add_template));
             
-            builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
+            builder.setPositiveButton(getText(R.string.tf_create), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {                
                     FormDefinition form = new FormDefinition();
                     form.setName(newFormName.getText().toString().trim());
                     form.setStatus(FormDefinition.Status.placeholder);
                     
                     if (form.getName().length() == 0) {
-                        removeDialog(DIALOG_CREATE_FORM);
-                        Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_required), Toast.LENGTH_LONG).show();                        
-                        showDialog(DIALOG_CREATE_FORM);
+                        removeDialog(DIALOG_CREATE_TEMPLATE);
+                        Toast.makeText(getApplicationContext(), getString(R.string.file_dialog_aborted), Toast.LENGTH_SHORT).show();                        
+                        showDialog(DIALOG_CREATE_TEMPLATE);
                     } else {
-                        removeDialog(DIALOG_CREATE_FORM);
+                        removeDialog(DIALOG_CREATE_TEMPLATE);
                         new CreateFormDefinitionTask().execute(form);
                     }
+                }
+            });
+            
+            builder.setNeutralButton(getString(R.string.tf_import), new DialogInterface.OnClickListener() {                
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent intent = new Intent(BrowserActivity.this, FileDialog.class);
+                    intent.putExtra(FileDialog.SELECTION_MODE, FileDialog.MODE_OPEN);
+                    intent.putExtra(FileDialog.START_PATH, "/sdcard");
+                    intent.putExtra(FileDialog.WINDOW_TITLE, "Select XForm File To Import");
+                    startActivityForResult(intent, RESULT_IMPORT);
                 }
             });
         
             builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    removeDialog(DIALOG_CREATE_FORM);
+                    removeDialog(DIALOG_CREATE_TEMPLATE);
                 }
             });
             
@@ -478,6 +529,13 @@ public class BrowserActivity extends ListActivity
             
             mDialog = builder.create();
             break;
+            
+        case DIALOG_IMPORTING_TEMPLATE:
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage(getText(R.string.tf_importing_template_please_wait));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);            
+            return mProgressDialog;
             
         // User requested forms (definitions or instances) to be loaded but none could be found 
         case DIALOG_INSTANCES_UNAVAILABLE:
@@ -627,7 +685,7 @@ public class BrowserActivity extends ListActivity
             mDialog = builder.create();
             break;
             
-        case DIALOG_RENAME_FORM:
+        case DIALOG_RENAME_TEMPLATE:
             view = inflater.inflate(R.layout.dialog_create_or_rename_form, null);
             
             // Set an EditText view to get user input 
@@ -644,9 +702,9 @@ public class BrowserActivity extends ListActivity
                     String newName = renamedFormName.getText().toString().trim();
                     
                     if (newName.length() == 0) {
-                        removeDialog(DIALOG_RENAME_FORM);
+                        removeDialog(DIALOG_RENAME_TEMPLATE);
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_required), Toast.LENGTH_LONG).show();                        
-                        showDialog(DIALOG_RENAME_FORM);
+                        showDialog(DIALOG_RENAME_TEMPLATE);
                     } else {
                         if (newName.equals(mFormDefinition.getName())) {
                             // Do nothing
@@ -663,7 +721,7 @@ public class BrowserActivity extends ListActivity
         
             builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    removeDialog(DIALOG_RENAME_FORM);
+                    removeDialog(DIALOG_RENAME_TEMPLATE);
                 }
             });
             
@@ -686,6 +744,22 @@ public class BrowserActivity extends ListActivity
 
             mDialog = builder.create();
             break;
+            
+        case DIALOG_UNABLE_TO_IMPORT_TEMPLATE:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_alert)
+            .setTitle(R.string.tf_unable_to_import_template)
+            .setMessage(mDialogMessage);
+
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_UNABLE_TO_IMPORT_TEMPLATE);
+                }
+            });
+
+            mDialog = builder.create();
+            break;
 
         case DIALOG_UNABLE_TO_RENAME_DUPLICATE:
             builder
@@ -697,7 +771,7 @@ public class BrowserActivity extends ListActivity
             builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     removeDialog(DIALOG_UNABLE_TO_RENAME_DUPLICATE);
-                    showDialog(DIALOG_RENAME_FORM);
+                    showDialog(DIALOG_RENAME_TEMPLATE);
                 }
             });
 
@@ -718,7 +792,7 @@ public class BrowserActivity extends ListActivity
         super.onCreateOptionsMenu(menu);
         menu.add(0, MENU_OPTION_REFRESH, 0, getString(R.string.refresh)).setIcon(R.drawable.ic_menu_refresh);
         menu.add(0, MENU_OPTION_FOLDERS, 0, getString(R.string.tf_form_folders)).setIcon(R.drawable.ic_menu_archive);
-        menu.add(0, MENU_OPTION_NEWFORM, 0, getString(R.string.tf_create_form)).setIcon(R.drawable.ic_menu_add);
+        menu.add(0, MENU_OPTION_NEWFORM, 0, getString(R.string.tf_add_template)).setIcon(R.drawable.ic_menu_add);
         menu.add(0, MENU_OPTION_ODKTOOLS, 0, getString(R.string.open_data_kit)).setIcon(R.drawable.ic_menu_upload);
         menu.add(0, MENU_OPTION_INFO, 0, getString(R.string.tf_inform_info)).setIcon(R.drawable.ic_menu_info_details);
         return true;
@@ -801,7 +875,7 @@ public class BrowserActivity extends ListActivity
             startActivity(new Intent(this, AccountFolderList.class));
             break;
         case MENU_OPTION_NEWFORM:
-            showDialog(DIALOG_CREATE_FORM);
+            showDialog(DIALOG_CREATE_TEMPLATE);
             break;
         case MENU_OPTION_ODKTOOLS:
             startActivity(new Intent(this, ODKActivityTab.class));
@@ -817,6 +891,10 @@ public class BrowserActivity extends ListActivity
     @Override
     public Object onRetainNonConfigurationInstance()
     {
+        // If we're importing, pass the thread to the next instance
+        if (mDefinitionImportTask != null && mDefinitionImportTask.getStatus() != AsyncTask.Status.FINISHED)
+            return mDefinitionImportTask;
+        
         // Avoid refetching documents from database by preserving them
         HashMap<String, Generic> persistentData = new HashMap<String, Generic>();
         persistentData.put(KEY_FORM_DEFINITION, mFormDefinition);
@@ -1074,7 +1152,7 @@ public class BrowserActivity extends ListActivity
         protected void onPreExecute()
         {
             progressDialog = new ProgressDialog(BrowserActivity.this);
-            progressDialog.setMessage(getString(R.string.tf_creating_form_please_wait));  
+            progressDialog.setMessage(getString(R.string.tf_creating_template_please_wait));  
             progressDialog.show();
         }
         
@@ -1086,11 +1164,11 @@ public class BrowserActivity extends ListActivity
                 progressDialog = null;
             } catch (Exception e) {
                 // Do nothing if view is no longer attached
-            }            
+            }
             
             if (isDuplicate) {
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_duplicate), Toast.LENGTH_LONG).show();
-                showDialog(DIALOG_CREATE_FORM);
+                showDialog(DIALOG_CREATE_TEMPLATE);
             } else {
                 if (isSuccessful) {
                     Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
@@ -1153,6 +1231,8 @@ public class BrowserActivity extends ListActivity
             setProgressVisibility(false);
         }        
     }
+    
+
 
     /*
      * Retrieve all instances of a certain status for a specified definition,
@@ -1485,6 +1565,8 @@ public class BrowserActivity extends ListActivity
                 // Some other failure
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_something_failed, getString(R.string.tf_rename)), Toast.LENGTH_LONG).show();
             }
+            
+            loadScreen();
         }        
     }
     
@@ -1690,6 +1772,22 @@ public class BrowserActivity extends ListActivity
         }
         
         return folderName;
+    }
+
+    @Override
+    public void importComplete(Bundle data) 
+    {
+        dismissDialog(DIALOG_IMPORTING_TEMPLATE);        
+        
+        if (data.getBoolean(DefinitionImportListener.IMPORT_SUCCESSFUL, false)) {
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_imported_file, data.getString(DefinitionImportListener.IMPORTED_FILENAME)), Toast.LENGTH_SHORT).show();
+            loadScreen();
+        } else {
+            mDialogMessage = data.getString(DefinitionImportListener.IMPORT_MESSAGE);
+            showDialog(DIALOG_UNABLE_TO_IMPORT_TEMPLATE);
+        }
+        
+        loadScreen();
     }
 
     /*

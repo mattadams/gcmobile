@@ -23,6 +23,7 @@ public class FormReader
     private static final String t = "FormReader: ";   
     
     private XMLTag mForm;                           // The "form" as it was loaded by xmltool
+    private String mTitle;                          // The title of the template
     private String mInstanceRoot;                   // The name of the instance root element 
     private String mInstanceRootId;                 // The name of the instance root ID attribute
     private String mDefaultPrefix;                  // The name of the default XForm prefix (needed for navigation)
@@ -71,6 +72,7 @@ public class FormReader
                     tag.gotoRoot().addTag(child);
                 }
 
+                // Reinitialize our XML object now that the <h:head...> element contains the expected namespaces
                 mForm = XMLDoc.from(tag.toString(), false);
             } catch (IOException e) {
                 // Ignore xis.close() exceptions
@@ -106,6 +108,8 @@ public class FormReader
             // See "Form ID Guidelines" (id is preferred vs. xmlns) http://code.google.com/p/opendatakit/wiki/XFormDesignGuidelines
             mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix);
             mForm.addTag(XMLDoc.from("<" + instanceRoot + " id=\"" + instanceRootId + "\"></" + instanceRoot + ">", false));
+        } else {
+            setTitle(mForm.gotoRoot().gotoTag("h:head/h:title").getInnerText());
         }
         
         mInstanceRoot = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getCurrentTagName();
@@ -418,5 +422,13 @@ public class FormReader
         }      
         
         return false;
+    }
+
+    public void setTitle(String mTitle) {
+        this.mTitle = mTitle;
+    }
+
+    public String getTitle() {
+        return mTitle;
     }
 }
