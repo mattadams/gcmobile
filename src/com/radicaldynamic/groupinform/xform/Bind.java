@@ -45,8 +45,9 @@ public class Bind
     public Bind(XMLTag tag, String instanceRoot)
     {
         // Read in attributes (includes "ref" to instance data output)
-        for (String s : tag.getAttributeNames()) {
+        for (String s : tag.getAttributeNames()) {            
             // Special handling for certain attributes
+            Object String;
             if (s.equals("nodeset")) {
                 String nodeset = tag.getAttribute(s);
 
@@ -56,9 +57,16 @@ public class Bind
                 }
 
                 setXPath(nodeset);         
-            } else if (s.equals("type"))
-                setType(tag.getAttribute(s));
-            else if (s.equals("required") && tag.getAttribute(s).equals("true()"))
+            } else if (s.equals("type")) {
+                // KoBo Forms Designer outputs something like xsd:type but that doesn't help us.  Workaround ensues.
+                String t = tag.getAttribute(s);
+                
+                if (t.contains(":")) {
+                    t = t.substring(t.indexOf(":") + 1);
+                }
+            
+                setType(t);
+            } else if (s.equals("required") && tag.getAttribute(s).equals("true()"))
                 setRequired(true);
             else if (s.equals("readonly") && tag.getAttribute(s).equals("true()"))
                 setReadonly(true);

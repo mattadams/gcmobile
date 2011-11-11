@@ -1,5 +1,6 @@
 package com.radicaldynamic.groupinform.xform;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Iterator;
@@ -42,11 +43,19 @@ public final class FormWriter
     }
     
     public static byte[] writeXml(String headTitle, String instanceRoot, String instanceRootId) throws GroupHasNoChildrenException
-    {
-        // Retrieve and load a template XForm file (this makes it easier than hardcoding a new one from scratch)
-        InputStream xis = Collect.getInstance().getResources().openRawResource(R.raw.xform_template);        
-        mFormTag = XMLDoc.from(xis, false);
-        mDefaultPrefix = mFormTag.getPefix("http://www.w3.org/2002/xforms");
+    {        
+        try {        
+            // Retrieve and load a template XForm file (this makes it easier than hardcoding a new one from scratch)
+            InputStream xis = Collect.getInstance().getResources().openRawResource(R.raw.xform_template);        
+            mFormTag = XMLDoc.from(xis, false);
+            xis.close();
+        } catch (IOException e) {
+            // Ignore xis.close() exceptions
+            e.printStackTrace();
+        }
+        
+        mDefaultPrefix = mFormTag.getPefix(XForm.Value.XMLNS_XFORMS);
+        
         
         mInstanceRoot = instanceRoot;
         mInstanceRootId = instanceRootId;

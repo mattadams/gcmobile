@@ -9,6 +9,7 @@ public class XForm
     public static class Attribute
     {
         public static final String APPEARANCE = "appearance";
+        public static final String BIND = "bind";
         public static final String ID = "id";
         public static final String JR_TEMPLATE = "jr:template";
         public static final String LANGUAGE = "lang";
@@ -34,6 +35,7 @@ public class XForm
         public static final String LIST_NOLABEL = "list-nolabel";
         public static final String MAP = "maps";
         public static final String MINIMAL = "minimal";
-        public static final String QUICK = "quick";        
+        public static final String QUICK = "quick";  
+        public static final String XMLNS_XFORMS = "http://www.w3.org/2002/xforms";
     }
 }

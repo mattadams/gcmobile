@@ -79,7 +79,7 @@ public class Field
              * but that both are essentially equivalent.  We need to remember this 
              * when it comes time to write out the XML. 
              */
-            if (s.equals(XForm.Attribute.REFERENCE) || s.equals(XForm.Attribute.NODESET)) {
+            if (s.equals(XForm.Attribute.REFERENCE) || s.equals(XForm.Attribute.NODESET) || s.equals(XForm.Attribute.BIND)) {
                 String xpath = tag.getAttribute(s);
                 
                 // If this reference is not to an itext translation then it must be to an instance/bind

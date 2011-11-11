@@ -1,5 +1,6 @@
 package com.radicaldynamic.groupinform.xform;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,12 +14,13 @@ import com.mycila.xmltool.CallBack;
 import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLDocumentException;
 import com.mycila.xmltool.XMLTag;
+import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.StringUtils;
 
 public class FormReader
 {
-    private static final String t = "FormReader: ";
+    private static final String t = "FormReader: ";   
     
     private XMLTag mForm;                           // The "form" as it was loaded by xmltool
     private String mInstanceRoot;                   // The name of the instance root element 
@@ -47,8 +49,36 @@ public class FormReader
     public FormReader(InputStream is) throws Exception
     {
         boolean newForm = false;
+        
         mForm = XMLDoc.from(is, false);
-        mDefaultPrefix = mForm.getPefix("http://www.w3.org/2002/xforms");
+        
+        /*
+         * Ensure that namespaces are as expected by loading a default document with a good configuration,
+         * removing the body of the template and pushing the contents of the recently loaded template into it.
+         * 
+         * This works around cases where people load documents from things like KoBo Form Designer that
+         * doesn't include the xmlns attribute as expected.
+         */
+        if (mForm.getPefix(XForm.Value.XMLNS_XFORMS) == null || mForm.getPefix(XForm.Value.XMLNS_XFORMS).length() == 0) {
+            try {        
+                InputStream xis = Collect.getInstance().getResources().openRawResource(R.raw.xform_template);        
+                XMLTag tag = XMLDoc.from(xis, false);
+                xis.close();
+
+                tag.gotoRoot().deleteChilds();
+
+                for (XMLTag child : mForm.gotoRoot().getInnerDocument().getChilds()) {
+                    tag.gotoRoot().addTag(child);
+                }
+
+                mForm = XMLDoc.from(tag.toString(), false);
+            } catch (IOException e) {
+                // Ignore xis.close() exceptions
+                e.printStackTrace();
+            }
+        }
+       
+        mDefaultPrefix = mForm.getPefix(XForm.Value.XMLNS_XFORMS);
         
         /*
          * This hack is in place in case a new form has been created but fails the first save attempt,
@@ -92,10 +122,10 @@ public class FormReader
                 Log.e(Collect.LOGTAG, t + e1.toString());
                 throw new Exception("Unable to find id or xmlns attribute for instance.\n\nPlease contact our support team with this message at confab@groupcomplete.com");
             }
-        }
+        }        
         
-        Log.d(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
-        Log.d(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
+        Log.v(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
+        Log.v(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
         
         parseForm();
 
