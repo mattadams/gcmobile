@@ -333,31 +333,6 @@ public class DatabaseService extends Service {
         }        
     }
     
-    /*
-     * Remove local database IF final replication push is successful
-     */
-    public boolean removeLocalDb(String db)
-    {
-        final String tt = t + "removeLocalDb(): ";
-        
-        try {
-            ReplicationStatus status = replicate(db, REPLICATE_PUSH);
-
-            if (status == null)
-                return false;
-            else if (status.isOk()) {
-                Log.i(Collect.LOGTAG, tt + "final replication push successful, removing " + db);
-                mLocalDbInstance.deleteDatabase("db_" + db);
-            }
-            
-            return status.isOk();
-        } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "final replication push failed at " + e.toString());
-            e.printStackTrace();
-            return false;
-        }
-    }
-    
     synchronized public ReplicationStatus replicate(String db, int mode)
     {
         final String tt = t + "replicate(): ";
@@ -612,9 +587,19 @@ public class DatabaseService extends Service {
                         // Remove databases that exist locally but for which we have no metadata
                         Log.i(Collect.LOGTAG, tt + "no metatdata for " + db + " (removing)");
                         mLocalDbInstance.deleteDatabase("db_" + db);
-                    } else if (isDbLocal(folder.getId()) && folder.isReplicated() == false) {
-                        // Purge any databases that were not zapped at the time of removal from the synchronization list
-                        removeLocalDb(folder.getId());
+                    } else if (isDbLocal(db) && folder.isReplicated() == false) {
+                        // Purge any databases that are local but not on the replication list                        
+                        try {
+                            ReplicationStatus status = replicate(db, REPLICATE_PUSH);
+
+                            if (status != null && status.isOk()) {
+                                Log.i(Collect.LOGTAG, tt + "final replication push successful, removing " + db);
+                                mLocalDbInstance.deleteDatabase("db_" + db);
+                            }
+                        } catch (Exception e) {
+                            Log.e(Collect.LOGTAG, tt + "final replication push of " + db + " failed at " + e.toString());
+                            e.printStackTrace();
+                        }
                     }
                 }
             }

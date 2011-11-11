@@ -32,15 +32,14 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
-import com.radicaldynamic.groupinform.utilities.HttpUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
+import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 public class AccountFolderReplicationList extends ListActivity
 {    
     private final String t = "AccountFolderReplicationList: ";
     
     public static final int SAVING_DIALOG = 0;
-    public static final int POSTSAVE_DIALOG = 1;
     
     private AlertDialog mAlertDialog;
     
@@ -49,7 +48,8 @@ public class AccountFolderReplicationList extends ListActivity
     private boolean mListChanged = false;
     
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)  
+    {
         super.onCreate(savedInstanceState);
         
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
@@ -81,13 +81,6 @@ public class AccountFolderReplicationList extends ListActivity
             saving.setIndeterminate(true);
             saving.setCancelable(false);            
             return saving;
-            
-        case POSTSAVE_DIALOG:
-            ProgressDialog postsave = new ProgressDialog(this);   
-            postsave.setMessage(getText(R.string.tf_processing));
-            postsave.setIndeterminate(true);
-            postsave.setCancelable(false);            
-            return postsave;
         }
         
         return null;
@@ -106,47 +99,6 @@ public class AccountFolderReplicationList extends ListActivity
 
         return super.onKeyDown(keyCode, event);
     }
-    
-    /*
-     * Housekeeping following a SUCCESSFUL selections update on server.  If this fails further
-     * attempts will be made by DatabaseService.performLocalHousekeeping()
-     */
-    private class PostReplicationsUpdateTask extends AsyncTask<Void, Void, Void>
-    {
-        @Override
-        protected Void doInBackground(Void... nothing)
-        {
-            SparseBooleanArray checkedItemPositions = mListView.getCheckedItemPositions();
-            
-            for (int i = 0; i < checkedItemPositions.size(); i++) {
-                // User has not selected folder for synchronization
-                if (!checkedItemPositions.valueAt(i)) {                    
-                    String db = ((AccountFolder) mListView.getItemAtPosition(i)).getId();                  
-                    Log.v(Collect.LOGTAG, t + "database " + db + " not selected for replication (checking for local copy)");                    
-                    
-                    if (Collect.getInstance().getDbService().isDbLocal(db)) {
-                        Log.d(Collect.LOGTAG, t + "database " + db + " is local, performing final replication before removal");
-                        Collect.getInstance().getDbService().removeLocalDb(db);
-                    }
-                }
-            }
-            
-            return null;        
-        }
-        
-        @Override
-        protected void onPreExecute()
-        {
-            showDialog(POSTSAVE_DIALOG);
-        }
-        
-        @Override
-        protected void onPostExecute(Void nothing)
-        {
-            removeDialog(POSTSAVE_DIALOG);
-            finish();
-        }
-    }
 
     /*
      * Refresh the main form browser view as requested by the user
@@ -158,8 +110,7 @@ public class AccountFolderReplicationList extends ListActivity
         @Override
         protected Void doInBackground(Void... nothing)
         {
-            folders = AccountFolderList.loadFolderList();
-            
+            folders = AccountFolderList.loadFolderList();            
             return null;
         }
 
@@ -247,8 +198,8 @@ public class AccountFolderReplicationList extends ListActivity
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
                     new File(getCacheDir(), FileUtilsExtended.FOLDER_CACHE_FILE).setLastModified(0);
-
-                    new PostReplicationsUpdateTask().execute();
+                    
+                    finish();
                 } else {
                     // Something bad happened
                     Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
@@ -271,14 +222,20 @@ public class AccountFolderReplicationList extends ListActivity
     private void showSaveDialog()
     {
         String[] items = {
-                getString(R.string.do_not_save),
-                getString(R.string.tf_save_and_exit), 
-                getString(R.string.tf_abort_exit)
+                getString(R.string.keep_changes),
+                getString(R.string.do_not_save)
         };
     
         mAlertDialog = new AlertDialog.Builder(this)
             .setIcon(R.drawable.ic_dialog_alert)
             .setTitle(getString(R.string.quit_application, "Without Saving?"))
+            .setNeutralButton(getString(R.string.do_not_exit), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id)
+                {
+                    dialog.cancel();
+                }
+            })
             .setItems(items,
                 new DialogInterface.OnClickListener() {
                     @Override
@@ -286,22 +243,18 @@ public class AccountFolderReplicationList extends ListActivity
                     {
                         switch (which) {
                         case 0:
+                            // Save and exit
+                            new UpdateReplicationsTask().execute();
+                            break;
+
+                        case 1:
                             // Discard any changes and exit
                             finish();
                             break;
-    
-                        case 1:
-                            // Save and exit                            
-                            new UpdateReplicationsTask().execute();
-                            break;
-    
-                        case 2:
-                            // Do nothing
-                            break;    
                         }
                     }
                 }).create();
     
-        mAlertDialog.show();  
+        mAlertDialog.show();
     }
 }
