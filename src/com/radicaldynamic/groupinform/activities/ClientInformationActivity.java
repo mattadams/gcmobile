@@ -21,8 +21,6 @@ import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -54,23 +52,15 @@ public class ClientInformationActivity extends Activity
     private static final String t = "ClientInformationActivity: ";
     
     private static final int MENU_ACCOUNT_MEMBERS = 0;
-    private static final int MENU_THIS_DEVICE = 1;
-    private static final int MENU_RESET_INFORM = 2;
+    private static final int MENU_RESET_INFORM = 1;
     
     // Dialog constants
     private static final int CONFIRM_RESET_DIALOG = 0;
     private static final int RESET_SUCCESSFUL_DIALOG = 1;
     private static final int RESET_FAILED_DIALOG = 2;
     private static final int RESET_PROGRESS_DIALOG = 3;
-    
-    // Intent constant for determining which "screen" to display
-    private static final String SCREEN = "screen";
-    private static final int SCREEN_DEFAULT = 0;
-    private static final int SCREEN_DEVICE_INFO = 1;    
-    
+
     private ProgressDialog mProgressDialog;
-    
-    private int mScreen;
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -79,68 +69,33 @@ public class ClientInformationActivity extends Activity
         
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.about_inform);        
-        
-        Intent intent = getIntent();
 
-        mScreen = intent.getIntExtra(SCREEN, 0);
-        
-        TextView header = (TextView) findViewById(R.id.aboutInformHeader);
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_inform_info));
 
-        switch (mScreen) {
-        case SCREEN_DEFAULT:
-            disableFormComponent(R.id.deviceInformation);
+        TextView accountNumber = (TextView) findViewById(R.id.accountNumber);
+        TextView accountKey = (TextView) findViewById(R.id.accountKey);
 
-            setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_inform_info));
-            
-            TextView accountNumber = (TextView) findViewById(R.id.accountNumber);
-            TextView accountKey = (TextView) findViewById(R.id.accountKey);
-//            TextView accountSeats = (TextView) findViewById(R.id.accountSeats);
-//            TextView accountPlan = (TextView) findViewById(R.id.accountPlan);
+        accountNumber.setText(Collect.getInstance().getInformOnlineState().getAccountNumber());
+        accountKey.setText(Collect.getInstance().getInformOnlineState().getAccountKey());
 
-            header.setText(getString(R.string.tf_about_inform_account_header));
-            accountNumber.setText(Collect.getInstance().getInformOnlineState().getAccountNumber());
-            accountKey.setText(Collect.getInstance().getInformOnlineState().getAccountKey());
-//            accountPlan.setText(Collect.getInstance().getInformOnlineState().getAccountPlan());
-//            
-//            int seatsLicenced = Collect.getInstance().getInformOnlineState().getAccountLicencedSeats();
-//            int seatsAssigned = Collect.getInstance().getInformOnlineState().getAccountAssignedSeats();
-//            int seatsRemaining = seatsLicenced - seatsAssigned;
-//            
-//            accountSeats.setText(
-//                    "Licenced (" + seatsLicenced + ")   " +
-//                    "Assigned (" + seatsAssigned + ")   " +
-//                    "Remaining (" + seatsRemaining + ")");
+        TextView devicePin = (TextView) findViewById(R.id.devicePin);
+        TextView deviceEmail = (TextView) findViewById(R.id.deviceEmail);                
 
-            break;
+        devicePin.setText(Collect.getInstance().getInformOnlineState().getDevicePin());
 
-        case SCREEN_DEVICE_INFO:
-            disableFormComponent(R.id.accountInformation);
-
-            setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_device_info));
-
-            header.setText(getString(R.string.tf_about_inform_device_header));
-            TextView devicePin = (TextView) findViewById(R.id.devicePin);
-            TextView deviceEmail = (TextView) findViewById(R.id.deviceEmail);                
-
-            devicePin.setText(Collect.getInstance().getInformOnlineState().getDevicePin());
-            
-            try {
-                deviceEmail.setText(
-                        Collect
-                        .getInstance()
-                        .getInformOnlineState()
-                        .getAccountDevices()
-                        .get(Collect.getInstance().getInformOnlineState().getDeviceId())
-                        .getEmail()
-                );
-            } catch (NullPointerException e) {
-                // In the event that the device does not have access to this information yet
-                deviceEmail.setText(getString(R.string.tf_unavailable));
-            }
-
-            break;
+        try {
+            deviceEmail.setText(
+                    Collect
+                    .getInstance()
+                    .getInformOnlineState()
+                    .getAccountDevices()
+                    .get(Collect.getInstance().getInformOnlineState().getDeviceId())
+                    .getEmail()
+            );
+        } catch (NullPointerException e) {
+            // In the event that the device does not have access to this information yet
+            deviceEmail.setText(getString(R.string.tf_unavailable));
         }
-
     }
     
     protected Dialog onCreateDialog(int id)
@@ -208,43 +163,11 @@ public class ClientInformationActivity extends Activity
     }
     
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-        
-        if (resultCode == RESULT_CANCELED)
-            return;
-        
-        switch (requestCode) {
-        // "Exit" if the user resets Inform
-        case SCREEN_DEVICE_INFO:
-            setResult(RESULT_OK);
-            finish();
-            break;
-        }
-    }
-    
-    @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        
-        boolean available = false;
-        
-        if (Collect.getInstance().getIoService().isSignedIn())
-            available = true;
-        
-        switch (mScreen) {
-        case SCREEN_DEFAULT:
-            menu.add(0, MENU_ACCOUNT_MEMBERS, 0, getString(R.string.tf_account_devices)).setIcon(R.drawable.ic_menu_allfriends);
-            menu.add(0, MENU_THIS_DEVICE, 0, getString(R.string.tf_this_device)).setIcon(R.drawable.ic_menu_myinfo);
-            break;
-        case SCREEN_DEVICE_INFO:
-            menu.add(0, MENU_RESET_INFORM, 0, getString(R.string.tf_reset_inform))
-                .setIcon(R.drawable.ic_menu_close_clear_cancel)
-                .setEnabled(available);
-            break;
-        }
-        
+        menu.add(0, MENU_ACCOUNT_MEMBERS, 0, getString(R.string.tf_account_devices)).setIcon(R.drawable.ic_menu_allfriends);
+        menu.add(0, MENU_RESET_INFORM, 0, getString(R.string.tf_reset_inform)).setIcon(R.drawable.ic_menu_close_clear_cancel).setEnabled(Collect.getInstance().getIoService().isSignedIn());
         return true;
     }    
 
@@ -258,11 +181,6 @@ public class ClientInformationActivity extends Activity
             i = new Intent(this, AccountDeviceList.class);
             startActivity(i);
             break;
-        case MENU_THIS_DEVICE:
-            i = new Intent(this, ClientInformationActivity.class);
-            i.putExtra(SCREEN, SCREEN_DEVICE_INFO);
-            startActivityForResult(i, SCREEN_DEVICE_INFO);
-            return true;
         case MENU_RESET_INFORM:
             showDialog(CONFIRM_RESET_DIALOG);
             return true;
@@ -418,11 +336,5 @@ public class ClientInformationActivity extends Activity
                 showDialog(RESET_FAILED_DIALOG);
             }
         }
-    }
-    
-    private void disableFormComponent(int componentResource)
-    {
-        ViewGroup component = (ViewGroup) findViewById(componentResource);
-        component.setVisibility(View.GONE);
     }
 }

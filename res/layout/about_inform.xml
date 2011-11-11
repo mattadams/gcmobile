@@ -10,132 +10,76 @@
     android:orientation="vertical"
     android:padding="10dp">
     
+    <!-- Account number -->
+    <TextView android:id="@android:id/empty"
+        android:text="Account Licence Number"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="3dp"
+        android:textSize="20sp" />
+
     <TextView
-        android:id="@+id/aboutInformHeader" 
-        android:text=""
+        android:id="@+id/accountNumber"  
+        android:text="@string/tf_unavailable"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:layout_marginBottom="15dp" />
     
-    <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/accountInformation"
-        android:orientation="vertical"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content">  
-    
-        <!-- Account number -->
-        <TextView
-            android:id="@android:id/empty" 
-            android:text="Account Licence Number"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:textSize="20sp" />
+    <!-- Account key -->
+    <TextView
+        android:id="@android:id/empty" 
+        android:text="Account Licence Key"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="3dp"
+        android:textSize="20sp" />
 
-        <TextView
-            android:id="@+id/accountNumber"  
-            android:text="@string/tf_unavailable"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="15dp" />
-    
-        <!-- Account key -->
-        <TextView
-            android:id="@android:id/empty" 
-            android:text="Account Licence Key"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/accountKey"  
-            android:text="Unavailable"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="15dp" />
-            
-        <!-- Account plan -->
-<!--        <TextView-->
-<!--            android:id="@android:id/empty" -->
-<!--            android:text="Account Plan"-->
-<!--            android:layout_width="wrap_content" -->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginBottom="3dp"-->
-<!--            android:textSize="20sp" />-->
-<!---->
-<!--        <TextView-->
-<!--            android:id="@+id/accountPlan"  -->
-<!--            android:text="@string/tf_unavailable"-->
-<!--            android:layout_width="wrap_content" -->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginBottom="15dp" />               -->
-            
-        <!-- Account seat counts -->
-<!--        <TextView-->
-<!--            android:id="@android:id/empty" -->
-<!--            android:text="Account Device Usage"-->
-<!--            android:layout_width="wrap_content" -->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginBottom="3dp"-->
-<!--            android:textSize="20sp" />-->
-<!---->
-<!--        <TextView-->
-<!--            android:id="@+id/accountSeats"  -->
-<!--            android:text="@string/tf_unavailable"-->
-<!--            android:layout_width="wrap_content" -->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginBottom="15dp" />            -->
-
-        <TextView
-            android:id="@android:id/empty"  
-            android:text="Help, tutorials and more at\ngroupcomplete.com\n\nEmail us at\nsupport@groupcomplete.com"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:textSize="20sp"
-            android:autoLink="all" />
-    </LinearLayout> 
+    <TextView
+        android:id="@+id/accountKey"  
+        android:text="Unavailable"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp" />    
         
-    <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/deviceInformation"
-        android:orientation="vertical"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content">          
-        
-        <!-- Device email -->
-        <TextView
-            android:id="@android:id/empty" 
-            android:text="Device Registered To"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:textSize="20sp" />
+    <!-- Device email -->
+    <TextView
+        android:id="@android:id/empty" 
+        android:text="Device Registered To"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="3dp"
+        android:textSize="20sp" />
 
-        <TextView
-            android:id="@+id/deviceEmail"  
-            android:text="@string/tf_unavailable"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="15dp" />
+    <TextView
+        android:id="@+id/deviceEmail"  
+        android:text="@string/tf_unavailable"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp" />
         
-        <!-- Device PIN -->
-        <TextView
-            android:id="@android:id/empty" 
-            android:text="Device PIN"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:textSize="20sp" />
+    <!-- Device PIN -->
+    <TextView
+        android:id="@android:id/empty" 
+        android:text="Device PIN"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="3dp"
+        android:textSize="20sp" />
 
-        <TextView
-            android:id="@+id/devicePin"  
-            android:text="@string/tf_unavailable"
-            android:layout_width="wrap_content" 
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="15dp" />
-    </LinearLayout>
+    <TextView
+        android:id="@+id/devicePin"  
+        android:text="@string/tf_unavailable"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp" />    
+
+    <TextView
+        android:id="@android:id/empty"  
+        android:text="Help, tutorials and more at\ngroupcomplete.com\n\nEmail us at\nsupport@groupcomplete.com"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:textSize="20sp"
+        android:autoLink="all" />
 </LinearLayout>
 </ScrollView>

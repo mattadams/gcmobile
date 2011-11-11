@@ -213,14 +213,12 @@
 <string name="selected_google_account_text">Google Account</string>
 <string name="google_submission_id_text">Google Collection Effort</string>
 
-    <!-- Temporary fixes -->
-    <string name="server">server</string>
-    <string name="change_server">change_server</string>
-    <string name="default_server">default_server</string>
+<!-- Temporary fixes -->
+<string name="server">server</string>
+<string name="change_server">change_server</string>
+<string name="default_server">default_server</string>
 
 	<!-- GC Mobile string resources below -->
-	<string name="tf_about_inform_account_header">This screen displays information about your Group Complete account. Certain details are only available to the account owner.\n\nSee the list of Account Devices and get more info on This Device from the option menu.</string>
-	<string name="tf_about_inform_device_header">Information about the device you are currently using.</string>
 	<string name="tf_abort_exit">Abort exit</string>
 	<string name="tf_account_created">Account Created</string>
 	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About GC\" option menu.\n\nWe have sent an email to %s confirming this new account.</string>
@@ -229,16 +227,16 @@
 	<string name="tf_account_devices">Account Devices</string>
 	<string name="tf_account_email_label">Email Address</string>
 	<string name="tf_account_email_hint">Enter the email address of the person who will be the account owner. We will send important information to this address.</string>
-    <string name="tf_account_exists_dialog">Account Already Exists</string>
-    <string name="tf_account_exists_dialog_msg">An account is already registered to this address.\n\nPlease enter your account details to register this device with your account or associate an unused profile with this device.\n\nIf you do not have your account information handy you can request that a reminder be sent to this address.</string>
+	<string name="tf_account_exists_dialog">Account Already Exists</string>
+	<string name="tf_account_exists_dialog_msg">An account is already registered to this address.\n\nPlease enter your account details to register this device with your account or associate an unused profile with this device.\n\nIf you do not have your account information handy you can request that a reminder be sent to this address.</string>
 	<string name="tf_account_folder">Folder</string>	
 	<string name="tf_account_key_label">License Key</string>
 	<string name="tf_account_number_label">Licence Number</string>
 	<string name="tf_add_form_field">Add Field</string>
-    <string name="tf_add_language">Add a language to begin translating</string>    
+	<string name="tf_add_language">Add a language to begin translating</string>    
 	<string name="tf_add_new">Add New</string>
-    <string name="tf_add_template">Add Template</string>
-    <string name="tf_add_template_hint">Enter a form name and select Create to build a new form template.\n\nYou may also add a template by importing an XForm file from the SD card.</string>
+	<string name="tf_add_template">Add Template</string>
+	<string name="tf_add_template_hint">Enter a form name and select Create to build a new form template.\n\nYou may also add a template by importing an XForm file from the SD card.</string>
 	<string name="tf_advanced">Advanced</string>
 	<string name="tf_alias_not_assigned">Alias not assigned</string>
 	<string name="tf_at_top_of_form">Viewing Top of Form</string>
@@ -248,9 +246,9 @@
 	<string name="tf_browse_instances_hint">Select item to %s</string>
 	<string name="tf_change_select_type">Change select type?</string>
 	<string name="tf_change_select_type_msg">This multiple select field has more than one preselected list item. A single select field can only have one preselected item.\n\nIf you choose to change to a single select field all of the preselected list items will be unselected.\n\nDo you wish to continue?</string>
-    <string name="tf_choose_appearance">Choose Appearance</string>
-    <string name="tf_choose_date_type">Choose date type</string>
-    <string name="tf_choose_date_type_hint">Select the input controls that will appear for this date &amp; time field.</string>
+	<string name="tf_choose_appearance">Choose Appearance</string>
+	<string name="tf_choose_date_type">Choose date type</string>
+	<string name="tf_choose_date_type_hint">Select the input controls that will appear for this date &amp; time field.</string>
 	<string name="tf_choose_group_type">Choose group type</string>
 	<string name="tf_choose_group_type_hint">- Regular groups are used to organize related questions under a common label\n\n- Repeated groups loop through the questions that they contain up to a maximum number of loops\n\n- If \"display on one screen\" is selected, all of the fields that this group contains will be shown on a single screen vs. the default format of one question per screen</string>
 	<string name="tf_choose_media_type">Choose media type</string>
@@ -274,13 +272,13 @@
 	<string name="tf_copy_to_folder">Copy to Folder</string>
 	<string name="tf_copying_please_wait">Copying...</string>
 	<string name="tf_copying_with_param">Copying %s...</string>
-    <string name="tf_create">Create</string>
+	<string name="tf_create">Create</string>
 	<string name="tf_create_folder">Create Folder</string>
 	<string name="tf_create_list_item">Add List Item</string>
-    <string name="tf_creating_template_please_wait">Creating template...</string>
-    <string name="tf_date_type_date_only">Date only</string>
-    <string name="tf_date_type_time_only">Time only</string>
-    <string name="tf_date_type_date_and_time">Date &amp; time</string>
+	<string name="tf_creating_template_please_wait">Creating template...</string>
+	<string name="tf_date_type_date_only">Date only</string>
+	<string name="tf_date_type_time_only">Time only</string>
+	<string name="tf_date_type_date_and_time">Date &amp; time</string>
 	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_ionline_port">5101</string>	
 	<string name="tf_decimal_number_type">Integers and decimals</string>
@@ -298,7 +296,6 @@
 	<string name="tf_device_admin_status_inuse">In Use</string>	
 	<string name="tf_device_admin_status_unused">Unused (available for activation)</string>
 	<string name="tf_device_email_hint">Enter the email address of the person who will be using this device. The address must be unique to this GC Mobile account.</string>
-	<string name="tf_device_info">Device Info</string>
 	<string name="tf_device_owner_notified_of_pin_use">User notified on your behalf via email</string>
 	<string name="tf_device_pin_label">Device PIN</string>
 	<string name="tf_device_pin_hint">Enter the PIN of the unused profile to have it activated and assigned to this device.</string>
@@ -332,8 +329,8 @@
 	<string name="tf_export_records_hint">Select an item to export records</string>
 	<string name="tf_fbel_default">Default value</string>
 	<string name="tf_fbel_default_hint">Any value supplied here will be shown in the input area of the field and will be saved as-is unless otherwise changed by the user.</string>
-    <string name="tf_fbel_geopointmap">Display location on map</string>
-    <string name="tf_fbel_geopointmap_hint">Selecting this option will cause the users detected location to appear on a Google Map.  This only works if the device that is capturing/viewing the location has access to the Internet.</string>
+	<string name="tf_fbel_geopointmap">Display location on map</string>
+	<string name="tf_fbel_geopointmap_hint">Selecting this option will cause the users detected location to appear on a Google Map.  This only works if the device that is capturing/viewing the location has access to the Internet.</string>
 	<string name="tf_fbel_hidden">Hidden</string>
 	<string name="tf_fbel_hidden_hint">Hidden fields will appear in your exported data and may be manipulated by advanced properties but are not directly available to the user.</string>
 	<string name="tf_fbel_hint">Description</string>
@@ -344,10 +341,10 @@
 	<string name="tf_fbel_readonly_hint">Read-only fields will be visible to the user but they will not be able to modify them directly. The values of read-only fields may be manipulated by advanced properties.</string>
 	<string name="tf_fbel_required">Required</string>
 	<string name="tf_fbel_required_hint">Require the user to respond to this field before marking the form as complete.</string>
-    <string name="tf_fbel_selectmultiple">Allow multiple select</string>
-    <string name="tf_fbel_selectmultiple_hint">Permit the user to select multiple options from the list of items.</string>
-    <string name="tf_fbel_select_appearance">Select appearance</string>
-    <string name="tf_fbel_select_appearance_hint">Adjust the appearance and behavior of the select field.</string>
+	<string name="tf_fbel_selectmultiple">Allow multiple select</string>
+	<string name="tf_fbel_selectmultiple_hint">Permit the user to select multiple options from the list of items.</string>
+	<string name="tf_fbel_select_appearance">Select appearance</string>
+	<string name="tf_fbel_select_appearance_hint">Adjust the appearance and behavior of the select field.</string>
 	<string name="tf_field">Field</string>
 	<string name="tf_folder_admin_name_label">Name</string>
 	<string name="tf_folder_admin_name_hint">A concise name for this folder.</string>
@@ -364,13 +361,12 @@
 	<string name="tf_folder_updated">%s updated</string>
 	<string name="tf_form_builder_load_error">Problem Loading Form</string>
 	<string name="tf_form_builder_exit">Leave Template?</string>
-    <string name="tf_form_builder_sanity_dialog">Form Did Not Validate</string>
+	<string name="tf_form_builder_sanity_dialog">Form Did Not Validate</string>
 	<string name="tf_form_details">Form Details</string>
 	<string name="tf_form_folders">Folders</string>
 	<string name="tf_form_name">Form Name</string>
-    
 	<string name="tf_form_name_required">Form name required</string>
-    <string name="tf_form_name_duplicate">Name already exists - please pick another</string>
+	<string name="tf_form_name_duplicate">Name already exists - please pick another</string>
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_go_offline">Go Offline</string>
 	<string name="tf_go_offline_dialog_msg">Folders selected for offline use will be synchronized prior to going offline.</string>
@@ -395,9 +391,9 @@
 	<string name="tf_i18n_setup">Languages</string>
 	<string name="tf_i18n_translate">Translate</string>
 	<string name="tf_image_media_type">Photograph</string>
-    <string name="tf_import">Import</string>
-    <string name="tf_imported_file">Imported \"%s\"</string>
-    <string name="tf_importing_template_please_wait">Importing template...</string>
+	<string name="tf_import">Import</string>
+	<string name="tf_imported_file">Imported \"%s\"</string>
+	<string name="tf_importing_template_please_wait">Importing template...</string>
 	<string name="tf_improperly_formatted_licence_number">Improperly formatted licence number</string>
 	<string name="tf_improperly_formatted_licence_key">Improperly formatted licence key</string>
 	<string name="tf_inform_info">About GC</string>
@@ -426,7 +422,6 @@
 	<string name="tf_loading_please_wait">Loading...</string>
 	<string name="tf_more_info">More Info</string>
 	<string name="tf_new_account">New Account</string>
-	<string name="tf_nothing_to_display_odk_aggregate">Nothing available to display.\n\nUse this screen to upload completed forms from the current folder to ODK Aggregate.</string>
 	<string name="tf_notification_settings">Notification settings</string>
 	<string name="tf_notify_device_owner">Notify User</string>
 	<string name="tf_odk_aggregate">Send Complete Forms</string>
@@ -457,11 +452,11 @@
 	<string name="tf_remove_form">Remove Form</string>
 	<string name="tf_remove_form_with_instances_dialog_msg">The form \"%s\" has data associated with it.  If you remove it the associated data will become unavailable.\n\nDo you wish to proceed?</string>
 	<string name="tf_remove_form_without_instances_dialog_msg">Do you wish to remove the form template \"%s?\"</string>
-    <string name="tf_remove_template">Remove Template</string>
+	<string name="tf_remove_template">Remove Template</string>
 	<string name="tf_removed_with_param">Removed \"%s\"</string>
 	<string name="tf_removing_please_wait">Removing...</string>
 	<string name="tf_rename">Rename</string>
-    <string name="tf_rename_template">Rename Template</string>
+	<string name="tf_rename_template">Rename Template</string>
 	<string name="tf_renaming_please_wait">Renaming...</string>
 	<string name="tf_renaming_with_param">Renaming %s...</string>
 	<string name="tf_repeated_group">repeated group</string>
@@ -484,11 +479,9 @@
 	<string name="tf_save_and_exit">Save and exit</string>
 	<string name="tf_saved_data">Saved!</string>
 	<string name="tf_saving_please_wait">Saving...</string>
-    <string name="tf_send">Send</string>
-    <string name="tf_screen_group_type">Display fields on one screen</string>
+	<string name="tf_send">Send</string>
+	<string name="tf_screen_group_type">Display fields on one screen</string>
 	<string name="tf_select_folders_for_offline_use">Select folders for offline use</string>
-	<string name="tf_select_multiple_type">Select multiple</string>
-	<string name="tf_select_single_type">Select one</string>
 	<string name="tf_select_task">Select Task</string>
 	<string name="tf_server_settings">Server settings</string>
 	<string name="tf_something_failed">%s failed!  Please try again.</string>
@@ -501,11 +494,10 @@
 	<string name="tf_synchronization_settings">Synchronization settings</string>
 	<string name="tf_system_error_dialog">An Error Occurred</string>
 	<string name="tf_system_error_dialog_msg">We encountered a system error. A team of trained monkeys has been dispatched to fix the problem. Please try again later!</string>
-	<string name="tf_this_device">This Device</string>
 	<string name="tf_translate_hint">Translate Description</string>
 	<string name="tf_translate_label">Translate Label</string>
-    <string name="tf_try_again">Try Again</string>
-    <string name="tf_unable_to_access_folder_for_instance_upload">The folder \"%s\" is not responding.  You may try again or cancel this upload attempt and check back later.</string>
+	<string name="tf_try_again">Try Again</string>
+	<string name="tf_unable_to_access_folder_for_instance_upload">The folder \"%s\" is not responding.  You may try again or cancel this upload attempt and check back later.</string>
 	<string name="tf_unable_to_connect">Unable To Connect</string>
 	<string name="tf_unable_to_copy">Unable To Copy</string>
 	<string name="tf_unable_to_copy_duplicate_dialog_msg">The folder \"%1$s\" already contains a form named \"%2$s.\"\n\nPlease choose another name.</string>
@@ -513,14 +505,14 @@
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one export destination must be selected for export.</string>
-    <string name="tf_unable_to_export_send_dependency">Sending Requires ZIP</string>
-    <string name="tf_unable_to_export_send_dependency_msg">All exported data must be compressed into a single ZIP file before it can be emailed or transferred via Bluetooth.</string>
+	<string name="tf_unable_to_export_send_dependency">Sending Requires ZIP</string>
+	<string name="tf_unable_to_export_send_dependency_msg">All exported data must be compressed into a single ZIP file before it can be emailed or transferred via Bluetooth.</string>
 	<string name="tf_unable_to_go_offline_dialog">Cannot Go Offline</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_folders">Select at least one folder to be synchronized for offline use prior to going offline.</string>
 	<string name="tf_unable_to_go_offline_dialog_msg_reason_generic">GC Mobile was unable to connect to the Group Complete service to go offline.\n\nThis usually means that this device cannot access the Internet.\n\nThis device will be forced into offline mode until a connection can be automatically restablished.</string>	
 	<string name="tf_unable_to_go_online_dialog">Cannot Go Online</string>
 	<string name="tf_unable_to_go_online_dialog_msg_reason_generic">Please make sure that this device can access the Internet and try again.</string>
-    <string name="tf_unable_to_import_template">Unable To Import Template</string>
+	<string name="tf_unable_to_import_template">Unable To Import Template</string>
 	<string name="tf_unable_to_launch_form_builder_dialog">Cannot Start Form Builder</string>
 	<string name="tf_unable_to_launch_form_builder_dialog_msg">Changes cannot be made to form templates when either draft or completed copies of the form are present.\n\nSupport for changes to forms with drafts/completed copies will be made available in a future version of this app.\n\nIf you wish to make changes to this form template either make a copy of it or remove all drafts/completed copies before editing it.</string>
 	<string name="tf_unable_to_load_instances_dialog">Form(s) Not Found</string>
@@ -540,12 +532,12 @@
 	<string name="tf_unable_to_remove_self">You cannot remove yourself!</string>
 	<string name="tf_unable_to_rename_dialog">Unable To Rename</string>
 	<string name="tf_unable_to_rename_dialog_msg">This folder already contains a form named \"%s.\"\n\nPlease choose another name.</string>
-	<string name="tf_unable_to_reset_self">This screen cannot be used to reset your own profile.  If you want to do this, please use\n\nAbout GC >\nThis Device >\nReset GC Mobile</string>
+	<string name="tf_unable_to_reset_self">This screen cannot be used to reset your own profile.  If you want to do this, please use\n\nAbout GC >\nReset GC Mobile</string>
 	<string name="tf_unable_to_save_empty_translation">Please provide a translation</string>
 	<string name="tf_unable_to_update_folder">Unable to update %s</string>
 	<string name="tf_unavailable">Unavailable</string>
 	<string name="tf_unknown_contact_email">Unknown email address</string>
-    <string name="tf_unknown_error">An unknown error occurred.  Please contact us at support@groupcomplete.com and let us know what you were doing when you received this message.</string>
+	<string name="tf_unknown_error">An unknown error occurred.  Please contact us at support@groupcomplete.com and let us know what you were doing when you received this message.</string>
 	<string name="tf_update">Update</string>
 	<string name="tf_updating_with_param">Updating %s...</string>
 	<string name="tf_video_media_type">Video recording</string>
@@ -553,15 +545,15 @@
 	<string name="tf_viewing_instance">Output Fields for</string>
 	<string name="tf_while_offline">Changes cannot be saved while offline</string>
 	<string name="tf_yes">Yes</string>
- 
-    <string name="file_dialog_app_name">File dialog</string>
-    <string name="file_dialog_location">Location</string>
-    <string name="file_dialog_cant_read_folder">folder can\'t be read!</string>
-    <string name="file_dialog_new">New</string>
-    <string name="file_dialog_select">Select</string>
-    <string name="file_dialog_file_name">File name:</string>
-    <string name="file_dialog_cancel">Cancel</string>
-    <string name="file_dialog_aborted">File selection aborted</string>
-    <string name="file_dialog_create">Save</string>
-    <string name="file_dialog_no_data">No Data</string>
+
+	<string name="file_dialog_app_name">File dialog</string>
+	<string name="file_dialog_location">Location</string>
+	<string name="file_dialog_cant_read_folder">folder can\'t be read!</string>
+	<string name="file_dialog_new">New</string>
+	<string name="file_dialog_select">Select</string>
+	<string name="file_dialog_file_name">File name:</string>
+	<string name="file_dialog_cancel">Cancel</string>
+	<string name="file_dialog_aborted">File selection aborted</string>
+	<string name="file_dialog_create">Save</string>
+	<string name="file_dialog_no_data">No Data</string>
 </resources>
