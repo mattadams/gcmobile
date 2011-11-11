@@ -710,16 +710,18 @@ public class FormBuilderFieldEditor extends Activity
         
         // Default appearance
         optionAppearance.setSelection(0);
-        
+
         // Switch to selected appearance option
-        if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.MINIMAL)) {
-            optionAppearance.setSelection(1);
-        } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.LIST)) {
-            optionAppearance.setSelection(2);
-        } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.LIST_NOLABEL)) {
-            optionAppearance.setSelection(3);
-        } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.QUICK)) {
-            optionAppearance.setSelection(4);
+        if (mField.getAttributes().get(XForm.Attribute.APPEARANCE) != null) {
+            if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.MINIMAL)) {
+                optionAppearance.setSelection(1);
+            } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.LIST)) {
+                optionAppearance.setSelection(2);
+            } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.LIST_NOLABEL)) {
+                optionAppearance.setSelection(3);
+            } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.QUICK)) {
+                optionAppearance.setSelection(4);
+            }
         }
     }
     
