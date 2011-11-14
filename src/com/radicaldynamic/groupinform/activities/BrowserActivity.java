@@ -1378,28 +1378,29 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
                 } else {
-                    if (mDialog == null || !mDialog.isShowing()) { 
-                        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
-                        String descriptor = s1.getSelectedItem().toString().toLowerCase();
-
-                        switch (s1.getSelectedItemPosition()) {
-                        case 0:
-                            Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
-                            break;
-                        case 1:
-                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
-                            break;
-                        case 2:
-                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
-                            break;
-                        case 3:
-                            Toast.makeText(getApplicationContext(), getString(R.string.tf_export_records_hint), Toast.LENGTH_SHORT).show();
-                            break;
-                        case 4:
-                            Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_SHORT).show();
-                            break;
-                        }
-                    }
+                    // TODO: hints disabled until we can find a way to show them unobtrousively (e.g., only once per user session)
+//                    if (mDialog == null || !mDialog.isShowing()) { 
+//                        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
+//                        String descriptor = s1.getSelectedItem().toString().toLowerCase();
+//
+//                        switch (s1.getSelectedItemPosition()) {
+//                        case 0:
+//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
+//                            break;
+//                        case 1:
+//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
+//                            break;
+//                        case 2:
+//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
+//                            break;
+//                        case 3:
+//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_export_records_hint), Toast.LENGTH_SHORT).show();
+//                            break;
+//                        case 4:
+//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_SHORT).show();
+//                            break;
+//                        }
+//                    }
                 }
             }
 
@@ -1775,15 +1776,15 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     }
 
     @Override
-    public void importComplete(Bundle data) 
+    public void importTaskFinished(Bundle data) 
     {
         dismissDialog(DIALOG_IMPORTING_TEMPLATE);        
         
-        if (data.getBoolean(DefinitionImportListener.IMPORT_SUCCESSFUL, false)) {
-            Toast.makeText(getApplicationContext(), getString(R.string.tf_imported_file, data.getString(DefinitionImportListener.IMPORTED_FILENAME)), Toast.LENGTH_SHORT).show();
+        if (data.getBoolean(DefinitionImportListener.SUCCESSFUL, false)) {
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_imported_file, data.getString(DefinitionImportListener.FILENAME)), Toast.LENGTH_SHORT).show();
             loadScreen();
         } else {
-            mDialogMessage = data.getString(DefinitionImportListener.IMPORT_MESSAGE);
+            mDialogMessage = data.getString(DefinitionImportListener.MESSAGE);
             showDialog(DIALOG_UNABLE_TO_IMPORT_TEMPLATE);
         }
         

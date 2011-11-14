@@ -19,9 +19,9 @@ import android.os.Bundle;
 
 public interface DefinitionImportListener 
 {
-    public static final String IMPORT_MESSAGE = "import_message";
-    public static final String IMPORT_SUCCESSFUL = "import_successful";
-    public static final String IMPORTED_FILENAME = "imported_filename";
+    public static final String MESSAGE = "message";             // Key for any message returned to the listener
+    public static final String SUCCESSFUL = "successful";       // Key for whether or not the import was successful
+    public static final String FILENAME = "filename";           // Key for the name of file that was imported
     
-    void importComplete(Bundle data);
+    void importTaskFinished(Bundle data);
 }

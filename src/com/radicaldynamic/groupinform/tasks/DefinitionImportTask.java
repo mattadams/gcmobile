@@ -94,16 +94,16 @@ public class DefinitionImportTask extends AsyncTask<String, Void, Void>
             if (mStateListener != null) {
                 Bundle b = new Bundle();
                 
-                b.putString(DefinitionImportListener.IMPORTED_FILENAME, mFormDefinition.getName());
-                b.putString(DefinitionImportListener.IMPORT_MESSAGE, mImportMessage);
+                b.putString(DefinitionImportListener.FILENAME, mFormDefinition.getName());
+                b.putString(DefinitionImportListener.MESSAGE, mImportMessage);
                 
                 if (mImportSuccessful) {
-                    b.putBoolean(DefinitionImportListener.IMPORT_SUCCESSFUL, true);
+                    b.putBoolean(DefinitionImportListener.SUCCESSFUL, true);
                 } else {
-                    b.putBoolean(DefinitionImportListener.IMPORT_SUCCESSFUL, false);                        
+                    b.putBoolean(DefinitionImportListener.SUCCESSFUL, false);                        
                 }
                 
-                mStateListener.importComplete(b);
+                mStateListener.importTaskFinished(b);
             }
         }
     }
