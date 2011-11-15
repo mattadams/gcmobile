@@ -12,6 +12,7 @@ public class ToggleOnlineStateTask extends AsyncTask<Void, Void, Void>
     private ToggleOnlineStateListener mStateListener;
     
     private int mOutcome = ToggleOnlineStateListener.SUCCESSFUL;
+    private boolean mPostExecuteSwitch = false;
     
     @Override
     protected Void doInBackground(Void... nothing)
@@ -45,6 +46,7 @@ public class ToggleOnlineStateTask extends AsyncTask<Void, Void, Void>
             if (mStateListener != null) {
                 Bundle b = new Bundle();
                 b.putInt(ToggleOnlineStateListener.OUTCOME, mOutcome);
+                b.putBoolean(ToggleOnlineStateListener.POS, mPostExecuteSwitch);
                 mStateListener.toggleOnlineStateTaskFinished(b);
             }
         }
@@ -55,5 +57,11 @@ public class ToggleOnlineStateTask extends AsyncTask<Void, Void, Void>
         synchronized (this) {
             mStateListener = sl;
         }
+    }
+    
+    // Return with result; use for alternate workflow in activity post-task handling 
+    public void setPostExecuteSwitch(boolean s)
+    {
+        mPostExecuteSwitch = s;
     }
 }

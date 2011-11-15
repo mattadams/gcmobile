@@ -55,6 +55,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
     private FormSavedListener mSavedListener;
     private Boolean mSave;
     private Boolean mMarkCompleted;
+    @SuppressWarnings("unused")
     private Uri mUri;
     private String mInstanceName;
 

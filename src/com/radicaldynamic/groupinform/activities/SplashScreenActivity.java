@@ -34,6 +34,7 @@ public class SplashScreenActivity extends Activity {
     private int mSplashTimeout = 2000; // milliseconds
 
     private AlertDialog mAlertDialog;
+    @SuppressWarnings("unused")
     private static final boolean EXIT = true;
 
 
@@ -189,6 +190,7 @@ public class SplashScreenActivity extends Activity {
     }
 
 
+    @SuppressWarnings("unused")
     private void createErrorDialog(String errorMsg, final boolean shouldExit) {
         mAlertDialog = new AlertDialog.Builder(this).create();
         mAlertDialog.setIcon(android.R.drawable.ic_dialog_info);

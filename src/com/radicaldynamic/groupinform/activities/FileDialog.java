@@ -49,7 +49,6 @@ public class FileDialog extends ListActivity {
 	private String parentPath;
 	private String currentPath = ROOT;
 	private String startPath;
-	private String windowTitle;
 	
 	public static final int MODE_CREATE = 0;
 	public static final int MODE_OPEN = 1;

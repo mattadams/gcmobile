@@ -19,11 +19,12 @@ import android.os.Bundle;
 
 public interface ToggleOnlineStateListener 
 {
-    public static final String OUTCOME = "outcome";     // Key for passing this task's outcome
+    public static final String OUTCOME = "outcome";         // Key for passing this task's outcome
+    public static final String POS = "post_execute_switch"; // Key for post execute switch option
     
-    public static final int SUCCESSFUL     = 0;         // Task completed without problem
-    public static final int CANNOT_SIGNIN  = 1;         // Could not go online for some reason
-    public static final int CANNOT_SIGNOUT = 2;         // Could not go offline for some reason
+    public static final int SUCCESSFUL     = 0;             // Task completed without problem
+    public static final int CANNOT_SIGNIN  = 1;             // Could not go online for some reason
+    public static final int CANNOT_SIGNOUT = 2;             // Could not go offline for some reason
     
     void toggleOnlineStateTaskFinished(Bundle data);
     void toggleOnlineStateHandler();

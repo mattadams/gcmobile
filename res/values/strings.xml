@@ -369,9 +369,9 @@
 	<string name="tf_form_name_duplicate">Name already exists - please pick another</string>
 	<string name="tf_forms_ready_to_upload">form(s) ready to upload</string>
 	<string name="tf_go_offline">Go Offline</string>
-	<string name="tf_go_offline_dialog_msg">Folders selected for offline use will be synchronized prior to going offline.</string>
+	<string name="tf_go_offline_dialog_msg">If \"Synchronize Folders\" is checked all folders selected for offline use will be updated prior to going offline.</string>
 	<string name="tf_go_online">Go Online</string>
-	<string name="tf_go_online_dialog_msg">Folders selected for offline use will be synchronized after going online.</string>
+	<string name="tf_go_online_dialog_msg">If \"Synchronize Folders\" is checked all folders selected for offline use will be updated after going online.</string>
 	<string name="tf_help">Help</string>
 	<string name="tf_i18n_add_language">Add Language</string>
 	<string name="tf_i18n_add_language_hint">Select language to add to form</string>

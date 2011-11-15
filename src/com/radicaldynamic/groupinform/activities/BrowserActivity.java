@@ -57,6 +57,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -765,17 +766,26 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             
             // Prompt user to connect/disconnect
             case DIALOG_TOGGLE_ONLINE_STATE:
+                view = inflater.inflate(R.layout.dialog_toggle_online_state, null);
+                
+                final CheckBox synchronizeFolders = (CheckBox) view.findViewById(R.id.synchronizeFolders);
+                TextView synchronizeFoldersMessage = (TextView) view.findViewById(R.id.synchronizeFoldersMessage);
+                
                 String buttonText;
                 
                 builder
-                .setCancelable(false) 
+                .setView(view)
+                .setInverseBackgroundForced(true)
                 .setIcon(R.drawable.ic_dialog_info);
                 
                 if (Collect.getInstance().getIoService().isSignedIn()) {
-                    builder.setTitle(getText(R.string.tf_go_offline) + "?").setMessage(R.string.tf_go_offline_dialog_msg);
+                    builder.setTitle(getText(R.string.tf_go_offline) + "?");
+                    synchronizeFoldersMessage.setText(getString(R.string.tf_go_offline_dialog_msg));
                     buttonText = getText(R.string.tf_go_offline).toString();
+                    
                 } else {
-                    builder.setTitle(getText(R.string.tf_go_online) + "?").setMessage(R.string.tf_go_online_dialog_msg);
+                    builder.setTitle(getText(R.string.tf_go_online) + "?");
+                    synchronizeFoldersMessage.setText(getString(R.string.tf_go_online_dialog_msg));
                     buttonText = getText(R.string.tf_go_online).toString();
                 }
 
@@ -783,7 +793,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                     public void onClick(DialogInterface dialog, int whichButton) {
                         removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
                         
-                        if (Collect.getInstance().getIoService().isSignedIn()) {
+                        if (Collect.getInstance().getIoService().isSignedIn() && synchronizeFolders.isChecked()) {
                             mSynchronizeFoldersTask = new SynchronizeFoldersTask();
                             mSynchronizeFoldersTask.setListener(BrowserActivity.this);
                             mSynchronizeFoldersTask.setTransferMode(SynchronizeFoldersListener.MODE_SWAP);
@@ -792,6 +802,11 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                         } else {
                             mToggleOnlineStateTask = new ToggleOnlineStateTask();
                             mToggleOnlineStateTask.setListener(BrowserActivity.this);
+                            
+                            if (synchronizeFolders.isChecked()) {
+                                mToggleOnlineStateTask.setPostExecuteSwitch(true);
+                            }
+                            
                             mToggleOnlineStateTask.execute();
                         }
                     }
@@ -1800,8 +1815,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
 
         switch (data.getInt(ToggleOnlineStateListener.OUTCOME)) {
         case ToggleOnlineStateListener.SUCCESSFUL:
-            // If we are signed in after toggling then it makes sense that we'd want to synchronize
-            if (Collect.getInstance().getIoService().isSignedIn()) {
+            // If we are signed in after toggling then it makes sense that we'd want to synchronize (but only if requested)
+            if (Collect.getInstance().getIoService().isSignedIn() && data.getBoolean(ToggleOnlineStateListener.POS, false)) {
                 mSynchronizeFoldersTask = new SynchronizeFoldersTask();
                 mSynchronizeFoldersTask.setListener(BrowserActivity.this);
                 mSynchronizeFoldersTask.setTransferMode(SynchronizeFoldersListener.MODE_SWAP);
