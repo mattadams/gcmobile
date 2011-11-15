@@ -21,9 +21,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
 
@@ -76,11 +74,15 @@ import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
 import com.radicaldynamic.groupinform.documents.Generic;
 import com.radicaldynamic.groupinform.listeners.DefinitionImportListener;
+import com.radicaldynamic.groupinform.listeners.SynchronizeFoldersListener;
+import com.radicaldynamic.groupinform.listeners.ToggleOnlineStateListener;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
 import com.radicaldynamic.groupinform.repositories.FormInstanceRepo;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.tasks.DefinitionImportTask;
+import com.radicaldynamic.groupinform.tasks.SynchronizeFoldersTask;
+import com.radicaldynamic.groupinform.tasks.ToggleOnlineStateTask;
 import com.radicaldynamic.groupinform.utilities.Base64Coder;
 import com.radicaldynamic.groupinform.utilities.DocumentUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
@@ -94,7 +96,7 @@ import com.radicaldynamic.groupinform.xform.FormWriter;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class BrowserActivity extends ListActivity implements DefinitionImportListener
+public class BrowserActivity extends ListActivity implements DefinitionImportListener, ToggleOnlineStateListener, SynchronizeFoldersListener
 {
     private static final String t = "BrowserActivity: ";
     
@@ -144,13 +146,17 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     private String mCopyToFolderName;           // Same
     private String mCopyToFolderAs;             // Used to pass to DIALOG_UNABLE_TO_COPY_DUPLICATE
     private String mSelectedDatabase;           // To save & restore the currently selected database
-    private boolean mSpinnerInit = false;       // See s1...OnItemSelectedListener() where this is used in a horrid workaround
+    
+    // See s1...OnItemSelectedListener() where this is used in a horrid workaround
+    private boolean mSpinnerInit = false;       
     
     private CopyToFolderTask mCopyToFolderTask;
     private DefinitionImportTask mDefinitionImportTask;
     private RefreshViewTask mRefreshViewTask;
-    private RemoveTask mRemoveTask;
-    private RenameTask mRenameTask;
+    private RemoveDefinitionTask mRemoveDefinitionTask;
+    private RenameDefinitionTask mRenameDefinitionTask;
+    private SynchronizeFoldersTask mSynchronizeFoldersTask;
+    private ToggleOnlineStateTask mToggleOnlineStateTask;
     private UpdateFolderTask mUpdateFolderTask;
     
     private Dialog mDialog;
@@ -193,10 +199,15 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         // Retrieve persistent data structures and processes
         Object data = getLastNonConfigurationInstance();
         
-        if (data instanceof DefinitionImportTask)
+        if (data instanceof DefinitionImportTask) {
             mDefinitionImportTask = (DefinitionImportTask) data;
-        else if (data instanceof HashMap<?, ?>)
+        } else if (data instanceof SynchronizeFoldersTask) {
+            mSynchronizeFoldersTask = (SynchronizeFoldersTask) data;
+        } else if (data instanceof ToggleOnlineStateTask) { 
+            mToggleOnlineStateTask = (ToggleOnlineStateTask) data;
+        } else if (data instanceof HashMap<?, ?>) {
             mFormDefinition = (FormDefinition) ((HashMap<String, Generic>) data).get(KEY_FORM_DEFINITION);
+        }
 
         // Initiate and populate spinner to filter form browser on the basis of the currently selected task
         ArrayAdapter<CharSequence> taskSpinnerOptions = ArrayAdapter.createFromResource(this, 
@@ -248,7 +259,10 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             @Override
             public void onClick(View v)
             {
-                showDialog(DIALOG_TOGGLE_ONLINE_STATE);
+                if (Collect.getInstance().getInformOnlineState().hasReplicatedFolders())
+                    showDialog(DIALOG_TOGGLE_ONLINE_STATE);
+                else 
+                    showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS);               
             }
         });
     }
@@ -256,15 +270,37 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     @Override
     protected void onDestroy() 
     {
+        if (mProgressDialog != null && mProgressDialog.isShowing())
+            mProgressDialog.dismiss();
+        
+        // Clean up definition import task
         if (mDefinitionImportTask != null) {
-            mDefinitionImportTask.setImportListener(null);
+            mDefinitionImportTask.setListener(null);
+            
             if (mDefinitionImportTask.getStatus() == AsyncTask.Status.FINISHED) {
                 mDefinitionImportTask.cancel(true);
             }
         }
+        
+        // Clean up folder synchronization task
+        if (mSynchronizeFoldersTask != null) {
+            mSynchronizeFoldersTask.setListener(null);
+            
+            if (mSynchronizeFoldersTask.getStatus() == AsyncTask.Status.FINISHED) {
+                mSynchronizeFoldersTask.cancel(true);
+            }
+        }
+        
+        // Clean up online/offline toggle task
+        if (mToggleOnlineStateTask != null) {
+            mToggleOnlineStateTask.setListener(null);
+            
+            if (mToggleOnlineStateTask.getStatus() == AsyncTask.Status.FINISHED) {
+                mToggleOnlineStateTask.cancel(true);
+            }
+        }
 
         super.onDestroy();
-
     }
 
     @Override
@@ -272,11 +308,36 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     {
         super.onResume();
         
+        // Handle resume of definition import task
         if (mDefinitionImportTask != null) {
-            mDefinitionImportTask.setImportListener(this);
+            mDefinitionImportTask.setListener(this);
             
             if (mDefinitionImportTask != null && mDefinitionImportTask.getStatus() == AsyncTask.Status.FINISHED) {
                 dismissDialog(DIALOG_IMPORTING_TEMPLATE);  
+            }
+        }        
+        
+        // Handle resume of folder synchronization task
+        if (mSynchronizeFoldersTask != null) {
+            mSynchronizeFoldersTask.setListener(this);
+            
+            if (mSynchronizeFoldersTask != null) {
+                if (mSynchronizeFoldersTask.getStatus() == AsyncTask.Status.RUNNING) {
+                    synchronizationHandler(null);
+                } else if (mSynchronizeFoldersTask.getStatus() == AsyncTask.Status.FINISHED) {
+                    if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+                    }
+                }
+            }
+        }
+        
+        // Handle resume of toggle online state offline/online task
+        if (mToggleOnlineStateTask != null) {
+            mToggleOnlineStateTask.setListener(this);
+            
+            if (mToggleOnlineStateTask != null && mToggleOnlineStateTask.getStatus() == AsyncTask.Status.FINISHED) {
+                removeDialog(DIALOG_ONLINE_STATE_CHANGING);  
             }
         }
         
@@ -309,7 +370,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         case RESULT_IMPORT:
             showDialog(DIALOG_IMPORTING_TEMPLATE);
             mDefinitionImportTask = new DefinitionImportTask();
-            mDefinitionImportTask.setImportListener(this);
+            mDefinitionImportTask.setListener(this);
             mDefinitionImportTask.execute(intent.getStringExtra(FileDialog.RESULT_PATH));
             break;
         }
@@ -431,9 +492,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             copyName.setText(mFormDefinition.getName());
             
             builder
-                .setTitle(R.string.tf_copy_to_folder)
-                .setView(view)
-                .setInverseBackgroundForced(true);
+            .setTitle(R.string.tf_copy_to_folder)
+            .setView(view)
+            .setInverseBackgroundForced(true);
             
             builder.setPositiveButton(getText(R.string.tf_copy), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -464,10 +525,10 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         // Local folder is most likely out-of-date
         case DIALOG_FOLDER_OUTDATED:
             builder
-                .setCancelable(false)
-                .setIcon(R.drawable.ic_dialog_info)
-                .setTitle(R.string.tf_folder_outdated_dialog)
-                .setMessage(getString(R.string.tf_folder_outdated_dialog_msg, getSelectedFolderName()));
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_folder_outdated_dialog)
+            .setMessage(getString(R.string.tf_folder_outdated_dialog_msg, getSelectedFolderName()));
             
             builder.setPositiveButton(getString(R.string.tf_update), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {                    
@@ -490,10 +551,10 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         // Couldn't connect to DB (for a specific reason)
         case DIALOG_FOLDER_UNAVAILABLE:
             builder
-                .setCancelable(false)
-                .setIcon(R.drawable.ic_dialog_info)
-                .setTitle(R.string.tf_folder_unavailable)
-                .setMessage(mDialogMessage);
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_folder_unavailable)
+            .setMessage(mDialogMessage);
             
             builder.setPositiveButton(getString(R.string.tf_form_folders), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -517,9 +578,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         // Unable to launch form builder (instances present) 
         case DIALOG_FORM_BUILDER_LAUNCH_ERROR:
             builder
-                .setIcon(R.drawable.ic_dialog_info)
-                .setTitle(R.string.tf_unable_to_launch_form_builder_dialog)
-                .setMessage(R.string.tf_unable_to_launch_form_builder_dialog_msg);
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_unable_to_launch_form_builder_dialog)
+            .setMessage(R.string.tf_unable_to_launch_form_builder_dialog_msg);
                 
             builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -530,6 +591,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             mDialog = builder.create();
             break;
             
+        // Simple progress dialog to display while importing a definition to the current folder
         case DIALOG_IMPORTING_TEMPLATE:
             mProgressDialog = new ProgressDialog(this);
             mProgressDialog.setMessage(getText(R.string.tf_importing_template_please_wait));
@@ -540,10 +602,10 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         // User requested forms (definitions or instances) to be loaded but none could be found 
         case DIALOG_INSTANCES_UNAVAILABLE:
             builder
-                .setCancelable(false)
-                .setIcon(R.drawable.ic_dialog_info)
-                .setTitle(R.string.tf_unable_to_load_instances_dialog)
-                .setMessage(R.string.tf_unable_to_load_instances_dialog_msg);
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_unable_to_load_instances_dialog)
+            .setMessage(R.string.tf_unable_to_load_instances_dialog_msg);
 
             builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -580,38 +642,6 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             else
                 mDialog = ProgressDialog.show(this, "", getText(R.string.tf_inform_state_connecting));
             
-            break;
-        
-        // Prompt user to connect/disconnect
-        case DIALOG_TOGGLE_ONLINE_STATE:
-            String buttonText;
-            
-            builder
-                .setCancelable(false) 
-                .setIcon(R.drawable.ic_dialog_info);
-            
-            if (Collect.getInstance().getIoService().isSignedIn()) {
-                builder.setTitle(getText(R.string.tf_go_offline) + "?").setMessage(R.string.tf_go_offline_dialog_msg);
-                buttonText = getText(R.string.tf_go_offline).toString();
-            } else {
-                builder.setTitle(getText(R.string.tf_go_online) + "?").setMessage(R.string.tf_go_online_dialog_msg);
-                buttonText = getText(R.string.tf_go_online).toString();
-            }
-
-            builder.setPositiveButton(buttonText, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    new ToggleOnlineStateTask().execute();
-                    removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
-                }
-            });
-
-            builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
-                }
-            });
-            
-            mDialog = builder.create();
             break;
             
         // Tried going offline but couldn't
@@ -671,8 +701,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             builder.setPositiveButton(getString(R.string.tf_remove), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {                    
                     removeDialog(DIALOG_REMOVE_FORM);
-                    mRemoveTask = new RemoveTask();
-                    mRemoveTask.execute(mFormDefinition);
+                    mRemoveDefinitionTask = new RemoveDefinitionTask();
+                    mRemoveDefinitionTask.execute(mFormDefinition);
                 }
             });
             
@@ -691,9 +721,10 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             // Set an EditText view to get user input 
             final EditText renamedFormName = (EditText) view.findViewById(R.id.formName);
             
-            builder.setView(view);
-            builder.setInverseBackgroundForced(true);
-            builder.setTitle(getText(R.string.tf_rename_template));
+            builder
+            .setView(view)
+            .setInverseBackgroundForced(true)
+            .setTitle(getText(R.string.tf_rename_template));
             
             renamedFormName.setText(mFormDefinition.getName());
             
@@ -712,8 +743,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                             // Hijack this variable in case we need to display DIALOG_UNABLE_TO_RENAME_DUPLICATE
                             mCopyToFolderAs = newName;
                             
-                            mRenameTask = new RenameTask();
-                            mRenameTask.execute(mFormDefinition, newName);
+                            mRenameDefinitionTask = new RenameDefinitionTask();
+                            mRenameDefinitionTask.execute(mFormDefinition, newName);
                         }
                     }
                 }
@@ -726,7 +757,51 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             });
             
             mDialog = builder.create();
-            break;            
+            break;  
+            
+            
+            // Prompt user to connect/disconnect
+            case DIALOG_TOGGLE_ONLINE_STATE:
+                String buttonText;
+                
+                builder
+                .setCancelable(false) 
+                .setIcon(R.drawable.ic_dialog_info);
+                
+                if (Collect.getInstance().getIoService().isSignedIn()) {
+                    builder.setTitle(getText(R.string.tf_go_offline) + "?").setMessage(R.string.tf_go_offline_dialog_msg);
+                    buttonText = getText(R.string.tf_go_offline).toString();
+                } else {
+                    builder.setTitle(getText(R.string.tf_go_online) + "?").setMessage(R.string.tf_go_online_dialog_msg);
+                    buttonText = getText(R.string.tf_go_online).toString();
+                }
+
+                builder.setPositiveButton(buttonText, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
+                        
+                        if (Collect.getInstance().getIoService().isSignedIn()) {
+                            mSynchronizeFoldersTask = new SynchronizeFoldersTask();
+                            mSynchronizeFoldersTask.setListener(BrowserActivity.this);
+                            mSynchronizeFoldersTask.setTransferMode(SynchronizeFoldersListener.MODE_SWAP);
+                            mSynchronizeFoldersTask.setPostExecuteSwitch(true);
+                            mSynchronizeFoldersTask.execute();
+                        } else {
+                            mToggleOnlineStateTask = new ToggleOnlineStateTask();
+                            mToggleOnlineStateTask.setListener(BrowserActivity.this);
+                            mToggleOnlineStateTask.execute();
+                        }
+                    }
+                });
+
+                builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
+                    }
+                });
+                
+                mDialog = builder.create();
+                break;            
 
         case DIALOG_UNABLE_TO_COPY_DUPLICATE:
             builder
@@ -887,13 +962,19 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
 
         return super.onOptionsItemSelected(item);
     }
-    
+
+    // Pass references and other important information to the next thread
     @Override
     public Object onRetainNonConfigurationInstance()
     {
-        // If we're importing, pass the thread to the next instance
         if (mDefinitionImportTask != null && mDefinitionImportTask.getStatus() != AsyncTask.Status.FINISHED)
             return mDefinitionImportTask;
+        
+        if (mSynchronizeFoldersTask != null && mSynchronizeFoldersTask.getStatus() != AsyncTask.Status.FINISHED)
+            return mSynchronizeFoldersTask;
+        
+        if (mToggleOnlineStateTask != null && mToggleOnlineStateTask.getStatus() != AsyncTask.Status.FINISHED)
+            return mToggleOnlineStateTask;
         
         // Avoid refetching documents from database by preserving them
         HashMap<String, Generic> persistentData = new HashMap<String, Generic>();
@@ -1408,7 +1489,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         }
     }
     
-    private class RemoveTask extends AsyncTask<Object, Void, Void>
+    private class RemoveDefinitionTask extends AsyncTask<Object, Void, Void>
     {
         FormDefinition formDefinition;
         ProgressDialog progressDialog;
@@ -1461,9 +1542,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         }
     }
     
-    private class RenameTask extends AsyncTask<Object, Void, Void>
+    private class RenameDefinitionTask extends AsyncTask<Object, Void, Void>
     {
-        private static final String tt = t + "RenameTask: ";        
+        private static final String tt = t + "RenameDefinitionTask: ";        
         private static final String KEY_ITEM = "key_item";
         
         private boolean renamed = false;
@@ -1569,142 +1650,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             
             loadScreen();
         }        
-    }
-    
-    /*
-     * Go online or offline at users request; synchronize folders accordingly.
-     */
-    private class ToggleOnlineStateTask extends AsyncTask<Void, Void, Void>
-    {        
-        Boolean hasReplicatedFolders = false;
-        Boolean missingSynchronizedFolders = false;
-        Boolean unableToGoOffline = false;
-        Boolean unableToGoOnline = false;
-        
-        ProgressDialog progressDialog = null;        
-        
-        final Handler progressHandler = new Handler() {
-            public void handleMessage(Message msg) {
-                progressDialog.setMessage(getString(R.string.tf_synchronizing_folder_count_dialog_msg, msg.arg1, msg.arg2));
-            }
-        };
-        
-        @Override
-        protected Void doInBackground(Void... nothing)
-        {
-            // TODO? Perform checkin on demand -- this gives us the most accurate online/offline state 
-            // Or maybe just again when the app starts up/is shown
-            
-            if (Collect.getInstance().getIoService().isSignedIn()) {
-                if (hasReplicatedFolders) {
-                    // Only attempt to synchronize if we can reasonably do so
-                    if (Collect.getInstance().getIoService().isSignedIn())
-                        synchronize();                      
-                    
-                    if (!Collect.getInstance().getIoService().goOffline())
-                        unableToGoOffline = true;
-                } else {
-                    missingSynchronizedFolders = true;
-                }
-            } else {
-                if (Collect.getInstance().getIoService().goOnline()) {                
-                    if (hasReplicatedFolders)
-                        synchronize();
-                } else
-                    unableToGoOnline = true;
-            }
+    }    
 
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute()
-        {
-            hasReplicatedFolders = Collect.getInstance().getInformOnlineState().hasReplicatedFolders();
-
-            if (hasReplicatedFolders) {
-                progressDialog = new ProgressDialog(BrowserActivity.this);
-                progressDialog.setMessage(getString(R.string.tf_synchronizing_folders_dialog_msg));  
-                progressDialog.show();
-            } else {
-                showDialog(DIALOG_ONLINE_STATE_CHANGING);
-            }
-            
-            // Not available while toggling
-            Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
-            b1.setEnabled(false);
-            b1.setText(R.string.tf_inform_state_transition);
-            
-            Button b2 = (Button) findViewById(R.id.folderTitleButton);
-            b2.setEnabled(false);
-            b2.setText("...");
-        }
-
-        @Override
-        protected void onPostExecute(Void nothing)
-        {   
-            if (progressDialog == null)
-                removeDialog(DIALOG_ONLINE_STATE_CHANGING);
-            else
-                progressDialog.cancel();
-            
-            if (missingSynchronizedFolders) {
-                showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS);
-                loadScreen();
-            } else if (unableToGoOffline) {
-                // Load screen after user acknowledges to avoid stacking of dialogs
-                showDialog(DIALOG_OFFLINE_ATTEMPT_FAILED);
-            } else if (unableToGoOnline) {
-                // Load screen after user acknowledges to avoid stacking of dialogs
-                showDialog(DIALOG_ONLINE_ATTEMPT_FAILED);
-            } else { 
-                loadScreen();
-            }
-        }
-        
-        private void synchronize()
-        {
-            Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
-            Iterator<String> folderIds = folderSet.iterator();
-            
-            int progress = 0;
-            int total = 0;
-            
-            // Figure out how many folders are marked for replication
-            while (folderIds.hasNext()) {
-                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
-                
-                if (folder.isReplicated())
-                    total++;
-            }
-            
-            // Reset iterator
-            folderIds = folderSet.iterator();    
-                
-            while (folderIds.hasNext()) {
-                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());                
-                
-                if (folder.isReplicated()) {
-                    Log.i(Collect.LOGTAG, t + "about to begin triggered replication of " + folder.getName());
-                    
-                    // Update progress dialog
-                    Message msg = progressHandler.obtainMessage();
-                    msg.arg1 = ++progress;
-                    msg.arg2 = total;
-                    progressHandler.sendMessage(msg);
-                    
-                    try {                        
-                        Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PUSH);
-                        Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL);
-                    } catch (Exception e) {
-                        Log.w(Collect.LOGTAG, t + "problem replicating " + folder.getId() + ": " + e.toString());
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-    
     /*
      * Update (synchronize) a local database by pulling from the remote database.
      * Needed if the local database becomes outdated.
@@ -1791,6 +1738,87 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         loadScreen();
     }
 
+    @Override
+    public void synchronizationHandler(Message msg) 
+    {
+        if (msg == null) {
+            // Close any existing progress dialogs
+            if (mProgressDialog != null && mProgressDialog.isShowing())
+                mProgressDialog.dismiss();
+
+            // Start new dialog with suitable message
+            mProgressDialog = new ProgressDialog(BrowserActivity.this);
+            mProgressDialog.setMessage(getString(R.string.tf_synchronizing_folders_dialog_msg));  
+            mProgressDialog.show();
+        } else {
+            // Update progress dialog
+            if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                mProgressDialog.setMessage(getString(R.string.tf_synchronizing_folder_count_dialog_msg, msg.arg1, msg.arg2));
+            }
+        }
+    }
+
+    @Override
+    public void synchronizationTaskFinished(Bundle data) 
+    {
+        if (mProgressDialog != null && mProgressDialog.isShowing())
+            mProgressDialog.dismiss();
+     
+        if (data.getBoolean(SynchronizeFoldersListener.POS, false)) {
+            // Alternate post-synchronization workflow (go offline after synchronizing)
+            mToggleOnlineStateTask = new ToggleOnlineStateTask();
+            mToggleOnlineStateTask.setListener(BrowserActivity.this);
+            mToggleOnlineStateTask.execute();
+        } else {
+            // Refresh after synchronizing to reflect any changes
+            loadScreen();
+        }
+    }
+
+    @Override
+    public void toggleOnlineStateHandler() 
+    {        
+        showDialog(DIALOG_ONLINE_STATE_CHANGING);
+
+        // Not available while toggling
+        Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
+        b1.setEnabled(false);
+        b1.setText(R.string.tf_inform_state_transition);
+
+        Button b2 = (Button) findViewById(R.id.folderTitleButton);
+        b2.setEnabled(false);
+        b2.setText("...");
+    }
+
+    @Override
+    public void toggleOnlineStateTaskFinished(Bundle data) 
+    {
+        removeDialog(DIALOG_ONLINE_STATE_CHANGING);
+
+        switch (data.getInt(ToggleOnlineStateListener.OUTCOME)) {
+        case ToggleOnlineStateListener.SUCCESSFUL:
+            // If we are signed in after toggling then it makes sense that we'd want to synchronize
+            if (Collect.getInstance().getIoService().isSignedIn()) {
+                mSynchronizeFoldersTask = new SynchronizeFoldersTask();
+                mSynchronizeFoldersTask.setListener(BrowserActivity.this);
+                mSynchronizeFoldersTask.setTransferMode(SynchronizeFoldersListener.MODE_SWAP);
+                mSynchronizeFoldersTask.execute();
+            } else {
+                loadScreen();
+            }
+            
+            break;
+        case ToggleOnlineStateListener.CANNOT_SIGNIN:
+            // Load screen after user acknowledges to avoid stacking of dialogs
+            showDialog(DIALOG_ONLINE_ATTEMPT_FAILED);
+            break;
+        case ToggleOnlineStateListener.CANNOT_SIGNOUT:
+            // Load screen after user acknowledges to avoid stacking of dialogs
+            showDialog(DIALOG_OFFLINE_ATTEMPT_FAILED);
+            break;            
+        }
+    }
+
     /*
      * Load the various elements of the screen that must wait for other tasks to complete
      */
@@ -1822,44 +1850,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         b2.setEnabled(true);
 
         // Spinner must reflect results of refresh view below
-        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);        
-        triggerRefresh(s1.getSelectedItemPosition());
+        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
         
-        registerForContextMenu(getListView());
-    }
-    
-    /*
-     * Parse an attachment input stream (form definition XML file), affect h:title and instance 
-     * root & id attribute and return the XML file as byte[] for consumption by the controlling task. 
-     */
-    private byte[] renameFormDefinition(AttachmentInputStream ais, String newName) throws Exception
-    {
-        FormReader fr = new FormReader(ais);
-
-        // Populate global state (expected by FormWriter)
-        Collect.getInstance().getFormBuilderState().setBinds(fr.getBinds());
-        Collect.getInstance().getFormBuilderState().setFields(fr.getFields());
-        Collect.getInstance().getFormBuilderState().setInstance(fr.getInstance());
-        Collect.getInstance().getFormBuilderState().setTranslations(fr.getTranslations());
-        
-        return FormWriter.writeXml(newName, fr.getInstanceRoot(), fr.getInstanceRootId());
-    }
-    
-    private void setProgressVisibility(boolean visible)
-    {
-        ProgressBar pb = (ProgressBar) getWindow().findViewById(R.id.titleProgressBar);
-        
-        if (pb != null) {
-            if (visible) {
-                pb.setVisibility(View.VISIBLE);
-            } else {
-                pb.setVisibility(View.GONE);
-            }
-        }
-    }
-
-    private void triggerRefresh(int position)
-    {
         // Hide "nothing to display" message
         TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
         nothingToDisplay.setVisibility(View.INVISIBLE);
@@ -1873,9 +1865,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         
         String folderName = getSelectedFolderName();
         
-        try {            
-            // Reflect the currently selected folder
-            Button b2 = (Button) findViewById(R.id.folderTitleButton);
+        try {         
+            // Display the currently selected folder
             b2.setText(folderName);
 
             // Open selected database
@@ -1883,7 +1874,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         
             mRefreshViewTask = new RefreshViewTask();
 
-            switch (position) {
+            switch (s1.getSelectedItemPosition()) {
             case 0:
                 // Show all forms
                 mRefreshViewTask.execute(FormInstance.Status.any);
@@ -1912,6 +1903,39 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         } catch (DatabaseService.DbUnavailableException e) {
             mDialogMessage = getString(R.string.tf_unable_to_open_folder, folderName);
             showDialog(DIALOG_FOLDER_UNAVAILABLE);
+        }
+        
+        registerForContextMenu(getListView());
+    }
+    
+    /*
+     * Parse an attachment input stream (form definition XML file), affect h:title and instance 
+     * root & id attribute and return the XML file as byte[] for consumption by the controlling task. 
+     */
+    private byte[] renameFormDefinition(AttachmentInputStream ais, String newName) throws Exception
+    {
+        FormReader fr = new FormReader(ais);
+
+        // Populate global state (expected by FormWriter)
+        Collect.getInstance().getFormBuilderState().setBinds(fr.getBinds());
+        Collect.getInstance().getFormBuilderState().setFields(fr.getFields());
+        Collect.getInstance().getFormBuilderState().setInstance(fr.getInstance());
+        Collect.getInstance().getFormBuilderState().setTranslations(fr.getTranslations());
+        
+        return FormWriter.writeXml(newName, fr.getInstanceRoot(), fr.getInstanceRootId());
+    }
+    
+    // Toggle progress spinner in custom title bar
+    private void setProgressVisibility(boolean visible)
+    {
+        ProgressBar pb = (ProgressBar) getWindow().findViewById(R.id.titleProgressBar);
+        
+        if (pb != null) {
+            if (visible) {
+                pb.setVisibility(View.VISIBLE);
+            } else {
+                pb.setVisibility(View.GONE);
+            }
         }
     }
 }

@@ -32,8 +32,7 @@ public class DefinitionImportTask extends AsyncTask<String, Void, Void>
     
     @Override
     protected Void doInBackground(String... arg0) 
-    {
-       
+    {       
         try {
             File templateFile = new File(arg0[0]);
             
@@ -108,7 +107,7 @@ public class DefinitionImportTask extends AsyncTask<String, Void, Void>
         }
     }
     
-    public void setImportListener(DefinitionImportListener sl) 
+    public void setListener(DefinitionImportListener sl) 
     {
         synchronized (this) {
             mStateListener = sl;
