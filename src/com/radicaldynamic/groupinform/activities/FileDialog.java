@@ -48,8 +48,8 @@ public class FileDialog extends ListActivity {
 	private InputMethodManager inputManager;
 	private String parentPath;
 	private String currentPath = ROOT;
-	private String windowTitle;
 	private String startPath;
+	private String windowTitle;
 	
 	public static final int MODE_CREATE = 0;
 	public static final int MODE_OPEN = 1;
@@ -64,6 +64,8 @@ public class FileDialog extends ListActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setResult(RESULT_CANCELED, getIntent());
+		
+		setTitle(getIntent().getStringExtra(WINDOW_TITLE));
 
 		setContentView(R.layout.file_dialog_main);
 		myPath = (TextView) findViewById(R.id.path);
@@ -263,6 +265,7 @@ public class FileDialog extends ListActivity {
 								}).show();
 			}
 		} else {
+		    Toast.makeText(getApplicationContext(), getString(R.string.selected) + " " + file.getName(), Toast.LENGTH_SHORT).show();
 			selectedFile = file;
 			v.setSelected(true);
 			selectButton.setEnabled(true);

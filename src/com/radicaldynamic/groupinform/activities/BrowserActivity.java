@@ -467,7 +467,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                     Intent intent = new Intent(BrowserActivity.this, FileDialog.class);
                     intent.putExtra(FileDialog.SELECTION_MODE, FileDialog.MODE_OPEN);
                     intent.putExtra(FileDialog.START_PATH, "/sdcard");
-                    intent.putExtra(FileDialog.WINDOW_TITLE, "Select XForm File To Import");
+                    intent.putExtra(FileDialog.WINDOW_TITLE, "Select XForm File for Import");
                     startActivityForResult(intent, RESULT_IMPORT);
                 }
             });
