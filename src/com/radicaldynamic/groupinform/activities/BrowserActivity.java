@@ -566,8 +566,11 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             if (!Collect.getInstance().getIoService().isSignedIn()) {
                 builder.setNeutralButton(getString(R.string.tf_go_online), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        new ToggleOnlineStateTask().execute();
                         removeDialog(DIALOG_FOLDER_UNAVAILABLE);
+                        
+                        mToggleOnlineStateTask = new ToggleOnlineStateTask();
+                        mToggleOnlineStateTask.setListener(BrowserActivity.this);
+                        mToggleOnlineStateTask.execute();
                     }
                 });
             }
