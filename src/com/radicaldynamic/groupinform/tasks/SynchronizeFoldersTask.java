@@ -25,10 +25,8 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
     
     private SynchronizeFoldersListener mStateListener;
     
-    // TODO: implement synchronization of specific folders
-    @SuppressWarnings("unused")
-    private ArrayList<String> mFoldersToSynchronize = new ArrayList<String>();
     private HashMap<String, HashMap<String, ReplicationStatus>> mSummary = new HashMap<String, HashMap<String, ReplicationStatus>>();
+    private ArrayList<String> mFoldersToSynchronize = new ArrayList<String>();    
     
     private int mTransferMode = SynchronizeFoldersListener.MODE_UNDEFINED;
     private boolean mPostExecuteSwitch = false;
@@ -154,8 +152,14 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
         while (folderIds.hasNext()) {
             AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
             
-            if (folder.isReplicated())
+            // If we were supplied with a specific list of folders to synchronize AND this folder isn't in the list
+            if (!mFoldersToSynchronize.isEmpty() && !mFoldersToSynchronize.contains(folder.getId())) {
+                Log.d(Collect.LOGTAG, t + folder.getId() + " is not among the list of folders to synchronize; removing it from the queue");
+                folderIds.remove();
+            } else if (folder.isReplicated()) {
+                // Otherwise, keep it in the list and increment the total number of folders to process                
                 total++;
+            }            
         }
         
         // Abort (no folders to replicate)
@@ -170,31 +174,30 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
             AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
             HashMap<String, ReplicationStatus> replicationResults = new HashMap<String, ReplicationStatus>();
             
+            // Remember if a database existed prior to the PULL that follows this
+            boolean dbMayHaveChanges = Collect.getInstance().getDbService().isDbLocal(folder.getId());
+            
             if (folder.isReplicated()) {
-                Log.i(Collect.LOGTAG, t + "replicating " + folder.getName());
-                
                 // Update progress dialog
                 Message msg = progressHandler.obtainMessage();
                 msg.arg1 = ++progress;
                 msg.arg2 = total;
                 progressHandler.sendMessage(msg);
-                
-                // Only replicate a folder if it exists locally (it might be in our list but may not yet exist on the local device)
-                if (Collect.getInstance().getDbService().isDbLocal(folder.getId())) {
-                    try {
-                        // Pull
-                        if (mTransferMode == SynchronizeFoldersListener.MODE_PULL || mTransferMode == SynchronizeFoldersListener.MODE_SWAP) {
-                            replicationResults.put(SynchronizeFoldersListener.PULL_RESULT, Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL));
-                        }
-                    } catch (Exception e) {
-                        Log.w(Collect.LOGTAG, t + "problem pulling " + folder.getId() + ": " + e.toString());
-                        e.printStackTrace();
 
-                        replicationResults.put(SynchronizeFoldersListener.PULL_RESULT, null);
+                try {
+                    if (mTransferMode == SynchronizeFoldersListener.MODE_PULL || mTransferMode == SynchronizeFoldersListener.MODE_SWAP) {
+                        replicationResults.put(SynchronizeFoldersListener.PULL_RESULT, Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL));
                     }
+                } catch (Exception e) {
+                    Log.w(Collect.LOGTAG, t + "problem pulling " + folder.getId() + ": " + e.toString());
+                    e.printStackTrace();
 
-                    try {
-                        // Push
+                    replicationResults.put(SynchronizeFoldersListener.PULL_RESULT, null);
+                }
+
+                // A push should only occur if the database exists locally and is likely to have changes
+                if (dbMayHaveChanges) {
+                    try {                        
                         if (mTransferMode == SynchronizeFoldersListener.MODE_PUSH || mTransferMode == SynchronizeFoldersListener.MODE_SWAP) {
                             replicationResults.put(SynchronizeFoldersListener.PUSH_RESULT, Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PUSH));
                         }
@@ -204,12 +207,12 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
 
                         replicationResults.put(SynchronizeFoldersListener.PUSH_RESULT, null);
                     }
+                }
 
-                    status.put(folder.getId(), replicationResults);
-                }                
-            }
+                status.put(folder.getId(), replicationResults);
+            }                
         }
-        
+
         return status;
     }
 }

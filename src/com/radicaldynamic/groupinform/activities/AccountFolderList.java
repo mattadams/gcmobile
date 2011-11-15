@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,6 +35,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -49,8 +51,10 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.AccountFolderListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.listeners.SynchronizeFoldersListener;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.tasks.SynchronizeFoldersTask;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
@@ -58,7 +62,7 @@ import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
  * Interface used to switch between folders and select destination
  * folders to copy and/or move forms and/or data to.
  */
-public class AccountFolderList extends ListActivity
+public class AccountFolderList extends ListActivity implements SynchronizeFoldersListener
 {
     private static final String t = "AccountFolderList: ";
 
@@ -70,7 +74,6 @@ public class AccountFolderList extends ListActivity
     
     public static final int DIALOG_DENIED_NOT_OWNER = 1;
     public static final int DIALOG_MORE_INFO        = 2;
-    public static final int DIALOG_OPENING          = 3;
     
     // Intent keys
     public static final String KEY_COPY_TO_FOLDER = "key_copytofolder";
@@ -78,10 +81,12 @@ public class AccountFolderList extends ListActivity
     public static final String KEY_FOLDER_NAME    = "key_foldername";    
     
     private RefreshViewTask mRefreshViewTask;
-    private SelectFolderTask mSelectFolderTask;
+    private SynchronizeFoldersTask mSynchronizeFoldersTask;
     
     private AccountFolder mFolder;
     private boolean mCopyToFolder = false;
+    
+    private ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -106,8 +111,8 @@ public class AccountFolderList extends ListActivity
             
             if (data instanceof RefreshViewTask)
                 mRefreshViewTask = (RefreshViewTask) data;
-            else if (data instanceof SelectFolderTask)
-                mSelectFolderTask = (SelectFolderTask) data;
+            else if (data instanceof SynchronizeFoldersTask)
+                mSynchronizeFoldersTask = (SynchronizeFoldersTask) data;
         }
         
         if (mCopyToFolder)
@@ -115,11 +120,45 @@ public class AccountFolderList extends ListActivity
         else 
             setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_form_folders));
     }
+    
+    @Override
+    protected void onDestroy() 
+    {
+        if (mProgressDialog != null && mProgressDialog.isShowing())
+            mProgressDialog.dismiss();
+        
+        // Clean up folder synchronization task
+        if (mSynchronizeFoldersTask != null) {
+            mSynchronizeFoldersTask.setListener(null);
+            
+            if (mSynchronizeFoldersTask.getStatus() == AsyncTask.Status.FINISHED) {
+                mSynchronizeFoldersTask.cancel(true);
+            }
+        }
+        
+        super.onDestroy();
+    }
 
     @Override
     protected void onResume()
     {
-        super.onResume();
+        super.onResume();        
+        
+        // Handle resume of folder synchronization task
+        if (mSynchronizeFoldersTask != null) {
+            mSynchronizeFoldersTask.setListener(this);
+            
+            if (mSynchronizeFoldersTask != null) {
+                if (mSynchronizeFoldersTask.getStatus() == AsyncTask.Status.RUNNING) {
+                    synchronizationHandler(null);
+                } else if (mSynchronizeFoldersTask.getStatus() == AsyncTask.Status.FINISHED) {
+                    if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+                    }
+                }
+            }
+        }
+        
         loadScreen();
     }
     
@@ -183,9 +222,6 @@ public class AccountFolderList extends ListActivity
             
             dialog = builder.create();
             break;
-            
-        case DIALOG_OPENING:
-            dialog = ProgressDialog.show(this, "", getText(R.string.tf_opening_please_wait));
         }
 
         return dialog;    
@@ -259,9 +295,17 @@ public class AccountFolderList extends ListActivity
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-        AccountFolder folder = (AccountFolder) getListAdapter().getItem(position);
-        mSelectFolderTask = new SelectFolderTask();
-        mSelectFolderTask.execute(folder);
+        mFolder = (AccountFolder) getListAdapter().getItem(position);
+        
+        if (mFolder.isReplicated() && !Collect.getInstance().getDbService().isDbLocal(mFolder.getId())) {
+            mSynchronizeFoldersTask = new SynchronizeFoldersTask();
+            mSynchronizeFoldersTask.setListener(AccountFolderList.this);
+            mSynchronizeFoldersTask.setTransferMode(SynchronizeFoldersListener.MODE_PULL);
+            mSynchronizeFoldersTask.setFolders(new ArrayList<String>(Collections.singletonList(mFolder.getId())));
+            mSynchronizeFoldersTask.execute();
+        } else {
+            openFolder();
+        }
     }
 
     @Override
@@ -286,8 +330,8 @@ public class AccountFolderList extends ListActivity
         if (mRefreshViewTask != null && mRefreshViewTask.getStatus() != AsyncTask.Status.FINISHED)
             return mRefreshViewTask;
         
-        if (mSelectFolderTask != null && mSelectFolderTask.getStatus() != AsyncTask.Status.FINISHED)
-            return mSelectFolderTask;
+        if (mSynchronizeFoldersTask != null && mSynchronizeFoldersTask.getStatus() != AsyncTask.Status.FINISHED)
+            return mSynchronizeFoldersTask;
         
         return null;
     }
@@ -344,58 +388,6 @@ public class AccountFolderList extends ListActivity
             }            
         }
     }
-    
-    private class SelectFolderTask extends AsyncTask<AccountFolder, Void, Void>
-    {
-        AccountFolder folder = null;
-        boolean folderReady = true;
-        
-        @Override
-        protected Void doInBackground(AccountFolder... selection)
-        {
-            folder = selection[0];
-            
-            // Initialize any databases that should be synchronized
-            if (folder.isReplicated()) {
-                if (!Collect.getInstance().getDbService().isDbLocal(folder.getId()))
-                    folderReady = Collect.getInstance().getDbService().initLocalDb(folder.getId());
-            }
-            
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute()
-        {
-            showDialog(DIALOG_OPENING);
-        }
-
-        @Override
-        protected void onPostExecute(Void nothing)
-        {           
-            // Hack for crash reported to Android Marketplace
-            try {
-                dismissDialog(DIALOG_OPENING);
-            } catch (IllegalArgumentException e) {
-                Log.w(Collect.LOGTAG, t + "DIALOG_OPENING did not exist to be dismissed, race condition?");
-            }
-            
-            if (folderReady) {
-                if (mCopyToFolder) {
-                    Intent i = new Intent();
-                    i.putExtra(KEY_FOLDER_NAME, folder.getName());
-                    i.putExtra(KEY_FOLDER_ID, folder.getId());
-                    setResult(RESULT_OK, i);
-                    finish();
-                } else {
-                    Collect.getInstance().getInformOnlineState().setSelectedDatabase(folder.getId());
-                    finish();
-                }
-            } else {
-                Toast.makeText(getApplicationContext(), "Unable to open " + folder.getName() + ". Please try again in a few seconds.", Toast.LENGTH_LONG).show();
-            }
-        }
-    }    
     
     /*
      * Fetch a new folder list from Inform Online and store it on disk
@@ -504,6 +496,39 @@ public class AccountFolderList extends ListActivity
         return folders;
     }
 
+    @Override
+    public void synchronizationHandler(Message msg) 
+    {
+        if (msg == null) {
+            // Close any existing progress dialogs
+            if (mProgressDialog != null && mProgressDialog.isShowing())
+                mProgressDialog.dismiss();
+
+            // Start new dialog with suitable message
+            mProgressDialog = new ProgressDialog(AccountFolderList.this);
+            mProgressDialog.setMessage(getString(R.string.tf_synchronizing_folders_dialog_msg));  
+            mProgressDialog.show();
+        } else {
+            // Update progress dialog
+            if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                mProgressDialog.setMessage(getString(R.string.tf_synchronizing_folder_count_dialog_msg, msg.arg1, msg.arg2));
+            }
+        }
+    }
+
+    @Override
+    public void synchronizationTaskFinished(Bundle data) 
+    {
+        if (mProgressDialog != null && mProgressDialog.isShowing())
+            mProgressDialog.dismiss();
+        
+        if (data.getBoolean(SynchronizeFoldersListener.SUCCESSFUL)) {
+            openFolder();
+        } else {
+            Toast.makeText(getApplicationContext(), "Unable to open " + mFolder.getName() + ". Please try again in a few minutes.", Toast.LENGTH_LONG).show();
+        }
+    }
+
     /**
      * Load the various elements of the screen that must wait for other tasks to
      * complete
@@ -517,5 +542,19 @@ public class AccountFolderList extends ListActivity
         
         if (mCopyToFolder)
             Toast.makeText(getApplicationContext(), "Select destination folder", Toast.LENGTH_SHORT).show();
+    }
+    
+    private void openFolder()
+    {
+        if (mCopyToFolder) {
+            Intent i = new Intent();
+            i.putExtra(KEY_FOLDER_NAME, mFolder.getName());
+            i.putExtra(KEY_FOLDER_ID, mFolder.getId());
+            setResult(RESULT_OK, i);
+            finish();
+        } else {
+            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mFolder.getId());
+            finish();
+        }
     }
 }

@@ -228,24 +228,6 @@ public class DatabaseService extends Service {
         return dbConnector;
     }
     
-    public boolean initLocalDb(String db)
-    {
-        final String tt = t + "initLocalDb(): ";
-        
-        try {
-            ReplicationStatus status = replicate(db, REPLICATE_PULL);
-
-            if (status == null)
-                return false;
-            else 
-                return status.isOk();
-        } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "replication pull failed at " + e.toString());
-            e.printStackTrace();
-            return false;
-        }
-    }
-    
     /*
      * Does a database exist on the local CouchDB instance?
      */
@@ -337,7 +319,7 @@ public class DatabaseService extends Service {
     {
         final String tt = t + "replicate(): ";
         
-        Log.d(Collect.LOGTAG, tt + "about to replicate " + db);
+        Log.i(Collect.LOGTAG, tt + "about to replicate " + db);
 
         // Will not replicate unless signed in
         if (!Collect.getInstance().getIoService().isSignedIn()) {
