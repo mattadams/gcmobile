@@ -614,7 +614,7 @@ public class ClientRegistrationActivity extends Activity
     {
         // Data to POST
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair("email", email));
+        params.add(new BasicNameValuePair("email", email.toLowerCase()));
         
         String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/send/reminder";
         
@@ -763,7 +763,7 @@ public class ClientRegistrationActivity extends Activity
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("licenceNumber", mAccountNumber));
         params.add(new BasicNameValuePair("licenceKey", mAccountKey));
-        params.add(new BasicNameValuePair("email", email));
+        params.add(new BasicNameValuePair("email", email.toLowerCase()));
         params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
         
         String registerDeviceUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/device";
@@ -912,7 +912,7 @@ public class ClientRegistrationActivity extends Activity
     {
         // Data to POST
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair("email", email));
+        params.add(new BasicNameValuePair("email", email.toLowerCase()));
         params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
         
         String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/account";
