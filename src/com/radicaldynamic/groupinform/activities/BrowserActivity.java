@@ -1843,7 +1843,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     private void loadScreen()
     {
         // If we can't contact one of the services there's no point in running - restart */
-        if (Collect.getInstance().getIoService() == null || Collect.getInstance().getDbService() == null) {            
+        if (Collect.getInstance() == null || Collect.getInstance().getIoService() == null || Collect.getInstance().getDbService() == null) {            
             Intent exit = new Intent();
             exit.putExtra("exit_app", true);
             setResult(RESULT_OK, exit);
