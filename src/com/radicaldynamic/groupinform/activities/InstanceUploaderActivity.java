@@ -237,20 +237,19 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
                     String i = instanceIterator.next();
                     totalUploads++;
 
-                    if (result.get(i).equals("SUCCESS"))
+                    if (result.get(i).equals(Collect.getInstance().getString(R.string.success).toString()))
                         successfulUploads++;
                     else
                         errors.append(result.get(i) + "\n");
                 }
 
                 b.append(successfulUploads + "/" + totalUploads + "\n");
-                b.append("Errors: ");
 
-                if (errors.length() > 0)
+                if (errors.length() > 0) {
+                    b.append("Errors: ");
                     b.append(errors.toString());
-                else
-                    b.append("none");
-
+                } 
+                
                 if (definitionIterator.hasNext())
                     b.append("\n\n");
             }
