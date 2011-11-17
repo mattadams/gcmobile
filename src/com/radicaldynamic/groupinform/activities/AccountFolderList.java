@@ -394,10 +394,12 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
      */
     public static void fetchFolderList()
     {
-        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
-            Log.d(Collect.LOGTAG, t + "off-line mode enabled, not fetching list of folders");
-        else
+        if (Collect.getInstance().getIoService().isSignedIn()) {
             Log.d(Collect.LOGTAG, t + "fetching new list of folders");
+        } else {
+            Log.d(Collect.LOGTAG, t + "not signed in, skipping folder list fetch");
+            return;            
+        }
         
         // Try to ping the service to see if it is "up"
         String folderListUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/folder/list";
