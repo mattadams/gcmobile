@@ -84,6 +84,8 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
     private SynchronizeFoldersTask mSynchronizeFoldersTask;
     
     private AccountFolder mFolder;
+    private String mSelectedFolderId;
+    private String mSelectedFolderName;
     private boolean mCopyToFolder = false;
     
     private ProgressDialog mProgressDialog;
@@ -106,6 +108,12 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         } else {
             if (savedInstanceState.containsKey(KEY_COPY_TO_FOLDER))
                 mCopyToFolder = savedInstanceState.getBoolean(KEY_COPY_TO_FOLDER);
+            
+            if (savedInstanceState.containsKey(KEY_FOLDER_ID))
+                mSelectedFolderId = savedInstanceState.getString(KEY_FOLDER_ID);
+            
+            if (savedInstanceState.containsKey(KEY_FOLDER_NAME))
+                mSelectedFolderName = savedInstanceState.getString(KEY_FOLDER_NAME);
             
             Object data = getLastNonConfigurationInstance();
             
@@ -297,6 +305,10 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
     {
         mFolder = (AccountFolder) getListAdapter().getItem(position);
         
+        // Store separately because mFolder may not be available after activity restart
+        mSelectedFolderId = mFolder.getId();
+        mSelectedFolderName = mFolder.getName();
+        
         if (mFolder.isReplicated() && !Collect.getInstance().getDbService().isDbLocal(mFolder.getId())) {
             mSynchronizeFoldersTask = new SynchronizeFoldersTask();
             mSynchronizeFoldersTask.setListener(AccountFolderList.this);
@@ -341,6 +353,8 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
     {
         super.onSaveInstanceState(outState);
         outState.putBoolean(KEY_COPY_TO_FOLDER, mCopyToFolder);
+        outState.putString(KEY_FOLDER_ID, mSelectedFolderId);
+        outState.putString(KEY_FOLDER_NAME, mSelectedFolderName);
     }
 
     /*
@@ -527,7 +541,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         if (data.getBoolean(SynchronizeFoldersListener.SUCCESSFUL)) {
             openFolder();
         } else {
-            Toast.makeText(getApplicationContext(), "Unable to open " + mFolder.getName() + ". Please try again in a few minutes.", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Unable to open " + mSelectedFolderName + ". Please try again in a few minutes.", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -542,8 +556,9 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
 
         registerForContextMenu(getListView());
         
-        if (mCopyToFolder)
+        if (mCopyToFolder) {
             Toast.makeText(getApplicationContext(), "Select destination folder", Toast.LENGTH_SHORT).show();
+        }
     }
     
     private void openFolder()
@@ -555,7 +570,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
             setResult(RESULT_OK, i);
             finish();
         } else {
-            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mFolder.getId());
+            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedFolderId);
             finish();
         }
     }
