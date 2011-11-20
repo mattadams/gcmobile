@@ -188,7 +188,7 @@ public class FormReader
         parseFormBinds(mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix));
 
         Log.d(Collect.LOGTAG, t + "parsing form body...");
-        parseFormFields(mForm.gotoRoot().gotoTag("h:body"));
+        parseFormBody(mForm.gotoRoot().gotoTag("h:body"));
         
         Log.d(Collect.LOGTAG, t + "parsing form instance...");
         parseFormInstance(mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild(), "/" + mInstanceRoot);
@@ -197,7 +197,7 @@ public class FormReader
     /*
      * Recursively iterate over the form fields, creating objects to represent these fields
      */
-    private void parseFormFields(XMLTag tag) throws Exception
+    private void parseFormBody(XMLTag tag) throws Exception
     {       
         String ctl = tag.getCurrentTagLocation();
 
@@ -265,7 +265,7 @@ public class FormReader
                 public void execute(XMLTag arg0)
                 {
                     try {
-                        parseFormFields(arg0);
+                        parseFormBody(arg0);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

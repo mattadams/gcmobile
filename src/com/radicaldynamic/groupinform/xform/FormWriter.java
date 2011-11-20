@@ -78,13 +78,13 @@ public final class FormWriter
         
         writeInstance(null);        
         writeBinds();        
-        writeControls(null);
+        writeBody(null);
         
         // Return XML for consumption
         return mFormTag.toBytes();
     }
 
-    private static void writeControls(Field incomingField) throws GroupHasNoChildrenException
+    private static void writeBody(Field incomingField) throws GroupHasNoChildrenException
     {
         Iterator<Field> it;
         
@@ -157,7 +157,7 @@ public final class FormWriter
                 }
             }
                 
-            writeControls(field);
+            writeBody(field);
             
             mFormTag.gotoParent();
         }
@@ -259,7 +259,7 @@ public final class FormWriter
                 }
             } else {
                 // Only write out translations that have content
-                if (t.getValue() instanceof String && t.getValue().length() > 0) {
+                if (t.getValue() instanceof String) {
                     mFormTag
                         .addTag("text").addAttribute(XForm.Attribute.ID, t.getId())
                         .addTag("value").setText(t.getValue())

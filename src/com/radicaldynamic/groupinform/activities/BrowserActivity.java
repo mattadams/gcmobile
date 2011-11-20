@@ -68,6 +68,7 @@ import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 
+import com.radicaldynamic.gcmobile.android.build.FieldList;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -468,7 +469,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                     Intent intent = new Intent(BrowserActivity.this, FileDialog.class);
                     intent.putExtra(FileDialog.SELECTION_MODE, FileDialog.MODE_OPEN);
                     intent.putExtra(FileDialog.START_PATH, "/sdcard");
-                    intent.putExtra(FileDialog.WINDOW_TITLE, "Select XForm File for Import");
+                    intent.putExtra(FileDialog.WINDOW_TITLE, "Select XForm File To Import");
                     startActivityForResult(intent, RESULT_IMPORT);
                 }
             });
@@ -1270,7 +1271,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                 showDialog(DIALOG_CREATE_TEMPLATE);
             } else {
                 if (isSuccessful) {
-                    Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
+                    Intent i = new Intent(BrowserActivity.this, FieldList.class);
                     i.putExtra(FormEntryActivity.KEY_FORMPATH, f.getId());
                     startActivity(i);                    
                 } else {
@@ -1319,7 +1320,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         {
             if (docId.length() > 0) {
                 // Success                
-                Intent i = new Intent(BrowserActivity.this, FormBuilderFieldList.class);
+                Intent i = new Intent(BrowserActivity.this, FieldList.class);
                 i.putExtra(FormEntryActivity.KEY_FORMPATH, docId);
                 startActivity(i);
             } else {
