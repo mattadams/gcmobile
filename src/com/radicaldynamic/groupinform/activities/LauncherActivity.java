@@ -41,6 +41,7 @@ import android.view.Gravity;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
 
@@ -79,6 +80,7 @@ public class LauncherActivity extends Activity
     
     private ProgressDialog mProgressDialog;
     private Toast mSplashToast;
+    private TextView mProgressLoading;
     
     private boolean mExitApplication = false;
 
@@ -191,6 +193,8 @@ public class LauncherActivity extends Activity
 
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);       
         setContentView(R.layout.launcher);
+        
+        mProgressLoading = (TextView) findViewById(R.id.progressLoading);
         
         startService(new Intent(this, InformOnlineService.class));
         startService(new Intent(this, DatabaseService.class));
@@ -503,6 +507,7 @@ public class LauncherActivity extends Activity
         @Override
         protected void onPreExecute()
         {
+            mProgressLoading.setText("Connecting");
         }
     
         @Override
@@ -515,10 +520,12 @@ public class LauncherActivity extends Activity
             
             if (pinged) {
                 if (registered) {
-                    if (Collect.getInstance().getInformOnlineState().isExpired())
+                    if (Collect.getInstance().getInformOnlineState().isExpired()) {
                         showDialog(DIALOG_EXPIRED);
-                    else 
+                    } else {
+                        mProgressLoading.setText("Starting Database");
                         startCouch();
+                    }
                 } else {
                     startActivity(new Intent(getApplicationContext(), ClientRegistrationActivity.class));
                     finish();
