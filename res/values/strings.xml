@@ -106,7 +106,7 @@
 <string name="longitude">Longitude</string>
 <string name="main_menu">Main Menu</string>
 <string name="main_menu_details">Data collection made easier...</string>
-<string name="main_menu_message">GC Mobile v1.2.6</string>
+<string name="main_menu_message">GC Mobile v1.2.7</string>
 <string name="manage_files">Delete Saved Form</string>
 <string name="mark_finished">Mark form as completed</string>
 <string name="no">No</string>
@@ -163,7 +163,7 @@
 <string name="username">Username</string>
 <string name="view_hierarchy">Go To Prompt</string>
 <string name="open_data_kit">Open Data Kit</string>
-<string name="general_preferences">Change Settings</string>
+<string name="general_preferences">Change ODK Settings</string>
 <string name="click_to_web">Tap to visit http://groupcomplete.com</string>
 <string name="first_run">Do first run on restart</string>
 <string name="client">Client</string>
@@ -277,7 +277,7 @@
 	<string name="tf_copying_with_param">Copying %s...</string>
 	<string name="tf_create">Create</string>
 	<string name="tf_create_folder">Create Folder</string>
-	<string name="tf_create_list_item">Add List Item</string>
+	<string name="tf_create_list_item">Add Item</string>
 	<string name="tf_creating_template_please_wait">Creating template...</string>
 	<string name="tf_date_type_date_only">Date only</string>
 	<string name="tf_date_type_time_only">Time only</string>
@@ -395,6 +395,7 @@
 	<string name="tf_i18n_translate">Translate</string>
 	<string name="tf_image_media_type">Photograph</string>
 	<string name="tf_import">Import</string>
+    <string name="tf_import_list">Import List</string>
 	<string name="tf_imported_file">Imported \"%s\"</string>
 	<string name="tf_importing_template_please_wait">Importing template...</string>
 	<string name="tf_improperly_formatted_licence_number">Improperly formatted licence number</string>
@@ -413,9 +414,10 @@
 	<string name="tf_item_default_hint">Preselect item when list is displayed.</string>
 	<string name="tf_item_label">Label</string>
 	<string name="tf_item_label_hint">Item as displayed for selection.</string>
-	<string name="tf_item_value">Value</string>
+	<string name="tf_item_value">Value/Key</string>
 	<string name="tf_item_value_hint">Value stored when item is selected.</string>
 	<string name="tf_item_value_not_unique">Cannot save: item must have a unique value</string>
+    <string name="tf_list_import_wizard">List Import Wizard</string>
 	<string name="tf_list_items">List Items</string>
 	<string name="tf_licence_limit_reached_dialog">All Licences In Use</string>
 	<string name="tf_licence_limit_reached_dialog_msg">All of the %1$s licences available to your %2$s account are in use.\n\nPlease contact the account owner to remove any unneeded device profiles or to add more licences to the account.\n\nAccount owners: please visit\nhttp://groupcomplete.com for more information on our plans and pricing.</string>
@@ -434,6 +436,7 @@
 	<string name="tf_open_data_kit">Open Data Kit</string>
 	<string name="tf_open_data_kit_abbrev">ODK</string>
 	<string name="tf_opening_please_wait">Opening, please wait...</string>
+    <string name="tf_preferences">Preferences</string>
 	<string name="tf_preparing_to_export">Preparing to export...</string>	
 	<string name="tf_processing">Processing...</string>
 	<string name="tf_reactivation_delayed_reason">Please wait 5 minutes after device reset</string>
@@ -553,7 +556,7 @@
 	<string name="file_dialog_location">Location</string>
 	<string name="file_dialog_cant_read_folder">folder can\'t be read!</string>
 	<string name="file_dialog_new">New</string>
-	<string name="file_dialog_select">Select</string>
+	<string name="file_dialog_select">Continue</string>
 	<string name="file_dialog_file_name">File name:</string>
 	<string name="file_dialog_cancel">Cancel</string>
 	<string name="file_dialog_aborted">File selection aborted</string>

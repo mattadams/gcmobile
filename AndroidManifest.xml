@@ -86,31 +86,35 @@ the License.
     <activity 
         android:label="@string/app_name" 
         android:name=".activities.FileDialog" />
+
+    <activity 
+        android:label="@string/app_name" 
+        android:name="com.radicaldynamic.gcmobile.android.build.FieldEditorActivity" 
+        android:windowSoftInputMode="stateHidden" />
+            
+    <activity 
+        android:label="@string/app_name"
+        android:name="com.radicaldynamic.gcmobile.android.build.FieldList" />        
+        
+    <activity 
+        android:label="@string/app_name"
+        android:name="com.radicaldynamic.gcmobile.android.build.I18nList" />
+
+    <activity 
+        android:label="@string/app_name"
+        android:name="com.radicaldynamic.gcmobile.android.build.InstanceList" />
     
     <activity 
         android:label="@string/app_name"
-        android:name=".activities.FormBuilderFieldList" />
-        
+        android:name="com.radicaldynamic.gcmobile.android.build.LanguageList" />
+
     <activity 
         android:label="@string/app_name" 
-        android:name=".activities.FormBuilderFieldEditor" 
-        android:windowSoftInputMode="stateHidden" />
-        
-    <activity 
-        android:label="@string/app_name"
-        android:name=".activities.FormBuilderInstanceList" />
-        
-    <activity 
-        android:label="@string/app_name"
-        android:name=".activities.FormBuilderI18nList" />
-        
-    <activity 
-        android:label="@string/app_name"
-        android:name=".activities.FormBuilderLanguageList" />
-        
+        android:name="com.radicaldynamic.gcmobile.android.build.SelectFieldImportActivity" />
+    
     <activity 
         android:label="@string/app_name" 
-        android:name=".activities.FormBuilderSelectItemList" />
+        android:name="com.radicaldynamic.gcmobile.android.build.SelectFieldList" />
         
     <activity 
         android:configChanges="orientation"

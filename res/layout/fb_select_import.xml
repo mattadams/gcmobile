@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wizardContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="10dp" >
+
+<ViewFlipper
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wizardSteps"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/wizardStep1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/stepHeader1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Step #1: Select CSV File"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/stepText1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Select a CSV file from your mobile device's SD card to use to populate your list.\n\nThe CSV file must have two columns: the first column will be used as the item label, the second column will be used as the value that is stored when the item is selected.\n\nFor further instructions see the Form Editor Guide at http://groupcomplete.com/help"
+            android:autoLink="web" />
+
+        <Button
+            android:id="@+id/importFileSelection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Select file to import" />
+
+        <TextView
+            android:id="@+id/stepSelectedFileNameLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Selected File"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <TextView
+            android:id="@+id/stepSelectedFileName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="File not selected" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/wizardStep2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/wizardSteps"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/stepHeader2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Step #2: Select Import Mode"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/stepText2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Should the CSV file be appended to the list or replace it entirely?" />
+
+        <RadioGroup
+            android:id="@+id/importMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <RadioButton
+                android:id="@+id/importAppend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Append" />
+
+            <RadioButton
+                android:id="@+id/importReplace"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Replace" />
+        </RadioGroup>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/wizardStep3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/stepHeader3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Step #3: Import Preview"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/stepText3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:text="A preview of your CSV file is shown below.  Each row in your CSV file will be turned into a separate item in your list.\n\nIf the first row contains column headings you will probably want to skip it." />
+
+        <TableLayout
+            android:id="@+id/importPreviewTable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stretchColumns="*" >
+        </TableLayout>
+
+        <CheckBox
+            android:id="@+id/importSkipFirstRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:checked="false"
+            android:text="Skip first row" />
+
+    </LinearLayout>
+</ViewFlipper>
+
+    <RelativeLayout
+        android:id="@+id/wizardNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        android:layout_alignParentBottom="true"   
+        android:layout_marginTop="4dp">
+
+        <Button
+            android:id="@+id/stepPrevious"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:enabled="false"
+            android:text="Back" />
+
+        <Button
+            android:id="@+id/stepNext"
+            android:drawableRight="@drawable/button_indicator_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="Next  " />
+    </RelativeLayout>
+
+</RelativeLayout>

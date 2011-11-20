@@ -1,4 +1,4 @@
-package com.radicaldynamic.groupinform.activities;
+package com.radicaldynamic.gcmobile.android.build;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,6 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.adapters.FormBuilderFieldListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
@@ -54,7 +55,7 @@ import com.radicaldynamic.groupinform.xform.FormWriter;
 import com.radicaldynamic.groupinform.xform.Instance;
 import com.radicaldynamic.groupinform.xform.FormWriter.FormSanityException;
 
-public class FormBuilderFieldList extends ListActivity implements FormLoaderListener, FormSavedListener
+public class FieldList extends ListActivity implements FormLoaderListener, FormSavedListener
 {
     private static final String t = "FormBuilderElementList: ";
     
@@ -113,7 +114,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         {
             final Field item = mAdapter.getItem(which);
             
-            mAlertDialog = new AlertDialog.Builder(FormBuilderFieldList.this)
+            mAlertDialog = new AlertDialog.Builder(FieldList.this)
                 .setCancelable(false)
                 .setIcon(R.drawable.ic_dialog_alert)
                 .setTitle(R.string.tf_confirm_removal)
@@ -138,7 +139,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
 
         private void displayRemovalFailed(String msg)
         {
-            mAlertDialog = new AlertDialog.Builder(FormBuilderFieldList.this)
+            mAlertDialog = new AlertDialog.Builder(FieldList.this)
                 .setIcon(R.drawable.ic_dialog_alert)
                 .setTitle(R.string.tf_unable_to_remove)
                 .setMessage(msg)
@@ -496,12 +497,12 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
         case R.id.text:     startFieldEditor("text",      null);  break;
         
         case R.id.i18n_setup:
-            Intent i = new Intent(this, FormBuilderI18nList.class);
+            Intent i = new Intent(this, I18nList.class);
             startActivityForResult(i, REQUEST_TRANSLATIONS);
             break;
         
         case R.id.view_instance:
-            startActivity(new Intent(this, FormBuilderInstanceList.class));
+            startActivity(new Intent(this, InstanceList.class));
             break;            
             
 //        case R.id.help:
@@ -678,7 +679,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     {
         dismissDialog(LOADING_DIALOG);
 
-        mAlertDialog = new AlertDialog.Builder(FormBuilderFieldList.this)
+        mAlertDialog = new AlertDialog.Builder(FieldList.this)
             .setCancelable(false)
             .setIcon(R.drawable.ic_dialog_alert)
             .setTitle(R.string.tf_form_builder_load_error)
@@ -877,7 +878,7 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
                         case 0:
                             // Save and exit
                             mSaveFormDefinitionTask = new SaveFormDefinitionTask();
-                            mSaveFormDefinitionTask.setFormSavedListener(FormBuilderFieldList.this);
+                            mSaveFormDefinitionTask.setFormSavedListener(FieldList.this);
                             mSaveFormDefinitionTask.execute(SaveToDiskTask.SAVED_AND_EXIT);
 
                             showDialog(SAVING_DIALOG);
@@ -1148,8 +1149,8 @@ public class FormBuilderFieldList extends ListActivity implements FormLoaderList
     {
         Collect.getInstance().getFormBuilderState().setField(field);
         
-        Intent i = new Intent(this, FormBuilderFieldEditor.class);
-        i.putExtra(FormBuilderFieldEditor.KEY_FIELDTYPE, type);
+        Intent i = new Intent(this, FieldEditorActivity.class);
+        i.putExtra(FieldEditorActivity.KEY_FIELDTYPE, type);
         startActivityForResult(i, REQUEST_EDITFIELD);
     }
 }

@@ -1,4 +1,4 @@
-package com.radicaldynamic.groupinform.activities;
+package com.radicaldynamic.gcmobile.android.build;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,13 +17,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.adapters.FormBuilderInstanceListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.views.TouchListView;
 import com.radicaldynamic.groupinform.xform.Instance;
 
-public class FormBuilderInstanceList extends ListActivity
+public class InstanceList extends ListActivity
 {
 //    private static final String t = "FormBuilderInstanceList: ";
     

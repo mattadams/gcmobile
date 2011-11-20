@@ -1,4 +1,4 @@
-package com.radicaldynamic.groupinform.activities;
+package com.radicaldynamic.gcmobile.android.build;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +37,7 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.TranslationSortByLang;
 import com.radicaldynamic.groupinform.xform.Translation;
 
-public class FormBuilderI18nList extends ExpandableListActivity 
+public class I18nList extends ExpandableListActivity 
 {
     private static final int DIALOG_EDIT_TRANSLATION   = 0;
     private static final int DIALOG_RESET_TRANSLATIONS = 1;
@@ -176,7 +176,7 @@ public class FormBuilderI18nList extends ExpandableListActivity
             builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     if (copy.getText().toString().trim().length() < 1) {
-                        Toast.makeText(FormBuilderI18nList.this, getString(R.string.tf_unable_to_save_empty_translation), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(I18nList.this, getString(R.string.tf_unable_to_save_empty_translation), Toast.LENGTH_SHORT).show();
                         removeDialog(DIALOG_EDIT_TRANSLATION);
                         showDialog(DIALOG_EDIT_TRANSLATION, args);
                     } else {                    
@@ -268,7 +268,7 @@ public class FormBuilderI18nList extends ExpandableListActivity
                         Collect.getInstance().getFormBuilderState().getField().setHint("");
                     }
                     
-                    Toast.makeText(FormBuilderI18nList.this, getString(R.string.tf_i18n_translations_reset, mFieldTextType), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(I18nList.this, getString(R.string.tf_i18n_translations_reset, mFieldTextType), Toast.LENGTH_SHORT).show();
                     
                     setResult(RESULT_OK);
                     finish();
@@ -298,7 +298,7 @@ public class FormBuilderI18nList extends ExpandableListActivity
                         // Bah. Aagain?
                         String l = Translation.expandLangAbbreviation(mLanguages, mAbbreviations, tgrl.getLang());
                         
-                        Toast.makeText(FormBuilderI18nList.this, getString(R.string.tf_removed_with_param, l), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(I18nList.this, getString(R.string.tf_removed_with_param, l), Toast.LENGTH_SHORT).show();
                         mTranslations.remove(args.getInt(KEY_GROUP_POSITION));                        
                         removeDialog(DIALOG_REMOVE_LANGUAGE);
                         refreshView();
@@ -342,7 +342,7 @@ public class FormBuilderI18nList extends ExpandableListActivity
                         }
                     }
                     
-                    Toast.makeText(FormBuilderI18nList.this, getString(R.string.tf_i18n_translation_removed, l), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(I18nList.this, getString(R.string.tf_i18n_translation_removed, l), Toast.LENGTH_SHORT).show();
                     
                     removeDialog(DIALOG_REMOVE_TRANSLATION);
                     refreshView();
@@ -466,7 +466,7 @@ public class FormBuilderI18nList extends ExpandableListActivity
     {
         switch (item.getItemId()) {
         case R.id.add:
-            Intent i = new Intent(this, FormBuilderLanguageList.class);
+            Intent i = new Intent(this, LanguageList.class);
             startActivity(i);
             break;
             
@@ -619,7 +619,7 @@ public class FormBuilderI18nList extends ExpandableListActivity
         }
         
         if (mTranslations.isEmpty()) {
-            Toast.makeText(FormBuilderI18nList.this, getString(R.string.tf_add_language), Toast.LENGTH_LONG).show();
+            Toast.makeText(I18nList.this, getString(R.string.tf_add_language), Toast.LENGTH_LONG).show();
         }
     }
 }

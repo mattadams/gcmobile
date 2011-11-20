@@ -1,4 +1,4 @@
-package com.radicaldynamic.groupinform.activities;
+package com.radicaldynamic.gcmobile.android.build;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,7 +33,7 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.xform.Field;
 import com.radicaldynamic.groupinform.xform.XForm;
 
-public class FormBuilderFieldEditor extends Activity
+public class FieldEditorActivity extends Activity
 {
     private static final String t = "FormBuilderElementEditor: ";
     
@@ -129,18 +129,18 @@ public class FormBuilderFieldEditor extends Activity
         // Access translations for label & hints
         mLabelI18n.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                Intent i = new Intent(FormBuilderFieldEditor.this, FormBuilderI18nList.class);
-                i.putExtra(FormBuilderI18nList.KEY_FIELDTEXT_TYPE, FormBuilderI18nList.KEY_LABEL);
-                i.putExtra(FormBuilderI18nList.KEY_TRANSLATION_ID, mField.getLabel().getRef());                
+                Intent i = new Intent(FieldEditorActivity.this, I18nList.class);
+                i.putExtra(I18nList.KEY_FIELDTEXT_TYPE, I18nList.KEY_LABEL);
+                i.putExtra(I18nList.KEY_TRANSLATION_ID, mField.getLabel().getRef());                
                 startActivityForResult(i, REQUEST_TRANSLATIONS);
             }
         });
         
         mHintI18n.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                Intent i = new Intent(new Intent(FormBuilderFieldEditor.this, FormBuilderI18nList.class));
-                i.putExtra(FormBuilderI18nList.KEY_FIELDTEXT_TYPE, FormBuilderI18nList.KEY_DESCRIPTION);
-                i.putExtra(FormBuilderI18nList.KEY_TRANSLATION_ID, mField.getHint().getRef());                
+                Intent i = new Intent(new Intent(FieldEditorActivity.this, I18nList.class));
+                i.putExtra(I18nList.KEY_FIELDTEXT_TYPE, I18nList.KEY_DESCRIPTION);
+                i.putExtra(I18nList.KEY_TRANSLATION_ID, mField.getHint().getRef());                
                 startActivityForResult(i, REQUEST_TRANSLATIONS);             
             }
         });
@@ -324,7 +324,7 @@ public class FormBuilderFieldEditor extends Activity
          
         // Launch the form builder select item editor
         case MENU_ITEMS:
-            Intent i = new Intent(this, FormBuilderSelectItemList.class);            
+            Intent i = new Intent(this, SelectFieldList.class);            
             /* 
              * Use the state of the select radio option to determine whether to indicate to
              * the select item list which mode the select list is operating in. 
@@ -333,8 +333,8 @@ public class FormBuilderFieldEditor extends Activity
              * not have saved the field yet, so we cannot determine this from the field itself.
              */
             final CheckBox optionMultiple = (CheckBox) findViewById(R.id.selectFieldMultiple);
-            i.putExtra(FormBuilderSelectItemList.KEY_SINGLE, !optionMultiple.isChecked());            
-            i.putExtra(FormBuilderSelectItemList.KEY_DEFAULT, mSelectInstanceDefault);
+            i.putExtra(SelectFieldList.KEY_SINGLE, !optionMultiple.isChecked());            
+            i.putExtra(SelectFieldList.KEY_DEFAULT, mSelectInstanceDefault);
             startActivityForResult(i, REQUEST_ITEMLIST);
             break;
             

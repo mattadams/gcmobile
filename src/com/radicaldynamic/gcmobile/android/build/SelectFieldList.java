@@ -1,4 +1,4 @@
-package com.radicaldynamic.groupinform.activities;
+package com.radicaldynamic.gcmobile.android.build;
 
 import java.util.Iterator;
 
@@ -34,16 +34,18 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.views.TouchListView;
 import com.radicaldynamic.groupinform.xform.Field;
 
-public class FormBuilderSelectItemList extends ListActivity
+public class SelectFieldList extends ListActivity
 {
     @SuppressWarnings("unused")
-    private static final String t = "FormBuilderSelectItemList: ";
+    private static final String t = "SelectFieldList: ";
     
     private static final int MENU_ADD = Menu.FIRST;
+    private static final int MENU_IMPORT = Menu.FIRST + 1;
     
     private static final int DIALOG_EDIT_ITEM = 1;
 
-    private static final int REQUEST_TRANSLATIONS = 1;
+    private static final int RESULT_TRANSLATIONS = 1;
+    private static final int RESULT_IMPORT = 2;
     
     public static final String KEY_SINGLE = "singleselect";    
     public static final String KEY_DEFAULT = "instancedefault";
@@ -71,7 +73,7 @@ public class FormBuilderSelectItemList extends ListActivity
         {
             final Field item = mAdapter.getItem(which);
 
-            mAlertDialog = new AlertDialog.Builder(FormBuilderSelectItemList.this);
+            mAlertDialog = new AlertDialog.Builder(SelectFieldList.this);
             mAlertDialog.setCancelable(false);
             mAlertDialog.setIcon(R.drawable.ic_dialog_alert);
             mAlertDialog.setTitle(R.string.tf_confirm_removal);
@@ -108,7 +110,11 @@ public class FormBuilderSelectItemList extends ListActivity
             return;
         
         switch (requestCode) {
-        case REQUEST_TRANSLATIONS:
+        case RESULT_IMPORT:
+            refreshView();
+            break;
+            
+        case RESULT_TRANSLATIONS:
             // Reflect any changes to the label translation in the dialog
             EditText label = (EditText) mAlertDialogView.findViewById(R.id.label); 
             label.setText(mItem.getLabel().toString());
@@ -199,10 +205,10 @@ public class FormBuilderSelectItemList extends ListActivity
                     Collect.getInstance().getFormBuilderState().setItem(mItem); 
                     
                     // Forward to translation screen
-                    Intent i = new Intent(FormBuilderSelectItemList.this, FormBuilderI18nList.class);
-                    i.putExtra(FormBuilderI18nList.KEY_FIELDTEXT_TYPE, FormBuilderI18nList.KEY_ITEM_LABEL);
-                    i.putExtra(FormBuilderI18nList.KEY_TRANSLATION_ID, mItem.getLabel().getRef());
-                    startActivityForResult(i, REQUEST_TRANSLATIONS);
+                    Intent i = new Intent(SelectFieldList.this, I18nList.class);
+                    i.putExtra(I18nList.KEY_FIELDTEXT_TYPE, I18nList.KEY_ITEM_LABEL);
+                    i.putExtra(I18nList.KEY_TRANSLATION_ID, mItem.getLabel().getRef());
+                    startActivityForResult(i, RESULT_TRANSLATIONS);
                 }
             });
             
@@ -222,7 +228,7 @@ public class FormBuilderSelectItemList extends ListActivity
                         return;
                     
                     if (value.getText().toString().length() == 0 && label.getText().toString().length() > 0)
-                        value.setText(label.getText().toString().replaceAll("[^a-zA-Z0-9]", "").toLowerCase());
+                        value.setText(label.getText().toString().replaceAll("[^a-zA-Z0-9_-]", ""));
                 }
             });
             
@@ -335,6 +341,7 @@ public class FormBuilderSelectItemList extends ListActivity
     {
         super.onCreateOptionsMenu(menu);
         menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_list_item)).setIcon(R.drawable.ic_menu_add);
+        menu.add(0, MENU_IMPORT, 0, getString(R.string.tf_import_list)).setIcon(R.drawable.ic_menu_attachment);
         return true;
     }
     
@@ -367,6 +374,10 @@ public class FormBuilderSelectItemList extends ListActivity
             mItem.setType("item");            
             showDialog(DIALOG_EDIT_ITEM);
             return true;
+        case MENU_IMPORT:
+            Intent intent = new Intent(this, SelectFieldImportActivity.class);
+            startActivityForResult(intent, RESULT_IMPORT);
+            break;
         }
         
         return super.onOptionsItemSelected(item);

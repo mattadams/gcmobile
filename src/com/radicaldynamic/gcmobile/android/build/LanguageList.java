@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.radicaldynamic.groupinform.activities;
+package com.radicaldynamic.gcmobile.android.build;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -46,7 +46,7 @@ import com.radicaldynamic.groupinform.xform.Translation;
  * AbsListView#setOnItemScrollListener(AbsListView.OnItemScrollListener)} to display the
  * first letter of the visible range of cheeses.
  */
-public class FormBuilderLanguageList extends ListActivity implements ListView.OnScrollListener
+public class LanguageList extends ListActivity implements ListView.OnScrollListener
 {
     private final class RemoveWindow implements Runnable 
     {
