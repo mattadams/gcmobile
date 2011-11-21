@@ -356,7 +356,7 @@ public class DataExportActivity extends Activity implements DataExportListener
                     Log.d(Collect.LOGTAG, tt + "Path to exported attachment is " + attachment);
                     
                     Intent i = new Intent(Intent.ACTION_SEND);
-                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK + Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
                     i.setType("application/zip");
                     i.putExtra(Intent.EXTRA_STREAM, Uri.parse(attachment));
                     startActivity(i);
