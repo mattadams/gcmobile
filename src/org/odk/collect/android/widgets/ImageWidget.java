@@ -12,14 +12,12 @@
  * the License.
  */
 
-package com.radicaldynamic.groupinform.widgets;
+package org.odk.collect.android.widgets;
 
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
 import org.odk.collect.android.utilities.FileUtils;
-import org.odk.collect.android.widgets.IBinaryWidget;
-import org.odk.collect.android.widgets.QuestionWidget;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
