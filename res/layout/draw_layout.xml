@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <FrameLayout android:id="@+id/drawPreview" android:background="@color/transparent" android:padding="5.0dip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1.0" />
+    <LinearLayout android:orientation="horizontal" android:id="@+id/drawButtons" android:background="@color/help_button_view" android:padding="5.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+        <Button android:id="@+id/drawCancel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/cancel" android:layout_weight="1.0" />
+        <Button android:id="@+id/drawClear" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tf_clear" android:layout_weight="1.0" />
+        <Button android:id="@+id/drawSave" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tf_done" android:layout_weight="1.0" />
+    </LinearLayout>
+</LinearLayout>

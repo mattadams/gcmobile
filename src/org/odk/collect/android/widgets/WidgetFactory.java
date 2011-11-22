@@ -17,7 +17,6 @@ package org.odk.collect.android.widgets;
 import org.javarosa.core.model.Constants;
 import org.javarosa.form.api.FormEntryPrompt;
 
-import com.radicaldynamic.groupinform.widgets.ImageWidget;
 
 import android.content.Context;
 import android.util.Log;
@@ -83,6 +82,18 @@ public class WidgetFactory {
                 break;
             case Constants.CONTROL_VIDEO_CAPTURE:
                 questionWidget = new VideoWidget(context, fep);
+                break;
+            case Constants.CONTROL_DRAW_CAPTURE:
+                String type = fep.getAppearanceHint();
+
+                if (type != null) {
+                    if (type.contains("annotate") || type.contains("sketch") || type.contains("signature"))
+                        questionWidget = new DrawWidget(context, fep, type);
+                }
+                
+                if (questionWidget == null)
+                    questionWidget = new DrawWidget(context, fep);
+
                 break;
             case Constants.CONTROL_SELECT_ONE:
                 String appearance = fep.getAppearanceHint();

@@ -259,6 +259,7 @@
 	<string name="tf_choose_number_type">Choose number type</string>
 	<string name="tf_choose_number_type_hint">Select the number type that this field should support.</string>
 	<string name="tf_choose_one">Choose one</string>
+    <string name="tf_clear">Clear</string>
 	<string name="tf_communication_error_try_again">Communication error - please try later</string>
 	<string name="tf_confirm_complete_instance_removal_dialog_msg">This is a completed form.\n\nAre you sure that you want to remove it?\n\nThis action can not be undone.</string>
 	<string name="tf_confirm_instance_removal_dialog_msg">Do you want to remove this form?\n\nThis action can not be undone.</string>
@@ -282,7 +283,7 @@
 	<string name="tf_date_type_date_only">Date only</string>
 	<string name="tf_date_type_time_only">Time only</string>
 	<string name="tf_date_type_date_and_time">Date &amp; time</string>
-	<string name="tf_default_ionline_server">groupcomplete.com</string>
+	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_ionline_port">5101</string>	
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_destination">Destination</string>
@@ -308,6 +309,7 @@
 	<string name="tf_device_registration_method_msg">Are you registering a new device or reactivating an unused device profile?</string>
 	<string name="tf_device_registration_method_register_new">New Device</string>
 	<string name="tf_device_registration_method_reactivate">Reactivate</string>
+    <string name="tf_done">Done</string>
 	<string name="tf_do_you_have_an_account">Do You Have An Account?</string>
 	<string name="tf_do_you_have_an_account_msg">If you have registered another device or have been told to use GC Mobile by someone else then you probably have an account.\n\nDo you have an account?</string>
 	<string name="tf_edit">Edit</string>
@@ -492,7 +494,7 @@
 	<string name="tf_server_settings">Server settings</string>
 	<string name="tf_something_failed">%s failed!  Please try again.</string>
 	<string name="tf_something_was_successful">%s successful</string>
-	<string name="tf_supply_account_details">Supply Account Details</string>
+	<string name="tf_supply_account_details">Enter Account Details</string>
 	<string name="tf_synchronize">Synchronize</string>
 	<string name="tf_synchronized_folders">Synchronized Folders</string>
 	<string name="tf_synchronizing_folders_dialog_msg">Synchronizing folders...</string>
