@@ -101,7 +101,11 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
             if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
                 mExportHeaders.put("formDefinitionName", "Form Name");
                 mExportHeaders.put("formDefinitionUuid", "Unique Form ID");
-                mExportHeaders.put("recordUuid", "Unique Record ID");
+            }
+            
+            mExportHeaders.put("recordUuid", "Unique Record ID");
+                
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
                 mExportHeaders.put("dateCreated", "Record Date Created");
                 mExportHeaders.put("createdBy", "Record Created By");
                 mExportHeaders.put("dateUpdated", "Record Date Updated");
@@ -194,7 +198,11 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
                     mExportData.getLast().put(mExportHeaders.get("formDefinitionUuid"), mFormDefinition.getId());
                     mExportData.getLast().put(mExportHeaders.get("formDefinitionName"), mFormDefinition.getName());
-                    mExportData.getLast().put(mExportHeaders.get("recordUuid"), instance.getId());
+                }
+                                
+                mExportData.getLast().put(mExportHeaders.get("recordUuid"), instance.getId());
+                    
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
                     mExportData.getLast().put(mExportHeaders.get("recordStatus"), instance.getStatus().toString());
                     mExportData.getLast().put(mExportHeaders.get("dateCreated"), instance.getDateCreated());
                     mExportData.getLast().put(mExportHeaders.get("createdBy"), instance.getCreatedByAlias());
