@@ -4,6 +4,7 @@
     <menu>
         <item android:id="@+id/barcode" android:title="@string/tf_element_barcode" />
         <item android:id="@+id/date" android:title="@string/tf_element_date" />
+        <item android:id="@+id/draw" android:title="@string/tf_element_draw" />
         <item android:id="@+id/geopoint" android:title="@string/tf_element_geopoint" />
         <item android:id="@+id/group" android:title="@string/tf_element_group" />
         <item android:id="@+id/media" android:title="@string/tf_element_media" />

@@ -128,11 +128,22 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
             details.add("Trigger");
             
         } else if (field.getType().equals("upload")) {
-            String mediaType = field.getAttributes().get("mediatype");
-            mediaType = mediaType.substring(0, 1).toUpperCase() + mediaType.substring(1, 5) + " media";
-                        
-            fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_media));
-            details.add(mediaType);
+            if (field.getAttributes().get(XForm.Attribute.MEDIA_TYPE).contains("draw")) {
+                String appearance = field.getAttributes().get(XForm.Attribute.APPEARANCE);
+                
+                fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_draw));
+                
+                if (appearance == null) {
+                    details.add("Sketch");
+                } else {
+                    details.add(appearance.substring(0, 1).toUpperCase() + appearance.substring(1));
+                }
+            } else {
+                String mediaType = field.getAttributes().get(XForm.Attribute.MEDIA_TYPE);
+                mediaType = mediaType.substring(0, 1).toUpperCase() + mediaType.substring(1, mediaType.indexOf("/")) + " media";
+                fieldTypeView.setImageDrawable(getDrawable(R.drawable.element_media));
+                details.add(mediaType);
+            }
         }
         
         try {

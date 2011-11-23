@@ -100,18 +100,9 @@ public class FieldEditorActivity extends Activity
                 mSelectInstanceDefault = savedInstanceState.getString(KEY_SELECTDEFAULT);
         }
 
-        String title = "";
-            
-        // Activity should have a relevant title (e.g., add new or edit existing)
-        if (mField.isNewField()) {
-            title = getString(R.string.tf_add_new) + " "
-                    + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field);
-        } else {
-            title = getString(R.string.tf_edit) + " "
-                    + mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field);            
-        }
-        
-        setTitle(getString(R.string.app_name) + " > " + title);
+        // Set up header
+        mHeaderType = (TextView) findViewById(R.id.headerType);
+        mHeaderIcon = (ImageView) findViewById(R.id.headerIcon);
         
         // Get a handle on common input elements
         mLabel          = (EditText) findViewById(R.id.label);
@@ -173,23 +164,21 @@ public class FieldEditorActivity extends Activity
         if (mFieldType.equals("barcode"))         loadBarcodeElement();
         else if (mFieldType.equals("date"))       loadDateElement();                
         else if (mFieldType.equals("dateTime"))   loadDateElement();
+        else if (mFieldType.equals("draw"))       loadDrawElement();        // Note: draw is a virtual type - it will be turned into media once created
         else if (mFieldType.equals("geopoint"))   loadGeopointElement();                  
-        else if (mFieldType.equals("group"))      loadGroupElement();                    
+        else if (mFieldType.equals("group"))      loadGroupElement();    
+        else if (mFieldType.equals("media") && mField.getAttributes().get(XForm.Attribute.MEDIA_TYPE).contains("draw"))
+                                                  loadDrawElement();
         else if (mFieldType.equals("media"))      loadMediaElement();                    
         else if (mFieldType.equals("number"))     loadNumberElement();                    
         else if (mFieldType.equals("select"))     loadSelectElement();
         else if (mFieldType.equals("time"))       loadDateElement();
         else if (mFieldType.equals("text"))       loadTextElement();                    
-        else 
+        else {            
+            // TODO: let the user know that we couldn't edit this field
             Log.w(Collect.LOGTAG, t + "unhandled field type");
-        
-        // Set up header
-        mHeaderType     = (TextView) findViewById(R.id.headerType);
-        mHeaderIcon     = (ImageView) findViewById(R.id.headerIcon);
-        
-        // Field type string
-        mHeaderType.setText(mFieldType.substring(0, 1).toUpperCase() + mFieldType.substring(1) + " " + getString(R.string.tf_field));
-        
+        }
+
         /*
          * Set header icon
          * 
@@ -224,7 +213,10 @@ public class FieldEditorActivity extends Activity
         } else if (mField.getType().equals("trigger")) {
             mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_noicon));            
         } else if (mField.getType().equals("upload")) {
-            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_media));            
+            if (mField.getAttributes().get(XForm.Attribute.MEDIA_TYPE).contains("draw"))
+                mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_draw));        
+            else
+                mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_media));
         }
     }
     
@@ -284,16 +276,10 @@ public class FieldEditorActivity extends Activity
     {
         super.onCreateOptionsMenu(menu);
         
-//        menu.add(0, MENU_ADVANCED, 0, getString(R.string.tf_advanced))
-//            .setIcon(R.drawable.options);
-        
         menu.add(0, MENU_ITEMS, 0, getString(R.string.tf_list_items))
             .setIcon(R.drawable.ic_menu_mark)
             .setEnabled(mFieldType.equals("select") ? true : false);        
-        
-//        menu.add(0, MENU_HELP, 0, getString(R.string.tf_help))
-//            .setIcon(R.drawable.ic_menu_help);
-        
+
         return true;
     }
     
@@ -318,7 +304,7 @@ public class FieldEditorActivity extends Activity
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch (item.getItemId()) {
-        // Launch the advanced properties editor
+        // TODO: launch the advanced properties editor
         case MENU_ADVANCED:
             break;
          
@@ -338,7 +324,7 @@ public class FieldEditorActivity extends Activity
             startActivityForResult(i, REQUEST_ITEMLIST);
             break;
             
-         // TODO: display field-specific help text (from web site)
+         // TODO: display field-specific help text
         case MENU_HELP:
             break;
         }
@@ -430,6 +416,8 @@ public class FieldEditorActivity extends Activity
     
     private void loadBarcodeElement()
     {
+        updateTitle(getString(R.string.tf_element_barcode));
+        
         // Further initialize newly created fields
         if (mField.isEmpty()) {
             mField.setType("input");                    
@@ -440,6 +428,7 @@ public class FieldEditorActivity extends Activity
         loadCommonAttributes();
         
         disableFormComponent(R.id.dateFieldTypeSelection);
+        disableFormComponent(R.id.drawFieldTypeSelection);
         disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
@@ -448,9 +437,10 @@ public class FieldEditorActivity extends Activity
         disableFormComponent(R.id.readonlyLayout);
     }
     
-    // TODO: add support for selecting times as well as dates once this becomes available
     private void loadDateElement()
     {
+        updateTitle(getString(R.string.tf_element_date));
+        
         // Further initialize newly created fields
         if (mField.isEmpty()) {
             mField.setType("input");                    
@@ -460,6 +450,7 @@ public class FieldEditorActivity extends Activity
         
         loadCommonAttributes();
      
+        disableFormComponent(R.id.drawFieldTypeSelection);
         disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
@@ -480,8 +471,52 @@ public class FieldEditorActivity extends Activity
         // TODO: we should probably display a "default" date using the date widget
     }
     
+    private void loadDrawElement()
+    {
+        updateTitle(getString(R.string.tf_element_draw));
+        
+        // "draw" is really a special kind of media field for which we want a different interface
+        mFieldType = "media";
+        
+        // Further initialize newly created fields
+        if (mField.isEmpty()) {
+            mField.setType("upload");
+            mField.getAttributes().put(XForm.Attribute.MEDIA_TYPE, "draw/*");
+            mField.getBind().setType("binary");            
+            mField.setEmpty(false);
+        }
+        
+        loadCommonAttributes();
+        
+        disableFormComponent(R.id.dateFieldTypeSelection);
+        disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.geopointFieldTypeSelection);
+        disableFormComponent(R.id.groupFieldTypeSelection);
+        disableFormComponent(R.id.mediaFieldTypeSelection);
+        disableFormComponent(R.id.numberFieldTypeSelection);
+        disableFormComponent(R.id.selectFieldTypeSelection);
+        
+//        final RadioButton drawAnnotate = (RadioButton) findViewById(R.id.drawTypeAnnotate);
+        final RadioButton drawSignature = (RadioButton) findViewById(R.id.drawTypeSignature);
+        final RadioButton drawSketch = (RadioButton) findViewById(R.id.drawTypeSketch);
+        
+        if (mField.getAttributes().get(XForm.Attribute.APPEARANCE) == null) {
+            drawSketch.setChecked(true);
+        } else {
+            if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals("annotate")) {
+//                drawAnnotate.setChecked(true);
+            } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals("signature")) {
+                drawSignature.setChecked(true);
+            } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals("sketch")) {
+                drawSketch.setChecked(true);
+            }
+        }
+    }
+    
     private void loadGeopointElement()
     {
+        updateTitle(getString(R.string.tf_element_geopoint));
+        
         // Further initialize newly created fields
         if (mField.isEmpty()) {
             mField.setType("input");
@@ -499,6 +534,7 @@ public class FieldEditorActivity extends Activity
         
         disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.drawFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);        
         disableFormComponent(R.id.mediaFieldTypeSelection);
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -508,6 +544,8 @@ public class FieldEditorActivity extends Activity
     
     private void loadGroupElement()
     {
+        updateTitle(getString(R.string.tf_element_group));
+        
         // Further initialize newly created fields
         if (mField.isEmpty()) {
             mField.setType("group");
@@ -518,6 +556,7 @@ public class FieldEditorActivity extends Activity
     
         disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.drawFieldTypeSelection);
         disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.hintInput);
         disableFormComponent(R.id.mediaFieldTypeSelection);
@@ -546,11 +585,13 @@ public class FieldEditorActivity extends Activity
     
     private void loadMediaElement()
     {
+        updateTitle(getString(R.string.tf_element_media));
+        
         // Further initialize newly created fields
         if (mField.isEmpty()) {
             mField.setType("upload");
             mField.getBind().setType("binary");
-            mField.getAttributes().put("mediatype", "image/*");
+            mField.getAttributes().put(XForm.Attribute.MEDIA_TYPE, "image/*");
             mField.setEmpty(false);
         }
         
@@ -558,6 +599,7 @@ public class FieldEditorActivity extends Activity
 
         disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.drawFieldTypeSelection);
         disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);        
         disableFormComponent(R.id.numberFieldTypeSelection);
@@ -586,16 +628,18 @@ public class FieldEditorActivity extends Activity
         radioVideo.setOnClickListener(radioListener);
         
         // Initialize media type selection
-        if (mField.getAttributes().get("mediatype").equals("audio/*"))
+        if (mField.getAttributes().get(XForm.Attribute.MEDIA_TYPE).equals("audio/*"))
             radioAudio.setChecked(true);
-        else if (mField.getAttributes().get("mediatype").equals("image/*"))
+        else if (mField.getAttributes().get(XForm.Attribute.MEDIA_TYPE).equals("image/*"))
             radioImage.setChecked(true);
-        else if (mField.getAttributes().get("mediatype").equals("video/*"))
+        else if (mField.getAttributes().get(XForm.Attribute.MEDIA_TYPE).equals("video/*"))
             radioVideo.setChecked(true);
     }
     
     private void loadNumberElement()
     {
+        updateTitle(getString(R.string.tf_element_number));
+        
         // Further initialize newly created fields
         if (mField.isEmpty()) {
             mField.setType("input");
@@ -606,6 +650,7 @@ public class FieldEditorActivity extends Activity
         loadCommonAttributes();
         
         disableFormComponent(R.id.dateFieldTypeSelection);
+        disableFormComponent(R.id.drawFieldTypeSelection);
         disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
@@ -657,6 +702,8 @@ public class FieldEditorActivity extends Activity
     
     private void loadSelectElement()
     {
+        updateTitle(getString(R.string.tf_element_select));
+        
         // Further initialize newly created fields
         if (mField.isEmpty()) {
             mField.setType(mFieldType);
@@ -668,6 +715,7 @@ public class FieldEditorActivity extends Activity
         
         disableFormComponent(R.id.dateFieldTypeSelection);
         disableFormComponent(R.id.defaultValueInput);
+        disableFormComponent(R.id.drawFieldTypeSelection);
         disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);        
         disableFormComponent(R.id.mediaFieldTypeSelection);
@@ -727,6 +775,8 @@ public class FieldEditorActivity extends Activity
     
     private void loadTextElement()
     {
+        updateTitle(getString(R.string.tf_element_text));
+        
         // Further initialize newly created fields
         if (mField.isEmpty()) {
             mField.setType("input");
@@ -737,6 +787,7 @@ public class FieldEditorActivity extends Activity
         loadCommonAttributes();
         
         disableFormComponent(R.id.dateFieldTypeSelection);
+        disableFormComponent(R.id.drawFieldTypeSelection);
         disableFormComponent(R.id.geopointFieldTypeSelection);
         disableFormComponent(R.id.groupFieldTypeSelection);
         disableFormComponent(R.id.mediaFieldTypeSelection);
@@ -786,7 +837,9 @@ public class FieldEditorActivity extends Activity
         else if (mFieldType.equals("date"))       saveDateElement();
         else if (mFieldType.equals("dateTime"))   saveDateElement();
         else if (mFieldType.equals("geopoint"))   saveGeopointElement();                  
-        else if (mFieldType.equals("group"))      saveGroupElement();                    
+        else if (mFieldType.equals("group"))      saveGroupElement();
+        else if (mFieldType.equals("media") && mField.getAttributes().get(XForm.Attribute.MEDIA_TYPE).contains("draw"))
+                                                  saveDrawElement();
         else if (mFieldType.equals("media"))      saveMediaElement();                    
         else if (mFieldType.equals("number"))     saveNumberElement();                    
         else if (mFieldType.equals("select"))     saveSelectElement();                    
@@ -825,6 +878,19 @@ public class FieldEditorActivity extends Activity
         } else if (dateAndTime.isChecked()) {
             Log.v(Collect.LOGTAG, t + "saveDateElement set dateTime");
             mField.getBind().setType("dateTime");
+        }
+    }
+    
+    private void saveDrawElement()
+    {
+//      final RadioButton drawAnnotate = (RadioButton) findViewById(R.id.drawTypeAnnotate);
+        final RadioButton drawSignature = (RadioButton) findViewById(R.id.drawTypeSignature);
+        final RadioButton drawSketch = (RadioButton) findViewById(R.id.drawTypeSketch);
+        
+        if (drawSignature.isChecked()) {
+            mField.getAttributes().put(XForm.Attribute.APPEARANCE, "signature");
+        } else if (drawSketch.isChecked()) {
+            mField.getAttributes().put(XForm.Attribute.APPEARANCE, "sketch");
         }
     }
     
@@ -899,11 +965,11 @@ public class FieldEditorActivity extends Activity
         final RadioButton radioVideo = (RadioButton) findViewById(R.id.mediaTypeVideo);
         
         if (radioAudio.isChecked()) {
-            mField.getAttributes().put("mediatype", "audio/*");
+            mField.getAttributes().put(XForm.Attribute.MEDIA_TYPE, "audio/*");
         } else if (radioImage.isChecked()) {
-            mField.getAttributes().put("mediatype", "image/*"); 
+            mField.getAttributes().put(XForm.Attribute.MEDIA_TYPE, "image/*"); 
         } else if (radioVideo.isChecked()) {
-            mField.getAttributes().put("mediatype", "video/*"); 
+            mField.getAttributes().put(XForm.Attribute.MEDIA_TYPE, "video/*"); 
         }        
     }
     
@@ -952,5 +1018,15 @@ public class FieldEditorActivity extends Activity
         v.setEnabled(b);                    
         v.setFocusable(b);
         v.setFocusableInTouchMode(b);
+    }
+    
+    private void updateTitle(String title)
+    {
+        mHeaderType.setText(title);
+        
+        if (mField.isNewField())
+            setTitle(getString(R.string.tf_add_new) + " " + title);                   
+        else
+            setTitle(getString(R.string.tf_edit) + " " + title);                                
     }
 }

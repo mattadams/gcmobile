@@ -479,8 +479,8 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
                 startFieldEditor(humanFieldType, field);
             else 
                 Log.w(Collect.LOGTAG, t + "Unable to determine field type and start element editor");            
-        } // end if field type is group or repeat        
-    } // end onListItemClick()
+        }    
+    }
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
@@ -489,6 +489,7 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
         
         case R.id.barcode:  startFieldEditor("barcode",   null);  break;
         case R.id.date:     startFieldEditor("date",      null);  break;
+        case R.id.draw:     startFieldEditor("draw",      null);  break;    // Note: draw is a virtual type - it will be turned into media once created
         case R.id.geopoint: startFieldEditor("geopoint",  null);  break;
         case R.id.group:    startFieldEditor("group",     null);  break;
         case R.id.media:    startFieldEditor("media",     null);  break;
@@ -503,10 +504,7 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
         
         case R.id.view_instance:
             startActivity(new Intent(this, InstanceList.class));
-            break;            
-            
-//        case R.id.help:
-//            break;            
+            break;        
         }
         
         return super.onOptionsItemSelected(item);

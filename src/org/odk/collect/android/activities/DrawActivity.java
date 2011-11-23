@@ -101,6 +101,8 @@ public class DrawActivity extends Activity implements ColorPickerDialog.OnColorC
             if (mDrawMode.contains("annotate"))
                 mDrawMode = "annotation";
         }
+        
+        setTitle(getString(R.string.app_name) + " > " + mDrawMode.substring(0, 1).toUpperCase() + mDrawMode.substring(1));
             
         mSaveUri = (Uri) getIntent().getExtras().getParcelable(KEY_OUTPUT_URI);
         Log.d(Collect.LOGTAG, t + "saveUri at " + mSaveUri.toString());
@@ -220,7 +222,7 @@ public class DrawActivity extends Activity implements ColorPickerDialog.OnColorC
             
             builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    finish();
+                    dialog.cancel();
                 }
             });
             
@@ -371,6 +373,7 @@ public class DrawActivity extends Activity implements ColorPickerDialog.OnColorC
                     mBitmap = Bitmap.createBitmap(mDisplay.getWidth(), mDrawFrame.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
                 } else {
                     // Make the loaded bitmap non-immutable
+                    // FIXME: known problem - ERASE function will not work with this image
                     mBitmap = mBitmap.copy(Bitmap.Config.ARGB_8888, true);
                 }
             } else {

@@ -458,6 +458,50 @@
         </RelativeLayout>  
     </RelativeLayout>
     
+   <!-- Draw (media) field options -->
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/drawFieldTypeSelection"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+        
+        <TextView
+            android:id="@+id/drawTypeLabel"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:paddingTop="10dp"
+            android:text="@string/tf_choose_draw_type" 
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+        
+        <RadioGroup
+            android:id="@+id/groupRadioSelection"
+            android:layout_below="@id/drawTypeLabel"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            
+            <!--<RadioButton 
+                android:id="@+id/drawTypeAnnotate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_draw_annotate_image" /> -->
+
+            <RadioButton
+                android:id="@+id/drawTypeSignature"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_draw_capture_signature" />            
+                            
+            <RadioButton 
+                android:id="@+id/drawTypeSketch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tf_draw_freehand_sketch" />            
+        </RadioGroup>       
+        
+    </RelativeLayout>
+    
     <!-- Read-only option -->
     <RelativeLayout 
         xmlns:android="http://schemas.android.com/apk/res/android"
