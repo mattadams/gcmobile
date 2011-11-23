@@ -31,6 +31,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
@@ -43,6 +44,7 @@ import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
+import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
@@ -82,7 +84,13 @@ public class DrawWidget extends QuestionWidget implements IBinaryWidget
     @Override
     public void clearAnswer() 
     {
-        // Not enabled here
+        // remove the file
+        deleteMedia();
+        mImageView.setImageBitmap(null);
+        mErrorTextView.setVisibility(View.GONE);
+
+        // reset buttons
+        mCaptureButton.setText(getCapturePrompt());
     }
 
     @Override
@@ -120,13 +128,73 @@ public class DrawWidget extends QuestionWidget implements IBinaryWidget
     {
         // Delete the previous image using the content provider
         if (mBinaryName != null) {
-//            deleteMedia();
+            deleteMedia();
         }
         
         mBinaryName = (new File(getPathFromUri((Uri) answer))).getName();        
         Log.i(t, "Setting current answer to " + mBinaryName);
         
         mWaitingForData = false;
+    }
+    
+    // Taken from ImageWidget
+    private void deleteMedia() 
+    {
+        // Get the file path and delete the file
+
+        /*
+         * There's only 1 in this case, but android 1.6 doesn't implement delete on
+         * android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI only on
+         * android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI + a #
+         */
+        String[] projection = {
+            Images.ImageColumns._ID
+        };
+        
+        Cursor c =
+            getContext().getContentResolver().query(
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection,
+                "_data='" + mInstanceFolder + mBinaryName + "'", null, null);
+        
+        int del = 0;
+        
+        if (c.getCount() > 0) {
+            c.moveToFirst();
+            String id = c.getString(c.getColumnIndex(Images.ImageColumns._ID));
+
+            Log.i(
+                t,
+                "attempting to delete: "
+                        + Uri.withAppendedPath(
+                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id));
+            del =
+                getContext().getContentResolver().delete(
+                    Uri.withAppendedPath(
+                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id), null,
+                    null);
+        }
+        
+        c.close();
+
+        // Clean up variables
+        mBinaryName = null;
+        
+        Log.i(t, "Deleted " + del + " rows from media content provider");
+    }
+    
+    private String getCapturePrompt()
+    {
+        String capturePrompt = "";
+        
+        if (mDrawMode == null || mDrawMode.contains("sketch")) {
+            capturePrompt = "Open Sketchpad";
+        } else if (mDrawMode.contains("signature")) {            
+            capturePrompt = mBinaryName == null ? "Capture Signature" : "Edit Signature";
+        } else if (mDrawMode.contains("annotate")) {
+            capturePrompt = mBinaryName == null ? "Annotate Image" : "Edit Annotation";
+        }
+        
+        return capturePrompt;
     }
     
     private String getPathFromUri(Uri uri) 
@@ -160,12 +228,11 @@ public class DrawWidget extends QuestionWidget implements IBinaryWidget
         mErrorTextView = new TextView(getContext());
         mErrorTextView.setText("Selected file is not a valid image");
 
-        // Setup capture button
         LayoutParams layoutParams = new TableLayout.LayoutParams();
         layoutParams.setMargins(7, 5, 7, 5);
         
         mCaptureButton = new Button(getContext());
-        mCaptureButton.setText("Open Sketchpad");
+        mCaptureButton.setText(getCapturePrompt());
         mCaptureButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, mAnswerFontsize);
         mCaptureButton.setPadding(20, 20, 20, 20);
         mCaptureButton.setEnabled(!mPrompt.isReadOnly());
