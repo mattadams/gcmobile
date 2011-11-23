@@ -238,10 +238,10 @@ public class DrawActivity extends Activity implements ColorPickerDialog.OnColorC
     {
         super.onCreateOptionsMenu(menu);
         
-        menu.add(0, COLOR_MENU_ID, 0, "Switch Color").setShortcut('3', 'c');
-        menu.add(0, EMBOSS_MENU_ID, 0, "Toggle Emboss").setShortcut('4', 's');
-        menu.add(0, BLUR_MENU_ID, 0, "Toggle Blur").setShortcut('5', 'z');
-        menu.add(0, ERASE_MENU_ID, 0, "Toggle Eraser").setShortcut('5', 'z');
+        menu.add(0, COLOR_MENU_ID, 0, "Pick Color").setShortcut('3', 'c');
+        menu.add(0, EMBOSS_MENU_ID, 0, "Emboss").setShortcut('4', 's');
+        menu.add(0, BLUR_MENU_ID, 0, "Blur").setShortcut('5', 'z');
+        menu.add(0, ERASE_MENU_ID, 0, "Eraser").setShortcut('5', 'z');
 //        menu.add(0, SRCATOP_MENU_ID, 0, "SrcATop").setShortcut('5', 'z');
         
         // Only enable menu in annotate or sketch modes (signature uses reasonable presets)
@@ -275,8 +275,7 @@ public class DrawActivity extends Activity implements ColorPickerDialog.OnColorC
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) 
-    {
-        mPaint.setXfermode(null);
+    {        
         mPaint.setAlpha(0xFF);
     
         switch (item.getItemId()) {
@@ -298,7 +297,11 @@ public class DrawActivity extends Activity implements ColorPickerDialog.OnColorC
                 }
                 return true;
             case ERASE_MENU_ID:
-                mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+                if (mPaint.getXfermode() == null) {
+                    mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+                } else {
+                    mPaint.setXfermode(null);
+                }
                 return true;
             case SRCATOP_MENU_ID:
                 mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
@@ -313,6 +316,25 @@ public class DrawActivity extends Activity implements ColorPickerDialog.OnColorC
     public boolean onPrepareOptionsMenu(Menu menu) 
     {
         super.onPrepareOptionsMenu(menu);
+        
+        if (mPaint.getMaskFilter() == mEmboss) {
+            menu.getItem(1).setTitle("Emboss ON");
+        } else {
+            menu.getItem(1).setTitle("Emboss");
+        }
+        
+        if (mPaint.getMaskFilter() == mBlur) {
+            menu.getItem(2).setTitle("Blur ON");
+        } else {
+            menu.getItem(2).setTitle("Blur");
+        }
+        
+        if (mPaint.getXfermode() == null) {
+            menu.getItem(3).setTitle("Erase");
+        } else {
+            menu.getItem(3).setTitle("Erase ON");
+        }
+        
         return true;
     }
     
