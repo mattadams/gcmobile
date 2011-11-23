@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -50,7 +51,8 @@ public class DataExportActivity extends Activity implements DataExportListener
     
     private static final int DIALOG_DEFINITION_UNAVAILABLE = 1;
     private static final int DIALOG_EMAIL_DEPENDENCY = 2;
-    private static final int DIALOG_OPTIONS_REQUIRED = 3;    
+    private static final int DIALOG_NO_SEND_ACTIVITY = 3;
+    private static final int DIALOG_OPTIONS_REQUIRED = 4;
     
     private Dialog mDialog;
     private ProgressDialog mProgressDialog;
@@ -283,6 +285,22 @@ public class DataExportActivity extends Activity implements DataExportListener
             
             mDialog = builder.create();
             break;
+            
+        case DIALOG_NO_SEND_ACTIVITY:
+            builder
+            .setCancelable(false)
+            .setIcon(R.drawable.ic_dialog_info)
+            .setTitle(R.string.tf_unable_to_send_export)
+            .setMessage(R.string.tf_unable_to_send_export_msg);
+            
+            builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    dialog.cancel();
+                }
+            });                        
+            
+            mDialog = builder.create();
+            break;            
         
         case DIALOG_OPTIONS_REQUIRED:
             builder
@@ -355,11 +373,16 @@ public class DataExportActivity extends Activity implements DataExportListener
                     String attachment = "file://" + data.getString(DataExportListener.KEY_EMAIL_ATTACHMENT);
                     Log.d(Collect.LOGTAG, tt + "Path to exported attachment is " + attachment);
                     
-                    Intent i = new Intent(Intent.ACTION_SEND);
-                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK + Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-                    i.setType("application/zip");
-                    i.putExtra(Intent.EXTRA_STREAM, Uri.parse(attachment));
-                    startActivity(i);
+                    try {
+                        Intent i = new Intent(Intent.ACTION_SEND);
+                        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK + Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+                        i.setType("application/zip");
+                        i.putExtra(Intent.EXTRA_STREAM, Uri.parse(attachment));
+                        startActivity(i);
+                    } catch (ActivityNotFoundException e) {
+                        dialog.cancel();
+                        showDialog(DIALOG_NO_SEND_ACTIVITY);
+                    }
                 }
             });
         }
