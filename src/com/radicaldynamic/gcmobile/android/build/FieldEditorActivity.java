@@ -209,9 +209,7 @@ public class FieldEditorActivity extends Activity
         } else if (mField.getType().equals("select")) {
             mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectmulti));
         } else if (mField.getType().equals("select1")) {
-            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));
-        } else if (mField.getType().equals("trigger")) {
-            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_noicon));            
+            mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_selectsingle));         
         } else if (mField.getType().equals("upload")) {
             if (mField.getAttributes().get(XForm.Attribute.MEDIA_TYPE).contains("draw"))
                 mHeaderIcon.setImageDrawable(getDrawable(R.drawable.element_draw));        

@@ -459,7 +459,7 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
              */
             String humanFieldType = null;
             
-            if (field.getType().equals("input")) {
+            if (field.getType().equals("input") || field.getType().equals("trigger")) {
                 if (field.getBind() == null || field.getBind().getType().equals("string")) {
                     humanFieldType = "text";
                 } else if (field.getBind().getType().equals("decimal") || field.getBind().getType().equals("int")) {
