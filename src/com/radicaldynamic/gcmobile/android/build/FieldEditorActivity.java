@@ -769,6 +769,8 @@ public class FieldEditorActivity extends Activity
                 optionAppearance.setSelection(3);
             } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.QUICK)) {
                 optionAppearance.setSelection(4);
+            } else if (mField.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.AUTOCOMPLETE)) {
+                optionAppearance.setSelection(5);
             }
         }
     }
@@ -1003,6 +1005,7 @@ public class FieldEditorActivity extends Activity
         case 2: mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.LIST); break;
         case 3: mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.LIST_NOLABEL); break;
         case 4: mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.QUICK); break;
+        case 5: mField.getAttributes().put(XForm.Attribute.APPEARANCE, XForm.Value.AUTOCOMPLETE); break;
         }
                 
         mField.getInstance().setDefaultValue(mSelectInstanceDefault);
