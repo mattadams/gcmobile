@@ -296,7 +296,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
             Log.e(Collect.LOGTAG, t + "problem retreiving form template: " + e.toString());
             e.printStackTrace();
             
-            mErrorMsg = "An error occured while exporting your data. Please contact our support team at confab@groupcomplete.com with this error message:\n\n"
+            mErrorMsg = "An error occured while exporting your data. Please contact our support team at support@groupcomplete.com with this error message:\n\n"
                 + e.toString();                
         }
         

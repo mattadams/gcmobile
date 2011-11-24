@@ -49,8 +49,6 @@ public class FormReader
      */
     public FormReader(InputStream is) throws Exception
     {
-        boolean newForm = false;
-        
         mForm = XMLDoc.from(is, false);
         
         /*
@@ -75,28 +73,26 @@ public class FormReader
                 // Reinitialize our XML object now that the <h:head...> element contains the expected namespaces
                 mForm = XMLDoc.from(tag.toString(), false);
             } catch (IOException e) {
-                // Ignore xis.close() exceptions
                 e.printStackTrace();
+                throw e;
             }
         }
        
         mDefaultPrefix = mForm.getPefix(XForm.Value.XMLNS_XFORMS);
         
         /*
+         * Initalize new forms
+         * 
          * This hack is in place in case a new form has been created but fails the first save attempt,
          * thereby creating a form that will not contain an instance root.  Since instance roots are
          * expected, the lack of one will crash this application.
          * 
          * FIXME: eventually remove this hack
          */
-        if (mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).getChildCount() == 0)
-            newForm = true;
-        
-        // Initialize new forms
-        if (newForm) {
+        if (mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).getChildCount() == 0) {
             // This might now be rigorous enough for i18n input
             String formName = Collect.getInstance().getFormBuilderState().getFormDefinition().getName(); 
-            String instanceRoot = formName.replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9]", "");
+            String instanceRoot = formName.replaceAll("\\s", "").replaceAll("[^a-zA-Z0-9_]", "");
             String instanceRootId = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
             
             // Just in case the form name did not have anything useful in it with which to generate a sane instance root
@@ -124,12 +120,13 @@ public class FormReader
                 mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute(XForm.Attribute.XML_NAMESPACE);
             } catch (XMLDocumentException e1) {
                 Log.e(Collect.LOGTAG, t + e1.toString());
-                throw new Exception("Unable to find id or xmlns attribute for instance.\n\nPlease contact our support team with this message at confab@groupcomplete.com");
+                throw new Exception("Unable to find id or xmlns attribute for instance.\n\nPlease contact our support team with this message at support@groupcomplete.com");
             }
         }        
         
         Log.v(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
         Log.v(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
+        Log.v(Collect.LOGTAG, t + "instance root ID: " + mInstanceRootId);
         
         parseForm();
 
@@ -223,7 +220,7 @@ public class FormReader
 
                 if (p == null) {
                     Log.e(Collect.LOGTAG, t + "could not find parent!");
-                    throw new Exception("Could not find parent tag at " + ptl + ".\n\nPlease contact our support team with this message at confab@groupcomplete.com");
+                    throw new Exception("Could not find parent tag at " + ptl + ".\n\nPlease contact our support team with this message at support@groupcomplete.com");
                 } else {
                     f = new Field(tag, mBinds, mInstanceRoot, p);
                     p.getChildren().add(f);
@@ -237,7 +234,7 @@ public class FormReader
 
             if (p == null) {
                 Log.e(Collect.LOGTAG, t + "could not find parent!");
-                throw new Exception("Could not find parent tag at " + ptl + ".\n\nPlease contact our support team with this message at confab@groupcomplete.com");
+                throw new Exception("Could not find parent tag at " + ptl + ".\n\nPlease contact our support team with this message at support@groupcomplete.com");
             }
 
             if (tag.getCurrentTagName().equals("label")) {
