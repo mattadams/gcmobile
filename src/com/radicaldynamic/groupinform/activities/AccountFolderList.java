@@ -368,7 +368,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         protected Void doInBackground(Void... nothing)
         {
             if (FileUtilsExtended.isFileOlderThan(getCacheDir() + File.separator + FileUtilsExtended.FOLDER_CACHE_FILE, FileUtilsExtended.TIME_TWO_MINUTES))                    
-                fetchFolderList();
+                fetchFolderList(false);
 
             folders = loadFolderList();
             
@@ -406,9 +406,9 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
     /*
      * Fetch a new folder list from Inform Online and store it on disk
      */
-    public static void fetchFolderList()
+    public static void fetchFolderList(boolean fetchAnyway)
     {
-        if (Collect.getInstance().getIoService().isSignedIn()) {
+        if (Collect.getInstance().getIoService().isSignedIn() || fetchAnyway) {
             Log.d(Collect.LOGTAG, t + "fetching new list of folders");
         } else {
             Log.d(Collect.LOGTAG, t + "not signed in, skipping folder list fetch");

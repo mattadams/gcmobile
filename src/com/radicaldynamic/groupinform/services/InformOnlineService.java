@@ -328,6 +328,9 @@ public class InformOnlineService extends Service {
     {
         mConnecting = true;
         
+        // 
+        boolean signedIn;
+        
         // Make sure that the user has not specifically requested that we be offline
         if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled() && forceOnline == false) {
             Log.i(Collect.LOGTAG, t + "offline mode enabled; not auto-connecting");
@@ -364,6 +367,11 @@ public class InformOnlineService extends Service {
                 
                 if (Collect.getInstance().getInformOnlineState().hasRegistration() && checkin()) {
                     Log.i(Collect.LOGTAG, t + "checkin successful (we are connected)");
+                    
+                    // Fetch regardless of the fact that we're not yet marked as being signed in
+                    AccountDeviceList.fetchDeviceList(true);                
+                    AccountFolderList.fetchFolderList(true);
+                    
                     mSignedIn = true;
                 } else {
                     Log.w(Collect.LOGTAG, t + "checkin failed (registration invalid)");
@@ -385,11 +393,6 @@ public class InformOnlineService extends Service {
             e.printStackTrace();
             mServicePingSuccessful = mSignedIn = false;
         } finally {
-            if (mSignedIn) {
-                AccountDeviceList.fetchDeviceList();                
-                AccountFolderList.fetchFolderList();                
-            }   
-            
             // Load regardless of whether we are signed in
             AccountDeviceList.loadDeviceList();
             AccountFolderList.loadFolderList();

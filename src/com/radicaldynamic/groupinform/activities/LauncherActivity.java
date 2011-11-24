@@ -477,17 +477,8 @@ public class LauncherActivity extends Activity
                 if ((Collect.getInstance().getIoService() instanceof InformOnlineService && 
                         Collect.getInstance().getIoService().isInitialized()) || seconds > 30) 
                     break;
-                
-                    /*
-                     * If we have waited longer than 10 seconds we may need to start forcing the issue.
-                     * 
-                     * This might happen because we have restarted to retry the connection but the 
-                     * services have not restarted and we are waiting on them to complete their usual
-                     * 10 minute delay.
-                     * 
-                     * FIXME: this should check every 10 seconds at the 10 seconds mark and after...
-                     */
-                if (Collect.getInstance().getIoService() instanceof InformOnlineService && seconds > 10)
+
+                if (Collect.getInstance().getIoService() instanceof InformOnlineService && (seconds % 6 == 0))
                     Collect.getInstance().getIoService().goOnline();
                 
                 try {

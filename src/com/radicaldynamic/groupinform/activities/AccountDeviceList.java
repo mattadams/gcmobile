@@ -146,7 +146,7 @@ public class AccountDeviceList extends ListActivity
         protected Void doInBackground(Void... nothing)
         {
             if (FileUtilsExtended.isFileOlderThan(getCacheDir() + File.separator + FileUtilsExtended.DEVICE_CACHE_FILE, FileUtilsExtended.TIME_TWO_MINUTES))
-                fetchDeviceList();
+                fetchDeviceList(false);
 
             devices = loadDeviceList();
             
@@ -187,9 +187,9 @@ public class AccountDeviceList extends ListActivity
      * Fetch a new device list from Inform Online and store it on disk 
      * (also store a hashed copy for later)
      */
-    static public void fetchDeviceList()
+    static public void fetchDeviceList(boolean fetchAnyway)
     {
-        if (Collect.getInstance().getIoService().isSignedIn()) {
+        if (Collect.getInstance().getIoService().isSignedIn() || fetchAnyway) {
             Log.d(Collect.LOGTAG, t + "fetching new list of devices");
         } else {
             Log.d(Collect.LOGTAG, t + "not signed in, skipping device list fetch");
