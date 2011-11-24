@@ -254,9 +254,9 @@ public class FormReader
                 p.setItemValue(tag.getInnerText());
             }
         }
-
-        // If field element has children then list fields recursively from the standpoint of every child
-        if (tag.getChildCount() > 0) {           
+        
+        // Parse children of those tags in our "field list" and the top-level tag h:body
+        if ((mFieldList.contains(tag.getCurrentTagName()) || tag.getCurrentTagName().equals("h:body")) && tag.getChildCount() > 0) {           
             tag.forEachChild(new CallBack() {
                 @Override
                 public void execute(XMLTag arg0)
