@@ -60,11 +60,11 @@ public class PropertyManager implements IPropertyManager {
         mTelephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
 
         String deviceId = mTelephonyManager.getDeviceId();
-        if (deviceId != null && (deviceId.contains("*") || Double.valueOf(deviceId) == 0.0)) {
-            deviceId =
-                Settings.Secure
-                        .getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
-        }
+//        if (deviceId != null && (deviceId.contains("*") || Double.valueOf(deviceId) == 0.0)) {
+//            deviceId =
+//                Settings.Secure
+//                        .getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+//        }
         mProperties.put(DEVICE_ID_PROPERTY, deviceId);
         mProperties.put(SUBSCRIBER_ID_PROPERTY, mTelephonyManager.getSubscriberId());
         mProperties.put(SIM_SERIAL_PROPERTY, mTelephonyManager.getSimSerialNumber());
