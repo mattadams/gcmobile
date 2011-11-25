@@ -227,7 +227,6 @@
 	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About GC\" option menu.\n\nWe have sent an email to %s confirming this new account.</string>
 	<string name="tf_account_details">If you do not know these details you can have a reminder sent to the account owner.</string>
 	<string name="tf_account_device">Registered Device</string>
-	<string name="tf_account_devices">Account Devices</string>
 	<string name="tf_account_email_label">Email Address</string>
 	<string name="tf_account_email_hint">Enter the email address of the person who will be the account owner. We will send important information to this address.</string>
 	<string name="tf_account_exists_dialog">Account Already Exists</string>
@@ -236,11 +235,12 @@
 	<string name="tf_account_key_label">License Key</string>
 	<string name="tf_account_number_label">Licence Number</string>
 	<string name="tf_add_form_field">Add Field</string>
-	<string name="tf_add_language">Add a language to begin translating</string>    
-	<string name="tf_add_new">Add New</string>
+	<string name="tf_add_language">Add a language to begin translating</string>   
+    <string name="tf_add_new">Add New</string>
 	<string name="tf_add_template">Add Template</string>
 	<string name="tf_add_template_hint">Enter a form name and select Create to build a new form template.\n\nYou may also add a template by importing an XForm file from the SD card.</string>
-	<string name="tf_advanced">Advanced</string>
+    <string name="tf_administer">Administer</string>
+    <string name="tf_administer_devices">Administer Devices</string>
 	<string name="tf_alias_not_assigned">Alias not assigned</string>
 	<string name="tf_at_top_of_form">Viewing Top of Form</string>
 	<string name="tf_audio_media_type">Audio recording</string>
@@ -268,8 +268,8 @@
 	<string name="tf_confirm_removal_msg">Are you sure you want to remove \"%s?\"</string>
 	<string name="tf_connection_error_registered_with_db_msg">Unable to connect to the GC Mobile service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.\n\nIf you choose to work offline the connection will be automatically reestablished as soon as it becomes available.</string>
 	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the GC Mobile service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
-	<string name="tf_connection_error_unregistered_msg">Unable to connect to the GC Mobile service to register this device.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>	
-	<string name="tf_connectivity_settings">Connectivity settings</string>
+	<string name="tf_connection_error_unregistered_msg">Unable to connect to the GC Mobile service to register this device.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
+    <string name="tf_connection_settings">Connection settings</string>	
 	<string name="tf_contact_account_owner">Action reserved for your account owner!</string>
 	<string name="tf_continue">Continue</string>
 	<string name="tf_copy">Copy</string>
@@ -285,7 +285,7 @@
 	<string name="tf_date_type_time_only">Time only</string>
 	<string name="tf_date_type_date_and_time">Date &amp; time</string>
 	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
-	<string name="tf_default_ionline_port">5101</string>	
+	<string name="tf_default_ionline_port">5101</string>
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_destination">Destination</string>
 	<string name="tf_device_admin_alias_label">Alias</string>
@@ -318,9 +318,9 @@
 	<string name="tf_edit">Edit</string>
 	<string name="tf_edit_folder">Edit Folder</string>
 	<string name="tf_edit_form_definition_hint">Select item to edit form template</string>
-	<string name="tf_edit_list_item">Edit List Item</string>
+    <string name="tf_edit_list_item">Edit List Item</string>
 	<string name="tf_edit_template">Edit Template</string>
-	<string name="tf_editing">Editing</string>
+    <string name="tf_editing">Editing</string>
 	<string name="tf_element_barcode">Barcode reader</string>
 	<string name="tf_element_date">Date &amp; time</string>
     <string name="tf_element_draw">Drawable area</string>
@@ -354,7 +354,6 @@
 	<string name="tf_fbel_selectmultiple_hint">Permit the user to select multiple options from the list of items.</string>
 	<string name="tf_fbel_select_appearance">Select appearance</string>
 	<string name="tf_fbel_select_appearance_hint">Adjust the appearance and behavior of the select field.</string>
-	<string name="tf_field">Field</string>
 	<string name="tf_folder_admin_name_label">Name</string>
 	<string name="tf_folder_admin_name_hint">A concise name for this folder.</string>
 	<string name="tf_folder_admin_description_label">Description</string>
@@ -433,7 +432,6 @@
 	<string name="tf_loading_please_wait">Loading...</string>
 	<string name="tf_more_info">More Info</string>
 	<string name="tf_new_account">New Account</string>
-	<string name="tf_notification_settings">Notification settings</string>
 	<string name="tf_notify_device_owner">Notify User</string>
 	<string name="tf_odk_aggregate">Send Complete Forms</string>
 	<string name="tf_odk_library">Download Forms</string>
@@ -441,10 +439,8 @@
 	<string name="tf_offline_mode_enabled_msg">You are currently working offline.  Only those folders that have been synchronized for offline use are available at this time.\n\nPlease note that some parts of this app will be unavailable while offline.</string>
 	<string name="tf_open_data_kit">Open Data Kit</string>
 	<string name="tf_open_data_kit_abbrev">ODK</string>
-	<string name="tf_opening_please_wait">Opening, please wait...</string>
     <string name="tf_preferences">Preferences</string>
 	<string name="tf_preparing_to_export">Preparing to export...</string>	
-	<string name="tf_processing">Processing...</string>
 	<string name="tf_reactivation_delayed_reason">Please wait 5 minutes after device reset</string>
 	<string name="tf_reactivation_delayed_wait">PIN will be accepted in%1$s%2$s %3$s</string>   
 	<string name="tf_register_this_device">Welcome to GC Mobile!</string>
@@ -489,14 +485,12 @@
 	<string name="tf_resetting_please_wait">Resetting...</string>
 	<string name="tf_retry">Retry</string>
     <string name="tf_save">Save</string>
-	<string name="tf_save_and_exit">Save and exit</string>
 	<string name="tf_saved_data">Saved!</string>
 	<string name="tf_saving_please_wait">Saving...</string>
 	<string name="tf_send">Send</string>
 	<string name="tf_screen_group_type">Display fields on one screen</string>
 	<string name="tf_select_folders_for_offline_use">Select folders for offline use</string>
 	<string name="tf_select_task">Select Task</string>
-	<string name="tf_server_settings">Server settings</string>
 	<string name="tf_something_failed">%s failed!  Please try again.</string>
 	<string name="tf_something_was_successful">%s successful</string>
 	<string name="tf_supply_account_details">Enter Account Details</string>
@@ -545,7 +539,7 @@
 	<string name="tf_unable_to_remove_self">You cannot remove yourself!</string>
 	<string name="tf_unable_to_rename_dialog">Unable To Rename</string>
 	<string name="tf_unable_to_rename_dialog_msg">This folder already contains a form named \"%s.\"\n\nPlease choose another name.</string>
-	<string name="tf_unable_to_reset_self">This screen cannot be used to reset your own profile.  If you want to do this, please use\n\nAbout GC >\nReset GC Mobile</string>
+	<string name="tf_unable_to_reset_self">This screen cannot be used to reset your own profile.  If you want to do this, please use\n\nAbout GC >\nReset Device.</string>
 	<string name="tf_unable_to_save_empty_translation">Please provide a translation</string>
     <string name="tf_unable_to_send_export">Cannot Send Export</string>
     <string name="tf_unable_to_send_export_msg">Before you can send exported data you must configure an email client (try the GMail or Email app) or enable Bluetooth on your mobile device.</string>
@@ -561,7 +555,6 @@
 	<string name="tf_while_offline">Changes cannot be saved while offline</string>
 	<string name="tf_yes">Yes</string>
 
-	<string name="file_dialog_app_name">File dialog</string>
 	<string name="file_dialog_location">Location</string>
 	<string name="file_dialog_cant_read_folder">folder can\'t be read!</string>
 	<string name="file_dialog_new">New</string>

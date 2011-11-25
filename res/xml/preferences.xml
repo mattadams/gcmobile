@@ -59,6 +59,7 @@
 			android:defaultValue="@string/default_odk_submission"
 			android:dialogTitle="@string/change_submission_url" />
 	</PreferenceCategory>
+ <!--
 	<PreferenceCategory android:title="@string/client">
 		<ListPreference
 			android:id="@+id/font_size"
@@ -87,4 +88,5 @@
 			android:dependency="showSplash"
 			android:layout="?android:attr/preferenceLayoutChild" />
 	</PreferenceCategory>
+ -->
 </PreferenceScreen>

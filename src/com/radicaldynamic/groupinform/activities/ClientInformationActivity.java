@@ -21,6 +21,7 @@ import android.view.Window;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.radicaldynamic.gcmobile.android.preferences.PreferencesActivity;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.listeners.SynchronizeFoldersListener;
@@ -48,7 +49,8 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
     private static final String t = "ClientInformationActivity: ";
     
     private static final int MENU_ACCOUNT_MEMBERS = 0;
-    private static final int MENU_RESET_INFORM = 1;
+    private static final int MENU_PREFERENCES = 1;
+    private static final int MENU_RESET_PROFILE = 2;
     
     // Dialog constants
     private static final int CONFIRM_RESET_DIALOG = 0;
@@ -69,7 +71,7 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.about_inform);        
 
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_inform_info));
+        setTitle(getString(R.string.main_menu_message));
 
         TextView accountNumber = (TextView) findViewById(R.id.accountNumber);
         TextView accountKey = (TextView) findViewById(R.id.accountKey);
@@ -179,8 +181,9 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_ACCOUNT_MEMBERS, 0, getString(R.string.tf_account_devices)).setIcon(R.drawable.ic_menu_allfriends);
-        menu.add(0, MENU_RESET_INFORM, 0, getString(R.string.tf_reset_inform)).setIcon(R.drawable.ic_menu_close_clear_cancel).setEnabled(Collect.getInstance().getIoService().isSignedIn());
+        menu.add(0, MENU_ACCOUNT_MEMBERS, 0, getString(R.string.tf_administer)).setIcon(R.drawable.ic_menu_allfriends);
+        menu.add(0, MENU_PREFERENCES, 0, getString(R.string.tf_preferences)).setIcon(R.drawable.ic_menu_preferences);
+        menu.add(0, MENU_RESET_PROFILE, 0, getString(R.string.tf_reset_device)).setIcon(R.drawable.ic_menu_close_clear_cancel).setEnabled(Collect.getInstance().getIoService().isSignedIn());
         return true;
     }    
     
@@ -212,7 +215,11 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
             i = new Intent(this, AccountDeviceList.class);
             startActivity(i);
             break;
-        case MENU_RESET_INFORM:
+        case MENU_PREFERENCES:
+            i = new Intent(this, PreferencesActivity.class);
+            startActivity(i);            
+            break;
+        case MENU_RESET_PROFILE:
             showDialog(CONFIRM_RESET_DIALOG);
             return true;
         }

@@ -92,7 +92,7 @@ public class PreferencesActivity extends PreferenceActivity implements
 
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.general_preferences));
 
-        setupSplashPathPreference();
+//        setupSplashPathPreference();
         setupSelectedGoogleAccountPreference();
 
         updateServerUrl();
@@ -103,15 +103,16 @@ public class PreferencesActivity extends PreferenceActivity implements
         updateFormListUrl();
         updateSubmissionUrl();
 
-        updateSplashPath();
+//        updateSplashPath();
 
-        updateFontSize();
+//        updateFontSize();
         updateProtocol();
         updateSelectedGoogleAccount();
         updateGoogleCollectionEffort();
     }
 
 
+    @SuppressWarnings("unused")
     private void setupSplashPathPreference() {
         mSplashPathPreference = (PreferenceScreen) findPreference(KEY_SPLASH_PATH);
 
@@ -199,9 +200,9 @@ public class PreferencesActivity extends PreferenceActivity implements
         updateFormListUrl();
         updateSubmissionUrl();
 
-        updateSplashPath();
+//        updateSplashPath();
 
-        updateFontSize();
+//        updateFontSize();
         updateProtocol();
         updateSelectedGoogleAccount();
         updateGoogleCollectionEffort();
@@ -273,9 +274,9 @@ public class PreferencesActivity extends PreferenceActivity implements
         } else if (key.equals(KEY_PASSWORD)) {
             updatePassword();
         } else if (key.equals(KEY_SPLASH_PATH)) {
-            updateSplashPath();
+//            updateSplashPath();
         } else if (key.equals(KEY_FONT_SIZE)) {
-            updateFontSize();
+//            updateFontSize();
         }
     }
 
@@ -367,6 +368,7 @@ public class PreferencesActivity extends PreferenceActivity implements
     }
 
 
+    @SuppressWarnings("unused")
     private void updateFontSize() {
         ListPreference lp = (ListPreference) findPreference(KEY_FONT_SIZE);
         lp.setSummary(lp.getEntry());

@@ -69,7 +69,7 @@ public class AccountDeviceList extends ListActivity
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         
         setContentView(R.layout.generic_list);        
-        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_account_devices));
+        setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_administer_devices));
     }
 
     @Override

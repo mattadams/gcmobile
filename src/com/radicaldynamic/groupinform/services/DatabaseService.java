@@ -39,11 +39,14 @@ import org.json.JSONObject;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.ConditionVariable;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.radicaldynamic.gcmobile.android.preferences.PreferencesActivity;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.database.InformCouchDbConnector;
@@ -65,8 +68,10 @@ public class DatabaseService extends Service {
     public static final int REPLICATE_PUSH = 0;
     public static final int REPLICATE_PULL = 1;   
     
-    // 5 minutes (represented as seconds)
-    private static final long TIME_FIVE_MINUTES = 300;
+    // Minutes represented as seconds 
+    private static final int TIME_FIVE_MINUTES = 300;
+    private static final int TIME_TEN_MINUTES = 600;
+    
     // 24 hours (represented as milliseconds)
     private static final long TIME_24_HOURS = 86400000;
     
@@ -96,11 +101,15 @@ public class DatabaseService extends Service {
     // Hash of database-to-last cleanup timestamp (used for controlled purging databases of placeholders)
     private Map<String, Long> mDbLastCleanup = new HashMap<String, Long>();
     
+    // Hash of database-to-last replication timestamp
+    private Map<String, Long> mDbLastReplication = new HashMap<String, Long>();
+    
     private Runnable mTask = new Runnable() 
     {
         final String tt = t + "mTask: ";
         
-        public void run() {            
+        public void run() 
+        {            
             for (int i = 1; i > 0; ++i) {
                 if (mInit == false) {
                     try {
@@ -118,7 +127,7 @@ public class DatabaseService extends Service {
                 }
                 
                 // Retry connection to CouchDB every 5 minutes
-                if (mCondition.block(300 * 1000))
+                if (mCondition.block(TIME_FIVE_MINUTES * 1000))
                     break;
             }
         }
@@ -307,7 +316,7 @@ public class DatabaseService extends Service {
         // Determine if this database needs to be cleaned up
         Long lastCleanup = mDbLastCleanup.get(db);
         
-        if (lastCleanup == null || System.currentTimeMillis() / 1000 - lastCleanup > TIME_FIVE_MINUTES) {
+        if (lastCleanup == null || System.currentTimeMillis() / 1000 - lastCleanup >= TIME_TEN_MINUTES) {
             Log.i(Collect.LOGTAG, tt + "beginning cleanup for " + db);
             mDbLastCleanup.put(db, new Long(System.currentTimeMillis() / 1000));            
             removePlaceholders(new FormDefinitionRepo(getDb()).getAllPlaceholders());
@@ -330,6 +339,18 @@ public class DatabaseService extends Service {
         if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
             Log.d(Collect.LOGTAG, tt + "aborting replication: offline mode is enabled");
             return null;
+        }
+        
+        // Determine if this database needs to be replicated
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(Collect.getInstance().getBaseContext());
+        int syncInterval = settings.getInt(PreferencesActivity.KEY_SYNCHRONIZATION_INTERVAL, (int) TIME_FIVE_MINUTES);
+        
+        Long lastUpdate = mDbLastReplication.get(db);
+        
+        if (lastUpdate == null || System.currentTimeMillis() / 1000 - lastUpdate >= syncInterval) {
+            mDbLastReplication.put(db, new Long(System.currentTimeMillis() / 1000));
+        } else {
+            Log.d(Collect.LOGTAG, tt + "aborting replication: last synchronization too recent");
         }
         
         /*
@@ -382,15 +403,23 @@ public class DatabaseService extends Service {
         String deviceId = Collect.getInstance().getInformOnlineState().getDeviceId();
         String deviceKey = Collect.getInstance().getInformOnlineState().getDeviceKey();
         
+        String localServer = "http://" + mLocalHost + ":" + mLocalPort + "/db_" + db; 
+        String remoteServer = "http://" + deviceId + ":" + deviceKey + "@" + masterClusterIP + ":5984/db_" + db;
+        
+        // Should we use encrypted transfers?
+        if (settings.getBoolean(PreferencesActivity.KEY_ENCRYPT_SYNCHRONIZATION, true)) {
+            remoteServer = "https://" + deviceId + ":" + deviceKey + "@" + masterClusterIP + ":6984/db_" + db;
+        }
+        
         switch (mode) {
         case REPLICATE_PUSH:
-            source = "http://" + mLocalHost + ":" + mLocalPort + "/db_" + db; 
-            target = "https://" + deviceId + ":" + deviceKey + "@" + masterClusterIP + ":6984/db_" + db;
+            source = localServer;
+            target = remoteServer;
             break;
 
         case REPLICATE_PULL:
-            source = "https://" + deviceId + ":" + deviceKey + "@" + masterClusterIP + ":6984/db_" + db;
-            target = "http://" + mLocalHost + ":" + mLocalPort + "/db_" + db; 
+            source = remoteServer;
+            target = localServer; 
             break;
         }
 
@@ -443,7 +472,7 @@ public class DatabaseService extends Service {
             mLocalHttpClient = new StdHttpClient.Builder()
                 .host(mLocalHost)
                 .port(mLocalPort)
-                .socketTimeout(300 * 1000)
+                .socketTimeout(TIME_FIVE_MINUTES * 1000)
                 .build();
             
             mLocalDbInstance = new StdCouchDbInstance(mLocalHttpClient);
@@ -647,23 +676,30 @@ public class DatabaseService extends Service {
     {
         final String tt = t + "synchronizeLocalDBs(): ";
         
-        Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
-        Iterator<String> folderIds = folderSet.iterator();
+        // Do we use automatic synchronization?
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(Collect.getInstance().getBaseContext());
         
-        while (folderIds.hasNext()) {
-            AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());            
+        if (settings.getBoolean(PreferencesActivity.KEY_AUTOMATIC_SYNCHRONIZATION, true)) {
+            Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
+            Iterator<String> folderIds = folderSet.iterator();
             
-            if (folder.isReplicated()) {
-                Log.i(Collect.LOGTAG, tt + "about to begin scheduled replication of " + folder.getName());
+            while (folderIds.hasNext()) {
+                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());            
                 
-                try {                    
-                    replicate(folder.getId(), REPLICATE_PULL);
-                    replicate(folder.getId(), REPLICATE_PUSH);
-                } catch (Exception e) {
-                    Log.w(Collect.LOGTAG, tt + "problem replicating " + folder.getId() + ": " + e.toString());
-                    e.printStackTrace();
+                if (folder.isReplicated()) {
+                    Log.i(Collect.LOGTAG, tt + "about to begin scheduled replication of " + folder.getName());
+                    
+                    try {                    
+                        replicate(folder.getId(), REPLICATE_PULL);
+                        replicate(folder.getId(), REPLICATE_PUSH);
+                    } catch (Exception e) {
+                        Log.w(Collect.LOGTAG, tt + "problem replicating " + folder.getId() + ": " + e.toString());
+                        e.printStackTrace();
+                    }
                 }
             }
+        } else {
+            Log.d(Collect.LOGTAG, tt + "skipping (automatic synchronization disabled)");
         }
     }
 }

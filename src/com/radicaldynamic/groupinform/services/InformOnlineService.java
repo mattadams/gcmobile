@@ -327,10 +327,7 @@ public class InformOnlineService extends Service {
     private void connect(boolean forceOnline)
     {
         mConnecting = true;
-        
-        // 
-        boolean signedIn;
-        
+
         // Make sure that the user has not specifically requested that we be offline
         if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled() && forceOnline == false) {
             Log.i(Collect.LOGTAG, t + "offline mode enabled; not auto-connecting");

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceScreen
+        android:id="@+id/info"
+        android:key="info"
+        android:title="@string/main_menu_message"
+        android:summary="@string/click_to_web">
+        
+        <intent 
+                android:action="android.intent.action.VIEW"
+                android:data="http://groupcomplete.com" />
+    </PreferenceScreen>
+
+    <PreferenceCategory android:title="@string/tf_synchronization_settings">    
+        <CheckBoxPreference
+            android:key="automatic_synchronization"
+            android:defaultValue="true"
+            android:title="Automatic sync"
+            android:summaryOn="Update folders selected for offline use on a regular basis. GC Mobile must be ONLINE and an Internet connection available for auto sync to work."
+            android:summaryOff="Folders selected for offline use will only be updated when GC Mobile is toggled between ONLINE and OFFLINE modes manually." />     
+              
+        <ListPreference
+            android:key="automatic_synchronization_interval"
+            android:dependency="automatic_synchronization"            
+            android:title="Sync schedule"
+            android:summary="The sync schedule controls how often auto sync will update folders selected for offline use."
+            android:entries="@array/tf_synchronization_period_preferences"
+            android:entryValues="@array/tf_synchronization_unit_preferences"
+            android:defaultValue="300"
+            android:dialogTitle="@string/tf_choose_one" />  
+    </PreferenceCategory>    
+            
+    <PreferenceCategory android:title="@string/tf_connection_settings">
+        <CheckBoxPreference
+            android:key="encrypted_synchronization"
+            android:title="Secure synchronization"
+            android:defaultValue="true"
+            android:summaryOn="Secure sync uses strong encryption to update folders selected for offline use. It is slower than regular sync but keeps your data safe during transit."
+            android:summaryOff="Updates to folders selected for offline use will not use encryption. Enable this if your data includes confidential or personal information." />
+    </PreferenceCategory>
+</PreferenceScreen>
