@@ -466,6 +466,9 @@ public class LauncherActivity extends Activity
                 upgradeFailed = true;
             }
             
+            // Go through and remove any outdated files & directories
+            FileUtilsExtended.expireExternalCache(new File (FileUtilsExtended.EXTERNAL_CACHE));
+            
             // Create directories
             FileUtils.createFolder(FileUtilsExtended.EXTERNAL_CACHE);
             FileUtils.createFolder(FileUtilsExtended.EXTERNAL_DB);

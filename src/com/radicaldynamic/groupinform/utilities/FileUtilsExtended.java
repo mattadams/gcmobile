@@ -44,7 +44,11 @@ public final class FileUtilsExtended
     public static final int IMAGE_WIDGET_MAX_HEIGHT = 768;
     public static final int IMAGE_WIDGET_QUALITY    = 75;
 
+    // Minutes in second units
     public static final int TIME_TWO_MINUTES = 120;
+    
+    // 24 hours (represented as milliseconds)
+    private static final long TIME_24_HOURS = 86400000;
     
     /*
      * Delete files from the app cache directory on the SD card according to
@@ -89,6 +93,33 @@ public final class FileUtilsExtended
             return dir.delete();
         } else {
             return false;
+        }
+    }    
+    
+    /*
+     * Recursively go through the external cache directories & files and 
+     * remove empty directories and files older than 72 hours.
+     */
+    public static void expireExternalCache(File f)
+    {
+        final String tt = t + "expireExternalCache(): ";
+        
+        if (!f.exists()) {
+            Log.w(Collect.LOGTAG, tt + f.getAbsolutePath() + " could not be found, aborting");
+            return;
+        }
+        
+        if (f.isDirectory()) {
+            Log.v(Collect.LOGTAG, tt + "expiring old files in " + f.getAbsolutePath());
+
+            for (File c : f.listFiles()) {
+                expireExternalCache(c);
+            }
+        }
+        
+        if (f.isFile() && (System.currentTimeMillis() - f.lastModified() >= TIME_24_HOURS * 3) || f.isDirectory() && f.listFiles().length == 0) {
+            Log.v(Collect.LOGTAG, tt + f.getName() + " older than 72 hours or empty directory, removing");
+            f.delete();
         }
     }
     
