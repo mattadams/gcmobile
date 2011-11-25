@@ -75,8 +75,6 @@ public class DateTimeWidget extends QuestionWidget {
                     int max = c.getActualMaximum(Calendar.DAY_OF_MONTH);
                     if (day > max) {
                         mDatePicker.updateDate(year, month, max);
-                    } else {
-                        mDatePicker.updateDate(year, month, day);
                     }
                 }
             }
