@@ -73,6 +73,11 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
 
     public ImageWidget(Context context, FormEntryPrompt prompt) {
         super(context, prompt);
+        
+        // BEGIN custom
+        // Try and avoid out-of-memory errors if at all possible
+        System.gc();
+        // END custom
 
         mWaitingForData = false;
         mInstanceFolder =
@@ -324,18 +329,37 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
         
         // BEGIN custom
         // Resize image (full sized images are too large for the system)
+        Bitmap bmp = null;
+        
         try {                                
-            Bitmap bmp = FileUtilsExtended.getBitmapResizedToStore(f, FileUtilsExtended.IMAGE_WIDGET_MAX_WIDTH, FileUtilsExtended.IMAGE_WIDGET_MAX_HEIGHT);                
+            bmp = FileUtilsExtended.getBitmapResizedToStore(f, FileUtilsExtended.IMAGE_WIDGET_MAX_WIDTH, FileUtilsExtended.IMAGE_WIDGET_MAX_HEIGHT);                
             FileOutputStream out = new FileOutputStream(new File(binarypath));
             bmp.compress(Bitmap.CompressFormat.JPEG, FileUtilsExtended.IMAGE_WIDGET_QUALITY, out);
-            out.close();
             bmp.recycle();
+            out.close();            
         } catch (FileNotFoundException e) {
             Log.e(Collect.LOGTAG, t + "failed to find file " + e.toString());  
             e.printStackTrace();
         } catch (IOException e) {
             Log.e(Collect.LOGTAG, t + "failed to close output stream " + e.toString());
             e.printStackTrace();
+        } catch (OutOfMemoryError e) {
+            Log.e(Collect.LOGTAG, t + "out of memory while resizing image " + e.toString());
+            e.printStackTrace();
+            
+            // Cleanup
+            if (bmp == null)
+                System.gc();
+            else
+                bmp.recycle();
+            
+            deleteMedia();
+            
+            if (mImageView != null)
+                mImageView.setImageBitmap(null);
+            
+            mErrorTextView.setText(getContext().getString(R.string.tf_unable_to_resize_image_out_of_memory));
+            mErrorTextView.setVisibility(View.VISIBLE);            
         }
         // END custom
 
