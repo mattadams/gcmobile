@@ -340,19 +340,7 @@ public class DatabaseService extends Service {
             Log.d(Collect.LOGTAG, tt + "aborting replication: offline mode is enabled");
             return null;
         }
-        
-        // Determine if this database needs to be replicated
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(Collect.getInstance().getBaseContext());
-        int syncInterval = settings.getInt(PreferencesActivity.KEY_SYNCHRONIZATION_INTERVAL, (int) TIME_FIVE_MINUTES);
-        
-        Long lastUpdate = mDbLastReplication.get(db);
-        
-        if (lastUpdate == null || System.currentTimeMillis() / 1000 - lastUpdate >= syncInterval) {
-            mDbLastReplication.put(db, new Long(System.currentTimeMillis() / 1000));
-        } else {
-            Log.d(Collect.LOGTAG, tt + "aborting replication: last synchronization too recent");
-        }
-        
+
         /*
          * Lookup master cluster by IP.  Do this instead of relying on Erlang's internal resolver 
          * (and thus Google's public DNS).  Our builds of Erlang for Android do not yet use 
@@ -407,6 +395,8 @@ public class DatabaseService extends Service {
         String remoteServer = "http://" + deviceId + ":" + deviceKey + "@" + masterClusterIP + ":5984/db_" + db;
         
         // Should we use encrypted transfers?
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(Collect.getInstance().getBaseContext());
+        
         if (settings.getBoolean(PreferencesActivity.KEY_ENCRYPT_SYNCHRONIZATION, true)) {
             remoteServer = "https://" + deviceId + ":" + deviceKey + "@" + masterClusterIP + ":6984/db_" + db;
         }
@@ -679,22 +669,34 @@ public class DatabaseService extends Service {
         // Do we use automatic synchronization?
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(Collect.getInstance().getBaseContext());
         
+        // How often should we automatically synchronize databases?
+        String syncInterval = settings.getString(PreferencesActivity.KEY_SYNCHRONIZATION_INTERVAL, Integer.toString(TIME_FIVE_MINUTES));
+        
         if (settings.getBoolean(PreferencesActivity.KEY_AUTOMATIC_SYNCHRONIZATION, true)) {
             Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
             Iterator<String> folderIds = folderSet.iterator();
             
-            while (folderIds.hasNext()) {
-                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());            
+            while (folderIds.hasNext()) {        
+                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());    
                 
                 if (folder.isReplicated()) {
-                    Log.i(Collect.LOGTAG, tt + "about to begin scheduled replication of " + folder.getName());
+                    // Determine if this database needs to be replicated
+                    Long lastUpdate = mDbLastReplication.get(folder.getId());
                     
-                    try {                    
-                        replicate(folder.getId(), REPLICATE_PULL);
-                        replicate(folder.getId(), REPLICATE_PUSH);
-                    } catch (Exception e) {
-                        Log.w(Collect.LOGTAG, tt + "problem replicating " + folder.getId() + ": " + e.toString());
-                        e.printStackTrace();
+                    if (lastUpdate == null || System.currentTimeMillis() / 1000 - lastUpdate >= Integer.parseInt(syncInterval)) {
+                        mDbLastReplication.put(folder.getId(), new Long(System.currentTimeMillis() / 1000));
+                        
+                        Log.i(Collect.LOGTAG, tt + "about to begin automatic replication of " + folder.getName());
+                        
+                        try {                    
+                            replicate(folder.getId(), REPLICATE_PULL);
+                            replicate(folder.getId(), REPLICATE_PUSH);
+                        } catch (Exception e) {
+                            Log.w(Collect.LOGTAG, tt + "problem replicating " + folder.getId() + ": " + e.toString());
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Log.d(Collect.LOGTAG, tt + "skipping automatic replication of " + folder.getName() + ": last synchronization too recent");
                     }
                 }
             }
