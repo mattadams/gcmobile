@@ -1843,49 +1843,34 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
      */
     private void loadScreen()
     {
-        // If we can't contact one of the services there's no point in running - restart */
-        if (Collect.getInstance() == null || Collect.getInstance().getIoService() == null || Collect.getInstance().getDbService() == null) {            
-            Intent exit = new Intent();
-            exit.putExtra("exit_app", true);
-            setResult(RESULT_OK, exit);
-            finish();            
+        String folderName = "?";
+        
+        try {
+            // Reflect the online/offline status (may be disabled thanks to toggling state)
+            Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
+            b1.setEnabled(true);            
+
+            if (Collect.getInstance().getIoService().isSignedIn())
+                b1.setText(getText(R.string.tf_inform_state_online));
+            else
+                b1.setText(getText(R.string.tf_inform_state_offline));
+
+            // Hide "nothing to display" message
+            TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
+            nothingToDisplay.setVisibility(View.INVISIBLE);
             
-            Intent i = getBaseContext().getPackageManager().getLaunchIntentForPackage(getBaseContext().getPackageName());
-            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(i);
-        }
-        
-        // Reflect the online/offline status (may be disabled thanks to toggling state)
-        Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
-        b1.setEnabled(true);
-
-        if (Collect.getInstance().getIoService().isSignedIn())
-            b1.setText(getText(R.string.tf_inform_state_online));
-        else
-            b1.setText(getText(R.string.tf_inform_state_offline));
-
-        // Re-enable (may be disabled thanks to toggling state)
-        Button b2 = (Button) findViewById(R.id.folderTitleButton);
-        b2.setEnabled(true);
-
-        // Spinner must reflect results of refresh view below
-        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
-        
-        // Hide "nothing to display" message
-        TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
-        nothingToDisplay.setVisibility(View.INVISIBLE);
-        
-        // Restore selected database (but only once)
-        if (mSelectedDatabase != null) {
-            Log.v(Collect.LOGTAG, t + "restoring selected database " + mSelectedDatabase);
-            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedDatabase);
-            mSelectedDatabase = null;
-        }
-        
-        String folderName = getSelectedFolderName();
-        
-        try {         
-            // Display the currently selected folder
+            // Restore selected database (but only once)
+            if (mSelectedDatabase != null) {
+                Log.v(Collect.LOGTAG, t + "restoring selected database " + mSelectedDatabase);
+                Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedDatabase);
+                mSelectedDatabase = null;
+            }
+            
+            folderName = getSelectedFolderName();        
+            
+            // Re-enable and display currently selected folder (may be disabled thanks to toggling state) 
+            Button b2 = (Button) findViewById(R.id.folderTitleButton);
+            b2.setEnabled(true);
             b2.setText(folderName);
 
             // Open selected database
@@ -1893,6 +1878,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         
             mRefreshViewTask = new RefreshViewTask();
 
+            // Spinner must reflect results of refresh view below
+            Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
+            
             switch (s1.getSelectedItemPosition()) {
             case 0:
                 // Show all forms
@@ -1913,6 +1901,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                 mRefreshViewTask.execute(FormInstance.Status.any);
                 break;
             }
+            
+            registerForContextMenu(getListView());
         } catch (DatabaseService.DbUnavailableDueToMetadataException e) {            
             mDialogMessage = getString(R.string.tf_unable_to_open_folder_missing_metadata);
             showDialog(DIALOG_FOLDER_UNAVAILABLE);
@@ -1921,10 +1911,19 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             showDialog(DIALOG_FOLDER_UNAVAILABLE);
         } catch (DatabaseService.DbUnavailableException e) {
             mDialogMessage = getString(R.string.tf_unable_to_open_folder, folderName);
-            showDialog(DIALOG_FOLDER_UNAVAILABLE);
+            showDialog(DIALOG_FOLDER_UNAVAILABLE);  
+        } catch (NullPointerException e) {
+            // Something failed to return -- restart app
+            // FIXME: remove this workaround -- figure out why it happens in the first place
+            Intent exit = new Intent();
+            exit.putExtra("exit_app", true);
+            setResult(RESULT_OK, exit);
+            finish();            
+            
+            Intent i = getBaseContext().getPackageManager().getLaunchIntentForPackage(getBaseContext().getPackageName());
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(i);
         }
-        
-        registerForContextMenu(getListView());
     }
     
     /*
