@@ -71,15 +71,15 @@ public class DefinitionImportTask extends AsyncTask<String, Void, Void>
             mImportSuccessful = true;
         } catch (FileNotFoundException e) {
             mImportMessage = "The file " + arg0[0] + " could not be found on the external storage.";
-            Log.w(Collect.LOGTAG, t + e.toString());
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + e.toString());
             e.printStackTrace();
         } catch (IOException e) {
             mImportMessage = e.toString();
-            Log.e(Collect.LOGTAG, t + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + e.toString());
             e.printStackTrace();
         } catch (Exception e) {
             mImportMessage = e.toString();
-            Log.e(Collect.LOGTAG, t + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + e.toString());
             e.printStackTrace();
         }
         

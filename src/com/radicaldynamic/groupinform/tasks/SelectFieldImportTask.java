@@ -72,7 +72,7 @@ public class SelectFieldImportTask extends AsyncTask<Void, Void, ArrayList<List<
             
             mImportSuccessful = true;
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "error while reading CSV file for import: " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "error while reading CSV file for import: " + e.toString());
             e.printStackTrace();
         }
 

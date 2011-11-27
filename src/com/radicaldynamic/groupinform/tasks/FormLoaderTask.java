@@ -136,7 +136,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         
         // Retrieve form definition from database
         try {
-            Log.d(Collect.LOGTAG, t + ": retrieving form definition document " + formId);
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + ": retrieving form definition document " + formId);
             
             FileUtils.createFolder(formDefinitionFile.getParent());
             FileUtils.createFolder(formDefinitionFile.getParent() + File.separator + FileUtilsExtended.MEDIA_DIR); 
@@ -167,11 +167,11 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 ais.close();
             }
         } catch (DocumentNotFoundException e) {
-            Log.w(Collect.LOGTAG, t + ": " + e.toString());
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + ": " + e.toString());
             mErrorMsg = "The form that you requested could not be found.  It may have been removed by one of your team members.\n\nSelect OK to refresh the screen and try again.";
             return null;
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form definition: " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form definition: " + e.toString());
             mErrorMsg = e.getMessage();
             e.printStackTrace();
             return null;
@@ -246,7 +246,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
                 try {
                     String instanceId = FormEntryActivity.mInstancePath.substring(FormEntryActivity.mInstancePath.lastIndexOf("/") + 1, FormEntryActivity.mInstancePath.lastIndexOf("."));
 
-                    Log.d(Collect.LOGTAG, t + ": retrieving form instance document " + instanceId);
+                    if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + ": retrieving form instance document " + instanceId);
 
                     String instanceFolder = FormEntryActivity.mInstancePath.substring(0, FormEntryActivity.mInstancePath.lastIndexOf("/")); 
                     FileUtils.createFolder(instanceFolder);
@@ -278,7 +278,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
 
                     importData(FormEntryActivity.mInstancePath, fec);
                 } catch (Exception e) {
-                    Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form instance: " + e.toString());
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": unexpected exception while retrieving form instance: " + e.toString());
                     mErrorMsg = e.getMessage();
                     e.printStackTrace();            
                 }

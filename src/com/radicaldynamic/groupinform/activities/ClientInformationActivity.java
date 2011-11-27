@@ -290,11 +290,11 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
                     success = true;
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
+	        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
                 e.printStackTrace();
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
                 e.printStackTrace();
             }
             

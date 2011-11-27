@@ -139,7 +139,7 @@ public class InformOnlineService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        Log.d(Collect.LOGTAG, t + "received start ID " + startId + ": " + intent);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "received start ID " + startId + ": " + intent);
         return START_STICKY;
     }    
     
@@ -147,11 +147,11 @@ public class InformOnlineService extends Service {
     public boolean goOffline()
     {
         if (checkout()) {
-            Log.i(Collect.LOGTAG, t + "went offline at users request");            
+            if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "went offline at users request");            
             Collect.getInstance().getInformOnlineState().setOfflineModeEnabled(true);
             return true;
         } else {
-            Log.w(Collect.LOGTAG, t + "unable to go offline at users request");
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to go offline at users request");
             return false;
         }
     }
@@ -164,11 +164,11 @@ public class InformOnlineService extends Service {
             connect(true);
         
         if (isSignedIn()) {
-            Log.i(Collect.LOGTAG, t + "went online at users request");
+            if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "went online at users request");
             Collect.getInstance().getInformOnlineState().setOfflineModeEnabled(false);
             return true;
         } else {
-            Log.w(Collect.LOGTAG, t + "unable to go online at users request");
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to go online at users request");
             return false;
         }
     }
@@ -211,7 +211,7 @@ public class InformOnlineService extends Service {
     // Bring the service back to the defaults it would have had when originally started
     public void reinitializeService()
     {
-        Log.d(Collect.LOGTAG, t + "service reinitialized");
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "service reinitialized");
         
         mInitialized
         = mServicePingSuccessful
@@ -248,25 +248,25 @@ public class InformOnlineService extends Service {
             String result = checkin.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
             
             if (result.equals(InformOnlineState.OK)) {
-                Log.i(Collect.LOGTAG, t + "successful checkin");
+                if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "successful checkin");
                 Collect.getInstance().getInformOnlineState().setExpired(false);
             } else if (result.equals(InformOnlineState.EXPIRED)) {
-                Log.i(Collect.LOGTAG, t + "associated order is expired; marking device as expired");
+                if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "associated order is expired; marking device as expired");
                 Collect.getInstance().getInformOnlineState().setExpired(true);
             } else if (result.equals(InformOnlineState.FAILURE)) {
-                Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
                 registered = false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing postResult");
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");
             }                
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");
             e.printStackTrace();            
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);
             e.printStackTrace();
         }
 
@@ -297,19 +297,19 @@ public class InformOnlineService extends Service {
             String result = checkout.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
             
             if (result.equals(InformOnlineState.OK)) {
-                Log.i(Collect.LOGTAG, t + "said goodbye to Inform Online");
+                if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "said goodbye to Group Complete");
             } else { 
-                Log.i(Collect.LOGTAG, t + "device checkout unnecessary");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "device checkout unnecessary");
             }
             
             saidGoodbye = true;
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
             e.printStackTrace();
         } finally {
             // Running a checkout ALWAYS "signs us out"
@@ -330,7 +330,7 @@ public class InformOnlineService extends Service {
 
         // Make sure that the user has not specifically requested that we be offline
         if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled() && forceOnline == false) {
-            Log.i(Collect.LOGTAG, t + "offline mode enabled; not auto-connecting");
+            if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "offline mode enabled; not auto-connecting");
             
             /* 
              * This is not a complete initialization (in the sense that we attempted connection) but we need 
@@ -342,7 +342,7 @@ public class InformOnlineService extends Service {
             return;
         }
         
-        Log.d(Collect.LOGTAG, t + "pinging " + Collect.getInstance().getInformOnlineState().getServerUrl());
+        if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "pinging " + Collect.getInstance().getInformOnlineState().getServerUrl());
         
         // Try to ping the service to see if it is "up" (and determine whether we are registered)
         String pingUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/ping";
@@ -356,14 +356,14 @@ public class InformOnlineService extends Service {
 
             // Online and registered (checked in)
             if (result.equals(InformOnlineState.OK)) {
-                Log.i(Collect.LOGTAG, t + "ping successful (we are connected and checked in)");
+                if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "ping successful (we are connected and checked in)");
                 mServicePingSuccessful = mSignedIn = true;
             } else if (result.equals(InformOnlineState.FAILURE)) {
-                Log.w(Collect.LOGTAG, t + "ping successful but not signed in (will attempt checkin)");
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "ping successful but not signed in (will attempt checkin)");
                 mServicePingSuccessful = true;
                 
                 if (Collect.getInstance().getInformOnlineState().hasRegistration() && checkin()) {
-                    Log.i(Collect.LOGTAG, t + "checkin successful (we are connected)");
+                    if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "checkin successful (we are connected)");
                     
                     // Fetch regardless of the fact that we're not yet marked as being signed in
                     AccountDeviceList.fetchDeviceList(true);                
@@ -371,22 +371,22 @@ public class InformOnlineService extends Service {
                     
                     mSignedIn = true;
                 } else {
-                    Log.w(Collect.LOGTAG, t + "checkin failed (registration invalid)");
+                    if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "checkin failed (registration invalid)");
                     mSignedIn = false;
                 }
             } else {
                 // Assume offline
-                Log.w(Collect.LOGTAG, t + "ping failed (we are offline)");
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "ping failed (we are offline)");
                 mSignedIn = false;
             }
         } catch (NullPointerException e) {
             // This usually indicates a communication error and will send us into an offline state
-            Log.e(Collect.LOGTAG, t + "ping error while communicating with service (we are offline)");
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "ping error while communicating with service (we are offline)");
             e.printStackTrace();
             mServicePingSuccessful = mSignedIn = false;            
         } catch (JSONException e) {
             // Parse errors (malformed result) send us into an offline state
-            Log.e(Collect.LOGTAG, t + "ping error while parsing getResult " + getResult + " (we are offline)");
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "ping error while parsing getResult " + getResult + " (we are offline)");
             e.printStackTrace();
             mServicePingSuccessful = mSignedIn = false;
         } finally {
@@ -409,7 +409,7 @@ public class InformOnlineService extends Service {
         File sessionCache = new File(getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE);
         
         if (sessionCache.exists()) {
-            Log.d(Collect.LOGTAG, t + "restoring cached session");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "restoring cached session");
             
             try {
                 InformOnlineSession session = new InformOnlineSession();
@@ -435,7 +435,7 @@ public class InformOnlineService extends Service {
                     Collect.getInstance().getInformOnlineState().getSession().addCookie(bcc);
                 }
             } catch (Exception e) {
-                Log.w(Collect.LOGTAG, t + "problem restoring cached session " + e.toString());
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "problem restoring cached session " + e.toString());
                 e.printStackTrace();
                 
                 // Don't leave a broken file hanging
@@ -445,7 +445,7 @@ public class InformOnlineService extends Service {
                 Collect.getInstance().getInformOnlineState().setSession(null);
             }
         } else {
-            Log.d(Collect.LOGTAG, t + "no session to restore");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "no session to restore");
         }
     }
     
@@ -456,7 +456,7 @@ public class InformOnlineService extends Service {
     {
         // Attempt to serialize the session for later use
         if (Collect.getInstance().getInformOnlineState().getSession() instanceof CookieStore) {
-            Log.d(Collect.LOGTAG, t + "serializing session");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "serializing session");
             
             try {
                 InformOnlineSession session = new InformOnlineSession();
@@ -481,14 +481,14 @@ public class InformOnlineService extends Service {
                 out.close();
                 fos.close();
             } catch (Exception e) {
-                Log.w(Collect.LOGTAG, t + "problem serializing session " + e.toString());
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "problem serializing session " + e.toString());
                 e.printStackTrace();
                 
                 // Make sure that we don't leave a broken file hanging
                 new File(getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE).delete();
             }
         } else {
-            Log.d(Collect.LOGTAG, t + "no session to serialize");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "no session to serialize");
         }
     }
 }

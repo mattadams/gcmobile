@@ -510,6 +510,7 @@
 	<string name="tf_unable_to_copy_duplicate_dialog_msg">The folder \"%1$s\" already contains a form named \"%2$s.\"\n\nPlease choose another name.</string>
 	<string name="tf_unable_to_edit_folder_not_owner_title">Folder Owner Only</string>
 	<string name="tf_unable_to_edit_folder_not_owner_msg">Only the owner of a folder may make changes to it.\n\nPlease contact the owner of this folder if you think that changes are in order.</string>
+    <string name="tf_unable_to_edit_unknown_field_type">Cannot edit unsupported field type!</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog">Check Export Options</string>
 	<string name="tf_unable_to_export_data_missing_options_dialog_msg">At least one record type and one export destination must be selected for export.</string>
 	<string name="tf_unable_to_export_send_dependency">Sending Requires ZIP</string>
@@ -542,6 +543,7 @@
 	<string name="tf_unable_to_reset_self">This screen cannot be used to reset your own profile.  If you want to do this, please use\n\nAbout GC >\nReset Device.</string>
     <string name="tf_unable_to_resize_image_out_of_memory">The picture that you took or selected was too large for GC Mobile to import.\n\nIf you are taking a picture using your mobile device\'s camera try reducing the picture size before taking another picture.</string>
 	<string name="tf_unable_to_save_empty_translation">Please provide a translation</string>
+    <string name="tf_unable_to_save_unknown_field_type">Cannot save field: something went wrong</string>
     <string name="tf_unable_to_send_export">Cannot Send Export</string>
     <string name="tf_unable_to_send_export_msg">Before you can send exported data you must configure an email client (try the GMail or Email app) or enable Bluetooth on your mobile device.</string>
 	<string name="tf_unable_to_update_folder">Unable to update %s</string>

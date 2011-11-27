@@ -133,7 +133,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
             exportXmlFile(payload, FormEntryActivity.mInstancePath);
 
         } catch (IOException e) {
-            Log.e(t, "Error creating serialized payload");
+            if (Collect.Log.ERROR) Log.e(t, "Error creating serialized payload");
             e.printStackTrace();
             return false;
         }
@@ -278,7 +278,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                     Log.d(Collect.LOGTAG, t + ": removing unused attachment " + attachmentId);
                     revision = Collect.getInstance().getDbService().getDb().deleteAttachment(docId, revision, attachmentId);
                 } catch (Exception e) {
-                    Log.e(Collect.LOGTAG, t + ": unexpected exception while removing unused attachment " + attachmentId);
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": unexpected exception while removing unused attachment " + attachmentId);
                     e.printStackTrace();
                 }
             }
@@ -286,7 +286,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
             // Make sure that we have the most current instance to return to FormEntryActivity
             mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, docId);
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + ": unexpected exception while attaching files to instance document " + docId);
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": unexpected exception while attaching files to instance document " + docId);
             e.printStackTrace();
 
             /*
@@ -301,7 +301,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, Integer> {
                     mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, docId);
                 }
             } catch (Exception e1) {
-                Log.e(Collect.LOGTAG, t + ": failed last ditch effort to tidy after save oops");
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": failed last ditch effort to tidy after save oops");
                 e.printStackTrace();
             }
 

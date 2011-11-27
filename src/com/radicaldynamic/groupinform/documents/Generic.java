@@ -109,7 +109,7 @@ public class Generic extends CouchDbDocument
         try {
             calendar.setTime(sdf.parse(dateCreated));
         } catch (ParseException e1) {
-            Log.e(Collect.LOGTAG, t + "unable to parse dateCreated, returning a valid date anyway: " + e1.toString());            
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to parse dateCreated, returning a valid date anyway: " + e1.toString());            
         }
         
         return calendar;

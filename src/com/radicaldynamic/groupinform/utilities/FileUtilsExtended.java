@@ -63,13 +63,13 @@ public final class FileUtilsExtended
         String[] fileNames = cacheDir.list();
     
         for (String f : fileNames) {
-            Log.v(Collect.LOGTAG, tt + "evaluating " + f + " for removal");
+            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "evaluating " + f + " for removal");
     
             if (Pattern.matches("^" + id + "[.].*", f)) {
                 if (new File(EXTERNAL_CACHE, f).delete()) {
-                    Log.d(Collect.LOGTAG, tt + "removed " + f);
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "removed " + f);
                 } else {
-                    Log.e(Collect.LOGTAG, tt + "unable to remove " + f);
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unable to remove " + f);
                 }
             }
         }
@@ -86,7 +86,7 @@ public final class FileUtilsExtended
                 File[] files = dir.listFiles();
                 for (File file : files) {
                     if (!file.delete()) {
-                        Log.i(t, "Failed to delete " + file);
+                        if (Collect.Log.ERROR) Log.e(t, "Failed to delete " + file);
                     }
                 }
             }
@@ -105,12 +105,12 @@ public final class FileUtilsExtended
         final String tt = t + "expireExternalCache(): ";
         
         if (!f.exists()) {
-            Log.w(Collect.LOGTAG, tt + f.getAbsolutePath() + " could not be found, aborting");
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + f.getAbsolutePath() + " could not be found, aborting");
             return;
         }
         
         if (f.isDirectory()) {
-            Log.v(Collect.LOGTAG, tt + "expiring old files in " + f.getAbsolutePath());
+            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "expiring old files in " + f.getAbsolutePath());
 
             for (File c : f.listFiles()) {
                 expireExternalCache(c);
@@ -118,7 +118,7 @@ public final class FileUtilsExtended
         }
         
         if (f.isFile() && (System.currentTimeMillis() - f.lastModified() >= TIME_24_HOURS * 3) || f.isDirectory() && f.listFiles().length == 0) {
-            Log.v(Collect.LOGTAG, tt + f.getName() + " older than 72 hours or empty directory, removing");
+            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + f.getName() + " older than 72 hours or empty directory, removing");
             f.delete();
         }
     }
@@ -150,7 +150,7 @@ public final class FileUtilsExtended
         newWidth = Math.round(o.outWidth * scaleWidth);
         newHeight = Math.round(o.outHeight * scaleHeight);
     
-        Log.i(t, "Image should be " + maxWidth + "x" + maxHeight 
+        if (Collect.Log.DEBUG) Log.d(t, "Image should be " + maxWidth + "x" + maxHeight 
                 + ".  Image has been scaled to "
                 + newWidth + "x" + newHeight);
     

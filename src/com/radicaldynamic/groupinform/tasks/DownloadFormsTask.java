@@ -189,7 +189,7 @@ public class DownloadFormsTask extends
                     String fileName = f.getName();
                     String attachmentName = fileName;
                     
-                    Log.v(Collect.LOGTAG, t + ": attaching " + fileName + " to " + fDoc.getId());
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + ": attaching " + fileName + " to " + fDoc.getId());
 
                     if (fileName.equals(dl.getName()))
                         attachmentName = "xml";

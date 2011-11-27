@@ -97,7 +97,7 @@ public class FormReader
             
             // Just in case the form name did not have anything useful in it with which to generate a sane instance root
             if (instanceRoot.length() == 0) {
-                Log.w(Collect.LOGTAG, t + "unable to construct instance root from form getName() of " + formName);
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to construct instance root from form getName() of " + formName);
                 instanceRoot = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
             }
             
@@ -113,20 +113,21 @@ public class FormReader
         try {
             mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute(XForm.Attribute.ID);
         } catch (XMLDocumentException e) {
-            Log.w(Collect.LOGTAG, t + e.toString());            
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + e.toString());            
 
             try {
                 // It's possible that the ID attribute doesn't exist -- if this is the case, try and use the old-style XMLNS attribute
                 mInstanceRootId = mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild().getAttribute(XForm.Attribute.XML_NAMESPACE);
             } catch (XMLDocumentException e1) {
-                Log.e(Collect.LOGTAG, t + e1.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + e1.toString());
+                e1.printStackTrace();
                 throw new Exception("Unable to find id or xmlns attribute for instance.\n\nPlease contact our support team with this message at support@groupcomplete.com");
             }
         }        
         
-        Log.v(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
-        Log.v(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
-        Log.v(Collect.LOGTAG, t + "instance root ID: " + mInstanceRootId);
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "default prefix for form: " + mDefaultPrefix);
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "instance root element name: " + mInstanceRoot);
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "instance root ID: " + mInstanceRootId);
         
         parseForm();
 
@@ -157,7 +158,7 @@ public class FormReader
     public String getInstanceRootId()
     {        
         if (mInstanceRootId == null || mInstanceRootId.length() == 0) {
-            Log.w(Collect.LOGTAG, t + "missing instance root ID attribute, generating random string");
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "missing instance root ID attribute, generating random string");
             mInstanceRootId = UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
         }
         
@@ -175,19 +176,19 @@ public class FormReader
     private void parseForm() throws Exception
     {
         if (mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix).hasTag("%1$s:itext", mDefaultPrefix)) {
-            Log.d(Collect.LOGTAG, t + "parsing itext form translations...");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing itext form translations...");
             parseFormTranslations(mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:itext", mDefaultPrefix));
         } else {
-            Log.d(Collect.LOGTAG, t + "no form translations to parse");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "no form translations to parse");
         }
 
-        Log.d(Collect.LOGTAG, t + "parsing form binds...");
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing form binds...");
         parseFormBinds(mForm.gotoRoot().gotoTag("h:head/%1$s:model", mDefaultPrefix));
 
-        Log.d(Collect.LOGTAG, t + "parsing form body...");
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing form body...");
         parseFormBody(mForm.gotoRoot().gotoTag("h:body"));
         
-        Log.d(Collect.LOGTAG, t + "parsing form instance...");
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing form instance...");
         parseFormInstance(mForm.gotoRoot().gotoTag("h:head/%1$s:model/%1$s:instance", mDefaultPrefix).gotoChild(), "/" + mInstanceRoot);
     }
     
@@ -198,7 +199,7 @@ public class FormReader
     {       
         String ctl = tag.getCurrentTagLocation();
 
-        Log.v(Collect.LOGTAG, t + "visiting <" + tag.getCurrentTagName() + "> at " + ctl);
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "visiting <" + tag.getCurrentTagName() + "> at " + ctl);
         
         // Is the tag name a field type that we understand?
         if (mFieldList.contains(tag.getCurrentTagName())) {
@@ -219,7 +220,7 @@ public class FormReader
                 Field p = mFlatFieldIndex.get(ptl);
 
                 if (p == null) {
-                    Log.e(Collect.LOGTAG, t + "could not find parent!");
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "could not find parent!");
                     throw new Exception("Could not find parent tag at " + ptl + ".\n\nPlease contact our support team with this message at support@groupcomplete.com");
                 } else {
                     f = new Field(tag, mBinds, mInstanceRoot, p);
@@ -233,7 +234,7 @@ public class FormReader
             Field p = mFlatFieldIndex.get(ptl);
 
             if (p == null) {
-                Log.e(Collect.LOGTAG, t + "could not find parent!");
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "could not find parent!");
                 throw new Exception("Could not find parent tag at " + ptl + ".\n\nPlease contact our support team with this message at support@groupcomplete.com");
             }
 
@@ -277,7 +278,7 @@ public class FormReader
     private void parseFormTranslations(XMLTag tag)
     {
         if (tag.getCurrentTagName().equals("translation")) {
-            Log.v(Collect.LOGTAG, t + "adding translations for " + tag.getAttribute(XForm.Attribute.LANGUAGE));
+            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "adding translations for " + tag.getAttribute(XForm.Attribute.LANGUAGE));
             Translation t = new Translation(tag.getAttribute(XForm.Attribute.LANGUAGE));
             
             // The first translation to be parsed is considered the default/fallback translation for the form
@@ -286,10 +287,10 @@ public class FormReader
                 
             mTranslations.add(t);
         } else if (tag.getCurrentTagName().equals("text")) {
-            Log.v(Collect.LOGTAG, t + "adding translation ID " + tag.getAttribute(XForm.Attribute.ID));
+            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "adding translation ID " + tag.getAttribute(XForm.Attribute.ID));
             mTranslations.get(mTranslations.size() - 1).getTexts().add(new Translation(tag.getAttribute(XForm.Attribute.ID), null));
         } else if (tag.getCurrentTagName().equals("value")) {
-            Log.v(Collect.LOGTAG, t + "adding translation: " + tag.getInnerText());
+            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "adding translation: " + tag.getInnerText());
             mTranslations
                 .get(mTranslations.size() - 1).getTexts()
                 .get(mTranslations.get(mTranslations.size() - 1).getTexts().size() - 1)
@@ -370,7 +371,7 @@ public class FormReader
             it = mFields.iterator();
         } else { 
             if (field.hasXPath() && field.getXPath().equals(instance.getXPath())) {
-                Log.v(Collect.LOGTAG, t + "instance matched with field object via " + instance.getXPath());
+                if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "instance matched with field object via " + instance.getXPath());
                 field.setInstance(instance);
                 field.getInstance().setField(field);
                 return true;

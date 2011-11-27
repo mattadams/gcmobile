@@ -234,7 +234,7 @@ public class DataExportActivity extends Activity implements DataExportListener
                 try {
                     mFormDefinition = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, id);
                 } catch (Exception e ){
-                    Log.e(Collect.LOGTAG, t + "unexpected exception while retrieving form definition document: " + e.toString());
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unexpected exception while retrieving form definition document: " + e.toString());
                     e.printStackTrace();
 
                     showDialog(DIALOG_DEFINITION_UNAVAILABLE);
@@ -371,7 +371,7 @@ public class DataExportActivity extends Activity implements DataExportListener
             builder.setNeutralButton(getString(R.string.tf_send), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {                    
                     String attachment = "file://" + data.getString(DataExportListener.KEY_EMAIL_ATTACHMENT);
-                    Log.d(Collect.LOGTAG, tt + "Path to exported attachment is " + attachment);
+                    if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "Path to exported attachment is " + attachment);
                     
                     try {
                         Intent i = new Intent(Intent.ACTION_SEND);

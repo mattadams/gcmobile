@@ -273,17 +273,17 @@ public class AccountFolderActivity extends Activity
                     finish();
                 } else { 
                     // Something bad happened
-                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }                
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }
@@ -315,7 +315,7 @@ public class AccountFolderActivity extends Activity
             JSONObject update;
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
                 update = (JSONObject) new JSONTokener(getResult).nextValue();
                 
                 String result = update.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
@@ -331,21 +331,20 @@ public class AccountFolderActivity extends Activity
                     finish();
                 } else if (result.equals(InformOnlineState.FAILURE)) {
                     // There is only one possible failure right now (the user tried to remove their default DB)
-                    Log.w(Collect.LOGTAG, t + "removal of default database denied");
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_defaultdb), Toast.LENGTH_LONG).show();
                 } else {
                     // Something bad happened
-                    Log.e(Collect.LOGTAG, t + "system error while processing getResult");                   
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing getResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }                
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");               
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }

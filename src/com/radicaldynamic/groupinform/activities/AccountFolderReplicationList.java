@@ -159,7 +159,7 @@ public class AccountFolderReplicationList extends ListActivity
             for (int i = 0; i < checkedItemPositions.size(); i++) {
                 if (checkedItemPositions.valueAt(i)) {
                     String databaseId = ((AccountFolder) mListView.getItemAtPosition(i)).getId();                    
-                    Log.v(Collect.LOGTAG, t + "selected database " + databaseId + " for replication");                    
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "selected database " + databaseId + " for replication");                    
                     databasesToReplicateById.add(databaseId);
                 }
             }
@@ -202,17 +202,17 @@ public class AccountFolderReplicationList extends ListActivity
                     finish();
                 } else {
                     // Something bad happened
-                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }                
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }

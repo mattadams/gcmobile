@@ -150,7 +150,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 FormInstance instance = mExportList.get(i);
                 String instancePath = exportPath + File.separator + instance.getId() + ".xml";
                 
-                Log.v(Collect.LOGTAG, tt + "processing " + instance.getId() + " for export");
+                if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "processing " + instance.getId() + " for export");
                 
                 int idx = i + 1;                
                 publishProgress("Add record " + idx + "/" + mExportList.size());
@@ -158,7 +158,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
                 
                 if (attachments == null) {
-                    Log.w(Collect.LOGTAG, t + "skipping attachment download for " + instance.getId() + ": no attachments!");
+                    if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "skipping attachment download for " + instance.getId() + ": no attachments!");
                     continue;
                 }
 
@@ -245,10 +245,10 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 String zip = Environment.getExternalStorageDirectory() + File.separator + prefix + ".zip";
                 ZipArchiveOutputStream os = new ZipArchiveOutputStream(new File(zip));
                 
-                Log.d(Collect.LOGTAG, tt + "creating zip file " + zip);
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "creating zip file " + zip);
                 
                 for (File f : new File(exportPath).listFiles()) {
-                    Log.v(Collect.LOGTAG, tt + "adding " + f.getName() + " to zip file");
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "adding " + f.getName() + " to zip file");
                     
                     os.putArchiveEntry(os.createArchiveEntry(f, f.getName()));
                     
@@ -293,7 +293,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 }
             }
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "problem retreiving form template: " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "problem retreiving form template: " + e.toString());
             e.printStackTrace();
             
             mErrorMsg = "An error occured while exporting your data. Please contact our support team at support@groupcomplete.com with this error message:\n\n"
@@ -369,7 +369,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                     }
                 }
                 
-                Log.v(Collect.LOGTAG, tt + "add export column index " + i.getXPath() + " with column header " + xpathPrefix + i.getName());
+                if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "add export column index " + i.getXPath() + " with column header " + xpathPrefix + i.getName());
                 mExportHeaders.put(i.getXPath(), xpathPrefix + i.getName());
             } else {
                 mErrorMsg = "This form template contains one or more repeated groups.\n\nExport of form data with repeated groups is not supported by this version of GC Mobile.\n\nSupport for exporting these types of forms will be added in a future release.";
@@ -394,7 +394,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
         final String tt = t + "readData(): ";
         
         if (mExportHeaders.containsKey(xpath)) {
-            Log.v(Collect.LOGTAG, tt + "insert data into record at using index " + mExportHeaders.get(xpath) + " (" + node.getText() + ")");
+            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "insert data into record at using index " + mExportHeaders.get(xpath) + " (" + node.getText() + ")");
             mExportData.getLast().put(mExportHeaders.get(xpath), node.getText());
         }
         

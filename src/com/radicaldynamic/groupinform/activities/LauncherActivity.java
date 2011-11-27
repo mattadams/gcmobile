@@ -118,7 +118,7 @@ public class LauncherActivity extends Activity
         @Override
         public void exit(String error) 
         {
-            Log.v(Collect.LOGTAG, "CouchDB error: " + error);
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, "CouchDB error: " + error);
             showDialog(DIALOG_COUCH_ERROR);
         }
     };
@@ -127,13 +127,13 @@ public class LauncherActivity extends Activity
     private ServiceConnection mDatabaseConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
-            Log.v(Collect.LOGTAG, t + "mDatabaseConnection: onServiceConnected()");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "mDatabaseConnection: onServiceConnected()");
             Collect.getInstance().setDbService(((DatabaseService.LocalBinder) service).getService());
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
-            Log.v(Collect.LOGTAG, t + "mDatabaseConnection: onServiceDisconnected()");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "mDatabaseConnection: onServiceDisconnected()");
             Collect.getInstance().setDbService(null);
         }
     };    
@@ -142,13 +142,13 @@ public class LauncherActivity extends Activity
     private ServiceConnection mOnlineConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
-            Log.v(Collect.LOGTAG, t + "mOnlineConnection: onServiceConnected()");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "mOnlineConnection: onServiceConnected()");
             Collect.getInstance().setIoService(((InformOnlineService.LocalBinder) service).getService());
         }
 
         public void onServiceDisconnected(ComponentName className)
         {
-            Log.v(Collect.LOGTAG, t + "mOnlineConnection: onServiceDisconnected()");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "mOnlineConnection: onServiceDisconnected()");
             Collect.getInstance().setIoService(null);
         }
     };
@@ -394,28 +394,28 @@ public class LauncherActivity extends Activity
         // Unbind from our services
         if (Collect.getInstance().getCouchService() instanceof ServiceConnection) {
             try {
-                Log.d(Collect.LOGTAG, tt + "unbinding from CouchService");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "unbinding from CouchService");
                 unbindService(Collect.getInstance().getCouchService());                
             } catch (IllegalArgumentException e) {
-                Log.w(Collect.LOGTAG, tt + "CouchService not registered: " + e.toString());
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "CouchService not registered: " + e.toString());
             }
         }
 
         if (Collect.getInstance().getDbService() instanceof DatabaseService) {
             try {
-                Log.d(Collect.LOGTAG, tt + "unbinding from DatabaseService");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "unbinding from DatabaseService");
                 unbindService(mDatabaseConnection);
             } catch (IllegalArgumentException e) { 
-                Log.w(Collect.LOGTAG, tt + "DatabaseService not registered: " + e.toString());    
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "DatabaseService not registered: " + e.toString());    
             }
         }
 
         if (Collect.getInstance().getIoService() instanceof InformOnlineService) {
             try {
-                Log.d(Collect.LOGTAG, tt + "unbinding from InformOnlineService");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "unbinding from InformOnlineService");
                 unbindService(mOnlineConnection);
             } catch (IllegalArgumentException e) {
-                Log.w(Collect.LOGTAG, tt + "InformOnlineService not registered: " + e.toString());
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "InformOnlineService not registered: " + e.toString());
             }
         }
         
@@ -434,13 +434,13 @@ public class LauncherActivity extends Activity
         
         if (Collect.getInstance().getIoService() == null) {
             if (bindService(new Intent(LauncherActivity.this, InformOnlineService.class), mOnlineConnection, Context.BIND_AUTO_CREATE)) {
-                Log.d(Collect.LOGTAG, tt + "bound to InformOnlineService");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "bound to InformOnlineService");
             }
         }
         
         if (Collect.getInstance().getDbService() == null) {
             if (bindService(new Intent(LauncherActivity.this, DatabaseService.class), mDatabaseConnection, Context.BIND_AUTO_CREATE)) {
-                Log.d(Collect.LOGTAG, tt + "bound to DatabaseService");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "bound to DatabaseService");
             }
         }
     }
@@ -461,7 +461,7 @@ public class LauncherActivity extends Activity
             try {
                 couchPackageUpgradePath();
             } catch (IOException e) {
-                Log.e(Collect.LOGTAG, t + "upgrade path failed at some point " + e.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "upgrade path failed at some point " + e.toString());
                 e.printStackTrace();
                 upgradeFailed = true;
             }
@@ -565,7 +565,7 @@ public class LauncherActivity extends Activity
             if (!new File(FileUtilsExtended.EXTERNAL_COUCH).exists() && !new File(FileUtilsExtended.EXTERNAL_ERLANG).exists())
                 return;
                 
-            Log.i(Collect.LOGTAG, t + "old CouchDB environment detected; about to execute upgrade path");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "old CouchDB environment detected; about to execute upgrade path");
 
             // Get a list of Couch database files
             FilenameFilter filter = new DbFilesFilter();
@@ -573,10 +573,10 @@ public class LauncherActivity extends Activity
 
             // Move database and design files to the new location
             if (dbFiles == null) {
-                Log.d(Collect.LOGTAG, t + "no databases to move");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "no databases to move");
             } else {
                 for (String file : dbFiles) {
-                    Log.d(Collect.LOGTAG, t + "about to copy " + file + " to new location");
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "about to copy " + file + " to new location");
                     File f = new File(FileUtilsExtended.EXTERNAL_COUCH, "/var/lib/couchdb/" + file);
                     org.apache.commons.io.FileUtils.copyFileToDirectory(f, new File(FileUtilsExtended.EXTERNAL_DB));
                 }

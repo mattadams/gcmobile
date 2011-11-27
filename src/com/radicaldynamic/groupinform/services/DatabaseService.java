@@ -120,7 +120,7 @@ public class DatabaseService extends Service {
                             synchronizeLocalDBs();
                         }
                     } catch (Exception e) {
-                        Log.w(Collect.LOGTAG, tt + "error automatically connecting to DB: " + e.toString()); 
+	                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "error automatically connecting to DB: " + e.toString()); 
                     } finally {
                         mInit = false;
                     }
@@ -157,7 +157,7 @@ public class DatabaseService extends Service {
         DbUnavailableDueToMetadataException(String db)
         {
             super();
-            Log.w(Collect.LOGTAG, t + "metadata missing for DB " + db);
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "metadata missing for DB " + db);
         }
     }
       
@@ -184,7 +184,7 @@ public class DatabaseService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        Log.d(Collect.LOGTAG, t + "received start ID " + startId + ": " + intent);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "received start ID " + startId + ": " + intent);
         return START_STICKY;
     }
     
@@ -219,7 +219,7 @@ public class DatabaseService extends Service {
             try {
                 open(db);                
             } catch (DbUnavailableException e) {
-                Log.w(Collect.LOGTAG, tt + "unable to connect to local database server: " + e.toString());
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "unable to connect to local database server: " + e.toString());
             }
             
             dbConnector = mLocalDbConnector;
@@ -228,7 +228,7 @@ public class DatabaseService extends Service {
             try {
                 open(db);              
             } catch (DbUnavailableException e) {
-                Log.w(Collect.LOGTAG, tt + "unable to connect to remote database server: " + e.toString());
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "unable to connect to remote database server: " + e.toString());
             }
             
             dbConnector = mRemoteDbConnector;
@@ -253,9 +253,9 @@ public class DatabaseService extends Service {
             if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) != -1)
                 result = true;
         } catch (DbAccessException e) {
-            Log.w(Collect.LOGTAG, tt + e.toString());
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + e.toString());
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "unhandled exception: " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unhandled exception: " + e.toString());
         }
         
         return result;
@@ -317,7 +317,7 @@ public class DatabaseService extends Service {
         Long lastCleanup = mDbLastCleanup.get(db);
         
         if (lastCleanup == null || System.currentTimeMillis() / 1000 - lastCleanup >= TIME_TEN_MINUTES) {
-            Log.i(Collect.LOGTAG, tt + "beginning cleanup for " + db);
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "beginning cleanup for " + db);
             mDbLastCleanup.put(db, new Long(System.currentTimeMillis() / 1000));            
             removePlaceholders(new FormDefinitionRepo(getDb()).getAllPlaceholders());
             removePlaceholders(new FormInstanceRepo(getDb()).getAllPlaceholders());
@@ -328,16 +328,16 @@ public class DatabaseService extends Service {
     {
         final String tt = t + "replicate(): ";
         
-        Log.i(Collect.LOGTAG, tt + "about to replicate " + db);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "about to replicate " + db);
 
         // Will not replicate unless signed in
         if (!Collect.getInstance().getIoService().isSignedIn()) {
-            Log.w(Collect.LOGTAG, tt + "aborting replication: not signed in");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "aborting replication: not signed in");
             return null;
         }
 
         if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
-            Log.d(Collect.LOGTAG, tt + "aborting replication: offline mode is enabled");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "aborting replication: offline mode is enabled");
             return null;
         }
 
@@ -352,7 +352,7 @@ public class DatabaseService extends Service {
             InetAddress [] clusterInetAddresses = InetAddress.getAllByName(getString(R.string.tf_default_ionline_server));
             masterClusterIP = clusterInetAddresses[new Random().nextInt(clusterInetAddresses.length)].getHostAddress();
         } catch (UnknownHostException e) {
-            Log.e(Collect.LOGTAG, tt + "unable to lookup master cluster IP addresses: " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unable to lookup master cluster IP addresses: " + e.toString());
             e.printStackTrace();
         }
 
@@ -365,21 +365,21 @@ public class DatabaseService extends Service {
                 connectToLocalServer();
             }
         } catch (DbUnavailableException e) {
-            Log.e(Collect.LOGTAG, tt + "cannot connect to local database server");
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "cannot connect to local database server");
             e.printStackTrace();
         }
 
         if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) == -1) {
             switch (mode) {
             case REPLICATE_PULL:
-                Log.i(Collect.LOGTAG, tt + "creating local database " + db);
+                if (Collect.Log.INFO) Log.i(Collect.LOGTAG, tt + "creating local database " + db);
                 mLocalDbInstance.createDatabase("db_" + db);
                 dbCreated = true;
                 break;
                 
             case REPLICATE_PUSH:
                 // If the database does not exist client side then there is no point in continuing
-                Log.w(Collect.LOGTAG, tt + "cannot find local database " + db + " to push");
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "cannot find local database " + db + " to push");
                 return null;
             }
         }
@@ -421,7 +421,7 @@ public class DatabaseService extends Service {
         } catch (Exception e) {
             // Remove a recently created DB if the replication failed
             if (dbCreated) {
-                Log.e(Collect.LOGTAG, t + "replication exception: " + e.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "replication exception: " + e.toString());
                 e.printStackTrace();
                 
                 mLocalDbInstance.deleteDatabase("db_" + db);
@@ -435,7 +435,7 @@ public class DatabaseService extends Service {
     {
         final String tt = t + "setLocalDatabaseInfo(): ";
         
-        Log.d(Collect.LOGTAG, tt + "set host and port to " + host + ":" + port);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "set host and port to " + host + ":" + port);
         
         mLocalHost = host;
         mLocalPort = port;
@@ -446,12 +446,12 @@ public class DatabaseService extends Service {
         final String tt = t + "connectToLocalServer(): ";
         
         if (mLocalHost == null || mLocalPort == 0) {
-            Log.w(Collect.LOGTAG, tt + "local host information not available; aborting connection");
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "local host information not available; aborting connection");
             mConnectedToLocal = false;
             return;
         }
         
-        Log.d(Collect.LOGTAG, tt + "establishing connection to " + mLocalHost + ":" + mLocalPort);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "establishing connection to " + mLocalHost + ":" + mLocalPort);
 
         try {          
             /*
@@ -471,9 +471,9 @@ public class DatabaseService extends Service {
             if (mConnectedToLocal == false)
                 mConnectedToLocal = true;
             
-            Log.d(Collect.LOGTAG, tt + "connection to " + mLocalHost + " successful");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "connection to " + mLocalHost + " successful");
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + e.toString());      
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + e.toString());      
             e.printStackTrace();
             mConnectedToLocal = false;            
             throw new DbUnavailableException();
@@ -487,7 +487,7 @@ public class DatabaseService extends Service {
         String host = getString(R.string.tf_default_ionline_server);
         int port = 6984;
         
-        Log.d(Collect.LOGTAG, tt + "establishing connection to " + host + ":" + port);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "establishing connection to " + host + ":" + port);
         
         try {                     
             mRemoteHttpClient = new StdHttpClient.Builder()
@@ -505,9 +505,9 @@ public class DatabaseService extends Service {
             if (mConnectedToRemote == false)
                 mConnectedToRemote = true;
             
-            Log.d(Collect.LOGTAG, tt + "connection to " + host + " successful");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "connection to " + host + " successful");
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "while connecting to server " + port + ": " + e.toString());      
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "while connecting to server " + port + ": " + e.toString());      
             e.printStackTrace();
             mConnectedToRemote = false;            
             throw new DbUnavailableException();
@@ -532,14 +532,15 @@ public class DatabaseService extends Service {
              * until the system got around to creating and replicating it automatically.
              */            
             if (mLocalDbInstance.getAllDatabases().indexOf("db_" + db) == -1) {
-                Log.w(Collect.LOGTAG, tt + "database does not exist; failing attempt to open");
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "database does not exist; failing attempt to open");
                 throw new DbUnavailableException();
             }
             
-            Log.d(Collect.LOGTAG, tt + "opening database " + db);
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "opening database " + db);
             mLocalDbConnector = new InformCouchDbConnector("db_" + db, mLocalDbInstance);
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "while opening DB " + db + ": " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "while opening DB " + db + ": " + e.toString());
+            e.printStackTrace();
             throw new DbUnavailableException();
         }
     }
@@ -549,7 +550,7 @@ public class DatabaseService extends Service {
         final String tt = t + "openRemoteDb(): ";
         
         try {
-            Log.d(Collect.LOGTAG, tt + "opening database " + db);
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "opening database " + db);
             mRemoteDbConnector = new InformCouchDbConnector("db_" + db, mRemoteDbInstance);
             
             /* 
@@ -558,7 +559,8 @@ public class DatabaseService extends Service {
              */
             mRemoteDbConnector.getDbInfo();
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "while opening DB " + db + ": " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "while opening DB " + db + ": " + e.toString());
+            e.printStackTrace();
             throw new DbUnavailableException();
         }
     }
@@ -586,7 +588,7 @@ public class DatabaseService extends Service {
 
                     if (folder == null) {
                         // Remove databases that exist locally but for which we have no metadata
-                        Log.i(Collect.LOGTAG, tt + "no metatdata for " + db + " (removing)");
+	                    if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "no metatdata for " + db + " (removing)");
                         mLocalDbInstance.deleteDatabase("db_" + db);
                     } else if (isDbLocal(db) && folder.isReplicated() == false) {
                         // Purge any databases that are local but not on the replication list                        
@@ -594,20 +596,20 @@ public class DatabaseService extends Service {
                             ReplicationStatus status = replicate(db, REPLICATE_PUSH);
 
                             if (status != null && status.isOk()) {
-                                Log.i(Collect.LOGTAG, tt + "final replication push successful, removing " + db);
+	                        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "final replication push successful, removing " + db);
                                 mLocalDbInstance.deleteDatabase("db_" + db);
                             }
                         } catch (Exception e) {
-                            Log.e(Collect.LOGTAG, tt + "final replication push of " + db + " failed at " + e.toString());
+                            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "final replication push of " + db + " failed at " + e.toString());
                             e.printStackTrace();
                         }
                     }
                 }
             }
         } catch (DbAccessException e) {
-            Log.w(Collect.LOGTAG, tt + "database not available " + e.toString());
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "database not available " + e.toString());
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, tt + "unhandled exception " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unhandled exception " + e.toString());
             e.printStackTrace();
         }
     }
@@ -624,17 +626,19 @@ public class DatabaseService extends Service {
                 // Remove old style (unowned) placeholders immediately
                 try {
                     getDb().delete(entry.getKey(), entry.getValue().optString("_rev"));
-                    Log.d(Collect.LOGTAG, tt + "removed old-style placeholder " + entry.getKey());
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "removed old-style placeholder " + entry.getKey());
                 } catch (Exception e) {
-                    Log.e(Collect.LOGTAG, tt + "unable to remove old-style placeholder");
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unable to remove old-style placeholder");
+                    e.printStackTrace();
                 }
             } else if (entry.getValue().optString("createdBy").equals(Collect.getInstance().getInformOnlineState().getDeviceId())) {
                 // Remove placeholders owned by me immediately
                 try {                        
                     getDb().delete(entry.getKey(), entry.getValue().optString("_rev"));
-                    Log.d(Collect.LOGTAG, tt + "removed my placeholder " + entry.getKey());
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "removed my placeholder " + entry.getKey());
                 } catch (Exception e) {
-                    Log.e(Collect.LOGTAG, tt + "unable to remove my placeholder");
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unable to remove my placeholder");
+                    e.printStackTrace();
                 }                                       
             } else {
                 // Remove placeholders owned by other people if they are stale (older than a day)
@@ -647,13 +651,15 @@ public class DatabaseService extends Service {
                     if (calendar.getTimeInMillis() - Calendar.getInstance().getTimeInMillis() > TIME_24_HOURS) {
                         try {                        
                             getDb().delete(entry.getKey(), entry.getValue().optString("_rev"));
-                            Log.d(Collect.LOGTAG, tt + "removed stale placeholder " + entry.getKey());
+                            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "removed stale placeholder " + entry.getKey());
                         } catch (Exception e) {
-                            Log.e(Collect.LOGTAG, tt + "unable to remove stale placeholder");
+                            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unable to remove stale placeholder");
+                            e.printStackTrace();
                         } 
                     }                        
                 } catch (ParseException e1) {
-                    Log.e(Collect.LOGTAG, tt + "unable to parse dateCreated: " + e1.toString());            
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unable to parse dateCreated: " + e1.toString());            
+                    e1.printStackTrace();
                 }
             }
         }                
@@ -686,22 +692,22 @@ public class DatabaseService extends Service {
                     if (lastUpdate == null || System.currentTimeMillis() / 1000 - lastUpdate >= Integer.parseInt(syncInterval)) {
                         mDbLastReplication.put(folder.getId(), new Long(System.currentTimeMillis() / 1000));
                         
-                        Log.i(Collect.LOGTAG, tt + "about to begin automatic replication of " + folder.getName());
+                        if (Collect.Log.INFO) Log.i(Collect.LOGTAG, tt + "about to begin automatic replication of " + folder.getName());
                         
                         try {                    
                             replicate(folder.getId(), REPLICATE_PULL);
                             replicate(folder.getId(), REPLICATE_PUSH);
                         } catch (Exception e) {
-                            Log.w(Collect.LOGTAG, tt + "problem replicating " + folder.getId() + ": " + e.toString());
+                            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "problem replicating " + folder.getId() + ": " + e.toString());
                             e.printStackTrace();
                         }
                     } else {
-                        Log.d(Collect.LOGTAG, tt + "skipping automatic replication of " + folder.getName() + ": last synchronization too recent");
+                        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "skipping automatic replication of " + folder.getName() + ": last synchronization too recent");
                     }
                 }
             }
         } else {
-            Log.d(Collect.LOGTAG, tt + "skipping (automatic synchronization disabled)");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "skipping (automatic synchronization disabled)");
         }
     }
 }

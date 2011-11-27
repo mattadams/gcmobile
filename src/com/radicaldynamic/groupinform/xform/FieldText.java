@@ -34,7 +34,7 @@ public class FieldText
      */
     public FieldText(String valueOrRef) 
     {
-        Log.v(Collect.LOGTAG, t + "instantiating with " + valueOrRef);
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "instantiating with " + valueOrRef);
         
         if (Pattern.matches("^jr:.*", valueOrRef)) {
             String [] items = valueOrRef.split("'");    // jr:itext('GroupLabel')
@@ -118,7 +118,7 @@ public class FieldText
              *        by checking the locale of the device.  Right now we just pick the first available language. 
              */
             if (ref == null) {
-                Log.w(Collect.LOGTAG, t + "field has neither value nor reference to itext translation");
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "field has neither value nor reference to itext translation");
             } else {
                 String translation = getDefaultTranslation(ref);
 

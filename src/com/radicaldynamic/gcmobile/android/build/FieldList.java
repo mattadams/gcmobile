@@ -190,7 +190,7 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
         
         private void removeByXPath(String xpath)
         {
-            Log.v(Collect.LOGTAG, t + "removing instances and binds matching XPath " + xpath);
+	    if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "removing instances and binds matching XPath " + xpath);
 
             // Also remove the related instance
             removeInstanceByXPath(xpath, null);
@@ -201,11 +201,11 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
             while (it.hasNext()) {
                 Bind bind = it.next();
                 
-                Log.v(Collect.LOGTAG, t + "evaluating bind for XPath " + bind.getXPath() + " for removal");
+                if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "evaluating bind for XPath " + bind.getXPath() + " for removal");
                 
                 // Remove any binds with an identical XPath to the field in question or those that are logical children
                 if (bind.getXPath().equals(xpath) || bind.getXPath().matches("^" + xpath + "/*$")) {
-                    Log.d(Collect.LOGTAG, t + "removing bind for XPath " + bind.getXPath());
+	            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "removing bind for XPath " + bind.getXPath());
                     it.remove();
                 }
             }
@@ -230,10 +230,10 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
             while (it.hasNext()) {
                 Instance i = it.next();
                 
-                Log.v(Collect.LOGTAG, t + "evaluating instance with XPath " + i.getXPath() + " for removal");
+                if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "evaluating instance with XPath " + i.getXPath() + " for removal");
                 
                 if (i.getXPath().equals(xpath)) {
-                    Log.d(Collect.LOGTAG, t + "removing instance with XPath " + i.getXPath());
+                    if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "removing instance with XPath " + i.getXPath());
                     it.remove();
                     return;
                 }
@@ -475,10 +475,11 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
                 humanFieldType = "trigger";
             }
             
-            if (humanFieldType != null) 
+            if (humanFieldType != null) {
                 startFieldEditor(humanFieldType, field);
-            else 
-                Log.w(Collect.LOGTAG, t + "Unable to determine field type and start element editor");            
+            } else {
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_edit_unknown_field_type), Toast.LENGTH_LONG).show();
+            }
         }    
     }
     
@@ -540,9 +541,9 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
             try {
                 mForm = Collect.getInstance().getDbService().getDb().get(FormDefinition.class, formId);
                 Collect.getInstance().getFormBuilderState().setFormDefinition(mForm);
-                Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "Retrieved form " + mForm.getName() + " from database");
                 
-                Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
                 AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
                 mFormReader = new FormReader(ais);
                 ais.close();
@@ -607,7 +608,7 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
         @Override
         protected Integer doInBackground(Integer... resultCode)
         {
-            Log.d(Collect.LOGTAG, t + "converting form to XML and attaching to database document...");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "converting form to XML and attaching to database document...");
             
             Integer result = resultCode[0];
             
@@ -629,12 +630,12 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
                 Collect.getInstance().getDbService().getDb().update(mForm);
                 f.delete();
             } catch (FormSanityException e) {
-                Log.w(Collect.LOGTAG, t + "sanity exception while writing XForm " + e.toString());
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "sanity exception while writing XForm " + e.toString());
                 e.printStackTrace();
                 mAlertDialogMsg = e.getMessage();
                 result = SaveToDiskTask.VALIDATE_ERROR;
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "failed writing XForm to XML: " + e.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed writing XForm to XML: " + e.toString());
                 e.printStackTrace();
                 
                 result = SaveToDiskTask.SAVE_ERROR;
@@ -888,7 +889,7 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
                                 if (mForm.getStatus() == FormDefinition.Status.placeholder)
                                     Collect.getInstance().getDbService().getDb().delete(mForm);
                             } catch (Exception e) {
-                                Log.e(Collect.LOGTAG, t + "unable to remove temporary document");
+                                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to remove temporary document");
                                 e.printStackTrace();
                             }
                             

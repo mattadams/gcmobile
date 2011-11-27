@@ -582,23 +582,23 @@ public class ClientRegistrationActivity extends Activity
             } else if (result.equals(InformOnlineState.FAILURE)) {
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_notify_device_user), Toast.LENGTH_LONG).show();
                 String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
-                Log.w(Collect.LOGTAG, t + "unable to notify device user: " + reason);
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to notify device user: " + reason);
                 return false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
-                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");
+                Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 return false;
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
@@ -632,33 +632,31 @@ public class ClientRegistrationActivity extends Activity
                 String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_EMAIL)) {
-                    Log.w(Collect.LOGTAG, t + "invalid email address \"" + email + "\"");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_UNKNOWN_ACCOUNT_CONTACT)) {
-                    Log.w(Collect.LOGTAG, t + "unknown account contact \"" + email + "\"");
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_unknown_contact_email), Toast.LENGTH_LONG).show();
                 } else {
                     // Unhandled response
-                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");
                 }   
                 
                 return false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");
                 return false;
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
@@ -737,19 +735,19 @@ public class ClientRegistrationActivity extends Activity
                     return false;
                 } else {
                     // Something bad happened
-                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                    
                     return false;
                 }
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
                 return false;
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();                
                 return false;
@@ -784,34 +782,31 @@ public class ClientRegistrationActivity extends Activity
                 String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_EMAIL)) {
-                    Log.w(Collect.LOGTAG, t + "invalid email address \"" + email + "\"");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_EMAIL_ASSIGNED)) {
-                    Log.i(Collect.LOGTAG, t + "email address \"" + email + "\" already assigned to an account");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_registration_error_email_in_use), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_LICENCE_LIMIT)) {
-                    Log.i(Collect.LOGTAG, t + "account seat licence limit reached");
                     mLicenceSeatLimit = verify.optString("licencedSeats", "?");
                     mLicencePlanType = verify.optString("planType", "?");
                     return DEVICE_REGISTRATION_LIMITED;
                 } else {
                     // Unhandled response
-                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");
                 }   
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }      
@@ -845,15 +840,11 @@ public class ClientRegistrationActivity extends Activity
                 String reason = reactivation.optString(InformOnlineState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_PIN)) {
-                    Log.i(Collect.LOGTAG, t + "reactivation failed (invalid PIN)");
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_pin), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_DEVICE_ACTIVE)) {
-                    Log.i(Collect.LOGTAG, t + "reactivation failed (device active)");
                     mOptionToNotifyDeviceUser = true;
                     showDialog(DIALOG_DEVICE_ACTIVE);
                 } else if (reason.equals(REASON_REACTIVATION_DELAYED)) {
-                    Log.i(Collect.LOGTAG, t + "reactivation delayed for " + reactivation.getString("delay") + "ms");
-                    
                     String approximation = " ";
                     String period = "";
                     String unit = "";
@@ -882,26 +873,26 @@ public class ClientRegistrationActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_reactivation_delayed_wait, approximation, period, unit), Toast.LENGTH_LONG).show();
                 } else {
                     // Unhandled response
-                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");
                 }
                 
                 return false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");
                 return false;
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
@@ -936,35 +927,33 @@ public class ClientRegistrationActivity extends Activity
                 String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_EMAIL)) {
-                    Log.w(Collect.LOGTAG, t + "invalid email address \"" + email + "\"");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();
                 } else if (reason.equals(REASON_EMAIL_ASSIGNED)) {
-                    Log.i(Collect.LOGTAG, t + "email address \"" + email + "\" already assigned to an account");                    
                     // Share email address with reminder and explanation dialogs
                     mContactEmail = email;
                     showDialog(DIALOG_ACCOUNT_EXISTS);
                 } else {
                     // Unhandled response
-                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");
                 }   
                 
                 return false;
             } else {
                 // Something bad happened
-                Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();                
                 return false;
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                        
             Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;

@@ -173,7 +173,7 @@ public final class FormWriter
             Bind bind = it.next();
             
             if (bind.hasUnhandledAttribute())
-                Log.w(Collect.LOGTAG, t + "bind " + bind.getXPath() + " has unhandled attributes that will not be written; data will be lost!");
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "bind " + bind.getXPath() + " has unhandled attributes that will not be written; data will be lost!");
             
             mFormTag.addTag("bind").addAttribute("nodeset", bind.getXPath());
             

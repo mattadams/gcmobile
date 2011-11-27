@@ -148,15 +148,15 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 try {
                     instanceDoc = Collect.getInstance().getDbService().getDb().get(FormInstance.class, id);
                 } catch (DocumentNotFoundException e) {
-                    Log.w(Collect.LOGTAG, t + "unable to retrieve instance: " + e.toString());
+                    if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to retrieve instance: " + e.toString());
                     mResults.put(id, fail + "warning: document not found :: details: " + e.getMessage());
                     continue;
                 } catch (DbAccessException e) {
-                    Log.w(Collect.LOGTAG, t + "unable to access database: " + e.toString());
+                    if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to access database: " + e.toString());
                     mResults.put(id, fail + "error: could not acess database :: details: " + e.getMessage());
                     continue;
                 } catch (Exception e) {                    
-                    Log.e(Collect.LOGTAG, t + "unexpected exception: " + e.toString());                    
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unexpected exception: " + e.toString());                    
                     e.printStackTrace();
                     mResults.put(id, fail + "unexpected error :: details: " + e.getMessage());
                     continue;
@@ -192,7 +192,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                         Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                     } catch (Exception e1) {
-                        Log.e(Collect.LOGTAG, t + ": could not record upload failed because of MalformedURLException for " + id + ": " + e1.toString());
+                        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of MalformedURLException for " + id + ": " + e1.toString());
                     }                    
                     // END custom
                     continue;
@@ -208,7 +208,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                         Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                     } catch (Exception e1) {
-                        Log.e(Collect.LOGTAG, t + ": could not record upload failed because of URISyntaxException for " + id + ": " + e1.toString());
+                        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of URISyntaxException for " + id + ": " + e1.toString());
                     }   
                     // END custom
                     continue;
@@ -224,7 +224,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                         Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                     } catch (Exception e1) {
-                        Log.e(Collect.LOGTAG, t + ": could not record upload failed because of UnsupportedEncodingException for " + id + ": " + e1.toString());
+                        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of UnsupportedEncodingException for " + id + ": " + e1.toString());
                     }   
                     // END custom
                     continue;
@@ -283,7 +283,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                                             instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                                             Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                                         } catch (Exception e1) {
-                                            Log.e(Collect.LOGTAG, t + ": could not record upload failed because of redirection error for " + id + ": " + e1.toString());
+                                            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of redirection error for " + id + ": " + e1.toString());
                                         }  
                                         // END custom
                                         continue;
@@ -301,7 +301,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                                         instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                                         Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                                     } catch (Exception e1) {
-                                        Log.e(Collect.LOGTAG, t + ": could not record upload failed because of unexpected exception for " + id + ": " + e1.toString());
+                                        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of unexpected exception for " + id + ": " + e1.toString());
                                     } 
                                     // END custom
                                     continue;
@@ -339,7 +339,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                                     instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                                     Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                                 } catch (Exception e1) {
-                                    Log.e(Collect.LOGTAG, t + ": could not record upload failed because of network login error for " + id + ": " + e1.toString());
+                                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of network login error for " + id + ": " + e1.toString());
                                 } 
                                 // END custom
                                 continue;
@@ -358,7 +358,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                             Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                         } catch (Exception e1) {
-                            Log.e(Collect.LOGTAG, t + ": could not record upload failed because of client protocol exception for " + id + ": " + e1.toString());
+                            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of client protocol exception for " + id + ": " + e1.toString());
                         }
                         // END custom
                         continue;
@@ -374,7 +374,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                             Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                         } catch (Exception e1) {
-                            Log.e(Collect.LOGTAG, t + ": could not record upload failed because of connection timeout exception for " + id + ": " + e1.toString());
+                            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of connection timeout exception for " + id + ": " + e1.toString());
                         }                        
                         // END custom
                         continue;
@@ -390,7 +390,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                             Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                         } catch (Exception e1) {
-                            Log.e(Collect.LOGTAG, t + ": could not record upload failed because of unknown host exception for " + id + ": " + e1.toString());
+                            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of unknown host exception for " + id + ": " + e1.toString());
                         }  
                         // END custom
                         continue;
@@ -405,7 +405,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                             Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                         } catch (Exception e1) {
-                            Log.e(Collect.LOGTAG, t + ": could not record upload failed because of (generic) unexpected exception for " + id + ": " + e1.toString());
+                            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of (generic) unexpected exception for " + id + ": " + e1.toString());
                         }
                         // END custom
                         continue;
@@ -450,15 +450,15 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         file.close();
                     }
                 } catch (DocumentNotFoundException e) {
-                    Log.w(Collect.LOGTAG, t + "unable to retrieve attachment: " + e.toString());
+                    if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to retrieve attachment: " + e.toString());
                     mResults.put(id, fail + "warning: attachment not found :: details: " + e.getMessage());
                     continue;
                 } catch (DbAccessException e) {
-                    Log.w(Collect.LOGTAG, t + "unable to access database: " + e.toString());
+                    if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to access database: " + e.toString());
                     mResults.put(id, fail + "error: could not acess database :: details: " + e.getMessage());
                     continue;
                 } catch (Exception e) {                    
-                    Log.e(Collect.LOGTAG, t + "unexpected exception: " + e.toString());                    
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unexpected exception: " + e.toString());                    
                     e.printStackTrace();
                     mResults.put(id, fail + "unexpected error :: details: " + e.getMessage());
                     continue;
@@ -481,7 +481,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                         instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                         Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                     } catch (Exception e1) {
-                        Log.e(Collect.LOGTAG, t + ": could not record upload failed because of missing instance file for " + id + ": " + e1.toString());
+                        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of missing instance file for " + id + ": " + e1.toString());
                     }
                     // END custom
                     continue;
@@ -665,7 +665,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                                 instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                                 Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                             } catch (Exception e1) {
-                                Log.e(Collect.LOGTAG, t + ": could not record upload failed because of network login error for " + id + ": " + e1.toString());
+                                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of network login error for " + id + ": " + e1.toString());
                             }
                             // END custom
                             continue next_submission;
@@ -681,7 +681,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                             instanceDoc.getOdk().setUploadStatus(ODKInstanceAttributes.UploadStatus.failed);
                             Collect.getInstance().getDbService().getDb().update(instanceDoc);                        
                         } catch (Exception e1) {
-                            Log.e(Collect.LOGTAG, t + ": could not record upload failed because of generic exception for " + id + ": " + e1.toString());
+                            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": could not record upload failed because of generic exception for " + id + ": " + e1.toString());
                         }
                         // END custom
                         continue next_submission;
@@ -702,7 +702,7 @@ public class InstanceUploaderTask extends AsyncTask<String, Integer, HashMap<Str
                 try {
                     Collect.getInstance().getDbService().getDb().update(instanceDoc);    
                 } catch (Exception e) {
-                    Log.e(Collect.LOGTAG, t + "unable to setUploadDate of successful upload: " + e.toString());
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to setUploadDate of successful upload: " + e.toString());
                     e.printStackTrace();
                 } finally {
                     FileUtilsExtended.deleteFolder(uploadFolder);

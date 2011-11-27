@@ -38,7 +38,7 @@ public class Instance
     
     public Instance(String instancePath, String defaultValue, String location, ArrayList<Bind> binds)
     {
-        Log.v(Collect.LOGTAG, t + "creating new instance with XPath " + instancePath + " and a default value of \"" + defaultValue + "\"");
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "creating new instance with XPath " + instancePath + " and a default value of \"" + defaultValue + "\"");
         
         this.xpath          = instancePath;
         this.defaultValue   = defaultValue;
@@ -52,7 +52,7 @@ public class Instance
             // If a bind with a nodeset identical to this ref exists, associate it with this field
             if (b.getXPath().equals(instancePath)) {
                 setBind(b);
-                Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getXPath() + " bound to this instance at " + instancePath);
+                if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getXPath() + " bound to this instance at " + instancePath);
             }
         }
     }

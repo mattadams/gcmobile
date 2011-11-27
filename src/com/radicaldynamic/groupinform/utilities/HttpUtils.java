@@ -37,7 +37,7 @@ public class HttpUtils
             
             // Load any cookies that have been stored
             if (Collect.getInstance().getInformOnlineState().getSession() == null) 
-                Log.w(Collect.LOGTAG, t + "connection without session");
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "connection without session");
             else
                 client.setCookieStore(Collect.getInstance().getInformOnlineState().getSession());
             
@@ -55,13 +55,13 @@ public class HttpUtils
             List<Cookie> cookies = client.getCookieStore().getCookies();
             
             if (cookies.isEmpty())
-                Log.d(Collect.LOGTAG, t + "GET resulted in no cookies");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "GET resulted in no cookies");
             else {
-                Log.i(Collect.LOGTAG, t + "GET resulted in " + cookies.size() + " cookies");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "GET resulted in " + cookies.size() + " cookies");
                 Collect.getInstance().getInformOnlineState().setSession(client.getCookieStore());
                 
                 for (int i = 0; i < cookies.size(); i++)
-                    Log.d(Collect.LOGTAG, t + "parsed cookie " + cookies.get(i).toString());
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "parsed cookie " + cookies.get(i).toString());
             }
             
             // Shutdown client manager to ensure deallocation of all system resources
@@ -76,7 +76,7 @@ public class HttpUtils
             e.printStackTrace();
         }
         
-        Log.v(Collect.LOGTAG, tt + "parsing result " + websiteData);
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "parsing result " + websiteData);
         
         return websiteData;
     }
@@ -94,7 +94,7 @@ public class HttpUtils
             
             // Load any cookies that have been stored
             if (Collect.getInstance().getInformOnlineState().getSession() == null) 
-                Log.w(Collect.LOGTAG, t + "connection without session");
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "connection without session");
             else
                 client.setCookieStore(Collect.getInstance().getInformOnlineState().getSession());
             
@@ -113,13 +113,13 @@ public class HttpUtils
             List<Cookie> cookies = client.getCookieStore().getCookies();
             
             if (cookies.isEmpty())
-                Log.d(Collect.LOGTAG, t + "GET resulted in no cookies");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "GET resulted in no cookies");
             else {
-                Log.i(Collect.LOGTAG, t + "GET resulted in " + cookies.size() + " cookies");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "GET resulted in " + cookies.size() + " cookies");
                 Collect.getInstance().getInformOnlineState().setSession(client.getCookieStore());
                 
                 for (int i = 0; i < cookies.size(); i++)
-                    Log.d(Collect.LOGTAG, t + "parsed cookie " + cookies.get(i).toString());
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "parsed cookie " + cookies.get(i).toString());
             }
             
             // Shutdown client manager to ensure deallocation of all system resources
@@ -134,7 +134,7 @@ public class HttpUtils
             e.printStackTrace();
         }
         
-        Log.v(Collect.LOGTAG, tt + "parsing result " + websiteData);
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "parsing result " + websiteData);
         
         return websiteData;
     }

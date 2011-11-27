@@ -112,8 +112,6 @@ public class AccountDeviceList extends ListActivity
     {
         AccountDevice device = (AccountDevice) getListAdapter().getItem(position);
         
-        Log.d(Collect.LOGTAG, t + "selected device " + device.getId() + " from list");
-        
         // Only account owners should proceed to the next screen
         if (Collect.getInstance().getInformOnlineState().isAccountOwner()) {
             Intent i = new Intent(this, AccountDeviceActivity.class);
@@ -190,10 +188,10 @@ public class AccountDeviceList extends ListActivity
     static public void fetchDeviceList(boolean fetchAnyway)
     {
         if (Collect.getInstance().getIoService().isSignedIn() || fetchAnyway) {
-            Log.d(Collect.LOGTAG, t + "fetching new list of devices");
+            if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "fetching list of devices");
         } else {
-            Log.d(Collect.LOGTAG, t + "not signed in, skipping device list fetch");
-            return;            
+            if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "not signed in, skipping device list fetch");
+            return;
         }
                 
         // Try to ping the service to see if it is "up"
@@ -227,7 +225,7 @@ public class AccountDeviceList extends ListActivity
                     fos.write(jsonDevices.toString().getBytes());
                     fos.close();
                 } catch (Exception e) {                    
-                    Log.e(Collect.LOGTAG, t + "unable to write device cache: " + e.toString());
+	            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to write device cache: " + e.toString());
                     e.printStackTrace();
                 }
             } else {
@@ -235,23 +233,23 @@ public class AccountDeviceList extends ListActivity
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
             e.printStackTrace();
         }
     }
     
     public static ArrayList<AccountDevice> loadDeviceList()
     {
-        Log.d(Collect.LOGTAG , t + "loading device cache");
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG , t + "loading device cache");
         
         ArrayList<AccountDevice> devices = new ArrayList<AccountDevice>();
         
         if (!new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).exists()) {
-            Log.w(Collect.LOGTAG, t + "device cache file cannot be read: aborting loadDeviceList()");
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "device cache file cannot be read: aborting loadDeviceList()");
             return devices;
         }
         
@@ -304,11 +302,11 @@ public class AccountDeviceList extends ListActivity
 //                Collect.getInstance().getInformOnlineState().setAccountAssignedSeats(assignedSeats);
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
                 e.printStackTrace();
             }
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "unable to read device cache: " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to read device cache: " + e.toString());
             e.printStackTrace();
         }
       

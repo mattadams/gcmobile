@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -175,8 +176,9 @@ public class FieldEditorActivity extends Activity
         else if (mFieldType.equals("time"))       loadDateElement();
         else if (mFieldType.equals("text"))       loadTextElement();                    
         else {            
-            // TODO: let the user know that we couldn't edit this field
-            Log.w(Collect.LOGTAG, t + "unhandled field type");
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_edit_unknown_field_type), Toast.LENGTH_LONG).show();
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unhandled field type");
+            finish();
         }
 
         /*
@@ -290,6 +292,9 @@ public class FieldEditorActivity extends Activity
             if (saveChanges()) {
                 setResult(RESULT_OK);
                 finish();
+            } else {
+	        Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_save_unknown_field_type), Toast.LENGTH_LONG).show();
+	        finish();
             }
             
             return true;
@@ -845,8 +850,10 @@ public class FieldEditorActivity extends Activity
         else if (mFieldType.equals("select"))     saveSelectElement();                    
         else if (mFieldType.equals("text"))       saveTextElement();
         else if (mFieldType.equals("time"))       saveDateElement();
-        else 
-            Log.w(Collect.LOGTAG, t + "unhandled field type");
+        else {
+	    if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unhandled field type");
+            return false;
+        }
         
         // Mark the field as having been saved
         mField.setSaved(true);
@@ -867,16 +874,11 @@ public class FieldEditorActivity extends Activity
         final RadioButton timeOnly = (RadioButton) findViewById(R.id.dateTypeTimeOnly);
         final RadioButton dateAndTime = (RadioButton) findViewById(R.id.dateTypeDateAndTime);
         
-        Log.v(Collect.LOGTAG, t + "saveDateElement executed");
-
         if (dateOnly.isChecked()) {
-            Log.v(Collect.LOGTAG, t + "saveDateElement set date");
             mField.getBind().setType("date");
         } else if (timeOnly.isChecked()) {
-            Log.v(Collect.LOGTAG, t + "saveDateElement set time");
             mField.getBind().setType("time");
         } else if (dateAndTime.isChecked()) {
-            Log.v(Collect.LOGTAG, t + "saveDateElement set dateTime");
             mField.getBind().setType("dateTime");
         }
     }

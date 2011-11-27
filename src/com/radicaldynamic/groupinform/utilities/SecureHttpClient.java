@@ -47,7 +47,7 @@ public class SecureHttpClient extends DefaultHttpClient
 
             // keypass should be hardedcoded, not a string resource
             try {
-                Log.d(Collect.LOGTAG, t + "loading trusted certificates from keystore");
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "loading trusted certificates from keystore");
                 trusted.load(in, "e04191f2".toCharArray());
             } finally {
                 in.close();

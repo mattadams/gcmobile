@@ -257,7 +257,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
             createAlertDialog(b.toString().trim());
         } catch (Exception e) {
             createAlertDialog("Error attempting to summarize upload results:\n" + e.toString());
-            Log.e(Collect.LOGTAG, t + ": unable to summarize upload results");
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": unable to summarize upload results");
             e.printStackTrace();
         }
         // END custom

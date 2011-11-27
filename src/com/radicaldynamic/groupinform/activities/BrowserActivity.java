@@ -694,7 +694,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                     removeFormMessage = getString(R.string.tf_remove_form_with_instances_dialog_msg, mFormDefinition.getName());
                 }
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unexpected exception while processing DIALOG_REMOVE_FORM");
+	        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unexpected exception while processing DIALOG_REMOVE_FORM");
                 e.printStackTrace();
             }
             
@@ -918,8 +918,6 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         InstanceLoadPathTask ilp;
         Intent i;
 
-        Log.d(Collect.LOGTAG, t + "selected form " + form.getId() + " from list");
-
         Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
         
         switch (s1.getSelectedItemPosition()) {
@@ -1040,7 +1038,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             copyToFolderId = (String) params[1];
             copyFormAsName = (String) params[2];
             
-            Log.d(Collect.LOGTAG, tt + "about to copy " + formDefinition.getId() + " to " + copyToFolderId);
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "about to copy " + formDefinition.getId() + " to " + copyToFolderId);
             
             Message msg = progressHandler.obtainMessage();
             Bundle b = new Bundle();
@@ -1140,7 +1138,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                         String fileName = f.getName();
                         String attachmentName = fileName;
 
-                        Log.v(Collect.LOGTAG, t + ": attaching " + fileName + " to " + copyOfFormDefinition.getId());
+                        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + ": attaching " + fileName + " to " + copyOfFormDefinition.getId());
 
                         String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
                         String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
@@ -1155,7 +1153,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
 
                 copied = true;             
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, tt + "unexpected exception");
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unexpected exception");
                 e.printStackTrace();
             }
             
@@ -1240,7 +1238,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                 is.close();
                 data.close();
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to read XForm template file; create new form process will fail");
                 e.printStackTrace();
                 isSuccessful = false;
             }
@@ -1299,7 +1297,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             try {
                 instanceIds = new FormInstanceRepo(Collect.getInstance().getDbService().getDb()).findByFormId(docId);
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unexpected exception " + e.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unexpected exception " + e.toString());
                 e.printStackTrace();
             } finally {                
                 if (instanceIds.isEmpty())
@@ -1353,7 +1351,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                 instanceIds = new FormInstanceRepo(Collect.getInstance().getDbService().getDb()).findByFormAndStatus(formId, status);
                 caughtExceptionInBackground = false;
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unhandled exception while processing InstanceLoadPathTask.doInBackground(): " + e.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unhandled exception while processing InstanceLoadPathTask.doInBackground(): " + e.toString());
                 e.printStackTrace();
             }
             
@@ -1418,18 +1416,18 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                 DocumentUtils.sortByName(documents);
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
-                Log.w(Collect.LOGTAG, t + e.toString());
             } catch (DocumentNotFoundException e) {
                 /*
                  * This most likely cause of this exception is that a design document could not be found.  This will happen if we are
                  * running a version of Inform that expects a design document by a certain name but the local folder does not have
                  * the most recent design documents.
                  */
-                Log.w(Collect.LOGTAG, t + e.toString());
+                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + e.toString());
                 folderOutdated = true;
                 folderUnavailable = true;
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unexpected exception " + e.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unexpected exception " + e.toString());
+                e.printStackTrace();
                 folderUnavailable = true;
             }
 
@@ -1632,7 +1630,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                 
                 renamed = true;           
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, tt + "unexpected exception");
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unexpected exception");
                 e.printStackTrace();
             }
             
@@ -1687,7 +1685,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             try {
                 status = Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL);
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + "unable to replicate during UpdateFolderTask: " + e.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to replicate during UpdateFolderTask: " + e.toString());
                 e.printStackTrace();
                 status = null;
             }

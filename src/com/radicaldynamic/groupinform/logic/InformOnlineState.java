@@ -123,8 +123,7 @@ public class InformOnlineState
     
     public void setAccountDevices(Map<String, AccountDevice> accountDevices) 
     { 
-        Log.d(Collect.LOGTAG, t + "setAccountDevices()");
-        
+	if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setAccountDevices()");
         this.accountDevicesSyncMap = accountDevices; 
     }
     
@@ -134,8 +133,7 @@ public class InformOnlineState
     
     public void setAccountFolders(Map<String, AccountFolder> accountFolders) 
     { 
-        Log.d(Collect.LOGTAG, t + "setAccountFolders()");
-        
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setAccountFolders()");
         this.accountFoldersSyncMap = accountFolders; 
     }
     
@@ -145,7 +143,7 @@ public class InformOnlineState
 
     public void setAccountKey(String accountKey)
     {
-        Log.d(Collect.LOGTAG, t + "setAccountKey() HIDDEN");
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setAccountKey() HIDDEN");
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(ACCOUNT_KEY, accountKey);
@@ -193,7 +191,7 @@ public class InformOnlineState
     
     public void setAccountNumber(String accountNumber)
     {
-        Log.d(Collect.LOGTAG, t + "setAccountNumber() " + accountNumber);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setAccountNumber() " + accountNumber);
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(ACCOUNT_NUM, accountNumber);
@@ -209,7 +207,7 @@ public class InformOnlineState
 
     public void setAccountOwner(boolean accountOwner)
     {
-        Log.d(Collect.LOGTAG, t + "setAccountOwner() " + accountOwner);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setAccountOwner() " + accountOwner);
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putBoolean(ACCOUNT_OWNER, accountOwner);
@@ -242,7 +240,7 @@ public class InformOnlineState
 
     public void setDeviceId(String deviceId)
     {
-        Log.d(Collect.LOGTAG, t + "setDeviceId() " + deviceId);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setDeviceId() " + deviceId);
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEVICE_ID, deviceId);
@@ -258,7 +256,7 @@ public class InformOnlineState
 
     public void setDeviceKey(String deviceKey)
     {
-        Log.d(Collect.LOGTAG, t + "setDeviceKey() HIDDEN");
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setDeviceKey() HIDDEN");
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEVICE_KEY, deviceKey);
@@ -274,7 +272,7 @@ public class InformOnlineState
 
     public void setDevicePin(String devicePin)
     {
-        Log.d(Collect.LOGTAG, t + "setDevicePin() HIDDEN");
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setDevicePin() HIDDEN");
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEVICE_PIN, devicePin);
@@ -290,7 +288,7 @@ public class InformOnlineState
 
     public void setExpired(boolean expired) 
     {
-        Log.d(Collect.LOGTAG, t + "setExpired() " + expired);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setExpired() " + expired);
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putBoolean(EXPIRED_ORDER, expired);
@@ -325,7 +323,7 @@ public class InformOnlineState
 
     public void setDefaultDatabase(String defaultDatabase)
     {
-        Log.d(Collect.LOGTAG, t + "setDefaultDatabase() " + defaultDatabase);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setDefaultDatabase() " + defaultDatabase);
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(DEFAULT_DATABASE, defaultDatabase);
@@ -341,7 +339,7 @@ public class InformOnlineState
 
     public void setSelectedDatabase(String selectedDatabase)
     {
-        Log.d(Collect.LOGTAG, t + "setSelectedDatabase() " + selectedDatabase);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setSelectedDatabase() " + selectedDatabase);
         
         this.selectedDatabase = selectedDatabase;
     }
@@ -366,7 +364,7 @@ public class InformOnlineState
 
         UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
         
-        Log.d(Collect.LOGTAG, t + "setDeviceFingerprint() " + deviceUuid.toString());
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setDeviceFingerprint() " + deviceUuid.toString());
         
         this.deviceFingerprint = deviceUuid.toString();
     }
@@ -378,7 +376,7 @@ public class InformOnlineState
 
     public void setOfflineModeEnabled(boolean offlineMode)
     {
-        Log.d(Collect.LOGTAG, t + "setOfflineModeEnabled() " + offlineMode);
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setOfflineModeEnabled() " + offlineMode);
         
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putBoolean(OFFLINE_MODE, offlineMode);
@@ -452,14 +450,14 @@ public class InformOnlineState
 
         // Shutdown CouchDB and remove databases & log files
         if (Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), CouchService.class)))
-            Log.d(Collect.LOGTAG, t + "CouchService stopped");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "CouchService stopped");
         
         // Shutdown other services to ensure a full reset off all stateful information
         if (Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), DatabaseService.class)))
-            Log.d(Collect.LOGTAG, t + "DatabaseService stopped");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "DatabaseService stopped");
         
         if (Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), InformOnlineService.class)))
-            Log.d(Collect.LOGTAG, t + "InformOnlineService stopped");  
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "InformOnlineService stopped");  
 
         // Remove DB files & log files
         if (CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_DB)))

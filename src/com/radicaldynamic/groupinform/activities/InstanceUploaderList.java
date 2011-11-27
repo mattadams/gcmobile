@@ -32,7 +32,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -413,7 +412,6 @@ public class InstanceUploaderList extends ListActivity {
                 folderUnavailable = true;
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
-                Log.w(Collect.LOGTAG, e.toString());
             }
             
             return null;

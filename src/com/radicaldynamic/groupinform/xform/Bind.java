@@ -87,7 +87,7 @@ public class Bind
             }                
         }
         
-        Log.v(Collect.LOGTAG, t + "created new bind for " + getXPath());
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "created new bind for " + getXPath());
     }
     
     public Map<String, String> getAttributes()

@@ -43,7 +43,7 @@ public class ODKInstanceAttributes
         try {
             calendar.setTime(sdf.parse(uploadDate));
         } catch (ParseException e1) {
-            Log.e(Collect.LOGTAG, t + "unable to parse uploadDate, returning a valid date anyway: " + e1.toString());            
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to parse uploadDate, returning a valid date anyway: " + e1.toString());            
         }
         
         return calendar;

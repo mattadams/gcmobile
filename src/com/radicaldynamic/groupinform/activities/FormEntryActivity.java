@@ -1567,7 +1567,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                                 finish();
                             }
                         } catch (Exception e) {
-                            Log.w(Collect.LOGTAG, t + "problem marking form instance document as removed " + e.toString());
+                            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "problem marking form instance document as removed " + e.toString());
                             Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_form_instance), Toast.LENGTH_LONG).show();                        
                         }
                     }
@@ -1741,7 +1741,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 mInstancePath = instanceFolder + File.separator + fid.getId() + ".xml";
                 mFormInstance = fid;
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, tt + "failed to create temporary instance and/or folder");
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "failed to create temporary instance and/or folder");
                 e.printStackTrace();
                 createErrorDialog("Unable to create new form placeholder and/or folder. Please report this problem and try again.", EXIT);
             }
@@ -2008,7 +2008,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     // BEGIN custom
     private void browseToInstance(String instanceId) 
     {
-        Log.v(Collect.LOGTAG, t + ": about to browse to " + instanceId + " using form " + mFormDefinition.getId() + " with list " + mInstances.toString());
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + ": about to browse to " + instanceId + " using form " + mFormDefinition.getId() + " with list " + mInstances.toString());
         
         tidyBeforeFinish();
         finish();
@@ -2062,11 +2062,11 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 mFormInstance = Collect.getInstance().getDbService().getDb().get(FormInstance.class, mFormInstance.getId());
 
                 if (mFormInstance.getStatus() == FormInstance.Status.placeholder) {
-                    Log.d(Collect.LOGTAG, t + ": removing placeholder " + mFormInstance.getId());
+                    if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + ": removing placeholder " + mFormInstance.getId());
                     Collect.getInstance().getDbService().getDb().delete(mFormInstance);
                 }
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, t + ": unexpected exception while running tidyBeforeFinish()");
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + ": unexpected exception while running tidyBeforeFinish()");
                 e.printStackTrace();
             }
         }
@@ -2074,7 +2074,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         // Remove the instance directory, if any
         if (mInstancePath != null) {
             String instanceDir = mInstancePath.substring(0, mInstancePath.lastIndexOf("/"));
-            Log.d(Collect.LOGTAG, t + ": removing instance directory " + instanceDir);
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + ": removing instance directory " + instanceDir);
             FileUtilsExtended.deleteFolder(instanceDir);
         }
     }

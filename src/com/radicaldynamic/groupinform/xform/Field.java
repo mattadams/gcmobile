@@ -59,7 +59,7 @@ public class Field
     {
         final String tt = t + "Field(): ";
 
-        Log.v(Collect.LOGTAG, tt + "created new " + tag.getCurrentTagName() + " field at " + tag.getCurrentTagLocation());
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "created new " + tag.getCurrentTagName() + " field at " + tag.getCurrentTagLocation());
         
         setType(tag.getCurrentTagName());
         setLocation(tag.getCurrentTagLocation());
@@ -91,7 +91,7 @@ public class Field
                         String ref = determineXPath(parent, instanceRoot, xpath);
 
                         if (ref.length() > 0) {
-                            Log.v(Collect.LOGTAG, tt + "changed non-literal XPath from " + xpath + " to " + ref);
+                            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "changed non-literal XPath from " + xpath + " to " + ref);
                             xpath = ref;
                         }
                     }
@@ -107,7 +107,7 @@ public class Field
 
                         // If a bind with a nodeset identical to this ref exists, associate it with this field
                         if (b.getXPath().equals(xpath)) {
-                            Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getXPath() + " associated to field at " + getLocation());                            
+                            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "bind with nodeset " + b.getXPath() + " associated to field at " + getLocation());                            
                             setBind(b);
                             
                             // Not all binds will have an associated type but our code (may) expect them to
@@ -118,7 +118,7 @@ public class Field
 //                                else 
 //                                    b.setType(getType());
                                 
-                                Log.w(Collect.LOGTAG, t + "bind for " + b.getXPath() + " missing an explicit type");
+                                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "bind for " + b.getXPath() + " missing an explicit type");
                             }
 
                             // No point in looking further, right?
@@ -151,7 +151,7 @@ public class Field
 
     public void setLabel(String label)
     {
-        Log.v(Collect.LOGTAG, t + "setting label for " + type + " at " + location);
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "setting label for " + type + " at " + location);
         this.label = new FieldText(label);
     }
 
@@ -163,7 +163,7 @@ public class Field
     
     public void setHint(String hint)
     {
-        Log.v(Collect.LOGTAG, t + "setting hint for " + type + " at " + location);
+        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "setting hint for " + type + " at " + location);
         this.hint = new FieldText(hint);
     }
 
@@ -261,7 +261,7 @@ public class Field
         
         // Just in case the label did not have anything in it from which to generate a sane field name
         if (name.length() == 0) {
-            Log.i(Collect.LOGTAG, t 
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t 
                     + "unable to construct field name from getLabel().toString() of " 
                     + label.toString());
             

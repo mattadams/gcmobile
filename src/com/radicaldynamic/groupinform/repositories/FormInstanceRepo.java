@@ -36,7 +36,7 @@ public class FormInstanceRepo extends CouchDbRepositorySupport<FormInstance>
             try {
                 results.put(record.getKey(), (JSONObject) new JSONTokener(record.getValue()).nextValue());                
             } catch (JSONException e) {
-                Log.e(Collect.LOGTAG, t + "failed to parse complex value in getAllPlaceholders, key: " + record.getKey() + ", value: " + record.getValue());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse complex value in getAllPlaceholders, key: " + record.getKey() + ", value: " + record.getValue());
                 e.printStackTrace();
             }
         }

@@ -49,7 +49,19 @@ import com.radicaldynamic.groupinform.xform.FormBuilderState;
  * @author carlhartung
  *
  */
-public class Collect extends Application {
+public class Collect extends Application 
+{
+    // Flags for logging
+    public class Log 
+    {
+        public static final int LOGLEVEL = 5;
+        public static final boolean VERBOSE   = LOGLEVEL > 4;       // Level 5
+        public static final boolean DEBUG     = LOGLEVEL > 3;         // Level 4
+        public static final boolean INFO      = LOGLEVEL > 2;          // Level 3
+        public static final boolean WARN      = LOGLEVEL > 1;          // Level 2
+        public static final boolean ERROR     = LOGLEVEL > 0;         // Level 1
+    }
+    
     public final static String LOGTAG = "GC Mobile";
     
     // Storage paths

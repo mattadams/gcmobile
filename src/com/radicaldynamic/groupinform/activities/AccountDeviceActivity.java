@@ -313,7 +313,7 @@ public class AccountDeviceActivity extends Activity
             JSONObject update;
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+	        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
                 update = (JSONObject) new JSONTokener(getResult).nextValue();
                 
                 String result = update.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
@@ -332,17 +332,17 @@ public class AccountDeviceActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_self), Toast.LENGTH_LONG).show();
                 } else {
                     // Something bad happened
-                    Log.e(Collect.LOGTAG, t + "system error while processing getResult");                   
+	            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing getResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }                
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");               
+	        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);                
+	        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }
@@ -372,7 +372,7 @@ public class AccountDeviceActivity extends Activity
             JSONObject reset;
             
             try {
-                Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
+	        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
                 reset = (JSONObject) new JSONTokener(getResult).nextValue();
                 
                 String result = reset.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
@@ -389,17 +389,17 @@ public class AccountDeviceActivity extends Activity
                     showDialog(CANNOT_RESET_OWN_DEVICE);
                 } else {
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
-                    Log.e(Collect.LOGTAG, t + "system error while processing getResult"); 
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing getResult"); 
                 }
             } catch (NullPointerException e) {
                 // Communication error
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
-                Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
                 e.printStackTrace();
             } catch (JSONException e) {
                 // Parse error (malformed result)
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
-                Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
                 e.printStackTrace();
             }
         }
@@ -455,29 +455,27 @@ public class AccountDeviceActivity extends Activity
                     String reason = update.optString(InformOnlineState.REASON, ClientRegistrationActivity.REASON_UNKNOWN);
                     
                     if (reason.equals(ClientRegistrationActivity.REASON_INVALID_EMAIL)) {
-                        Log.w(Collect.LOGTAG, t + "invalid email address \"" + mDeviceEmail.getText().toString().trim() + "\"");                    
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();
                     } else if (reason.equals(ClientRegistrationActivity.REASON_EMAIL_ASSIGNED)) {
-                        Log.i(Collect.LOGTAG, t + "email address \"" + mDeviceEmail.getText().toString().trim() + "\" already assigned to an account");                    
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_registration_error_email_in_use), Toast.LENGTH_LONG).show();
                     } else {
                         // Unhandled response
-                        Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
+	                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");                    
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                     }                    
                 } else {
                     // Something bad happened
-                    Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
+	            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing postResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }                
             } catch (NullPointerException e) {
                 // Communication error
-                Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no postResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }

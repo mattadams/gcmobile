@@ -280,7 +280,7 @@ public class SelectFieldImportActivity extends Activity implements SelectFieldIm
             switch (data.getInt(SelectFieldImportListener.MODE)) {
             case SelectFieldImportListener.MODE_IMPORT:
                 if (data.getBoolean(SelectFieldImportListener.CLEAR_LIST, false)) {
-                    Log.v(Collect.LOGTAG, t + "reset select list");
+                    if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "reset select list");
                     Collect.getInstance().getFormBuilderState().getField().getChildren().clear();
                 }
                 

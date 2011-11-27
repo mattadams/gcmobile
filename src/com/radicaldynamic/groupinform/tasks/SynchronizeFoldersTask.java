@@ -154,7 +154,7 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
             
             // If we were supplied with a specific list of folders to synchronize AND this folder isn't in the list
             if (!mFoldersToSynchronize.isEmpty() && !mFoldersToSynchronize.contains(folder.getId())) {
-                Log.d(Collect.LOGTAG, t + folder.getId() + " is not among the list of folders to synchronize; removing it from the queue");
+                if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + folder.getId() + " is not among the list of folders to synchronize; removing it from the queue");
                 folderIds.remove();
             } else if (folder.isReplicated()) {
                 // Otherwise, keep it in the list and increment the total number of folders to process                
@@ -189,7 +189,7 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
                         replicationResults.put(SynchronizeFoldersListener.PULL_RESULT, Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PULL));
                     }
                 } catch (Exception e) {
-                    Log.w(Collect.LOGTAG, t + "problem pulling " + folder.getId() + ": " + e.toString());
+                    if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "problem pulling " + folder.getId() + ": " + e.toString());
                     e.printStackTrace();
 
                     replicationResults.put(SynchronizeFoldersListener.PULL_RESULT, null);
@@ -202,7 +202,7 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
                             replicationResults.put(SynchronizeFoldersListener.PUSH_RESULT, Collect.getInstance().getDbService().replicate(folder.getId(), DatabaseService.REPLICATE_PUSH));
                         }
                     } catch (Exception e) {
-                        Log.w(Collect.LOGTAG, t + "problem pushing " + folder.getId() + ": " + e.toString());
+                        if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "problem pushing " + folder.getId() + ": " + e.toString());
                         e.printStackTrace();
 
                         replicationResults.put(SynchronizeFoldersListener.PUSH_RESULT, null);

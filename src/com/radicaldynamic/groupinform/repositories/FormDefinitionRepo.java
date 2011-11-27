@@ -67,7 +67,7 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
             try {
                 results.put(record.getKey(), (JSONObject) new JSONTokener(record.getValue()).nextValue());                
             } catch (JSONException e) {
-                Log.e(Collect.LOGTAG, t + "failed to parse complex value in getAllPlaceholders, key: " + record.getKey() + ", value: " + record.getValue());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse complex value in getAllPlaceholders, key: " + record.getKey() + ", value: " + record.getValue());
                 e.printStackTrace();
             }
         }
@@ -97,7 +97,7 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
                     results.get(key.getString(0)).put(key.getString(1), record.getValue());
                 }
             } catch (JSONException e) {
-                Log.e(Collect.LOGTAG, t + "failed to parse complex key in getFormsByInstanceStatus, key: " + record.getKey() + ", value: " + record.getValue());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse complex key in getFormsByInstanceStatus, key: " + record.getKey() + ", value: " + record.getValue());
                 e.printStackTrace();
             }
         }

@@ -409,9 +409,9 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
     public static void fetchFolderList(boolean fetchAnyway)
     {
         if (Collect.getInstance().getIoService().isSignedIn() || fetchAnyway) {
-            Log.d(Collect.LOGTAG, t + "fetching new list of folders");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "fetching list of folders");
         } else {
-            Log.d(Collect.LOGTAG, t + "not signed in, skipping folder list fetch");
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "not signed in, skipping folder list fetch");
             return;            
         }
         
@@ -435,7 +435,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
                     fos.write(jsonFolders.toString().getBytes());
                     fos.close();
                 } catch (Exception e) {
-                    Log.e(Collect.LOGTAG, t + "unable to write folder cache: " + e.toString());
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to write folder cache: " + e.toString());
                     e.printStackTrace();
                 }
             } else {
@@ -443,23 +443,23 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
             }
         } catch (NullPointerException e) {
             // Communication error
-            Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");
             e.printStackTrace();
         } catch (JSONException e) {
             // Parse error (malformed result)
-            Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);
             e.printStackTrace();
         }
     }
 
     public static ArrayList<AccountFolder> loadFolderList()
     {
-        Log.d(Collect.LOGTAG , t + "loading folder cache");
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG , t + "loading folder cache");
         
         ArrayList<AccountFolder> folders = new ArrayList<AccountFolder>();
         
         if (!new File(Collect.getInstance().getCacheDir(), FileUtilsExtended.FOLDER_CACHE_FILE).exists()) {
-            Log.w(Collect.LOGTAG, t + "folder cache file cannot be read: aborting loadFolderList()");
+            if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "folder cache file cannot be read: aborting loadFolderList()");
             return folders;
         }
         
@@ -501,11 +501,11 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
                 }
             } catch (JSONException e) {
                 // Parse error (malformed result)
-                Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse JSON " + sb.toString());
                 e.printStackTrace();
             }
         } catch (Exception e) {
-            Log.e(Collect.LOGTAG, t + "unable to read folder cache: " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "unable to read folder cache: " + e.toString());
             e.printStackTrace();
         }
      
