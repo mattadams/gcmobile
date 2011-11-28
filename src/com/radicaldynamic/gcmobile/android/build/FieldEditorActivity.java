@@ -168,7 +168,9 @@ public class FieldEditorActivity extends Activity
         else if (mFieldType.equals("draw"))       loadDrawElement();        // Note: draw is a virtual type - it will be turned into media once created
         else if (mFieldType.equals("geopoint"))   loadGeopointElement();                  
         else if (mFieldType.equals("group"))      loadGroupElement();    
-        else if (mFieldType.equals("media") && mField.getAttributes().get(XForm.Attribute.MEDIA_TYPE).contains("draw"))
+        else if (mFieldType.equals("media") 
+                && mField.getAttributes().containsKey(XForm.Attribute.MEDIA_TYPE) 
+                && mField.getAttributes().get(XForm.Attribute.MEDIA_TYPE).contains("draw"))
                                                   loadDrawElement();
         else if (mFieldType.equals("media"))      loadMediaElement();                    
         else if (mFieldType.equals("number"))     loadNumberElement();                    
