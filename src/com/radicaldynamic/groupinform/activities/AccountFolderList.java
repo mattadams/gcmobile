@@ -205,7 +205,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
                 .setIcon(R.drawable.ic_dialog_info)
                 .setTitle(R.string.tf_unable_to_edit_folder_not_owner_title)
                 .setMessage(R.string.tf_unable_to_edit_folder_not_owner_msg)
-                .setPositiveButton(R.string.tf_remove, new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
                     }

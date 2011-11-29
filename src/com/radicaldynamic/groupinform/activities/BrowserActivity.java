@@ -454,7 +454,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                     
                     if (form.getName().length() == 0) {
                         removeDialog(DIALOG_CREATE_TEMPLATE);
-                        Toast.makeText(getApplicationContext(), getString(R.string.file_dialog_aborted), Toast.LENGTH_SHORT).show();                        
+                        Toast.makeText(getApplicationContext(), getString(R.string.tf_form_name_required), Toast.LENGTH_LONG).show();                        
                         showDialog(DIALOG_CREATE_TEMPLATE);
                     } else {
                         removeDialog(DIALOG_CREATE_TEMPLATE);

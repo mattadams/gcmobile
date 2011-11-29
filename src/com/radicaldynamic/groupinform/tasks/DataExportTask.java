@@ -269,9 +269,9 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 // Remove export data directory
                 FileUtilsExtended.deleteFolder(exportPath);
                 
-                mCompleteMsg = exportTally + " records have been successfully exported the external storage on this device.\n\nPlease look for a ZIP file with the following name:\n\n" + prefix;
+                mCompleteMsg = exportTally + " records have been successfully exported to the external storage on this device.\n\nPlease look for a ZIP file with the following name:\n\n" + prefix;
             } else {
-                mCompleteMsg = exportTally + " records have been successfully exported the external storage on this device.\n\nPlease look for a folder with the following name:\n\n" + prefix;
+                mCompleteMsg = exportTally + " records have been successfully exported to the external storage on this device.\n\nPlease look for a folder with the following name:\n\n" + prefix;
             }
             
             // If emailing, make a copy of the exported ZIP in the cache directory
@@ -293,7 +293,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 }
             }
         } catch (Exception e) {
-            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "problem retreiving form template: " + e.toString());
+            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "problem exporting data: " + e.toString());
             e.printStackTrace();
             
             mErrorMsg = "An error occured while exporting your data. Please contact our support team at support@groupcomplete.com with this error message:\n\n"
