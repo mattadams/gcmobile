@@ -313,11 +313,15 @@ public class InformOnlineState
 
     public void setSession(CookieStore session)
     {
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setSession() called");
+        
         this.session = session;
     }
 
     public CookieStore getSession()
     {
+        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "getSession() called");
+        
         return session;
     }
 
