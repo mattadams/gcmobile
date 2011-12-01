@@ -207,6 +207,7 @@ public class SelectFieldImportActivity extends Activity implements SelectFieldIm
                 public void onClick(DialogInterface dialog, int whichButton) {
                     dialog.cancel();
                     mViewFlipper.setDisplayedChild(0);
+                    updateWizardNavigation();
                 }
             });
             
