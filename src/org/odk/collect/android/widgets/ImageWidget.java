@@ -14,19 +14,21 @@
 
 package org.odk.collect.android.widgets;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
 import org.odk.collect.android.utilities.FileUtils;
 
-import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.activities.FormEntryActivity;
-import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
-
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -45,10 +47,10 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
+import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**
  * Widget that allows user to take pictures, sounds or video and add them to the form.
@@ -338,13 +340,13 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
             bmp.recycle();
             out.close();            
         } catch (FileNotFoundException e) {
-            Log.e(Collect.LOGTAG, t + "failed to find file " + e.toString());  
+            Log.e(Collect.LOGTAG, t + "failed to find file: " + e.toString());  
             e.printStackTrace();
         } catch (IOException e) {
-            Log.e(Collect.LOGTAG, t + "failed to close output stream " + e.toString());
+            Log.e(Collect.LOGTAG, t + "failed to close output stream: " + e.toString());
             e.printStackTrace();
         } catch (OutOfMemoryError e) {
-            Log.e(Collect.LOGTAG, t + "out of memory while resizing image " + e.toString());
+            Log.e(Collect.LOGTAG, t + "out of memory while resizing image: " + e.toString());
             e.printStackTrace();
             
             // Cleanup
@@ -358,8 +360,21 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
             if (mImageView != null)
                 mImageView.setImageBitmap(null);
             
-            mErrorTextView.setText(getContext().getString(R.string.tf_unable_to_resize_image_out_of_memory));
-            mErrorTextView.setVisibility(View.VISIBLE);            
+            // Show error dialog
+            AlertDialog errorDialog = new AlertDialog.Builder(getContext())
+                .setIcon(R.drawable.ic_dialog_alert)
+                .setTitle(getContext().getString(R.string.tf_unable_to_capture_image))
+                .setMessage(getContext().getString(R.string.tf_unable_to_resize_image_out_of_memory))
+                .setNeutralButton(getContext().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id)
+                    {
+                        dialog.cancel();
+                    }
+                })
+                .create();
+
+            errorDialog.show();         
         }
         // END custom
 

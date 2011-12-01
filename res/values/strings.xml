@@ -505,6 +505,7 @@
 	<string name="tf_translate_label">Translate Label</string>
 	<string name="tf_try_again">Try Again</string>
 	<string name="tf_unable_to_access_folder_for_instance_upload">The folder \"%s\" is not responding.  You may try again or cancel this upload attempt and check back later.</string>
+    <string name="tf_unable_to_capture_image">Cannot Capture Image</string>
 	<string name="tf_unable_to_connect">Unable To Connect</string>
 	<string name="tf_unable_to_copy">Unable To Copy</string>
 	<string name="tf_unable_to_copy_duplicate_dialog_msg">The folder \"%1$s\" already contains a form named \"%2$s.\"\n\nPlease choose another name.</string>
@@ -541,7 +542,7 @@
 	<string name="tf_unable_to_rename_dialog">Unable To Rename</string>
 	<string name="tf_unable_to_rename_dialog_msg">This folder already contains a form named \"%s.\"\n\nPlease choose another name.</string>
 	<string name="tf_unable_to_reset_self">This screen cannot be used to reset your own profile.  If you want to do this, please use\n\nAbout GC >\nReset Device.</string>
-    <string name="tf_unable_to_resize_image_out_of_memory">The picture that you took or selected was too large for GC Mobile to import.\n\nIf you are taking a picture using your mobile device\'s camera try reducing the picture size before taking another picture.</string>
+    <string name="tf_unable_to_resize_image_out_of_memory">The picture that you took or selected was too large for GC Mobile to import.\n\nIf you took this picture using your mobile device\'s camera try reducing the image size before taking another picture.\n\nIf you selected an existing picture from your mobile device, crop or resize it before adding it to the form.</string>
 	<string name="tf_unable_to_save_empty_translation">Please provide a translation</string>
     <string name="tf_unable_to_save_unknown_field_type">Cannot save field: something went wrong</string>
     <string name="tf_unable_to_send_export">Cannot Send Export</string>
