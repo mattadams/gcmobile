@@ -132,7 +132,7 @@
 <string name="quit_entry">Save Form and Exit</string>
 <string name="refresh">Refresh</string>
 <string name="replace_audio">Replace Sound</string>
-<string name="replace_barcode">Replace Barcode</string>
+<string name="replace_barcode">Rescan Barcode</string>
 <string name="replace_image">Replace Picture</string>
 <string name="replace_location">Replace Location</string>
 <string name="replace_video">Replace Video</string>

@@ -207,6 +207,10 @@ public class LauncherActivity extends Activity
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         Dialog dialog = null;
         
+        if (isFinishing()) {
+            return dialog;
+        }
+        
         switch (id) {
         case DIALOG_COUCH_ERROR:
             builder

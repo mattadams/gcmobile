@@ -432,7 +432,11 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);        
         View view = null;
-        mDialog = null;
+        mDialog = null;        
+        
+        if (isFinishing()) {
+            return mDialog;
+        }
         
         switch (id) {
         // User wishes to make a new form
