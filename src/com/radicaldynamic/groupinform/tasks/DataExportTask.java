@@ -99,11 +99,11 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
 
             // Include metadata headers?
             if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
-                mExportHeaders.put("formDefinitionName", "Form Name");
-                mExportHeaders.put("formDefinitionUuid", "Unique Form ID");
+                mExportHeaders.put("formDefinitionName", "Template Name");
+                mExportHeaders.put("formDefinitionUuid", "Template ID");
             }
             
-            mExportHeaders.put("recordUuid", "Unique Record ID");
+            mExportHeaders.put("recordUuid", "Record ID");
                 
             if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
                 mExportHeaders.put("dateCreated", "Record Date Created");
