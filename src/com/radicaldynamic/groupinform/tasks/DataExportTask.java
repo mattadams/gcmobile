@@ -79,6 +79,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
         mHandler = (Handler) params[0];
         mFormDefinition = (FormDefinition) params[1];
         mExportOptions = (Bundle) params[2];
+        
         int i;
         
         try {

@@ -69,7 +69,7 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
         super.onCreate(savedInstanceState);
         
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        setContentView(R.layout.about_inform);        
+        setContentView(R.layout.about_gc);        
 
         setTitle(getString(R.string.main_menu_message));
 
