@@ -1475,34 +1475,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                     showDialog(DIALOG_FOLDER_UNAVAILABLE);
                 }
             } else {
-                // Provide hints to user
                 if (documents.isEmpty()) {
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
-                } else {
-                    // TODO: hints disabled until we can find a way to show them unobtrousively (e.g., only once per user session)
-//                    if (mDialog == null || !mDialog.isShowing()) { 
-//                        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
-//                        String descriptor = s1.getSelectedItem().toString().toLowerCase();
-//
-//                        switch (s1.getSelectedItemPosition()) {
-//                        case 0:
-//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_begin_instance_hint), Toast.LENGTH_SHORT).show();
-//                            break;
-//                        case 1:
-//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
-//                            break;
-//                        case 2:
-//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_browse_instances_hint, descriptor), Toast.LENGTH_SHORT).show();
-//                            break;
-//                        case 3:
-//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_export_records_hint), Toast.LENGTH_SHORT).show();
-//                            break;
-//                        case 4:
-//                            Toast.makeText(getApplicationContext(), getString(R.string.tf_edit_form_definition_hint), Toast.LENGTH_SHORT).show();
-//                            break;
-//                        }
-//                    }
                 }
             }
 
@@ -1852,10 +1827,14 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             Button b1 = (Button) findViewById(R.id.onlineStatusTitleButton);
             b1.setEnabled(true);            
 
-            if (Collect.getInstance().getIoService().isSignedIn())
+            if (Collect.getInstance().getIoService().isSignedIn()) {
                 b1.setText(getText(R.string.tf_inform_state_online));
-            else
-                b1.setText(getText(R.string.tf_inform_state_offline));
+            } else {
+                if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
+                    b1.setText(getText(R.string.tf_inform_state_offline));
+                else 
+                    b1.setText(getText(R.string.tf_inform_state_disconnected));
+            }
 
             // Hide "nothing to display" message
             TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);

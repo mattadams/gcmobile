@@ -408,9 +408,10 @@
 	<string name="tf_inform_info">About GC</string>
 	<string name="tf_inform_state_connecting">Going online...</string>
 	<string name="tf_inform_state_disconnecting">Going offline...</string>
-	<string name="tf_inform_state_offline">GC Mobile: OFFLINE</string>
-	<string name="tf_inform_state_online">GC Mobile: Online</string>
-	<string name="tf_inform_state_transition">GC Mobile: ...</string>
+    <string name="tf_inform_state_disconnected">Disconnected</string>
+	<string name="tf_inform_state_offline">OFFLINE</string>
+	<string name="tf_inform_state_online">Online</string>
+	<string name="tf_inform_state_transition">...</string>
 	<string name="tf_integer_number_type">Integers only</string>
 	<string name="tf_invalid_email">Invalid email address</string>
 	<string name="tf_invalid_pin">This PIN is not registered with our system. Double check the PIN and try again.</string>
