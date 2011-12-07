@@ -52,6 +52,7 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.AccountFolderListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.listeners.SynchronizeFoldersListener;
+import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.tasks.SynchronizeFoldersTask;
@@ -178,7 +179,8 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         boolean enabled = false;
         boolean visible = true;
         
-        if (Collect.getInstance().getIoService().isSignedIn())
+        if (Collect.getInstance().getIoService().isSignedIn() && 
+                !Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY))
             enabled = true;
         
         if (mCopyToFolder)
@@ -251,7 +253,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         
         menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_folder))
             .setIcon(R.drawable.ic_menu_add)
-            .setEnabled(enabled)
+            .setEnabled(enabled && !Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY))
             .setVisible(visible);            
         
         menu.add(0, MENU_SYNC_LIST, 0, getString(R.string.tf_replication_list))

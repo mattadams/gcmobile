@@ -52,7 +52,28 @@
         android:inputType="textMultiLine"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"                    
-        android:text="@string/tf_device_admin_email_hint" />      
+        android:text="@string/tf_device_admin_email_hint" />    
+    
+    <!-- Device role -->
+    <TextView
+        android:id="@android:id/empty"
+        android:textSize="20sp"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:paddingTop="10dp"
+        android:text="@string/tf_device_admin_role_label" />
+
+    <Spinner
+        android:id="@+id/role"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    
+    <TextView
+        android:id="@android:id/empty"
+        android:inputType="textMultiLine"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"                    
+        android:text="@string/tf_device_admin_role_hint" />      
     
     <!-- Transfer status option -->
     <TextView

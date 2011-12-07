@@ -22,7 +22,9 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,6 +64,9 @@ public class AccountDeviceActivity extends Activity
     private TextView mDevicePin;
     private TextView mDeviceCheckin;
     private TextView mDeviceStatus;
+    private Spinner mDeviceRole;
+    
+    private ArrayAdapter<CharSequence> mDeviceRoleOptions;
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -82,61 +87,48 @@ public class AccountDeviceActivity extends Activity
         mDevice = Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId);
         
         mDeviceAlias = (EditText) findViewById(R.id.alias);
+        mDeviceCheckin = (TextView) findViewById(R.id.checkin);
         mDeviceEmail = (EditText) findViewById(R.id.email);
         mDevicePin = (TextView) findViewById(R.id.pin);
-        mDeviceCheckin = (TextView) findViewById(R.id.checkin);        
+        mDeviceRole = (Spinner) findViewById(R.id.role);
         mDeviceStatus = (TextView) findViewById(R.id.status);
         
         mDeviceAlias.setText(mDevice.getAlias());
+        mDeviceCheckin.setText(lastCheckinToString());
         mDeviceEmail.setText(mDevice.getEmail());
         mDevicePin.setText(mDevice.getPin());
         
-        // lastCheck is delivered in milliseconds
-        Integer lastCheckin;
+        mDeviceRoleOptions = 
+            ArrayAdapter.createFromResource(this, R.array.tf_device_roles, android.R.layout.simple_spinner_item);        
+        mDeviceRoleOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);        
+        mDeviceRole.setAdapter(mDeviceRoleOptions);
         
-        try {
-            lastCheckin = Integer.valueOf(mDevice.getLastCheckin()) / 1000;
-        } catch (NumberFormatException e) {
-            // Not sure why we run into problems with this
-            lastCheckin = 0;
-        }
-        
-        String approximation = "";
-        String period = "";
-        String unit = "";
-        
-        if (lastCheckin / 86400 > 0) {
-            period = Integer.toString(lastCheckin / 86400);
-            approximation = "About ";
-            unit = " days";
-        } else if ((lastCheckin % 86400) / 3600 > 0) {
-            period = Integer.toString((lastCheckin % 86400) / 3600);
-            approximation = "About ";
-            unit = " hours";
-        } else if (((lastCheckin % 86400) % 3600) / 60 > 0) {
-            period = Integer.toString(((lastCheckin % 86400) % 3600) / 60);
-            unit = " minutes";
-        } else if ((lastCheckin % 86400) % 3600 > 0) {
-            period = Integer.toString((lastCheckin % 86400) % 3600);
-            unit = " seconds";
+        // Initialize role field
+        if (mDevice.getRole() == null) {
+            // If the device role has never been set
+            if (mDevice.getId() == Collect.getInstance().getInformOnlineState().getDeviceId()) {
+                if (Collect.getInstance().getInformOnlineState().isAccountOwner()) {
+                    // Set to administrator if we are viewing our own device profile and we're an account owner
+                    mDeviceRole.setSelection(0);
+                }
+            } else {
+                // Otherwise, default to Mobile Worker
+                mDeviceRole.setSelection(1);
+            }
         } else {
-            approximation = getString(R.string.tf_unavailable);
-        }
-
-        // Hack to turn "minutes" into "minute" or whatever
-        if (period.equals("1")) {
-            unit = unit.substring(0, unit.length() - 1);
+            if (mDevice.getRole().equals(AccountDevice.ROLE_ADMIN)) {
+                mDeviceRole.setSelection(0);
+            } else if (mDevice.getRole().equals(AccountDevice.ROLE_MOBILE_WORKER)) {
+                mDeviceRole.setSelection(1);
+            } else if (mDevice.getRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+                mDeviceRole.setSelection(2);
+            } else {
+                Log.w(Collect.LOGTAG, t + "unknown device role");
+                mDeviceRole.setSelection(3);
+            }
         }
         
-        String text = approximation + period + unit;
-        
-        if (!text.equals(getString(R.string.tf_unavailable).toString())) {
-            text = text + " ago";
-        }
-
-        mDeviceCheckin.setText(text);
-        
-        // Initialize fields based on whether the device is locked
+        // Initialize status field
         if (mDevice.getStatus().equals(AccountDevice.STATUS_ACTIVE))
             mDeviceStatus.setText(getString(R.string.tf_device_admin_status_inuse));                        
         else
@@ -313,18 +305,18 @@ public class AccountDeviceActivity extends Activity
             JSONObject update;
             
             try {
-	        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
+                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
                 update = (JSONObject) new JSONTokener(getResult).nextValue();
-                
+
                 String result = update.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
-                
+
                 // Update successful
                 if (result.equals(InformOnlineState.OK)) {  
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mDevice.getDisplayName()), Toast.LENGTH_SHORT).show();                    
-                    
+
                     // Force the list to refresh (do not be destructive in case something bad happens later)
                     new File(getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).setLastModified(0);
-                    
+
                     // Get out of here
                     finish();
                 } else if (result.equals(InformOnlineState.FAILURE)) {
@@ -332,17 +324,17 @@ public class AccountDeviceActivity extends Activity
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_self), Toast.LENGTH_LONG).show();
                 } else {
                     // Something bad happened
-	            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing getResult");                   
+                    if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "system error while processing getResult");                   
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 }                
             } catch (NullPointerException e) {
                 // Communication error
-	        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");               
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "no getResult to parse.  Communication error with node.js server?");               
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_communication_error_try_again), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             } catch (JSONException e) {
                 // Parse error (malformed result)
-	        if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);                
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse getResult " + getResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }
@@ -415,6 +407,21 @@ public class AccountDeviceActivity extends Activity
             params.add(new BasicNameValuePair("alias", mDeviceAlias.getText().toString().trim()));
             params.add(new BasicNameValuePair("email", mDeviceEmail.getText().toString().trim()));
             
+            switch (mDeviceRole.getSelectedItemPosition()) {
+            case 0:
+                params.add(new BasicNameValuePair("role", AccountDevice.ROLE_ADMIN));
+                break;
+            case 1:
+                params.add(new BasicNameValuePair("role", AccountDevice.ROLE_MOBILE_WORKER));
+                break;
+            case 2:
+                params.add(new BasicNameValuePair("role", AccountDevice.ROLE_DATA_ENTRY));
+                break;
+            case 3:
+                params.add(new BasicNameValuePair("role", AccountDevice.ROLE_UNASSIGNED));
+                break;
+            }
+            
             String updateUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/update";
             
             return HttpUtils.postUrlData(updateUrl, params);
@@ -447,9 +454,6 @@ public class AccountDeviceActivity extends Activity
                     // Commit changes to the cache-in-memory to avoid running InformOnlineService.loadDeviceHash()
                     Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());
                     Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());                
-                    
-                    // Get out of here
-                    finish();
                 } else if (result.equals(InformOnlineState.FAILURE)) {
                     // Update failed because of something the user did                    
                     String reason = update.optString(InformOnlineState.REASON, ClientRegistrationActivity.REASON_UNKNOWN);
@@ -478,7 +482,59 @@ public class AccountDeviceActivity extends Activity
                 if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "failed to parse postResult " + postResult);                
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
+            } finally {                
+                // Get out of here -- don't trap a user who may have become disconnected
+                finish();
             }
         }
+    }
+    
+    // Derive a string from the lastCheckin time
+    private String lastCheckinToString()
+    {        
+        // lastCheck is delivered in milliseconds
+        Integer lastCheckin;
+        
+        try {
+            lastCheckin = Integer.valueOf(mDevice.getLastCheckin()) / 1000;
+        } catch (NumberFormatException e) {
+            // Not sure why we run into problems with this
+            lastCheckin = 0;
+        }
+        
+        String approximation = "";
+        String period = "";
+        String unit = "";
+        
+        if (lastCheckin / 86400 > 0) {
+            period = Integer.toString(lastCheckin / 86400);
+            approximation = "About ";
+            unit = " days";
+        } else if ((lastCheckin % 86400) / 3600 > 0) {
+            period = Integer.toString((lastCheckin % 86400) / 3600);
+            approximation = "About ";
+            unit = " hours";
+        } else if (((lastCheckin % 86400) % 3600) / 60 > 0) {
+            period = Integer.toString(((lastCheckin % 86400) % 3600) / 60);
+            unit = " minutes";
+        } else if ((lastCheckin % 86400) % 3600 > 0) {
+            period = Integer.toString((lastCheckin % 86400) % 3600);
+            unit = " seconds";
+        } else {
+            approximation = getString(R.string.tf_unavailable);
+        }
+
+        // Hack to turn "minutes" into "minute" or whatever
+        if (period.equals("1")) {
+            unit = unit.substring(0, unit.length() - 1);
+        }
+        
+        String text = approximation + period + unit;
+        
+        if (!text.equals(getString(R.string.tf_unavailable).toString())) {
+            text = text + " ago";
+        }
+        
+        return text;        
     }
 }

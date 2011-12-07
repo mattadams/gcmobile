@@ -54,7 +54,8 @@ public class InformOnlineState
     public static final String DEVICE_ID   = "informonline_deviceid";       // Invisible 
     public static final String DEVICE_KEY  = "informonline_devicekey";      // Invisible 
     public static final String DEVICE_PIN  = "informonline_devicepin";      // Accessible
-    
+    public static final String DEVICE_ROLE = "informonline_devicerole";     // Accessible 
+
     public static final String DEFAULT_DATABASE = "informonline_defaultdb"; // Invisible
     
     // The order associated to this device is expired - the account owner needs to fix it 
@@ -87,6 +88,7 @@ public class InformOnlineState
     private String deviceKey;
     private String devicePin;    
     private String deviceFingerprint;
+    private String deviceRole;
     
     private String defaultDatabase;
     private String selectedDatabase;        // The database the user has selected to work with at any given time
@@ -286,6 +288,20 @@ public class InformOnlineState
         return devicePin;
     }
 
+    public void setDeviceRole(String deviceRole) 
+    {
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putString(DEVICE_ROLE, deviceRole);
+        editor.commit(); 
+        
+        this.deviceRole = deviceRole;
+    }
+
+    public String getDeviceRole() 
+    {
+        return deviceRole;
+    }
+
     public void setExpired(boolean expired) 
     {
         if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setExpired() " + expired);
@@ -437,6 +453,7 @@ public class InformOnlineState
         setDeviceId(null);
         setDeviceKey(null);
         setDevicePin(null);
+        setDeviceRole(AccountDevice.ROLE_UNASSIGNED);
         
         setDefaultDatabase(null);
         setExpired(false);
@@ -480,6 +497,7 @@ public class InformOnlineState
         setDeviceId(mPrefs.getString(DEVICE_ID, null));
         setDeviceKey(mPrefs.getString(DEVICE_KEY, null));
         setDevicePin(mPrefs.getString(DEVICE_PIN, null));
+        setDeviceRole(mPrefs.getString(DEVICE_ROLE, AccountDevice.ROLE_UNASSIGNED));
         
         setDefaultDatabase(mPrefs.getString(DEFAULT_DATABASE, null));
         setExpired(mPrefs.getBoolean(EXPIRED_ORDER, false));

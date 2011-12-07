@@ -47,7 +47,6 @@ import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -78,6 +77,7 @@ import com.radicaldynamic.groupinform.documents.Generic;
 import com.radicaldynamic.groupinform.listeners.DefinitionImportListener;
 import com.radicaldynamic.groupinform.listeners.SynchronizeFoldersListener;
 import com.radicaldynamic.groupinform.listeners.ToggleOnlineStateListener;
+import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
 import com.radicaldynamic.groupinform.repositories.FormDefinitionRepo;
 import com.radicaldynamic.groupinform.repositories.FormInstanceRepo;
@@ -128,6 +128,13 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     private static final int MENU_OPTION_NEWFORM = 2;
     private static final int MENU_OPTION_ODKTOOLS = 4;
     private static final int MENU_OPTION_INFO = 5;
+    
+    // Keys for context menu items
+    private static final int MENU_CONTEXT_COPY = 0;
+    private static final int MENU_CONTEXT_EDIT = 1;
+    private static final int MENU_CONTEXT_EXPORT = 2;
+    private static final int MENU_CONTEXT_REMOVE = 3;
+    private static final int MENU_CONTEXT_RENAME = 4;
     
     // Keys for persistence between screen orientation changes
     private static final String KEY_COPY_TO_FOLDER_AS   = "copy_to_folder_as";
@@ -386,30 +393,30 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         Intent i;
         
         switch (item.getItemId()) {
-        case R.id.copy:            
+        case MENU_CONTEXT_COPY:            
             mFormDefinition = form;            
             i = new Intent(this, AccountFolderList.class);
             i.putExtra(AccountFolderList.KEY_COPY_TO_FOLDER, true);
             startActivityForResult(i, RESULT_COPY);
             return true;
             
-        case R.id.edit:
+        case MENU_CONTEXT_EDIT:
             FormBuilderLauncherTask fbl = new FormBuilderLauncherTask();
             fbl.execute(form.getId());
             return true;
             
-        case R.id.export:
+        case MENU_CONTEXT_EXPORT:
             i = new Intent(this, DataExportActivity.class);
             i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
             startActivity(i);
             return true;
             
-        case R.id.remove:
+        case MENU_CONTEXT_REMOVE:
             mFormDefinition = form;
             showDialog(DIALOG_REMOVE_FORM);
             return true;
             
-        case R.id.rename:
+        case MENU_CONTEXT_RENAME:
             mFormDefinition = form;
             showDialog(DIALOG_RENAME_TEMPLATE);
             return true;    
@@ -423,8 +430,14 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
     {        
         super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.browseractivity_cmenu, menu);
+        
+        boolean hasDataEntryRole = Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY);
+        
+        menu.add(0, MENU_CONTEXT_COPY, 0, getString(R.string.tf_copy_to_folder)).setEnabled(!hasDataEntryRole);
+        menu.add(0, MENU_CONTEXT_EDIT, 0, getString(R.string.tf_edit_template)).setEnabled(!hasDataEntryRole);
+        menu.add(0, MENU_CONTEXT_EXPORT, 0, getString(R.string.tf_export_records)).setEnabled(!hasDataEntryRole);
+        menu.add(0, MENU_CONTEXT_REMOVE, 0, getString(R.string.tf_remove_template)).setEnabled(!hasDataEntryRole);
+        menu.add(0, MENU_CONTEXT_RENAME, 0, getString(R.string.tf_rename_template)).setEnabled(!hasDataEntryRole);
     }
     
     public Dialog onCreateDialog(int id)
@@ -888,11 +901,21 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_OPTION_REFRESH, 0, getString(R.string.refresh)).setIcon(R.drawable.ic_menu_refresh);
-        menu.add(0, MENU_OPTION_FOLDERS, 0, getString(R.string.tf_form_folders)).setIcon(R.drawable.ic_menu_archive);
-        menu.add(0, MENU_OPTION_NEWFORM, 0, getString(R.string.tf_add_template)).setIcon(R.drawable.ic_menu_add);
-        menu.add(0, MENU_OPTION_ODKTOOLS, 0, getString(R.string.open_data_kit)).setIcon(R.drawable.ic_menu_upload);
-        menu.add(0, MENU_OPTION_INFO, 0, getString(R.string.tf_inform_info)).setIcon(R.drawable.ic_menu_info_details);
+        menu.add(0, MENU_OPTION_REFRESH, 0, getString(R.string.refresh))
+            .setIcon(R.drawable.ic_menu_refresh);
+        
+        menu.add(0, MENU_OPTION_FOLDERS, 0, getString(R.string.tf_form_folders))
+            .setIcon(R.drawable.ic_menu_archive);
+        
+        menu.add(0, MENU_OPTION_NEWFORM, 0, getString(R.string.tf_add_template))
+            .setIcon(R.drawable.ic_menu_add)
+            .setEnabled(!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY));                    
+        
+        menu.add(0, MENU_OPTION_ODKTOOLS, 0, getString(R.string.open_data_kit))
+            .setIcon(R.drawable.ic_menu_upload);
+        
+        menu.add(0, MENU_OPTION_INFO, 0, getString(R.string.tf_inform_info))
+            .setIcon(R.drawable.ic_menu_info_details);
         return true;
     }
     

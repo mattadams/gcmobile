@@ -44,6 +44,7 @@ import android.util.Log;
 import com.radicaldynamic.groupinform.activities.AccountDeviceList;
 import com.radicaldynamic.groupinform.activities.AccountFolderList;
 import com.radicaldynamic.groupinform.application.Collect;
+import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.InformOnlineSession;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
@@ -250,6 +251,9 @@ public class InformOnlineService extends Service {
             if (result.equals(InformOnlineState.OK)) {
                 if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "successful checkin");
                 Collect.getInstance().getInformOnlineState().setExpired(false);
+                
+                // Update device role -- it might have changed
+                Collect.getInstance().getInformOnlineState().setDeviceRole(checkin.optString("role", AccountDevice.ROLE_UNASSIGNED));
             } else if (result.equals(InformOnlineState.EXPIRED)) {
                 if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "associated order is expired; marking device as expired");
                 Collect.getInstance().getInformOnlineState().setExpired(true);

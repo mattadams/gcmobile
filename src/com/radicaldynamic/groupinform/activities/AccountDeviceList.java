@@ -113,12 +113,14 @@ public class AccountDeviceList extends ListActivity
         AccountDevice device = (AccountDevice) getListAdapter().getItem(position);
         
         // Only account owners should proceed to the next screen
-        if (Collect.getInstance().getInformOnlineState().isAccountOwner()) {
+        if (Collect.getInstance().getInformOnlineState().isAccountOwner() || 
+                Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_ADMIN)) 
+        {
             Intent i = new Intent(this, AccountDeviceActivity.class);
             i.putExtra(AccountDeviceActivity.KEY_DEVICE_ID, device.getId());
             startActivity(i);
         } else {
-            Toast.makeText(getApplicationContext(), getString(R.string.tf_contact_account_owner), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.tf_action_reserved_for_admin), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -287,6 +289,7 @@ public class AccountDeviceList extends ListActivity
                     // Optional information that will only be present if the user is also an account owner
                     device.setLastCheckin(jsonDevice.optString("lastCheckin"));
                     device.setPin(jsonDevice.optString("pin"));
+                    device.setRole(jsonDevice.optString("role"));
                     
                     // Update the lookup hash
                     Collect.getInstance().getInformOnlineState().getAccountDevices().put(device.getId(), device);

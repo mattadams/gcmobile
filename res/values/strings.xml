@@ -234,6 +234,7 @@
 	<string name="tf_account_folder">Folder</string>	
 	<string name="tf_account_key_label">License Key</string>
 	<string name="tf_account_number_label">Licence Number</string>
+    <string name="tf_action_reserved_for_admin">Action reserved for account administrators!</string>
 	<string name="tf_add_form_field">Add Field</string>
 	<string name="tf_add_language">Add a language to begin translating</string>   
     <string name="tf_add_new">Add New</string>
@@ -270,7 +271,6 @@
 	<string name="tf_connection_error_registered_without_db_msg">Unable to connect to the GC Mobile service.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
 	<string name="tf_connection_error_unregistered_msg">Unable to connect to the GC Mobile service to register this device.\n\nPlease make sure that this device can access the Internet and try again in a few minutes.</string>
     <string name="tf_connection_settings">Connection settings</string>	
-	<string name="tf_contact_account_owner">Action reserved for your account owner!</string>
 	<string name="tf_continue">Continue</string>
 	<string name="tf_copy">Copy</string>
 	<string name="tf_copy_as">Copy As</string>
@@ -284,7 +284,7 @@
 	<string name="tf_date_type_date_only">Date only</string>
 	<string name="tf_date_type_time_only">Time only</string>
 	<string name="tf_date_type_date_and_time">Date &amp; time</string>
-	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
+	<string name="tf_default_ionline_server">192.168.43.212</string>
 	<string name="tf_default_ionline_port">5101</string>
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_destination">Destination</string>
@@ -296,6 +296,8 @@
 	<string name="tf_device_admin_email_hint">The email address of the primary user of this device. This email address must be unique to your account.</string>
 	<string name="tf_device_admin_pin_label">Device PIN</string>
 	<string name="tf_device_admin_pin_hint">If the device status is \"unused\" this PIN may be supplied during the registration process to reactivate this device profile.</string>
+    <string name="tf_device_admin_role_label">Role</string>
+    <string name="tf_device_admin_role_hint">The role of this device will control the availability of certain features and options to the user.  See the Intermediate help article \"Managing Your Deployment\" on GroupComplete.com for more information on selecting a role.</string>
 	<string name="tf_device_admin_status_label">Status</string>	
 	<string name="tf_device_admin_status_hint"></string>
 	<string name="tf_device_admin_status_inuse">In Use</string>	

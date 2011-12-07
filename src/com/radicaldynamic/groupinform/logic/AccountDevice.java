@@ -3,6 +3,11 @@ package com.radicaldynamic.groupinform.logic;
 
 public class AccountDevice
 {
+    public static final String ROLE_ADMIN           = "administrator";
+    public static final String ROLE_DATA_ENTRY      = "data entry"; 
+    public static final String ROLE_MOBILE_WORKER   = "mobile worker";
+    public static final String ROLE_UNASSIGNED      = "unassigned";
+        
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_UNUSED = "unused";
     
@@ -12,6 +17,7 @@ public class AccountDevice
     private String email;               // Everyone (r/w by device owner)
     private String lastCheckin;         // ?
     private String pin;                 // RO by account owner, device owner
+    private String role;                // R/W by account owner
     private String status;              // R/W by account owner    
     
     public AccountDevice(String id, String rev, String alias, String email, String status)
@@ -20,6 +26,7 @@ public class AccountDevice
         setRev(rev);
         setAlias(alias);
         setEmail(email);
+        setRole(role);
         setStatus(status);
     }
     
@@ -46,8 +53,7 @@ public class AccountDevice
     
     /*
      * Setters and getters listed below are used by account and/or device owners only
-     */
-    
+     */    
     public void setLastCheckin(String lastCheckin) { this.lastCheckin = lastCheckin; }
     public String getLastCheckin() { return lastCheckin; }
     
@@ -56,4 +62,7 @@ public class AccountDevice
 
     public void setStatus(String status) { this.status = status; }
     public String getStatus() { return status; }
+    
+    public void setRole(String role) { this.role = role; }
+    public String getRole() { return role; }
 }

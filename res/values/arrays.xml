@@ -107,6 +107,13 @@
         <item>3600</item>
     </string-array>
     
+    <string-array name="tf_device_roles">
+        <item>Administrator</item>
+        <item>Mobile Worker</item>
+        <item>Data Entry</item>
+        <item>Unassigned</item>
+    </string-array>
+    
     <string-array name="i18n">
         <item>Abkhazian</item>
         <item>Afar</item>
