@@ -179,14 +179,16 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         boolean enabled = false;
         boolean visible = true;
         
-        if (Collect.getInstance().getIoService().isSignedIn() && 
-                !Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY))
+        if (Collect.getInstance().getIoService().isSignedIn())
             enabled = true;
         
         if (mCopyToFolder)
             visible = false;
         
-        menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder)).setEnabled(enabled).setVisible(visible);
+        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+            menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder)).setEnabled(enabled).setVisible(visible);
+        }
+        
         menu.add(0, CONTEXT_MENU_INFO, 0, getString(R.string.tf_more_info));
     }
 
@@ -251,10 +253,12 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         if (mCopyToFolder)
             visible = false;
         
-        menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_folder))
-            .setIcon(R.drawable.ic_menu_add)
-            .setEnabled(enabled && !Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY))
-            .setVisible(visible);            
+        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+            menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_folder))
+                .setIcon(R.drawable.ic_menu_add)
+                .setEnabled(enabled)
+                .setVisible(visible);
+        }
         
         menu.add(0, MENU_SYNC_LIST, 0, getString(R.string.tf_replication_list))
             .setIcon(R.drawable.ic_menu_sync_list)

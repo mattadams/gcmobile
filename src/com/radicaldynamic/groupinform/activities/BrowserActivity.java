@@ -219,9 +219,19 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         }
 
         // Initiate and populate spinner to filter form browser on the basis of the currently selected task
-        ArrayAdapter<CharSequence> taskSpinnerOptions = ArrayAdapter.createFromResource(this, 
-                R.array.tf_task_spinner_values, 
-                android.R.layout.simple_spinner_item);
+        ArrayAdapter<String> taskSpinnerOptions = new ArrayAdapter(this, android.R.layout.simple_spinner_item);        
+        String [] taskOptions = getResources().getStringArray(R.array.tf_task_selector_options);
+        
+        // Filter tasks for certain device roles
+        for (String t : taskOptions) {
+            if (Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+                if (!t.equals("Export Records") && !t.equals("Edit Form Templates")) {
+                    taskSpinnerOptions.add(t);   
+                }
+            } else {
+                taskSpinnerOptions.add(t);
+            }
+        }
         
         taskSpinnerOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
@@ -431,13 +441,13 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     {        
         super.onCreateContextMenu(menu, v, menuInfo);
         
-        boolean hasDataEntryRole = Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY);
-        
-        menu.add(0, MENU_CONTEXT_COPY, 0, getString(R.string.tf_copy_to_folder)).setEnabled(!hasDataEntryRole);
-        menu.add(0, MENU_CONTEXT_EDIT, 0, getString(R.string.tf_edit_template)).setEnabled(!hasDataEntryRole);
-        menu.add(0, MENU_CONTEXT_EXPORT, 0, getString(R.string.tf_export_records)).setEnabled(!hasDataEntryRole);
-        menu.add(0, MENU_CONTEXT_REMOVE, 0, getString(R.string.tf_remove_template)).setEnabled(!hasDataEntryRole);
-        menu.add(0, MENU_CONTEXT_RENAME, 0, getString(R.string.tf_rename_template)).setEnabled(!hasDataEntryRole);
+        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+            menu.add(0, MENU_CONTEXT_COPY, 0, getString(R.string.tf_copy_to_folder));
+            menu.add(0, MENU_CONTEXT_EDIT, 0, getString(R.string.tf_edit_template));
+            menu.add(0, MENU_CONTEXT_EXPORT, 0, getString(R.string.tf_export_records));
+            menu.add(0, MENU_CONTEXT_REMOVE, 0, getString(R.string.tf_remove_template));
+            menu.add(0, MENU_CONTEXT_RENAME, 0, getString(R.string.tf_rename_template));
+        }
     }
     
     public Dialog onCreateDialog(int id)
@@ -901,21 +911,24 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
+        
         menu.add(0, MENU_OPTION_REFRESH, 0, getString(R.string.refresh))
             .setIcon(R.drawable.ic_menu_refresh);
         
         menu.add(0, MENU_OPTION_FOLDERS, 0, getString(R.string.tf_form_folders))
             .setIcon(R.drawable.ic_menu_archive);
         
-        menu.add(0, MENU_OPTION_NEWFORM, 0, getString(R.string.tf_add_template))
-            .setIcon(R.drawable.ic_menu_add)
-            .setEnabled(!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY));                    
+        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+            menu.add(0, MENU_OPTION_NEWFORM, 0, getString(R.string.tf_add_template))
+                .setIcon(R.drawable.ic_menu_add);
+        }
         
         menu.add(0, MENU_OPTION_ODKTOOLS, 0, getString(R.string.open_data_kit))
             .setIcon(R.drawable.ic_menu_upload);
         
         menu.add(0, MENU_OPTION_INFO, 0, getString(R.string.tf_inform_info))
             .setIcon(R.drawable.ic_menu_info_details);
+        
         return true;
     }
     

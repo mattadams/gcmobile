@@ -62,7 +62,7 @@
    </string-array>
 
     <!-- Begin customizations for Inform --> 
-    <string-array name="tf_task_spinner_values">
+    <string-array name="tf_task_selector_options">
         <item>Start New Form</item>        
         <item>Browse Completed Data</item>
         <item>Browse Draft Data</item>
