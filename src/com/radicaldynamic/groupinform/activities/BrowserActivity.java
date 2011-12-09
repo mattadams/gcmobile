@@ -255,7 +255,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                 if (mSpinnerInit == false) {
                     mSpinnerInit = true;
                 } else {
-                    loadScreen();
+                    // Don't allow a refresh to be triggered manually until the other one is finished
+                    if (mRefreshViewTask == null || mRefreshViewTask.getStatus() == AsyncTask.Status.FINISHED)
+                        loadScreen();
                 }
             }
 
@@ -1478,14 +1480,13 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         protected void onPreExecute()
         {
             setProgressVisibility(true);
+            ((Spinner) findViewById(R.id.taskSpinner)).setClickable(false);
+            ((Spinner) findViewById(R.id.taskSpinner)).setEnabled(false);
         }
 
         @Override
         protected void onPostExecute(FormInstance.Status status)
-        {
-            RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
-            onscreenProgress.setVisibility(View.GONE);
-            
+        {   
             /*
              * Special hack to ensure that our application doesn't crash if we terminate it
              * before the AsyncTask has finished running.  This is stupid and I don't know
@@ -1495,6 +1496,14 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
              */
             if (isFinishing())
                 return;
+            
+            // Stop progress
+            RelativeLayout onscreenProgress = (RelativeLayout) findViewById(R.id.progress);
+            onscreenProgress.setVisibility(View.GONE);
+            
+            // Re-enable task selector
+            ((Spinner) findViewById(R.id.taskSpinner)).setClickable(true);
+            ((Spinner) findViewById(R.id.taskSpinner)).setEnabled(true);
             
             BrowserListAdapter adapter = new BrowserListAdapter(getApplicationContext(), R.layout.browser_list_item, documents, tallies, (Spinner) findViewById(R.id.taskSpinner));
             
