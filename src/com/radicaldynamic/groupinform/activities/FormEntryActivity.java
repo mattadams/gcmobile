@@ -381,7 +381,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             case BARCODE_CAPTURE:
                 String sb = intent.getStringExtra("SCAN_RESULT");
                 ((ODKView) mCurrentView).setBinaryData(sb);
-                saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+                saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
                 break;
             case IMAGE_CAPTURE:
                 /*
@@ -421,7 +421,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 Log.i(t, "Inserting image returned uri = " + imageURI.toString());
 
                 ((ODKView) mCurrentView).setBinaryData(imageURI);
-                saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+                saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
                 refreshCurrentView();
                 break;
             case IMAGE_CHOOSER:
@@ -473,7 +473,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                     Log.i(t, "Inserting image returned uri = " + imageURI.toString());
 
                     ((ODKView) mCurrentView).setBinaryData(imageURI);
-                    saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+                    saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
                 } else {
                     Log.e(t, "NO IMAGE EXISTS at: " + source.getAbsolutePath());
                 }
@@ -487,13 +487,13 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 // then the widget copies the file and makes a new entry in the content provider.
                 Uri media = intent.getData();
                 ((ODKView) mCurrentView).setBinaryData(media);
-                saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+                saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
                 refreshCurrentView();
                 break;
             case LOCATION_CAPTURE:
                 String sl = intent.getStringExtra(LOCATION_RESULT);
                 ((ODKView) mCurrentView).setBinaryData(sl);
-                saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+                saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
                 break;
             case HIERARCHY_ACTIVITY:
                 // BEGIN custom
@@ -593,7 +593,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 return true;
             case MENU_HIERARCHY_VIEW:
                 if (currentPromptIsQuestion()) {
-                    saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+                    saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
                 }
                 Intent i = new Intent(this, FormHierarchyActivity.class);
                 // BEGIN custom
@@ -633,7 +633,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      * @param evaluateConstraints
      * @return false if any error occurs while saving (constraint violated, etc...), true otherwise.
      */
-    private boolean saveAnswersForCurrentScreen(boolean evaluateConstraints) {
+    private boolean saveAnswersForCurrentScreen(boolean evaluateConstraints, boolean ignoreRequiredConstraint) {
         // only try to save if the current event is a question or a field-list group
         if (mFormController.getEvent() == FormEntryController.EVENT_QUESTION
                 || (mFormController.getEvent() == FormEntryController.EVENT_GROUP && mFormController
@@ -643,7 +643,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             for (FormIndex index : indexKeys) {
                 // Within a group, you can only save for question events
                 if (mFormController.getEvent(index) == FormEntryController.EVENT_QUESTION) {
-                    int saveStatus = saveAnswer(answers.get(index), index, evaluateConstraints);
+                    int saveStatus = saveAnswer(answers.get(index), index, evaluateConstraints, ignoreRequiredConstraint);
                     if (evaluateConstraints && saveStatus != FormEntryController.ANSWER_OK) {
                         createConstraintToast(mFormController.getQuestionPrompt(index)
                                 .getConstraintText(), saveStatus);
@@ -712,7 +712,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 
         // mFormEntryController is static so we don't need to pass it.
         if (mFormController != null && currentPromptIsQuestion()) {
-            saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+            saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
         }
         // BEGIN custom
 //        return null;
@@ -926,7 +926,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      */
     private void showNextView() {
         if (currentPromptIsQuestion()) {
-            if (!saveAnswersForCurrentScreen(EVALUATE_CONSTRAINTS)) {
+            if (!saveAnswersForCurrentScreen(EVALUATE_CONSTRAINTS, false)) {
                 // A constraint was violated so a dialog should be showing.
                 return;
             }
@@ -983,7 +983,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     private void showPreviousView() {
         // The answer is saved on a back swipe, but question constraints are ignored.
         if (currentPromptIsQuestion()) {
-            saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+            saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
         }
 
         if (mFormController.getEvent() != FormEntryController.EVENT_BEGINNING_OF_FORM) {
@@ -1215,7 +1215,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      */
     private boolean saveDataToDisk(boolean exit, boolean complete, String updatedSaveName) {
         // save current answer
-        if (!saveAnswersForCurrentScreen(EVALUATE_CONSTRAINTS)) {
+        if (!saveAnswersForCurrentScreen(EVALUATE_CONSTRAINTS, !complete)) {
             Toast.makeText(this, getString(R.string.data_saved_error), Toast.LENGTH_SHORT).show();
             return false;
         }
@@ -1425,7 +1425,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 switch (i) {
                     case DialogInterface.BUTTON1: // yes
                         clearAnswer(qw);
-                        saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+                        saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
                         break;
                     case DialogInterface.BUTTON2: // no
                         break;
@@ -1479,7 +1479,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                                 mFormController.setLanguage(languages[whichButton]);
                                 dialog.dismiss();
                                 if (currentPromptIsQuestion()) {
-                                    saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+                                    saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
                                 }
                                 refreshCurrentView();
                             }
@@ -1621,7 +1621,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     protected void onPause() {
         dismissDialogs();
         if (mCurrentView != null && currentPromptIsQuestion()) {
-            saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS);
+            saveAnswersForCurrentScreen(DO_NOT_EVALUATE_CONSTRAINTS, false);
         }
         super.onPause();
     }
@@ -1868,9 +1868,16 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
      * @param evaluateConstraints
      * @return status as determined in FormEntryController
      */
-    public int saveAnswer(IAnswerData answer, FormIndex index, boolean evaluateConstraints) {
+    public int saveAnswer(IAnswerData answer, FormIndex index, boolean evaluateConstraints, boolean ignoreRequiredConstraint) {
         if (evaluateConstraints) {
-            return mFormController.answerQuestion(index, answer);
+            int saveStatus = mFormController.answerQuestion(index, answer);
+            
+            if (ignoreRequiredConstraint && saveStatus == FormEntryController.ANSWER_REQUIRED_BUT_EMPTY) {
+                mFormController.saveAnswer(index, answer);
+                return FormEntryController.ANSWER_OK;
+            }
+            
+            return saveStatus;
         } else {
             mFormController.saveAnswer(index, answer);
             return FormEntryController.ANSWER_OK;

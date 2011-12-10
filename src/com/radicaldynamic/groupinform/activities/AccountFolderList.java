@@ -41,6 +41,7 @@ import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -95,6 +96,8 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
         setContentView(R.layout.generic_list);
         
@@ -569,6 +572,8 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
     
     private void openFolder()
     {
+        setProgressBarIndeterminateVisibility(true);
+        
         if (mCopyToFolder) {
             Intent i = new Intent();
             i.putExtra(KEY_FOLDER_NAME, mFolder.getName());

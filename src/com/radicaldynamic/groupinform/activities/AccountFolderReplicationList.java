@@ -53,6 +53,7 @@ public class AccountFolderReplicationList extends ListActivity
         super.onCreate(savedInstanceState);
         
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        
         setTitle(getString(R.string.app_name) + " > " + getString(R.string.tf_synchronized_folders));
         
         mListView = getListView();
@@ -68,7 +69,7 @@ public class AccountFolderReplicationList extends ListActivity
         
         new RefreshViewTask().execute();
         
-        Toast.makeText(this, getString(R.string.tf_select_folders_for_offline_use), Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getString(R.string.tf_select_folders_for_offline_use), Toast.LENGTH_SHORT).show();
     }
     
     @Override
