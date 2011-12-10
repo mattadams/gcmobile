@@ -1,5 +1,7 @@
 package com.radicaldynamic.groupinform.documents;
 
+import java.util.List;
+
 import com.radicaldynamic.groupinform.logic.ODKInstanceAttributes;
 
 public class FormInstance extends Generic
@@ -19,6 +21,7 @@ public class FormInstance extends Generic
     private String name;
     private ODKInstanceAttributes odk;
     private Status status;
+    private List<String> assignedTo;
     
     public FormInstance() 
     {
@@ -66,5 +69,13 @@ public class FormInstance extends Generic
     public Status getStatus()
     {
         return status;
+    }
+
+    public void setAssignedTo(List<String> assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public List<String> getAssignedTo() {
+        return assignedTo;
     }
 }

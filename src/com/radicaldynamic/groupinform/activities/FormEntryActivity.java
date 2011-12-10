@@ -41,6 +41,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.DialogInterface.OnDismissListener;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -78,6 +79,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.radicaldynamic.gcmobile.android.dialogs.FormInstanceInfo;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
@@ -169,6 +171,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
     
     // BEGIN custom
     private static final int REMOVE_DIALOG = 3;
+    private static final int INFO_DIALOG = 4;
     
     private static final int MENU_REMOVE = Menu.FIRST + 4;
     private static final int MENU_INFO = Menu.FIRST + 5;
@@ -571,7 +574,8 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
         // BEGIN custom
 //        menu.add(0, MENU_PREFERENCES, 0, getString(R.string.general_preferences)).setIcon(
 //            android.R.drawable.ic_menu_preferences);
-        menu.add(0, MENU_REMOVE, 0, getString(R.string.tf_remove_form)).setIcon(R.drawable.ic_menu_delete);
+        menu.add(0, MENU_INFO, 0, getString(R.string.tf_about_form)).setIcon(R.drawable.ic_menu_info_details);
+        menu.add(0, MENU_REMOVE, 0, getString(R.string.tf_remove_form)).setIcon(R.drawable.ic_menu_delete);        
         // END custom
         return true;
     }
@@ -602,6 +606,9 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 startActivity(pref);
                 return true;
             // BEGIN custom
+            case MENU_INFO:
+                showDialog(INFO_DIALOG);
+                return true;
             case MENU_REMOVE:
                 showDialog(REMOVE_DIALOG);
                 return true;
@@ -1581,6 +1588,19 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 
                 dialog = builder.create();
                 return dialog;
+                
+            case INFO_DIALOG:                
+                FormInstanceInfo fii = new FormInstanceInfo(this, mFormDefinition, mFormInstance);
+                
+                fii.setOnDismissListener(new OnDismissListener () {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) 
+                    {
+                        removeDialog(INFO_DIALOG);                        
+                    }
+                });
+                
+                return fii;
             // END custom
         }
         return null;

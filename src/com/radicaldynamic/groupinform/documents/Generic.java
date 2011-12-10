@@ -123,17 +123,16 @@ public class Generic extends CouchDbDocument
         return dateUpdated;
     }  
 
-    // FIXME: yeah, fix this shit
     @JsonIgnore
     public Calendar getDateUpdatedAsCalendar() {
         Calendar calendar = Calendar.getInstance();
-//        SimpleDateFormat sdf = new SimpleDateFormat(DATETIME);        
+        SimpleDateFormat sdf = new SimpleDateFormat(DATETIME);        
                 
-//        try {
-//            calendar.setTime(sdf.parse(dateUpdated));
-//        } catch (ParseException e1) {
-//            Log.e(Collect.LOGTAG, t + "unable to parse dateCreated, returning a valid date anyway: " + e1.toString());            
-//        }
+        try {
+            calendar.setTime(sdf.parse(dateUpdated));
+        } catch (ParseException e1) {
+            Log.e(Collect.LOGTAG, t + "unable to parse dateUpdated, returning a valid date anyway: " + e1.toString());            
+        }
         
         return calendar;
     }

@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.utilities.StringUtils;
 import com.radicaldynamic.groupinform.xform.Field;
 import com.radicaldynamic.groupinform.xform.XForm;
 
@@ -136,7 +137,7 @@ public class FormBuilderFieldListAdapter extends ArrayAdapter<Field>
                 if (appearance == null) {
                     details.add("Sketch");
                 } else {
-                    details.add(appearance.substring(0, 1).toUpperCase() + appearance.substring(1));
+                    details.add(StringUtils.ucfirst(appearance));
                 }
             } else {
                 String mediaType = field.getAttributes().get(XForm.Attribute.MEDIA_TYPE);

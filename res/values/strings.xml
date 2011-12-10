@@ -223,6 +223,7 @@
 
 	<!-- GC Mobile string resources below -->
 	<string name="tf_abort_exit">Abort exit</string>
+    <string name="tf_about_form">About Form</string>
 	<string name="tf_account_created">Account Created</string>
 	<string name="tf_account_created_msg">You have successfully created an account and registered this device! More information is available from the \"About GC\" option menu.\n\nWe have sent an email to %s confirming this new account.</string>
 	<string name="tf_account_details">If you do not know these details you can have a reminder sent to the account owner.</string>
@@ -243,6 +244,7 @@
     <string name="tf_administer">Administer</string>
     <string name="tf_administer_devices">Administer Devices</string>
 	<string name="tf_alias_not_assigned">Alias not assigned</string>
+    <string name="tf_assign_form">Assign Form</string>
 	<string name="tf_at_top_of_form">Viewing Top of Form</string>
 	<string name="tf_audio_media_type">Audio recording</string>
 	<string name="tf_begin_instance_hint">Select item to begin a new form</string>
@@ -284,7 +286,7 @@
 	<string name="tf_date_type_date_only">Date only</string>
 	<string name="tf_date_type_time_only">Time only</string>
 	<string name="tf_date_type_date_and_time">Date &amp; time</string>
-	<string name="tf_default_ionline_server">192.168.43.212</string>
+	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_ionline_port">5101</string>
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_destination">Destination</string>
@@ -493,6 +495,7 @@
 	<string name="tf_saving_please_wait">Saving...</string>
 	<string name="tf_send">Send</string>
 	<string name="tf_screen_group_type">Display fields on one screen</string>
+    <string name="tf_select_devices">Select Devices</string>
 	<string name="tf_select_folders_for_offline_use">Select folders for offline use</string>
 	<string name="tf_select_task">Select Task</string>
 	<string name="tf_something_failed">%s failed!  Please try again.</string>

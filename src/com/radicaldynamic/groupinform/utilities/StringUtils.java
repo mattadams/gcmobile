@@ -6,7 +6,8 @@ import java.security.NoSuchAlgorithmException;
 
 public class StringUtils
 {
-    public static String getMD5(String input) {
+    public static String getMD5(String input) 
+    {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] messageDigest = md.digest(input.getBytes());
@@ -25,11 +26,13 @@ public class StringUtils
         }
     }
 
-    public static void main(String[] args) throws NoSuchAlgorithmException {
+    public static void main(String[] args) throws NoSuchAlgorithmException 
+    {
         System.out.println(getMD5("Javarmi.com"));
     }
 
-    public static String join(String[] a, String separator, int limit) {
+    public static String join(String[] a, String separator, int limit) 
+    {
         StringBuffer result = new StringBuffer();
 
         if (a.length > 0) {
@@ -42,5 +45,10 @@ public class StringUtils
         }
 
         return result.toString();
+    }
+    
+    public static String ucfirst(String s)
+    {
+        return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
     }
 }

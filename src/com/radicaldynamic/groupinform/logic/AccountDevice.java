@@ -45,7 +45,7 @@ public class AccountDevice
     // Retrieve a reasonable display name (prefer the alias but fall back to email address)
     public String getDisplayName()
     {
-        if (getAlias() == null || getAlias().equals("null"))
+        if (getAlias() == null || getAlias().length() == 0 || getAlias().equals("null"))
             return getEmail();
         else
             return getAlias();      
