@@ -754,6 +754,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             
             // Set an EditText view to get user input 
             final EditText renamedFormName = (EditText) view.findViewById(R.id.formName);
+            TextView renamedFormNameHint = (TextView) view.findViewById(R.id.formNameHint);
+            renamedFormNameHint.setText(getString(R.string.tf_rename_template_hint));
             
             builder
             .setView(view)

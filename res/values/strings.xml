@@ -468,6 +468,7 @@
 	<string name="tf_removing_please_wait">Removing...</string>
 	<string name="tf_rename">Rename</string>
 	<string name="tf_rename_template">Rename Template</string>
+    <string name="tf_rename_template_hint">Enter a new name for this template and select Rename.</string>
 	<string name="tf_renaming_please_wait">Renaming...</string>
 	<string name="tf_renaming_with_param">Renaming %s...</string>
 	<string name="tf_repeated_group">repeated group</string>
