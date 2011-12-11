@@ -387,7 +387,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         @Override
         protected void onPreExecute()
         {
-            //setProgressBarIndeterminateVisibility(true);
+            setProgressBarIndeterminateVisibility(true);
         }
 
         @Override
@@ -408,7 +408,9 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
                         folders);
 
                 setListAdapter(adapter);
-            }            
+            }
+            
+            setProgressBarIndeterminateVisibility(false);
         }
     }
     

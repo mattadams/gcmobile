@@ -67,7 +67,7 @@ import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 
-import com.radicaldynamic.gcmobile.android.activities.DataExportWizard;
+import com.radicaldynamic.gcmobile.android.activities.DataExportActivity;
 import com.radicaldynamic.gcmobile.android.build.FieldList;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
@@ -419,7 +419,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             return true;
             
         case MENU_CONTEXT_EXPORT:
-            i = new Intent(this, DataExportWizard.class);
+            i = new Intent(this, DataExportActivity.class);
             i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
             startActivity(i);
             return true;
@@ -988,7 +988,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
 
         case 3:
             // When showing all forms in folder... export records
-            Intent dea = new Intent(this, DataExportWizard.class);
+            Intent dea = new Intent(this, DataExportActivity.class);
             dea.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
             startActivity(dea);
             break;

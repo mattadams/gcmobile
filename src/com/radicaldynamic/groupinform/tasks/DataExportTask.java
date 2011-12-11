@@ -35,7 +35,7 @@ import android.util.Log;
 import com.mycila.xmltool.CallBack;
 import com.mycila.xmltool.XMLDoc;
 import com.mycila.xmltool.XMLTag;
-import com.radicaldynamic.gcmobile.android.activities.DataExportWizard;
+import com.radicaldynamic.gcmobile.android.activities.DataExportActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
@@ -46,7 +46,7 @@ import com.radicaldynamic.groupinform.xform.FormReader;
 import com.radicaldynamic.groupinform.xform.Instance;
 
 //public class DataExportTask extends AsyncTask<Params, Progress, Result>
-public class DataExport extends AsyncTask<Object, String, Void> 
+public class DataExportTask extends AsyncTask<Object, String, Void> 
 {
     private final static String t = "DataExportTask: ";
     
@@ -99,14 +99,14 @@ public class DataExport extends AsyncTask<Object, String, Void>
             publishProgress("Generating headers...");
 
             // Include metadata headers?
-            if (mExportOptions.getBoolean(DataExportWizard.KEY_OUTPUT_RECORD_METADATA, false)) {
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
                 mExportHeaders.put("formDefinitionName", "Template Name");
                 mExportHeaders.put("formDefinitionUuid", "Template ID");
             }
             
             mExportHeaders.put("recordUuid", "Record ID");
                 
-            if (mExportOptions.getBoolean(DataExportWizard.KEY_OUTPUT_RECORD_METADATA, false)) {
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
                 mExportHeaders.put("dateCreated", "Record Date Created");
                 mExportHeaders.put("createdBy", "Record Created By");
                 mExportHeaders.put("dateUpdated", "Record Date Updated");
@@ -126,12 +126,12 @@ public class DataExport extends AsyncTask<Object, String, Void>
             // Filter list
             for (i = 0; i < unfilteredList.size(); i++) {
                 if (unfilteredList.get(i).getStatus().equals(FormInstance.Status.complete) 
-                        && mExportOptions.getBoolean(DataExportWizard.KEY_EXPORT_COMPLETED, false)) {
+                        && mExportOptions.getBoolean(DataExportActivity.KEY_EXPORT_COMPLETED, false)) {
                     mExportList.add(unfilteredList.get(i));
                 }
                 
                 if (unfilteredList.get(i).getStatus().equals(FormInstance.Status.draft) 
-                        && mExportOptions.getBoolean(DataExportWizard.KEY_EXPORT_DRAFT, false)) {
+                        && mExportOptions.getBoolean(DataExportActivity.KEY_EXPORT_DRAFT, false)) {
                     mExportList.add(unfilteredList.get(i));
                 }
             }
@@ -172,7 +172,7 @@ public class DataExport extends AsyncTask<Object, String, Void>
                         file = new FileOutputStream(instancePath);
                     } else {
                         // Determine if we should download the media file or skip it, as per the user
-                        if (mExportOptions.getBoolean(DataExportWizard.KEY_OUTPUT_MEDIA_FILES, false)) { 
+                        if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_MEDIA_FILES, false)) { 
                             file = new FileOutputStream(exportPath + File.separator + instance.getId() + "-" + key);
                         } else {
                             continue;
@@ -196,14 +196,14 @@ public class DataExport extends AsyncTask<Object, String, Void>
                 mExportData.add(new HashMap<String, Object>());
 
                 // Add in per-record metadata?
-                if (mExportOptions.getBoolean(DataExportWizard.KEY_OUTPUT_RECORD_METADATA, false)) {
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
                     mExportData.getLast().put(mExportHeaders.get("formDefinitionUuid"), mFormDefinition.getId());
                     mExportData.getLast().put(mExportHeaders.get("formDefinitionName"), mFormDefinition.getName());
                 }
                                 
                 mExportData.getLast().put(mExportHeaders.get("recordUuid"), instance.getId());
                     
-                if (mExportOptions.getBoolean(DataExportWizard.KEY_OUTPUT_RECORD_METADATA, false)) {
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
                     mExportData.getLast().put(mExportHeaders.get("recordStatus"), instance.getStatus().toString());
                     mExportData.getLast().put(mExportHeaders.get("dateCreated"), instance.getDateCreated());
                     mExportData.getLast().put(mExportHeaders.get("createdBy"), instance.getCreatedByAlias());
@@ -218,7 +218,7 @@ public class DataExport extends AsyncTask<Object, String, Void>
                 fis.close();
                 
                 // Remove XForm instance file unless the user has opted to keep it
-                if (!mExportOptions.getBoolean(DataExportWizard.KEY_OUTPUT_XFORM_FILES, false)) {
+                if (!mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_XFORM_FILES, false)) {
                     new File(instancePath).delete();
                 }   
             }
@@ -240,7 +240,7 @@ public class DataExport extends AsyncTask<Object, String, Void>
             String exportTally = mExportData.size() + "/" + mExportList.size();
 
             // Create a ZIP archive containing the requested file
-            if (mExportOptions.getBoolean(DataExportWizard.KEY_OUTPUT_ZIP, false)) {
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_ZIP, false)) {
                 publishProgress("Compressing exported data...");
                 
                 String zip = Environment.getExternalStorageDirectory() + File.separator + prefix + ".zip";
@@ -276,14 +276,14 @@ public class DataExport extends AsyncTask<Object, String, Void>
             }
             
             // If emailing, make a copy of the exported ZIP in the cache directory
-            if (mExportOptions.getBoolean(DataExportWizard.KEY_OUTPUT_SEND, false)) {
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_SEND, false)) {
                 mAttachmentPath = FileUtilsExtended.EXTERNAL_CACHE + File.separator + prefix + ".zip";
                 
                 org.apache.commons.io.FileUtils.copyFile(
                         new File(Environment.getExternalStorageDirectory() + File.separator + prefix + ".zip"), 
                         new File(mAttachmentPath));
 
-                if (mExportOptions.getBoolean(DataExportWizard.KEY_OUTPUT_EXTERNAL, false)) {
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_EXTERNAL, false)) {
                     mCompleteMsg = mCompleteMsg + "\n\nSelect \"Send\" to compose an email with the exported data attached in a ZIP file or to transfer the file via Bluetooth.";
                 } else {
                     // Remove from /sdcard if user didn't ask for it to be there
@@ -311,7 +311,7 @@ public class DataExport extends AsyncTask<Object, String, Void>
         update.what = PROGRESS;
         
         Bundle data = new Bundle();
-        data.putString(DataExportWizard.KEY_PROGRESS_MSG, values[0]);
+        data.putString(DataExportActivity.KEY_PROGRESS_MSG, values[0]);
         update.setData(data);
         
         mHandler.sendMessage(update);

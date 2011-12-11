@@ -13,14 +13,14 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 
-public class FormInstanceInfo extends AlertDialog 
+public class InstanceInfoDialog extends AlertDialog 
 {
     Context context;
     
     FormDefinition formDefinition;
     FormInstance formInstance;
     
-    public FormInstanceInfo(final Context context, final FormDefinition fd, final FormInstance fi) 
+    public InstanceInfoDialog(final Context context, final FormDefinition fd, final FormInstance fi) 
     {
         super(context);
         this.context = context;
@@ -42,7 +42,7 @@ public class FormInstanceInfo extends AlertDialog
             @Override
             public void onClick(DialogInterface dialog, int which) 
             {
-                new AccountDeviceChooser(context, fi).show();
+                new ProfileChooserDialog(context, fi).show();
             }            
         });        
     }

@@ -79,7 +79,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.radicaldynamic.gcmobile.android.dialogs.FormInstanceInfo;
+import com.radicaldynamic.gcmobile.android.dialogs.InstanceInfoDialog;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
@@ -1590,7 +1590,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                 return dialog;
                 
             case INFO_DIALOG:                
-                FormInstanceInfo fii = new FormInstanceInfo(this, mFormDefinition, mFormInstance);
+                InstanceInfoDialog fii = new InstanceInfoDialog(this, mFormDefinition, mFormInstance);
                 
                 fii.setOnDismissListener(new OnDismissListener () {
                     @Override
