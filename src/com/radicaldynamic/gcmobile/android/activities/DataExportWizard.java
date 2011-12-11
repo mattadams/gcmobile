@@ -1,4 +1,4 @@
-package com.radicaldynamic.groupinform.activities;
+package com.radicaldynamic.gcmobile.android.activities;
 
 import java.util.HashMap;
 
@@ -23,12 +23,13 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import com.radicaldynamic.groupinform.R;
+import com.radicaldynamic.groupinform.activities.FormEntryActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.listeners.DataExportListener;
-import com.radicaldynamic.groupinform.tasks.DataExportTask;
+import com.radicaldynamic.groupinform.tasks.DataExport;
 
-public class DataExportActivity extends Activity implements DataExportListener
+public class DataExportWizard extends Activity implements DataExportListener
 {
     private static final String t = "DataExportActivity: ";
     
@@ -57,7 +58,7 @@ public class DataExportActivity extends Activity implements DataExportListener
     private Dialog mDialog;
     private ProgressDialog mProgressDialog;
     
-    private DataExportTask mDataExportTask;
+    private DataExport mDataExportTask;
     
     private CheckBox mExportDraft;
     private CheckBox mExportCompleted;
@@ -75,11 +76,11 @@ public class DataExportActivity extends Activity implements DataExportListener
         public void handleMessage(Message msg) 
         {
             switch (msg.what) {     
-            case DataExportTask.ERROR:
-                AlertDialog.Builder builder = new AlertDialog.Builder(DataExportActivity.this);
+            case DataExport.ERROR:
+                AlertDialog.Builder builder = new AlertDialog.Builder(DataExportWizard.this);
                 
                 // TODO: write or pass a proper error message
-                builder.setMessage(DataExportActivity.this.getString(R.string.tf_unknown_error))
+                builder.setMessage(DataExportWizard.this.getString(R.string.tf_unknown_error))
                     .setCancelable(false)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() { 
                         public void onClick(DialogInterface dialog, int id) { 
@@ -91,12 +92,12 @@ public class DataExportActivity extends Activity implements DataExportListener
                 alert.show();                
                 break;
 
-            case DataExportTask.PROGRESS:
+            case DataExport.PROGRESS:
                 Bundle data = msg.getData();              
                 mProgressDialog.setMessage(data.getString(KEY_PROGRESS_MSG));
                 break;
 
-            case DataExportTask.COMPLETE:
+            case DataExport.COMPLETE:
                 mProgressDialog.dismiss();
                 break;
             }
@@ -128,7 +129,7 @@ public class DataExportActivity extends Activity implements DataExportListener
                 if (!verifyFilterOptions() || !verifyDestionationOptions()) {
                     showDialog(DIALOG_OPTIONS_REQUIRED);
                 } else {
-                    mProgressDialog = new ProgressDialog(DataExportActivity.this);
+                    mProgressDialog = new ProgressDialog(DataExportWizard.this);
                     mProgressDialog.setCancelable(false);                
                     mProgressDialog.setMessage(getString(R.string.tf_preparing_to_export));
                     mProgressDialog.show();
@@ -136,13 +137,13 @@ public class DataExportActivity extends Activity implements DataExportListener
                     new Thread() {
                         public void run() {
                             try {
-                                mDataExportTask = new DataExportTask();
-                                mDataExportTask.setDataExportListener(DataExportActivity.this);
+                                mDataExportTask = new DataExport();
+                                mDataExportTask.setDataExportListener(DataExportWizard.this);
                                 mDataExportTask.execute(mProgressHandler, mFormDefinition, getExportOptions());
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 mProgressDialog.dismiss();
-                                mProgressHandler.sendMessage(mProgressHandler.obtainMessage(DataExportTask.ERROR));
+                                mProgressHandler.sendMessage(mProgressHandler.obtainMessage(DataExport.ERROR));
                             }
                         }
                     }.start();
@@ -210,12 +211,12 @@ public class DataExportActivity extends Activity implements DataExportListener
             // Continue data export
             if (((HashMap<?, ?>) data).containsKey(KEY_DATA_EXPORT_TASK)) {
                 // Recreate progress handler for UI
-                mProgressDialog = new ProgressDialog(DataExportActivity.this);
+                mProgressDialog = new ProgressDialog(DataExportWizard.this);
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.setMessage("Resuming export...");
                 mProgressDialog.show();
 
-                mDataExportTask = (DataExportTask) ((HashMap<?, ?>) data).get(KEY_DATA_EXPORT_TASK);
+                mDataExportTask = (DataExport) ((HashMap<?, ?>) data).get(KEY_DATA_EXPORT_TASK);
                 mDataExportTask.setHandler(mProgressHandler);
             }
             
