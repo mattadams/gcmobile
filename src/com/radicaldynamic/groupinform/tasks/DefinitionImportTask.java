@@ -77,6 +77,10 @@ public class DefinitionImportTask extends AsyncTask<String, Void, Void>
             mImportMessage = e.toString();
             if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + e.toString());
             e.printStackTrace();
+        } catch (NullPointerException e) {
+             mImportMessage = "The file that you selected does not appear to contain an XForm or the XML is invalid.\n\nPlease verify that the file you selected is a valid XForm definition.";
+             if (Collect.Log.WARN) Log.e(Collect.LOGTAG, t + e.toString());
+             e.printStackTrace();
         } catch (Exception e) {
             mImportMessage = e.toString();
             if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + e.toString());
