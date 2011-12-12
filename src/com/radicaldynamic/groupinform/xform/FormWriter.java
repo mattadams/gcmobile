@@ -56,7 +56,6 @@ public final class FormWriter
         
         mDefaultPrefix = mFormTag.getPefix(XForm.Value.XMLNS_XFORMS);
         
-        
         mInstanceRoot = instanceRoot;
         mInstanceRootId = instanceRootId;
         

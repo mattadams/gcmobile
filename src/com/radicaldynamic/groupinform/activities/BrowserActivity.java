@@ -68,6 +68,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.radicaldynamic.gcmobile.android.activities.DataExportActivity;
+import com.radicaldynamic.gcmobile.android.activities.DataImportActivity;
 import com.radicaldynamic.gcmobile.android.build.FieldList;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
@@ -134,8 +135,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     private static final int MENU_CONTEXT_COPY = 0;
     private static final int MENU_CONTEXT_EDIT = 1;
     private static final int MENU_CONTEXT_EXPORT = 2;
-    private static final int MENU_CONTEXT_REMOVE = 3;
-    private static final int MENU_CONTEXT_RENAME = 4;
+    private static final int MENU_CONTEXT_IMPORT = 3;
+    private static final int MENU_CONTEXT_REMOVE = 4;
+    private static final int MENU_CONTEXT_RENAME = 5;
     
     // Keys for persistence between screen orientation changes
     private static final String KEY_COPY_TO_FOLDER_AS   = "copy_to_folder_as";
@@ -402,12 +404,12 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     public boolean onContextItemSelected(MenuItem item) 
     {
         AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-        FormDefinition form = (FormDefinition) getListAdapter().getItem((int) info.id);
+        FormDefinition fd = (FormDefinition) getListAdapter().getItem((int) info.id);
         Intent i;
         
         switch (item.getItemId()) {
         case MENU_CONTEXT_COPY:            
-            mFormDefinition = form;            
+            mFormDefinition = fd;            
             i = new Intent(this, AccountFolderList.class);
             i.putExtra(AccountFolderList.KEY_COPY_TO_FOLDER, true);
             startActivityForResult(i, RESULT_COPY);
@@ -415,22 +417,28 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             
         case MENU_CONTEXT_EDIT:
             FormBuilderLauncherTask fbl = new FormBuilderLauncherTask();
-            fbl.execute(form.getId());
+            fbl.execute(fd.getId());
             return true;
             
         case MENU_CONTEXT_EXPORT:
             i = new Intent(this, DataExportActivity.class);
-            i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
+            i.putExtra(FormEntryActivity.KEY_FORMPATH, fd.getId());
+            startActivity(i);
+            return true;
+            
+        case MENU_CONTEXT_IMPORT:
+            i = new Intent(this, DataImportActivity.class);
+            i.putExtra(FormEntryActivity.KEY_FORMPATH, fd.getId());
             startActivity(i);
             return true;
             
         case MENU_CONTEXT_REMOVE:
-            mFormDefinition = form;
+            mFormDefinition = fd;
             showDialog(DIALOG_REMOVE_FORM);
             return true;
             
         case MENU_CONTEXT_RENAME:
-            mFormDefinition = form;
+            mFormDefinition = fd;
             showDialog(DIALOG_RENAME_TEMPLATE);
             return true;    
             
@@ -448,6 +456,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             menu.add(0, MENU_CONTEXT_COPY, 0, getString(R.string.tf_copy_to_folder));
             menu.add(0, MENU_CONTEXT_EDIT, 0, getString(R.string.tf_edit_template));
             menu.add(0, MENU_CONTEXT_EXPORT, 0, getString(R.string.tf_export_records));
+            menu.add(0, MENU_CONTEXT_IMPORT, 0, getString(R.string.tf_import_records));
             menu.add(0, MENU_CONTEXT_REMOVE, 0, getString(R.string.tf_remove_template));
             menu.add(0, MENU_CONTEXT_RENAME, 0, getString(R.string.tf_rename_template));
         }
@@ -1618,7 +1627,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             msg.setData(b);
             progressHandler.sendMessage(msg);
             
-            AttachmentInputStream ais = null;;
+            AttachmentInputStream ais = null;
             byte [] xml = null;
             
             try {
@@ -1961,7 +1970,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
      */
     private byte[] renameFormDefinition(AttachmentInputStream ais, String newName) throws Exception
     {
-        FormReader fr = new FormReader(ais);
+        FormReader fr = new FormReader(ais, false);
 
         // Populate global state (expected by FormWriter)
         Collect.getInstance().getFormBuilderState().setBinds(fr.getBinds());

@@ -47,7 +47,7 @@ public class FormReader
     /*
      * Used to read in a form definition for manipulation by the Form Builder.
      */
-    public FormReader(InputStream is) throws Exception
+    public FormReader(InputStream is, boolean retainFlatFieldIndex) throws Exception
     {
         mForm = XMLDoc.from(is, false);
         
@@ -131,8 +131,14 @@ public class FormReader
         
         parseForm();
 
-        // Free immediately
-        mFlatFieldIndex.clear();
+        // Free immediately (unless we need it)
+        if (retainFlatFieldIndex == false)
+            mFlatFieldIndex.clear();
+    }
+    
+    public HashMap<String, Field> getFlatFieldIndex()
+    {
+        return mFlatFieldIndex;
     }
     
     public ArrayList<Bind> getBinds()

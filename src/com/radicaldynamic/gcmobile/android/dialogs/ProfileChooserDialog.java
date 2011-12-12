@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnMultiChoiceClickListener;
+import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
@@ -21,7 +22,7 @@ public class ProfileChooserDialog extends Builder
     private CharSequence [] items;
     boolean [] checkedItems;
 
-    public ProfileChooserDialog(Context context, final FormInstance fi)
+    public ProfileChooserDialog(final Context context, final FormInstance fi)
     {
         super(context);
         
@@ -70,6 +71,7 @@ public class ProfileChooserDialog extends Builder
                         fi.getAssignedTo().add(d.getId());
                 }
                 
+                Toast.makeText(context, "Assignment updated", Toast.LENGTH_LONG).show();
                 dialog.dismiss();               
             }
         });

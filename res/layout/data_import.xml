@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wizardContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="10dp">    
+
+    <ScrollView 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/wizardScroller" 
+        android:layout_width="fill_parent" 
+        android:layout_height="fill_parent"
+        android:layout_marginBottom="60dp"
+        android:fillViewport="true">
+    
+        <ViewFlipper
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/wizardSteps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/wizardStep1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/stepHeader1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Step #1: Select CSV File"
+                    android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                <TextView
+                    android:id="@+id/stepText1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Select a CSV file from your mobile device's SD card that contains information about the forms to be created.\n\nThe CSV file must have at least one column (this will usually contain names to assign to the forms or the email address of device profiles that the forms should be assigned to).\n\nFor further instructions see the Intermediate help articles at http://groupcomplete.com/help"
+                    android:autoLink="web" />
+
+                <Button
+                    android:id="@+id/importFileSelection"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Select file to import" />
+
+                <TextView
+                    android:id="@+id/stepSelectedFileNameLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Selected File"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <TextView
+                    android:id="@+id/stepSelectedFileName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="File not selected" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/wizardStep2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/wizardSteps"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:id="@+id/stepHeader2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Step #2: Import Preview"
+                    android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                <TextView
+                    android:id="@+id/stepText2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="10dp"
+                    android:text="A preview of your CSV file is shown below. Each row in your CSV file will be turned into a new form.\n\nIf the first row contains column headings you will probably want to skip it." />
+
+                <TableLayout
+                    android:id="@+id/importPreviewTable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:stretchColumns="*" >
+                </TableLayout>
+        
+                <CheckBox
+                    android:id="@+id/importPreserveOrder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:checked="false"
+                    android:text="Preserve order of records" />            
+
+                <CheckBox
+                    android:id="@+id/importSkipFirstRow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:checked="false"
+                    android:text="Skip first row" />   
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/wizardStep3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:id="@+id/stepHeader3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Step #3: New Form Setup"
+                    android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                <TextView
+                    android:id="@+id/stepText3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="10dp"
+                    android:text="The following options determine some of the basic properties of the forms that will be created." />
+        
+                <TextView
+                    android:id="@android:id/empty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="Form Names"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+        
+                <Spinner
+                    android:id="@+id/setFormNames"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+        
+                <TextView
+                    android:id="@android:id/empty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="Form Statuses"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+        
+                <Spinner
+                    android:id="@+id/setFormStatuses"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@android:id/empty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="Assign Forms"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+        
+                <Spinner
+                    android:id="@+id/setFormAssignments"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />        
+            </LinearLayout>
+    
+            <LinearLayout
+                android:id="@+id/wizardStep4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:id="@+id/stepHeader4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Step #4: Prepopulate Fields"
+                    android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                <TextView
+                    android:id="@+id/stepText4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Use these settings to map data contained in the columns of the CSV file to fields in your form.\n\nThe effect of this is very similar to setting default values in the form template except that prepopulated fields can have different values from form to form." />
+
+            </LinearLayout>
+            
+        </ViewFlipper>
+    </ScrollView>
+    
+    <RelativeLayout
+        android:id="@+id/wizardNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" 
+        android:layout_weight="1"   
+        android:layout_marginTop="4dp" >
+
+        <Button
+            android:id="@+id/stepPrevious"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:enabled="false"
+            android:text="Back" />
+
+        <Button
+            android:id="@+id/stepNext"
+            android:drawableRight="@drawable/button_indicator_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="Next  " />
+    </RelativeLayout>
+</RelativeLayout>

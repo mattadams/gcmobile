@@ -38,7 +38,7 @@ public class DefinitionImportTask extends AsyncTask<String, Void, Void>
             
             // Read form to ensure that it is an XML file
             FileInputStream fis = new FileInputStream(templateFile);
-            FormReader fr = new FormReader(fis);
+            FormReader fr = new FormReader(fis, false);
             fis.close();                
             
             // Get title from form, if possible

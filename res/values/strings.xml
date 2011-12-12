@@ -405,6 +405,7 @@
 	<string name="tf_image_media_type">Photograph</string>
 	<string name="tf_import">Import</string>
     <string name="tf_import_list">Import List</string>
+    <string name="tf_import_records">Import Records</string>
 	<string name="tf_imported_file">Imported \"%s\"</string>
 	<string name="tf_importing_template_please_wait">Importing template...</string>
 	<string name="tf_improperly_formatted_licence_number">Improperly formatted licence number</string>
@@ -416,6 +417,7 @@
 	<string name="tf_inform_state_offline">OFFLINE</string>
 	<string name="tf_inform_state_online">Online</string>
 	<string name="tf_inform_state_transition">...</string>
+    <string name="tf_instance_import_wizard">Form Import Wizard</string>
 	<string name="tf_integer_number_type">Integers only</string>
 	<string name="tf_invalid_email">Invalid email address</string>
 	<string name="tf_invalid_pin">This PIN is not registered with our system. Double check the PIN and try again.</string>
@@ -435,6 +437,7 @@
 	<string name="tf_licence_validation_succeeded">Licence checks out!</string>
 	<string name="tf_loading">Loading</string>
 	<string name="tf_loading_please_wait">Loading...</string>
+    <string name="tf_loading_template_please_wait">Loading template...</string>
 	<string name="tf_more_info">More Info</string>
 	<string name="tf_new_account">New Account</string>
 	<string name="tf_notify_device_owner">Notify User</string>
@@ -463,7 +466,7 @@
 	<string name="tf_remove_folder">Remove Folder</string>
 	<string name="tf_remove_folder_dialog_msg">IMPORTANT - PLEASE READ\n\nThis operation cannot be reversed! All form templates, drafts and completed forms contained in this folder will be lost upon removal.\n\nIf you need any of this information export it before removing this folder.</string>
 	<string name="tf_remove_form">Remove Form</string>
-	<string name="tf_remove_form_with_instances_dialog_msg">The form \"%s\" has data associated with it.\n\nIf you remove this template the associated data will be removed along with it.\n\nDo you wish to proceed?</string>
+	<string name="tf_remove_form_with_instances_dialog_msg">The form \"%s\" has data associated with it.\n\nIf you remove this template this data will be removed along with it.\n\nDo you wish to proceed?</string>
 	<string name="tf_remove_form_without_instances_dialog_msg">Do you wish to remove the form template \"%s?\"</string>
 	<string name="tf_remove_template">Remove Template</string>
 	<string name="tf_removed_with_param">Removed \"%s\"</string>

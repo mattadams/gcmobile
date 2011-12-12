@@ -93,7 +93,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
             AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(mFormDefinition.getId(), "xml");
             
             publishProgress("Parsing template...");
-            mFormReader = new FormReader(ais);
+            mFormReader = new FormReader(ais, false);
             ais.close();
             
             publishProgress("Generating headers...");

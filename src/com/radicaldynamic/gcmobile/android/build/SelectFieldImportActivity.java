@@ -144,6 +144,13 @@ public class SelectFieldImportActivity extends Activity implements SelectFieldIm
             }
         });
         
+        Object data = getLastNonConfigurationInstance();
+        
+        if (data instanceof SelectFieldImportTask) {
+            mSelectFieldImportTask = (SelectFieldImportTask) data;
+            mSelectFieldImportTask.setListener(this);
+        }
+        
         if (savedInstanceState == null) {
             
         } else {            
@@ -223,13 +230,6 @@ public class SelectFieldImportActivity extends Activity implements SelectFieldIm
         }
         
         return mAlertDialog;
-    }
-    
-    @Override
-    protected void onDestroy() 
-    {
-        // Destroy logic goes above this line
-        super.onDestroy();
     }
     
     @Override
@@ -353,25 +353,6 @@ public class SelectFieldImportActivity extends Activity implements SelectFieldIm
         }
     }
 
-    private void updateWizardNavigation()
-    {        
-        switch (mViewFlipper.getCurrentView().getId()) {
-        case R.id.wizardStep1:
-            mPreviousStep.setEnabled(false);
-            mNextStep.setText("Next  ");
-            break;
-        case R.id.wizardStep2:
-            mPreviousStep.setEnabled(true);
-            mNextStep.setText("Next  ");
-            break;
-        case R.id.wizardStep3:
-            processCsvFile(true);
-            mPreviousStep.setEnabled(true);
-            mNextStep.setText("Import  ");
-            break;
-        }
-    }
-    
     private void processCsvFile(boolean preview)
     {
         mSelectFieldImportTask = new SelectFieldImportTask();
@@ -391,5 +372,24 @@ public class SelectFieldImportActivity extends Activity implements SelectFieldIm
 
         showDialog(DIALOG_IMPORTING);
         mSelectFieldImportTask.execute();
+    }    
+
+    private void updateWizardNavigation()
+    {        
+        switch (mViewFlipper.getCurrentView().getId()) {
+        case R.id.wizardStep1:
+            mPreviousStep.setEnabled(false);
+            mNextStep.setText("Next  ");
+            break;
+        case R.id.wizardStep2:
+            mPreviousStep.setEnabled(true);
+            mNextStep.setText("Next  ");
+            break;
+        case R.id.wizardStep3:
+            processCsvFile(true);
+            mPreviousStep.setEnabled(true);
+            mNextStep.setText("Import  ");
+            break;
+        }
     }
 }

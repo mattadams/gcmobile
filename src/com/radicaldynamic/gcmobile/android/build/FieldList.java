@@ -545,7 +545,7 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
                 
                 if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "Retreiving form XML from database...");
                 AttachmentInputStream ais = Collect.getInstance().getDbService().getDb().getAttachment(formId, "xml");
-                mFormReader = new FormReader(ais);
+                mFormReader = new FormReader(ais, false);
                 ais.close();
                 
                 mFieldState = mFormReader.getFields();
