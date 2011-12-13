@@ -264,6 +264,7 @@
 	<string name="tf_choose_number_type_hint">Select the number type that this field should support.</string>
 	<string name="tf_choose_one">Choose one</string>
     <string name="tf_clear">Clear</string>
+    <string name="tf_clear_results">Clear Results</string>
 	<string name="tf_communication_error_try_again">Communication error - please try later</string>
 	<string name="tf_confirm_complete_instance_removal_dialog_msg">This is a completed form.\n\nAre you sure that you want to remove it?\n\nThis action can not be undone.</string>
 	<string name="tf_confirm_instance_removal_dialog_msg">Do you want to remove this form?\n\nThis action can not be undone.</string>
@@ -496,6 +497,11 @@
     <string name="tf_save">Save</string>
 	<string name="tf_saved_data">Saved!</string>
 	<string name="tf_saving_please_wait">Saving...</string>
+    <string name="tf_search">Search</string>
+    <string name="tf_search_by_assignment_prompt">Display forms assigned to...</string>
+    <string name="tf_search_by_status_prompt">Display forms with...</string>
+    <string name="tf_search_filter_by_assignment">Filter By Assignment</string>    
+    <string name="tf_search_filter_by_status">Filter By Status</string>
 	<string name="tf_send">Send</string>
 	<string name="tf_screen_group_type">Display fields on one screen</string>
     <string name="tf_select_devices">Select Devices</string>

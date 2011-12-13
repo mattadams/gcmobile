@@ -218,7 +218,7 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
         try {
             FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());
             ArrayList<FormDefinition> definitions = (ArrayList<FormDefinition>) repo.getAllActiveByKeys(new ArrayList<Object>(mUploadBundle.keySet()));
-            DocumentUtils.sortByName(definitions);
+            DocumentUtils.sortDefinitionsByName(definitions);
 
             StringBuilder b = new StringBuilder();
             Iterator<FormDefinition> definitionIterator = definitions.iterator();

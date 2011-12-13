@@ -15,14 +15,14 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormInstance;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 
-public class ProfileChooserDialog extends Builder 
+public class InstanceAssignDialog extends Builder 
 {
     private List<AccountDevice> deviceList = new ArrayList<AccountDevice>();
         
     private CharSequence [] items;
     boolean [] checkedItems;
 
-    public ProfileChooserDialog(final Context context, final FormInstance fi)
+    public InstanceAssignDialog(final Context context, final FormInstance fi)
     {
         super(context);
         

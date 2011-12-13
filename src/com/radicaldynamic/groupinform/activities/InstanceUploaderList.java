@@ -406,7 +406,7 @@ public class InstanceUploaderList extends ListActivity {
                 
                 if (!mInstances.isEmpty()) {                
                     documents = (ArrayList<FormDefinition>) new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()).getAllActiveByKeys(new ArrayList<Object>(mInstances.keySet()));            
-                    DocumentUtils.sortByName(documents);
+                    DocumentUtils.sortDefinitionsByName(documents);
                 }
             } catch (DbAccessException e) {
                 folderUnavailable = true;

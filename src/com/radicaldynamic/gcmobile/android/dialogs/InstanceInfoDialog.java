@@ -42,7 +42,7 @@ public class InstanceInfoDialog extends AlertDialog
             @Override
             public void onClick(DialogInterface dialog, int which) 
             {
-                new ProfileChooserDialog(context, fi).show();
+                new InstanceAssignDialog(context, fi).show();
             }            
         });        
     }

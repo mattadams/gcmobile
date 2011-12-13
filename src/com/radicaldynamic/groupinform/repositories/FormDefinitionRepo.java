@@ -43,11 +43,6 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
         return queryView("byXmlHash", xmlHash);
     }
 
-    public List<FormDefinition> getAllByKeys(Collection<Object> keys) 
-    {
-        return db.queryView(createQuery("all").keys(keys).includeDocs(true), FormDefinition.class);
-    }    
-    
     public List<FormDefinition> getAllActive()
     {        
         return db.queryView(createQuery("allActive").includeDocs(true), FormDefinition.class);
@@ -108,6 +103,7 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
     public Map<String, List<String>> getByAggregateReadiness() 
     {
         Map<String, List<String>> results = new HashMap<String, List<String>>();
+        
         ViewResult r = db.queryView(createQuery("byAggregateReadiness"));
         List<Row> rows = r.getRows();
         

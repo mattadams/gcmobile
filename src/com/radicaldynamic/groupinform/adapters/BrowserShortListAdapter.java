@@ -17,14 +17,14 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
 
-public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
+public class BrowserShortListAdapter extends ArrayAdapter<FormDefinition>
 {       
     private Context mContext;
     private ArrayList<FormDefinition> mItems;
     private HashMap<String, HashMap<String, String>> mTallies;
     private Spinner mSpinner;
 
-    public BrowserListAdapter(Context context, int textViewResourceId, ArrayList<FormDefinition> items, HashMap<String, HashMap<String, String>> tallies, Spinner spinner) {
+    public BrowserShortListAdapter(Context context, int textViewResourceId, ArrayList<FormDefinition> items, HashMap<String, HashMap<String, String>> tallies, Spinner spinner) {
         super(context, textViewResourceId, items);
         mContext = context;
         mItems = items;           
@@ -83,7 +83,7 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
                         complete = "0";
                     
                     fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked3));
-                    tallies = complete + " completed forms";
+                    tallies = complete + " complete forms";
                     
                     if (mTallies.get(f.getId()).get(FormInstance.Status.complete.toString()).equals("1"))
                         tallies = tallies.substring(0, tallies.length() - 1);
@@ -101,8 +101,12 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
                     if (mTallies.get(f.getId()).get(FormInstance.Status.draft.toString()).equals("1"))
                         tallies = tallies.substring(0, tallies.length() - 1);
                     break;
-                    
+
                 case 3:
+                    // Handled by BrowserLongListAdapter
+                    break;
+                    
+                case 4:
                     fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.clipboard_download));
                     
                     if (mTallies.containsKey(f.getId())) {
@@ -119,7 +123,7 @@ public class BrowserListAdapter extends ArrayAdapter<FormDefinition>
                     tallies = draft + " draft(s), " + complete + " complete";
                     break;
                     
-                case 4:
+                case 5:
                     fi.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_edit));
                     
                     if (mTallies.containsKey(f.getId())) {

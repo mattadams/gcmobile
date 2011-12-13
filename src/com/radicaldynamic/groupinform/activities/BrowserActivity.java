@@ -20,6 +20,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -70,8 +72,10 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import com.radicaldynamic.gcmobile.android.activities.DataExportActivity;
 import com.radicaldynamic.gcmobile.android.activities.DataImportActivity;
 import com.radicaldynamic.gcmobile.android.build.FieldList;
+import com.radicaldynamic.gcmobile.android.dialogs.FilterByAssignmentDialog;
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.adapters.BrowserListAdapter;
+import com.radicaldynamic.groupinform.adapters.BrowserLongListAdapter;
+import com.radicaldynamic.groupinform.adapters.BrowserShortListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
@@ -118,26 +122,28 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     private static final int DIALOG_ONLINE_STATE_CHANGING = 10;
     private static final int DIALOG_REMOVE_FORM = 11;
     private static final int DIALOG_RENAME_TEMPLATE = 12;
-    private static final int DIALOG_TOGGLE_ONLINE_STATE = 13;
-    private static final int DIALOG_UNABLE_TO_COPY_DUPLICATE = 14;
-    private static final int DIALOG_UNABLE_TO_IMPORT_TEMPLATE = 15;
-    private static final int DIALOG_UNABLE_TO_RENAME_DUPLICATE = 16;
-    private static final int DIALOG_UPDATING_FOLDER = 17;
+    private static final int DIALOG_SEARCH_FILTER = 13;
+    private static final int DIALOG_TOGGLE_ONLINE_STATE = 14;
+    private static final int DIALOG_UNABLE_TO_COPY_DUPLICATE = 15;
+    private static final int DIALOG_UNABLE_TO_IMPORT_TEMPLATE = 16;
+    private static final int DIALOG_UNABLE_TO_RENAME_DUPLICATE = 17;
+    private static final int DIALOG_UPDATING_FOLDER = 18;
     
     // Keys for option menu items
-    private static final int MENU_OPTION_REFRESH = 0;
-    private static final int MENU_OPTION_FOLDERS = 1;
-    private static final int MENU_OPTION_NEWFORM = 2;
-    private static final int MENU_OPTION_ODKTOOLS = 4;
-    private static final int MENU_OPTION_INFO = 5;
+    private static final int MENU_OPTION_REFRESH    = 0;
+    private static final int MENU_OPTION_SEARCH     = 1;
+    private static final int MENU_OPTION_FOLDERS    = 2;
+    private static final int MENU_OPTION_NEWFORM    = 3;
+    private static final int MENU_OPTION_ODKTOOLS   = 4;
+    private static final int MENU_OPTION_INFO       = 5;
     
     // Keys for context menu items
-    private static final int MENU_CONTEXT_COPY = 0;
-    private static final int MENU_CONTEXT_EDIT = 1;
-    private static final int MENU_CONTEXT_EXPORT = 2;
-    private static final int MENU_CONTEXT_IMPORT = 3;
-    private static final int MENU_CONTEXT_REMOVE = 4;
-    private static final int MENU_CONTEXT_RENAME = 5;
+    private static final int MENU_CONTEXT_COPY      = 0;
+    private static final int MENU_CONTEXT_EDIT      = 1;
+    private static final int MENU_CONTEXT_EXPORT    = 2;
+    private static final int MENU_CONTEXT_IMPORT    = 3;
+    private static final int MENU_CONTEXT_REMOVE    = 4;
+    private static final int MENU_CONTEXT_RENAME    = 5;
     
     // Keys for persistence between screen orientation changes
     private static final String KEY_COPY_TO_FOLDER_AS   = "copy_to_folder_as";
@@ -146,13 +152,22 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     private static final String KEY_DIALOG_MESSAGE      = "dialog_msg";
     private static final String KEY_FORM_DEFINITION     = "form_definition_doc";
     private static final String KEY_SELECTED_DB         = "selected_db";
+    private static final String KEY_SEARCH_FILTER       = "search_filter";
+    private static final String KEY_TASK_SELECTOR       = "task_selector";
+    
+    // Search filter keys
+    private static final String KEY_SEARCH_BY_ASSIGNMENT        = "search_by_assignment";
+    public static final String KEY_SEARCH_BY_ASSIGNMENT_IDS     = "search_by_assignment_ids";
+    private static final String KEY_SEARCH_BY_STATUS            = "search_by_status";
         
     // Request codes for returning data from specified intent 
-    private static final int RESULT_ABOUT = 1;
-    private static final int RESULT_COPY = 2;    
-    private static final int RESULT_IMPORT = 3;
+    private static final int RESULT_ABOUT   = 1;
+    private static final int RESULT_COPY    = 2;    
+    private static final int RESULT_IMPORT  = 3;
 
     private FormDefinition mFormDefinition;     // Stash for a selected form definition
+    
+    private Bundle mSearchFilter = null;
     
     private String mCopyToFolderId;             // Data passed back from user selection on AccountFolderList
     private String mCopyToFolderName;           // Same
@@ -187,6 +202,27 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         // Load our custom window title
         getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.title_browser_activity);
         
+        // Initiate and populate spinner to filter form browser on the basis of the currently selected task
+        ArrayAdapter<String> taskSpinnerOptions = new ArrayAdapter(this, android.R.layout.simple_spinner_item);        
+        String [] taskOptions = getResources().getStringArray(R.array.tf_task_selector_options);
+        
+        // Filter tasks for certain device roles
+        for (String t : taskOptions) {
+            if (Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+                if (!t.equals("Export Records") && !t.equals("Edit Form Templates")) {
+                    taskSpinnerOptions.add(t);   
+                }
+            } else {
+                taskSpinnerOptions.add(t);
+            }
+        }
+        
+        taskSpinnerOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        // Associate task spinner with options, set up listener for spinner
+        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);   
+        s1.setAdapter(taskSpinnerOptions);     
+        
         if (savedInstanceState == null) {
             mDialogMessage = "";
             mSelectedDatabase = null;
@@ -206,6 +242,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
 
             if (savedInstanceState.containsKey(KEY_SELECTED_DB))
                 mSelectedDatabase = savedInstanceState.getString(KEY_SELECTED_DB);
+            
+            if (savedInstanceState.containsKey(KEY_TASK_SELECTOR))
+                s1.setSelection(savedInstanceState.getInt(KEY_TASK_SELECTOR), true);
         }
         
         // Retrieve persistent data structures and processes
@@ -218,58 +257,22 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         } else if (data instanceof ToggleOnlineStateTask) { 
             mToggleOnlineStateTask = (ToggleOnlineStateTask) data;
         } else if (data instanceof HashMap<?, ?>) {
-            mFormDefinition = (FormDefinition) ((HashMap<String, Generic>) data).get(KEY_FORM_DEFINITION);
-        }
-
-        // Initiate and populate spinner to filter form browser on the basis of the currently selected task
-        ArrayAdapter<String> taskSpinnerOptions = new ArrayAdapter(this, android.R.layout.simple_spinner_item);        
-        String [] taskOptions = getResources().getStringArray(R.array.tf_task_selector_options);
-        
-        // Filter tasks for certain device roles
-        for (String t : taskOptions) {
-            if (Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
-                if (!t.equals("Export Records") && !t.equals("Edit Form Templates")) {
-                    taskSpinnerOptions.add(t);   
-                }
-            } else {
-                taskSpinnerOptions.add(t);
-            }
+            mFormDefinition = (FormDefinition) ((HashMap<String, Object>) data).get(KEY_FORM_DEFINITION);
+            mSearchFilter = (Bundle) ((HashMap<String, Object>) data).get(KEY_SEARCH_FILTER);
         }
         
-        taskSpinnerOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // Associate task spinner with options, set up listener for spinner
-        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);        
-        s1.setAdapter(taskSpinnerOptions);
         s1.setOnItemSelectedListener(new OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
-                /*
-                 * Probably an implementation bug, the listener erroneously is called during layout.
-                 * Since this listener in effect triggers an Ektorp repository and this repository
-                 * in turn creates Couch views and having the repository initiated twice within the same
-                 * thread will cause a segfault we had to implement this little workaround to ensure
-                 * that loadScreen() is not called twice.
-                 * 
-                 * See https://groups.google.com/group/android-developers/browse_thread/thread/d93ce1ef583a2a29
-                 * and http://stackoverflow.com/questions/2562248/android-how-to-keep-onitemselected-from-firing-off-on-a-newly-instantiated-spinn
-                 * for more on this disgusting issue. 
-                 */
-                if (mSpinnerInit == false) {
-                    mSpinnerInit = true;
-                } else {
-                    // Don't allow a refresh to be triggered manually until the other one is finished
-                    if (mRefreshViewTask == null || mRefreshViewTask.getStatus() == AsyncTask.Status.FINISHED)
-                        loadScreen();
-                }
+                if (mRefreshViewTask == null || mRefreshViewTask.getStatus() == AsyncTask.Status.FINISHED) 
+                    loadScreen();
             }
 
             public void onNothingSelected(AdapterView<?> parent) { }
         });
 
         // Set up listener for Folder title button
-        Button b1 = (Button) findViewById(R.id.folderTitleButton);
-        b1.setOnClickListener(new OnClickListener() {
+        ((Button) findViewById(R.id.folderTitleButton)).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v)
             {
@@ -277,9 +280,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             }
         });
 
-        // Set up listener for Online/Offline title button
-        Button b2 = (Button) findViewById(R.id.onlineStatusTitleButton);
-        b2.setOnClickListener(new OnClickListener() {
+        // Set up listener for Online/Offline title button        
+        ((Button) findViewById(R.id.onlineStatusTitleButton)).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v)
             {
@@ -452,7 +454,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     {        
         super.onCreateContextMenu(menu, v, menuInfo);
         
-        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY) 
+                && ((Spinner) findViewById(R.id.taskSpinner)).getSelectedItemPosition() != 3) 
+        {
             menu.add(0, MENU_CONTEXT_COPY, 0, getString(R.string.tf_copy_to_folder));
             menu.add(0, MENU_CONTEXT_EDIT, 0, getString(R.string.tf_edit_template));
             menu.add(0, MENU_CONTEXT_EXPORT, 0, getString(R.string.tf_export_records));
@@ -803,65 +807,156 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             });
             
             mDialog = builder.create();
-            break;  
+            break;
             
+        case DIALOG_SEARCH_FILTER:
+            view = inflater.inflate(R.layout.dialog_search_forms, null);
             
-            // Prompt user to connect/disconnect
-            case DIALOG_TOGGLE_ONLINE_STATE:
-                view = inflater.inflate(R.layout.dialog_toggle_online_state, null);
-                
-                final CheckBox synchronizeFolders = (CheckBox) view.findViewById(R.id.synchronizeFolders);
-                TextView synchronizeFoldersMessage = (TextView) view.findViewById(R.id.synchronizeFoldersMessage);
-                
-                String buttonText;
-                
-                builder
-                .setView(view)
-                .setInverseBackgroundForced(true)
-                .setIcon(R.drawable.ic_dialog_info);
-                
-                if (Collect.getInstance().getIoService().isSignedIn()) {
-                    builder.setTitle(getText(R.string.tf_go_offline) + "?");
-                    synchronizeFoldersMessage.setText(getString(R.string.tf_go_offline_dialog_msg));
-                    buttonText = getText(R.string.tf_go_offline).toString();
+            if (mSearchFilter == null)
+                mSearchFilter = new Bundle();
+            
+            // Set up adapter and spinner for assignment filter
+            ArrayAdapter<String> filterByAssignmentOptions = 
+                new ArrayAdapter<String>(
+                        this, 
+                        android.R.layout.simple_spinner_item, 
+                        new ArrayList<String>(Arrays.asList("Any device", "This device", "Other devices")));
+            
+            filterByAssignmentOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            
+            final Spinner filterByAssignment = (Spinner) view.findViewById(R.id.filterByAssignment);
+            filterByAssignment.setAdapter(filterByAssignmentOptions);
+            filterByAssignment.setSelection(mSearchFilter.getInt(KEY_SEARCH_BY_ASSIGNMENT, 0));
+            filterByAssignment.setOnItemSelectedListener(new OnItemSelectedListener() {            
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) 
+                {
+                    // Pop up profile selection dialog
+                    if (position == 2 && mSearchFilter.getInt(KEY_SEARCH_BY_ASSIGNMENT, 0) != 2) {
+                        FilterByAssignmentDialog assignmentDialog = new FilterByAssignmentDialog(BrowserActivity.this, mSearchFilter);
+                        assignmentDialog.show();
+                    }
                     
-                } else {
-                    builder.setTitle(getText(R.string.tf_go_online) + "?");
-                    synchronizeFoldersMessage.setText(getString(R.string.tf_go_online_dialog_msg));
-                    buttonText = getText(R.string.tf_go_online).toString();
+                    mSearchFilter.putInt(KEY_SEARCH_BY_ASSIGNMENT, position);
                 }
 
-                builder.setPositiveButton(buttonText, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
-                        
-                        if (Collect.getInstance().getIoService().isSignedIn() && synchronizeFolders.isChecked()) {
-                            mSynchronizeFoldersTask = new SynchronizeFoldersTask();
-                            mSynchronizeFoldersTask.setListener(BrowserActivity.this);
-                            mSynchronizeFoldersTask.setTransferMode(SynchronizeFoldersListener.MODE_SWAP);
-                            mSynchronizeFoldersTask.setPostExecuteSwitch(true);
-                            mSynchronizeFoldersTask.execute();
-                        } else {
-                            mToggleOnlineStateTask = new ToggleOnlineStateTask();
-                            mToggleOnlineStateTask.setListener(BrowserActivity.this);
-                            
-                            if (synchronizeFolders.isChecked()) {
-                                mToggleOnlineStateTask.setPostExecuteSwitch(true);
-                            }
-                            
-                            mToggleOnlineStateTask.execute();
-                        }
-                    }
-                });
+                @Override
+                public void onNothingSelected(AdapterView<?> arg0) 
+                {
+                }            
+            });
+           
+            // Set up adapter and spinner for status filter
+            ArrayAdapter<String> filterByStatusOptions = 
+                new ArrayAdapter<String>(
+                        this, 
+                        android.R.layout.simple_spinner_item, 
+                        new ArrayList<String>(Arrays.asList("Any status", "Complete status", "Draft status")));
+            
+            filterByStatusOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            
+            final Spinner filterByStatus = (Spinner) view.findViewById(R.id.filterByStatus);
+            filterByStatus.setAdapter(filterByStatusOptions);
+            filterByStatus.setSelection(mSearchFilter.getInt(KEY_SEARCH_BY_STATUS, 0));
+            filterByStatus.setOnItemSelectedListener(new OnItemSelectedListener() {            
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) 
+                {
+                    mSearchFilter.putInt(KEY_SEARCH_BY_STATUS, position);
+                }
 
-                builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
+                @Override
+                public void onNothingSelected(AdapterView<?> arg0) 
+                {
+                }            
+            });
+            
+            builder
+                .setView(view)
+                .setInverseBackgroundForced(true)
+                .setTitle("Search Form List");
+            
+            builder.setPositiveButton(getString(R.string.tf_search), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_SEARCH_FILTER);                
+                    
+                    if (((Spinner) findViewById(R.id.taskSpinner)).getSelectedItemPosition() != 3)                    
+                        ((Spinner) findViewById(R.id.taskSpinner)).setSelection(3, true);
+                    else 
+                        loadScreen();
+                }
+            });
+            
+            builder.setNegativeButton(getString(R.string.tf_clear_results), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_SEARCH_FILTER);    
+                    mSearchFilter = null;
+                    
+                    if (((Spinner) findViewById(R.id.taskSpinner)).getSelectedItemPosition() != 3)                    
+                        ((Spinner) findViewById(R.id.taskSpinner)).setSelection(3, true);
+                    else 
+                        loadScreen();
+                }
+            });
+            
+            mDialog = builder.create();
+            break;
+
+        case DIALOG_TOGGLE_ONLINE_STATE:
+            view = inflater.inflate(R.layout.dialog_toggle_online_state, null);
+
+            final CheckBox synchronizeFolders = (CheckBox) view.findViewById(R.id.synchronizeFolders);
+            TextView synchronizeFoldersMessage = (TextView) view.findViewById(R.id.synchronizeFoldersMessage);
+
+            String buttonText;
+
+            builder
+            .setView(view)
+            .setInverseBackgroundForced(true)
+            .setIcon(R.drawable.ic_dialog_info);
+
+            if (Collect.getInstance().getIoService().isSignedIn()) {
+                builder.setTitle(getText(R.string.tf_go_offline) + "?");
+                synchronizeFoldersMessage.setText(getString(R.string.tf_go_offline_dialog_msg));
+                buttonText = getText(R.string.tf_go_offline).toString();
+
+            } else {
+                builder.setTitle(getText(R.string.tf_go_online) + "?");
+                synchronizeFoldersMessage.setText(getString(R.string.tf_go_online_dialog_msg));
+                buttonText = getText(R.string.tf_go_online).toString();
+            }
+
+            builder.setPositiveButton(buttonText, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
+
+                    if (Collect.getInstance().getIoService().isSignedIn() && synchronizeFolders.isChecked()) {
+                        mSynchronizeFoldersTask = new SynchronizeFoldersTask();
+                        mSynchronizeFoldersTask.setListener(BrowserActivity.this);
+                        mSynchronizeFoldersTask.setTransferMode(SynchronizeFoldersListener.MODE_SWAP);
+                        mSynchronizeFoldersTask.setPostExecuteSwitch(true);
+                        mSynchronizeFoldersTask.execute();
+                    } else {
+                        mToggleOnlineStateTask = new ToggleOnlineStateTask();
+                        mToggleOnlineStateTask.setListener(BrowserActivity.this);
+
+                        if (synchronizeFolders.isChecked()) {
+                            mToggleOnlineStateTask.setPostExecuteSwitch(true);
+                        }
+
+                        mToggleOnlineStateTask.execute();
                     }
-                });
-                
-                mDialog = builder.create();
-                break;            
+                }
+            });
+
+            builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    removeDialog(DIALOG_TOGGLE_ONLINE_STATE);
+                }
+            });
+
+            mDialog = builder.create();
+            break;            
 
         case DIALOG_UNABLE_TO_COPY_DUPLICATE:
             builder
@@ -929,6 +1024,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         menu.add(0, MENU_OPTION_REFRESH, 0, getString(R.string.refresh))
             .setIcon(R.drawable.ic_menu_refresh);
         
+        menu.add(0, MENU_OPTION_SEARCH, 0, getString(R.string.tf_search))
+            .setIcon(R.drawable.ic_menu_search);
+        
         menu.add(0, MENU_OPTION_FOLDERS, 0, getString(R.string.tf_form_folders))
             .setIcon(R.drawable.ic_menu_archive);
         
@@ -968,44 +1066,52 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id)
     {
-        FormDefinition form = (FormDefinition) getListAdapter().getItem(position);
         InstanceLoadPathTask ilp;
         Intent i;
 
-        Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
-        
-        switch (s1.getSelectedItemPosition()) {
+        switch (((Spinner) findViewById(R.id.taskSpinner)).getSelectedItemPosition()) {
         case 0:
             // When showing all forms in folder... start a new form
             i = new Intent(this, FormEntryActivity.class);
             i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, new ArrayList<String>());
-            i.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
+            i.putExtra(FormEntryActivity.KEY_FORMPATH, ((FormDefinition) getListAdapter().getItem(position)).getId());
             startActivity(i);
             break;
 
         case 1:
             // When showing all completed forms in folder... browse selected form instances
             ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), FormInstance.Status.complete);
+            ilp.execute(((FormDefinition) getListAdapter().getItem(position)).getId(), FormInstance.Status.complete);
             break;
 
         case 2:
             // When showing all draft forms in folder... browse selected form instances
             ilp = new InstanceLoadPathTask();
-            ilp.execute(form.getId(), FormInstance.Status.draft);
+            ilp.execute(((FormDefinition) getListAdapter().getItem(position)).getId(), FormInstance.Status.draft);
+            break;
+            
+        case 3:
+            // Load instance for editing
+            String instanceId = ((FormInstance) getListAdapter().getItem(position)).getId();
+            
+            i = new Intent(this, FormEntryActivity.class);
+            i.putStringArrayListExtra(FormEntryActivity.KEY_INSTANCES, new ArrayList<String>(Arrays.asList(instanceId)));
+            i.putExtra(FormEntryActivity.KEY_INSTANCEPATH, instanceId);
+            i.putExtra(FormEntryActivity.KEY_FORMPATH, ((FormInstance) getListAdapter().getItem(position)).getFormId());
+            startActivity(i);
             break;
 
-        case 3:
+        case 4:
             // When showing all forms in folder... export records
             Intent dea = new Intent(this, DataExportActivity.class);
-            dea.putExtra(FormEntryActivity.KEY_FORMPATH, form.getId());
+            dea.putExtra(FormEntryActivity.KEY_FORMPATH, ((FormDefinition) getListAdapter().getItem(position)).getId());
             startActivity(dea);
             break;
 
-        case 4:           
+        case 5:           
             // When showing all forms in folder... edit a form
             FormBuilderLauncherTask fbl = new FormBuilderLauncherTask();
-            fbl.execute(form.getId());
+            fbl.execute(((FormDefinition) getListAdapter().getItem(position)).getId());
             break;
         }
     }
@@ -1016,6 +1122,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         switch (item.getItemId()) {
         case MENU_OPTION_REFRESH:
             loadScreen();
+            break;
+        case MENU_OPTION_SEARCH:
+            showDialog(DIALOG_SEARCH_FILTER);
             break;
         case MENU_OPTION_FOLDERS:
             startActivity(new Intent(this, AccountFolderList.class));
@@ -1048,10 +1157,11 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             return mToggleOnlineStateTask;
         
         // Avoid refetching documents from database by preserving them
-        HashMap<String, Generic> persistentData = new HashMap<String, Generic>();
-        persistentData.put(KEY_FORM_DEFINITION, mFormDefinition);
+        HashMap<String, Object> data = new HashMap<String, Object>();
+        data.put(KEY_FORM_DEFINITION, mFormDefinition);
+        data.put(KEY_SEARCH_FILTER, mSearchFilter);
         
-        return persistentData;
+        return data;
     }
     
     @Override
@@ -1063,6 +1173,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         outState.putString(KEY_COPY_TO_FOLDER_NAME, mCopyToFolderName);
         outState.putString(KEY_DIALOG_MESSAGE, mDialogMessage);
         outState.putString(KEY_SELECTED_DB, mSelectedDatabase);
+        outState.putInt(KEY_TASK_SELECTOR, ((Spinner) findViewById(R.id.taskSpinner)).getSelectedItemPosition());
     }
     
     private class CopyToFolderTask extends AsyncTask<Object, Void, Void>
@@ -1263,8 +1374,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             
             try {
                 // Basic deduplication
-                FormDefinitionRepo formDefinitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb(Collect.getInstance().getInformOnlineState().getSelectedDatabase()));
-                List<FormDefinition> definitions = formDefinitionRepo.findByName(f.getName());
+                FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb(Collect.getInstance().getInformOnlineState().getSelectedDatabase()));
+                List<FormDefinition> definitions = repo.findByName(f.getName());
 
                 if (!definitions.isEmpty()) {
                     isDuplicate = true;
@@ -1383,8 +1494,6 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             setProgressVisibility(false);
         }        
     }
-    
-
 
     /*
      * Retrieve all instances of a certain status for a specified definition,
@@ -1444,30 +1553,80 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     /*
      * Refresh the main form browser view as requested by the user
      */
-    private class RefreshViewTask extends AsyncTask<FormInstance.Status, Integer, FormInstance.Status>
+    private class RefreshViewTask extends AsyncTask<Void, Integer, Void>
     {
-        private ArrayList<FormDefinition> documents = new ArrayList<FormDefinition>();
         private HashMap<String, HashMap<String, String>> tallies = new HashMap<String, HashMap<String, String>>();
+                
+        private ArrayList<FormDefinition> definitions = new ArrayList<FormDefinition>();
+        private ArrayList<FormInstance> instances = new ArrayList<FormInstance>();
+        
+        private FormInstance.Status statusFilter = null;        
+        private Bundle filterOptions = null;
+        
         private boolean folderOutdated = false;
-        private boolean folderUnavailable = false;        
+        private boolean folderUnavailable = false;    
 
         @Override
-        protected FormInstance.Status doInBackground(FormInstance.Status... status)
+        protected Void doInBackground(Void... params)
         {
-            try {               
-                // Clean up the currently selected database before we display anything from it
-                Collect.getInstance().getDbService().performHousekeeping(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
-                
-                FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());                
-                tallies = repo.getFormsByInstanceStatus(status[0]);
-                
-                if (status[0].equals(FormInstance.Status.any)) {
-                    documents = (ArrayList<FormDefinition>) repo.getAllActive();
+            try {    
+                if (filterOptions == null && statusFilter == null) {
+                    // Search results pulled but nothing to show
+                } else if (filterOptions == null) {
+                    // No filter options, we must be using the simple status filter
+                    
+                    // TODO: move to AccountFolderList and activate when a user opens a folder?
+                    Collect.getInstance().getDbService().performHousekeeping(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
+
+                    FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());                
+                    tallies = repo.getFormsByInstanceStatus(statusFilter);
+
+                    if (statusFilter.equals(FormInstance.Status.any)) {
+                        definitions = (ArrayList<FormDefinition>) repo.getAllActive();
+                    } else {
+                        definitions = (ArrayList<FormDefinition>) repo.getAllActiveByKeys(new ArrayList<Object>(tallies.keySet()));    
+                    }
+
+                    DocumentUtils.sortDefinitionsByName(definitions);
                 } else {
-                    documents = (ArrayList<FormDefinition>) repo.getAllActiveByKeys(new ArrayList<Object>(tallies.keySet()));    
+                    // Use filter options                    
+                    FormDefinitionRepo definitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()); 
+                    definitions = (ArrayList<FormDefinition>) definitionRepo.getAll();
+
+                    List<String> assignmentParameter = new ArrayList<String>();
+                    FormInstance.Status statusParameter = FormInstance.Status.any;
+                    
+                    switch (filterOptions.getInt(KEY_SEARCH_BY_ASSIGNMENT, 0)) {
+                    case 0:
+                        // Any device
+                        break;
+                    case 1:
+                        // This device
+                        assignmentParameter.add(Collect.getInstance().getInformOnlineState().getDeviceId());
+                        break;
+                    case 2:
+                        // Specific devices
+                        assignmentParameter = filterOptions.getStringArrayList(KEY_SEARCH_BY_ASSIGNMENT_IDS);
+                        break;
+                    }
+                    
+                    switch (filterOptions.getInt(KEY_SEARCH_BY_STATUS, 0)) {
+                    case 0:
+                        // Any status
+                        break;
+                    case 1:
+                        // Complete only
+                        statusParameter = FormInstance.Status.complete; 
+                        break;
+                    case 2:
+                        // Draft only
+                        statusParameter = FormInstance.Status.draft;
+                        break;
+                    }
+                                       
+                    FormInstanceRepo instanceRepo = new FormInstanceRepo(Collect.getInstance().getDbService().getDb());
+                    instances = (ArrayList<FormInstance>) instanceRepo.findByFilterIndex(assignmentParameter, statusParameter);
                 }
-                
-                DocumentUtils.sortByName(documents);
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
             } catch (DocumentNotFoundException e) {
@@ -1485,7 +1644,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                 folderUnavailable = true;
             }
 
-            return status[0];                
+            return null;             
         }
 
         @Override
@@ -1497,8 +1656,10 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         }
 
         @Override
-        protected void onPostExecute(FormInstance.Status status)
+        protected void onPostExecute(Void nothing)
         {   
+            boolean noResults = true;
+            
             /*
              * Special hack to ensure that our application doesn't crash if we terminate it
              * before the AsyncTask has finished running.  This is stupid and I don't know
@@ -1516,10 +1677,6 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             // Re-enable task selector
             ((Spinner) findViewById(R.id.taskSpinner)).setClickable(true);
             ((Spinner) findViewById(R.id.taskSpinner)).setEnabled(true);
-            
-            BrowserListAdapter adapter = new BrowserListAdapter(getApplicationContext(), R.layout.browser_list_item, documents, tallies, (Spinner) findViewById(R.id.taskSpinner));
-            
-            setListAdapter(adapter);
 
             if (folderUnavailable) {
                 String db = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
@@ -1532,13 +1689,37 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                     showDialog(DIALOG_FOLDER_UNAVAILABLE);
                 }
             } else {
-                if (documents.isEmpty()) {
+                if (filterOptions == null) {
+                    noResults = definitions.isEmpty();
+                    
+                    BrowserShortListAdapter adapter = new BrowserShortListAdapter(BrowserActivity.this, R.layout.browser_list_item, definitions, tallies, (Spinner) findViewById(R.id.taskSpinner));
+                    setListAdapter(adapter);
+                } else {
+                    noResults = instances.isEmpty();
+                    
+                    BrowserLongListAdapter adapter = new BrowserLongListAdapter(BrowserActivity.this, R.layout.browser_list_item, instances, definitions);
+                    setListAdapter(adapter);
+                }
+                
+                if (noResults) {
                     TextView nothingToDisplay = (TextView) findViewById(R.id.nothingToDisplay);
                     nothingToDisplay.setVisibility(View.VISIBLE);
                 }
             }
 
             setProgressVisibility(false);
+        }
+        
+        // Simplistic filtering
+        public void setFilterByStatus(FormInstance.Status s)
+        {
+            statusFilter = s;
+        }
+
+        // Search filters for displaying forms via the long adapter
+        public void setFilterOptions(Bundle b)
+        {
+            filterOptions = b;
         }
     }
     
@@ -1877,6 +2058,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
      */
     private void loadScreen()
     {
+        Log.v("DEBUG", "entered load screen");
+        
         String folderName = "?";
         
         try {
@@ -1916,29 +2099,40 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         
             mRefreshViewTask = new RefreshViewTask();
 
-            // Spinner must reflect results of refresh view below
-            Spinner s1 = (Spinner) findViewById(R.id.taskSpinner);
-            
-            switch (s1.getSelectedItemPosition()) {
+            // Spinner must reflect results of refresh view below            
+            switch (((Spinner) findViewById(R.id.taskSpinner)).getSelectedItemPosition()) {
             case 0:
-                // Show all forms
-                mRefreshViewTask.execute(FormInstance.Status.any);
+                Log.v("DEBUG", "refresh 0");
+                // Show all templates to start new form
+                mRefreshViewTask.setFilterByStatus(FormInstance.Status.any);
                 break;
             case 1:
-                // Show all completed forms
-                mRefreshViewTask.execute(FormInstance.Status.complete);
+                Log.v("DEBUG", "refresh 1");
+                // Show templates with complete forms
+                mRefreshViewTask.setFilterByStatus(FormInstance.Status.complete);
                 break;
             case 2:
-                // Show all draft forms
-                mRefreshViewTask.execute(FormInstance.Status.draft);
+                Log.v("DEBUG", "refresh 2");
+                // Show templates with draft forms
+                mRefreshViewTask.setFilterByStatus(FormInstance.Status.draft);
                 break;
             case 3:
-                // Show all forms
+                Log.v("DEBUG", "refresh 3");
+                // Show forms according to filter, search results
+                mRefreshViewTask.setFilterOptions(mSearchFilter);
+                mRefreshViewTask.setFilterByStatus(null);
+                break;
             case 4:
-                // Show all forms
-                mRefreshViewTask.execute(FormInstance.Status.any);
+                Log.v("DEBUG", "refresh 4");
+                // Show all templates (for record export)
+            case 5:
+                Log.v("DEBUG", "refresh 5");
+                // Show all templates (to edit template)
+                mRefreshViewTask.setFilterByStatus(FormInstance.Status.any);
                 break;
             }
+            
+            mRefreshViewTask.execute();
             
             registerForContextMenu(getListView());
         } catch (DatabaseService.DbUnavailableDueToMetadataException e) {            

@@ -66,6 +66,7 @@
         <item>Start New Form</item>        
         <item>Browse Completed Data</item>
         <item>Browse Draft Data</item>
+        <item>View Search Results</item>
         <item>Export Records</item>    
         <item>Edit Form Templates</item>        
     </string-array>
