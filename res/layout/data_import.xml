@@ -192,6 +192,12 @@
                     android:layout_marginTop="10dp"
                     android:text="Use these settings to map data contained in the columns of the CSV file to fields in your form.\n\nThe effect of this is very similar to setting default values in the form template except that prepopulated fields can have different values from form to form." />
 
+                <LinearLayout
+                    android:id="@+id/wizardStep4MapContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">                    
+                </LinearLayout>
             </LinearLayout>
             
         </ViewFlipper>

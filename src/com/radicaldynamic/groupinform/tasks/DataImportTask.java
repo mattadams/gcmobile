@@ -2,7 +2,6 @@ package com.radicaldynamic.groupinform.tasks;
 
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -75,7 +74,7 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
             switch (mImportMode) {
             case DataImportListener.MODE_PREVIEW:
                 while ((line = inFile.read()) != null) {
-                    Log.v(Collect.LOGTAG, tt + "previewing line " + inFile.getLineNumber() + ": " + line.toString());                    
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "previewing line " + inFile.getLineNumber() + ": " + line.toString());                    
                     records.add(new ArrayList<String>(line));
                     
                     // Only read a few lines in
@@ -97,7 +96,7 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                 }
                 
                 while ((line = inFile.read()) != null) {
-                    Log.v(Collect.LOGTAG, tt + "verifying line " + inFile.getLineNumber() + ": " + line.toString());
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "verifying line " + inFile.getLineNumber() + ": " + line.toString());
                     
                     // Verify form assignment
                     if (mFormSetup.getInt(DataImportActivity.KEY_FORM_SETUP_ASSIGNMENT, 0) > 0) {
@@ -105,7 +104,7 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                         int column = mFormSetup.getInt(DataImportActivity.KEY_FORM_SETUP_ASSIGNMENT, 0); 
                         column--;
                         
-                        Log.v(Collect.LOGTAG, tt + "verify assignment from column " + (column + 1) + " (" + line.get(column) + ")");
+                        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "verify assignment from column " + (column + 1) + " (" + line.get(column) + ")");
                         
                         // Split up potential device profile identifiers
                         String [] emailAddresses = line.get(column).split("\\s+");
@@ -125,7 +124,7 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                         int column = mFormSetup.getInt(DataImportActivity.KEY_FORM_SETUP_STATUS, 0); 
                         column = column - 2;
                         
-                        Log.v(Collect.LOGTAG, tt + "verify form status from column " + (column + 1) + " (" + line.get(column) + ")");
+                        if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "verify form status from column " + (column + 1) + " (" + line.get(column) + ")");
                         
                         String status = line.get(column).trim().toLowerCase();
                         
@@ -149,7 +148,7 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                             // Field (with information that tells us what values it expects)
                             Field f = mFormReader.getFlatFieldIndex().get(location);
 
-                            Log.v(Collect.LOGTAG, tt + "verify field-to-column mapping " + (column + 1) + " (" + line.get(column) + ") for " + f.getType() + "." + f.getBind().getType());
+                            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "verify field-to-column mapping " + (column + 1) + " (" + line.get(column) + ") for " + f.getType() + "." + f.getBind().getType());
                         }
                     }
                 }
@@ -167,7 +166,7 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                 }
                 
                 while ((line = inFile.read()) != null) {
-                    Log.v(Collect.LOGTAG, tt + "importing line " + inFile.getLineNumber() + ": " + line.toString());
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "importing line " + inFile.getLineNumber() + ": " + line.toString());
 
                     FormInstance fi = new FormInstance();
                     fi.setFormId(mFormDefinitionId);

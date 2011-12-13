@@ -425,7 +425,7 @@ public class DataImportActivity extends Activity implements DataImportListener
                 
                 parseSuccessful = true;
             } catch (Exception e) {
-                Log.e(Collect.LOGTAG, tt + "critical error while trying to parse form definition: " + e.toString());
+                if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "critical error while trying to parse form definition: " + e.toString());
                 e.printStackTrace();
                 mDialogMsg = e.toString();
             }
@@ -525,13 +525,8 @@ public class DataImportActivity extends Activity implements DataImportListener
             break;
 
         case DataImportListener.MODE_IMPORT:
-            // while (recordIterator.hasNext()) {
-            //     List<String> entry = recordIterator.next();
-            // }
-            //                
-            // mDialogMsg = records.size() + " items were added to the list.";
+            mDialogMsg = data.getString(DataImportListener.MESSAGE);
             showDialog(DIALOG_IMPORT_COMPLETE);
-
             break;
         }
     }
@@ -539,7 +534,8 @@ public class DataImportActivity extends Activity implements DataImportListener
     // Setup UI for step #4 (mapping fields to columns in the import file for prepopulation) 
     private void populateImportFieldMapOptions(FormReader fr)
     {
-        LinearLayout mapInterface = (LinearLayout) findViewById(R.id.wizardStep4);
+        LinearLayout mapInterface = (LinearLayout) findViewById(R.id.wizardStep4MapContainer);
+        mapInterface.removeAllViews();
         
         // Types that can accept default values/pre-population
         List<String> fieldTypes = Arrays.asList(new String [] { "input", "select", "select1" });
@@ -591,7 +587,12 @@ public class DataImportActivity extends Activity implements DataImportListener
             mapOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
             sp.setAdapter(mapOptions);
-            sp.setSelection(0);
+            
+            if (mFieldImportMap.containsKey(f.getLocation()))
+                sp.setSelection(mFieldImportMap.get(f.getLocation()));
+            else
+                sp.setSelection(0);
+            
             sp.setOnItemSelectedListener(new OnItemSelectedListener() {            
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) 
@@ -749,20 +750,32 @@ public class DataImportActivity extends Activity implements DataImportListener
             break;
             
         case R.id.wizardStep2:
+            // Reset column dependant import options (CSV file may have changed)
+            mFieldImportMap = new HashMap<String, Integer>();
+            mFormSetupNamePosition = 0;
+            mFormSetupStatusPosition = 0;
+            mFormSetupAssignmentPosition = 0;           
+            
+            // Preview
             processCsvFile(DataImportListener.MODE_PREVIEW);
+            
             mPreviousStep.setEnabled(true);
             mNextStep.setText("Next  ");
             break;
             
         case R.id.wizardStep3:
-            populateNewFormSetupOptions();            
+            // UI interface
+            populateNewFormSetupOptions();
+            
             mPreviousStep.setEnabled(true);
             mNextStep.setText("Next  ");            
             break;
             
         case R.id.wizardStep4:
+            // After form is correctly parsed, populateImportFieldMapOptions() will be triggered
             mParseFormDefinitionTask = new ParseFormDefinitionTask();
             mParseFormDefinitionTask.execute();            
+            
             mPreviousStep.setEnabled(true);
             mNextStep.setText("Verify ");            
             break;
