@@ -197,18 +197,18 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
 
                 // Add in per-record metadata?
                 if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
-                    mExportData.getLast().put(mExportHeaders.get("formDefinitionUuid"), mFormDefinition.getId());
-                    mExportData.getLast().put(mExportHeaders.get("formDefinitionName"), mFormDefinition.getName());
+                    mExportData.getLast().put(mExportHeaders.get("formDefinitionUuid"), getStringValue(mFormDefinition.getId()));
+                    mExportData.getLast().put(mExportHeaders.get("formDefinitionName"), getStringValue(mFormDefinition.getName()));
                 }
                                 
                 mExportData.getLast().put(mExportHeaders.get("recordUuid"), instance.getId());
                     
                 if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
-                    mExportData.getLast().put(mExportHeaders.get("recordStatus"), instance.getStatus().toString());
-                    mExportData.getLast().put(mExportHeaders.get("dateCreated"), instance.getDateCreated());
-                    mExportData.getLast().put(mExportHeaders.get("createdBy"), instance.getCreatedByAlias());
-                    mExportData.getLast().put(mExportHeaders.get("dateUpdated"), instance.getDateUpdated());
-                    mExportData.getLast().put(mExportHeaders.get("updatedBy"), instance.getUpdatedByAlias());
+                    mExportData.getLast().put(mExportHeaders.get("recordStatus"), getStringValue(instance.getStatus().toString()));
+                    mExportData.getLast().put(mExportHeaders.get("dateCreated"), getStringValue(instance.getDateCreated()));
+                    mExportData.getLast().put(mExportHeaders.get("createdBy"), getStringValue(instance.getCreatedByAlias()));
+                    mExportData.getLast().put(mExportHeaders.get("dateUpdated"), getStringValue(instance.getDateUpdated()));
+                    mExportData.getLast().put(mExportHeaders.get("updatedBy"), getStringValue(instance.getUpdatedByAlias()));
                 }
                 
                 // Parse instance data from XML file
@@ -390,13 +390,22 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
         return formatter.format(calendar.getTime());
     }
     
+    // Don't ever return a null -- just give us an empty string, thanks
+    private String getStringValue(String s)
+    {
+        if (s == null)
+            return "";
+        else
+            return s.trim();
+    }
+    
     private void readData(XMLTag node, final String xpath)
     {   
         final String tt = t + "readData(): ";
         
         if (mExportHeaders.containsKey(xpath)) {
             if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "insert data into record at using index " + mExportHeaders.get(xpath) + " (" + node.getText() + ")");
-            mExportData.getLast().put(mExportHeaders.get(xpath), node.getText());
+            mExportData.getLast().put(mExportHeaders.get(xpath), getStringValue(node.getText()));
         }
         
         node.forEachChild(new CallBack() {
