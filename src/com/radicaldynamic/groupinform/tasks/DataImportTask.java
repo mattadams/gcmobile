@@ -347,6 +347,6 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
     
     private String startErrorMsg(int row, int column)
     {
-        return "Error at row " + row + ", " + " column "  + column + ":\n\n";
+        return "Error at row " + row + ", column "  + column + ":\n\n";
     }
 }

@@ -84,7 +84,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
                     android:layout_marginTop="10dp"
-                    android:text="A preview of your CSV file is shown below. Each row in your CSV file will be turned into a new form.\n\nIf the first row contains column headings you will probably want to skip it." />
+                    android:text="A preview of your CSV file is shown below. Each row in your CSV file will be turned into a new form using the template that you selected.\n\nIf the first row contains column headings you will probably want to skip it." />
 
                 <TableLayout
                     android:id="@+id/importPreviewTable"

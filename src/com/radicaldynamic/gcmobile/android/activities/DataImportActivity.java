@@ -455,7 +455,7 @@ public class DataImportActivity extends Activity implements DataImportListener
     @Override
     public void importTaskFinished(Bundle data, ArrayList<List<String>> records) 
     {
-        dismissDialog(DIALOG_IMPORTING);
+        removeDialog(DIALOG_IMPORTING);
         
         // Error out
         if (!data.getBoolean(SelectFieldImportListener.SUCCESSFUL, false)) {
@@ -727,7 +727,7 @@ public class DataImportActivity extends Activity implements DataImportListener
             break;
             
         case DataImportListener.MODE_VERIFY:
-            mDialogMsg = "Verifying import...";
+            mDialogMsg = "Verifying data...";
             break;
             
         case DataImportListener.MODE_IMPORT:
