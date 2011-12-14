@@ -31,6 +31,7 @@ import java.util.Vector;
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
 
+@SuppressWarnings("unused")
 public class PropertyManager implements IPropertyManager {
 
     private String t = "PropertyManager";

@@ -21,7 +21,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -79,7 +78,6 @@ import com.radicaldynamic.groupinform.adapters.BrowserShortListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormDefinition;
 import com.radicaldynamic.groupinform.documents.FormInstance;
-import com.radicaldynamic.groupinform.documents.Generic;
 import com.radicaldynamic.groupinform.listeners.DefinitionImportListener;
 import com.radicaldynamic.groupinform.listeners.SynchronizeFoldersListener;
 import com.radicaldynamic.groupinform.listeners.ToggleOnlineStateListener;
@@ -173,10 +171,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     private String mCopyToFolderName;           // Same
     private String mCopyToFolderAs;             // Used to pass to DIALOG_UNABLE_TO_COPY_DUPLICATE
     private String mSelectedDatabase;           // To save & restore the currently selected database
-    
-    // See s1...OnItemSelectedListener() where this is used in a horrid workaround
-    private boolean mSpinnerInit = false;       
-    
+
     private CopyToFolderTask mCopyToFolderTask;
     private DefinitionImportTask mDefinitionImportTask;
     private RefreshViewTask mRefreshViewTask;

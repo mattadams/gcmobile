@@ -62,7 +62,7 @@ public class InstanceAssignDialog extends Builder
         setPositiveButton(context.getString(R.string.tf_save), new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                fi.getAssignedTo().clear();
+                fi.setAssignedTo(new ArrayList<String>());
                 
                 int i = 0;
                 
