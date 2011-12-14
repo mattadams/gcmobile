@@ -106,7 +106,7 @@
 <string name="longitude">Longitude</string>
 <string name="main_menu">Main Menu</string>
 <string name="main_menu_details">Data collection made easier...</string>
-<string name="main_menu_message">GC Mobile v1.2.8</string>
+<string name="main_menu_message">GC Mobile v1.2.9</string>
 <string name="manage_files">Delete Saved Form</string>
 <string name="mark_finished">Mark form as completed</string>
 <string name="no">No</string>
@@ -235,7 +235,7 @@
 	<string name="tf_account_folder">Folder</string>	
 	<string name="tf_account_key_label">License Key</string>
 	<string name="tf_account_number_label">Licence Number</string>
-    <string name="tf_action_reserved_for_admin">Action reserved for account administrators!</string>
+    <string name="tf_action_reserved_for_admin">Action reserved for administrators!</string>
 	<string name="tf_add_form_field">Add Field</string>
 	<string name="tf_add_language">Add a language to begin translating</string>   
     <string name="tf_add_new">Add New</string>
