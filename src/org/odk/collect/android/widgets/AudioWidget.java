@@ -238,16 +238,16 @@ public class AudioWidget extends QuestionWidget implements IBinaryWidget {
         FileUtils.copyFile(source, newAudio);
 
         if (newAudio.exists()) {
-            // Add the copy to the content provier
-            ContentValues values = new ContentValues(6);
-            values.put(Audio.Media.TITLE, newAudio.getName());
-            values.put(Audio.Media.DISPLAY_NAME, newAudio.getName());
-            values.put(Audio.Media.DATE_ADDED, System.currentTimeMillis());
-            values.put(Audio.Media.DATA, newAudio.getAbsolutePath());
-
-            Uri AudioURI =
-                getContext().getContentResolver().insert(Audio.Media.EXTERNAL_CONTENT_URI, values);
-            Log.i(t, "Inserting AUDIO returned uri = " + AudioURI.toString());
+//            // Add the copy to the content provier
+//            ContentValues values = new ContentValues(6);
+//            values.put(Audio.Media.TITLE, newAudio.getName());
+//            values.put(Audio.Media.DISPLAY_NAME, newAudio.getName());
+//            values.put(Audio.Media.DATE_ADDED, System.currentTimeMillis());
+//            values.put(Audio.Media.DATA, newAudio.getAbsolutePath());
+//
+//            Uri AudioURI =
+//                getContext().getContentResolver().insert(Audio.Media.EXTERNAL_CONTENT_URI, values);
+//            Log.i(t, "Inserting AUDIO returned uri = " + AudioURI.toString());
         } else {
             Log.e(t, "Inserting Audio file FAILED");
         }
