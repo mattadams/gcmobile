@@ -287,7 +287,7 @@
 	<string name="tf_date_type_date_only">Date only</string>
 	<string name="tf_date_type_time_only">Time only</string>
 	<string name="tf_date_type_date_and_time">Date &amp; time</string>
-	<string name="tf_default_ionline_server">groupcomplete.com</string>
+	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
 	<string name="tf_default_ionline_port">5101</string>
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_destination">Destination</string>

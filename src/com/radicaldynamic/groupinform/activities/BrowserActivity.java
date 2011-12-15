@@ -1340,6 +1340,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             
             if (copied) {
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_something_was_successful, getString(R.string.tf_copy)), Toast.LENGTH_SHORT).show();
+                
+                if (copyToFolderId.equals(Collect.getInstance().getInformOnlineState().getSelectedDatabase()))
+                    loadScreen();
             } else if (duplicate) {
                 // Show duplicate explanation dialog
                 showDialog(DIALOG_UNABLE_TO_COPY_DUPLICATE);
@@ -2052,9 +2055,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
      * Load the various elements of the screen that must wait for other tasks to complete
      */
     private void loadScreen()
-    {
-        Log.v("DEBUG", "entered load screen");
-        
+    {        
         String folderName = "?";
         
         try {
