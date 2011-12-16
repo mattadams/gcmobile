@@ -38,13 +38,15 @@ public class InstanceInfoDialog extends AlertDialog
             }            
         });
         
-        setButton2(context.getString(R.string.tf_assign_form), new OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) 
-            {
-                new InstanceAssignDialog(context, fi).show();
-            }            
-        });        
+        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+            setButton2(context.getString(R.string.tf_assign_form), new OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) 
+                {
+                    new InstanceAssignDialog(context, fi).show();
+                }            
+            });
+        }
     }
 
     private void setTitleAndMessage()
