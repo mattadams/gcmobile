@@ -22,7 +22,10 @@ public class InformCouchDbConnector extends StdCouchDbConnector
     public void create(Object o) {
         try {
             ((Generic) o).setCreatedBy(Collect.getInstance().getInformOnlineState().getDeviceId());
-            ((Generic) o).setDateCreated(Generic.generateTimestamp());            
+            
+            // We might force a particular timestamp during import, so only set if one isn't present
+            if (((Generic) o).getDateCreated() == null)
+                ((Generic) o).setDateCreated(Generic.generateTimestamp());            
         } catch (Exception e) {
             // Is it worth logging this?
         }

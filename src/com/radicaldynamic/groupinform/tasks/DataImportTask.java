@@ -1,11 +1,15 @@
 package com.radicaldynamic.groupinform.tasks;
 
 import java.io.FileReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.ektorp.Attachment;
 import org.ektorp.DbAccessException;
@@ -23,6 +27,7 @@ import com.mycila.xmltool.XMLTag;
 import com.radicaldynamic.gcmobile.android.activities.DataImportActivity;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.documents.FormInstance;
+import com.radicaldynamic.groupinform.documents.Generic;
 import com.radicaldynamic.groupinform.listeners.DataImportListener;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.utilities.Base64Coder;
@@ -165,13 +170,23 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                     emailProfileIdMap.put(device.getEmail(), device.getId());
                 }
                 
+                // Prepare to preserve order of records
+                Calendar calendar = Calendar.getInstance();
+                SimpleDateFormat formatter = (SimpleDateFormat) DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);                
+                formatter.setTimeZone(TimeZone.getDefault());
+                formatter.applyPattern(Generic.DATETIME);
+
                 while ((line = inFile.read()) != null) {
                     if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "importing line " + inFile.getLineNumber() + ": " + line.toString());
 
                     FormInstance fi = new FormInstance();
                     fi.setFormId(mFormDefinitionId);
                     
-                    // TODO: PRESERVE RECORD ORDER
+                    // Increment time to represent order of records in CSV file
+                    if (mImportOptions.getBoolean(DataImportActivity.KEY_IMPORT_OPTION_PRO, false)) {
+                        fi.setDateCreated(formatter.format(calendar.getTime()));
+                        calendar.add(Calendar.SECOND, 1);
+                    }
                     
                     // Set form assignments
                     int assignment = mFormSetup.getInt(DataImportActivity.KEY_FORM_SETUP_ASSIGNMENT, 0);

@@ -47,7 +47,7 @@ public class Generic extends CouchDbDocument
     public static String generateTimestamp() 
     {
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat formatter = (SimpleDateFormat)DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
+        SimpleDateFormat formatter = (SimpleDateFormat) DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
         
         formatter.setTimeZone(TimeZone.getDefault());
         formatter.applyPattern(DATETIME);

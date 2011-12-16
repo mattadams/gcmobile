@@ -1571,7 +1571,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                 if (filterOptions == null && statusFilter == null) {
                     // Search results pulled but nothing to show
                 } else if (filterOptions == null) {
-                    // No filter options, we must be using the simple status filter
+                    // No search options, we must be using the simple status filter
                     
                     // TODO: move to AccountFolderList and activate when a user opens a folder?
                     Collect.getInstance().getDbService().performHousekeeping(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
@@ -1587,7 +1587,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
 
                     DocumentUtils.sortDefinitionsByName(definitions);
                 } else {
-                    // Use filter options                    
+                    // Use search filter options                    
                     FormDefinitionRepo definitionRepo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb()); 
                     definitions = (ArrayList<FormDefinition>) definitionRepo.getAll();
 
@@ -1624,6 +1624,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                                        
                     FormInstanceRepo instanceRepo = new FormInstanceRepo(Collect.getInstance().getDbService().getDb());
                     instances = (ArrayList<FormInstance>) instanceRepo.findByFilterIndex(assignmentParameter, statusParameter);
+                    
+                    DocumentUtils.sortByDateCreated(instances);
                 }
             } catch (ClassCastException e) {
                 // TODO: is there a better way to handle empty lists?
