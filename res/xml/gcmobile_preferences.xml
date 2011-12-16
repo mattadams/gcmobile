@@ -38,4 +38,12 @@
             android:summaryOn="Secure sync uses strong encryption to update folders selected for offline use. It is slower than regular sync but keeps your data safe during transit."
             android:summaryOff="Updates to folders selected for offline use will not use encryption. Enable this if your data includes confidential or personal information." />
     </PreferenceCategory>
+    
+    <PreferenceCategory android:title="@string/tf_data_entry_settings">
+        <CheckBoxPreference
+            android:key="complete_by_default"
+            android:title="Default to complete"
+            android:defaultValue="false"
+            android:summary="If checked, 'Mark form as completed' will be selected by default when reaching the end of a draft form." />        
+    </PreferenceCategory>
 </PreferenceScreen>

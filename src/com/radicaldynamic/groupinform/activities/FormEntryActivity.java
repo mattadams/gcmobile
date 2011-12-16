@@ -865,7 +865,7 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                                      * form browser by their form name AND any custom name if it exists.
                                      * E.g., New Widgets (Smith Interview)
                                      */
-                                    if (saveAs.getText().toString().equals(mFormDefinition.getName()))
+                                    if (saveAs.getText().toString().trim().equals(mFormDefinition.getName()) || saveAs.getText().toString().trim().length() == 0)
                                         saveDataToDisk(EXIT, instanceComplete.isChecked(), null);
                                     else
                                         saveDataToDisk(EXIT, instanceComplete.isChecked(), saveAs.getText().toString());
@@ -1900,8 +1900,11 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
             // First get the value from the preferences
             SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(this);
-            complete =
-                sharedPreferences.getBoolean(PreferencesActivity.KEY_COMPLETED_DEFAULT, true);
+            // BEGIN custom
+//            complete =
+//                sharedPreferences.getBoolean(PreferencesActivity.KEY_COMPLETED_DEFAULT, true);
+            
+            complete = sharedPreferences.getBoolean(com.radicaldynamic.gcmobile.android.preferences.PreferencesActivity.KEY_COMPLETE_BY_DEFAULT, false);
         }
         
 //        // Then see if we've already marked this form as complete before
@@ -1922,11 +1925,10 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
 //        }
 //        return complete;
         
-        if (mFormInstance == null) {
+        if (mFormInstance.getStatus().equals(FormInstance.Status.draft) || mFormInstance.getStatus().equals(FormInstance.Status.placeholder))
             return complete;
-        } else {
+        else
             return mFormInstance.getStatus().equals(FormInstance.Status.complete);
-        }
         // END custom
 
     }

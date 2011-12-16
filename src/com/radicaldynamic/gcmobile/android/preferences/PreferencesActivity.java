@@ -33,9 +33,10 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
     private static final String t = "PreferencesActivity: ";
     
     // Keys to preference settings
-    public static final String KEY_AUTOMATIC_SYNCHRONIZATION = "automatic_synchronization";
-    public static final String KEY_ENCRYPT_SYNCHRONIZATION = "encrypted_synchronization";
-    public static final String KEY_SYNCHRONIZATION_INTERVAL = "automatic_synchronization_interval";
+    public static final String KEY_AUTOMATIC_SYNCHRONIZATION    = "automatic_synchronization";
+    public static final String KEY_COMPLETE_BY_DEFAULT          = "complete_by_default";
+    public static final String KEY_ENCRYPT_SYNCHRONIZATION      = "encrypted_synchronization";
+    public static final String KEY_SYNCHRONIZATION_INTERVAL     = "automatic_synchronization_interval";
     
     @Override
     protected void onCreate(Bundle savedInstanceState) 
