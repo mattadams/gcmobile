@@ -47,6 +47,7 @@ import java.io.File;
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
 
+@SuppressWarnings("unused")
 public class AudioWidget extends QuestionWidget implements IBinaryWidget {
     private final static String t = "MediaWidget";
 

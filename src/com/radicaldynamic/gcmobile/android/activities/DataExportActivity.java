@@ -34,7 +34,7 @@ public class DataExportActivity extends Activity implements DataExportListener
     private static final String t = "DataExportActivity: ";
     
     // For use with mProgressHandler
-    public static final String KEY_PROGRESS_MSG = "key_progress_msg";
+    public static final String KEY_PROGRESS_MSG = "progress_msg";
     
     // Export options
     public static final String KEY_EXPORT_DRAFT = "export_draft";

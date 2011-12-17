@@ -154,7 +154,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "processing " + instance.getId() + " for export");
                 
                 int idx = i + 1;                
-                publishProgress("Add record " + idx + "/" + mExportList.size());
+                publishProgress("Exporting record " + idx + "/" + mExportList.size());
                 
                 HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
                 

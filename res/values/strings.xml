@@ -408,6 +408,7 @@
 	<string name="tf_import">Import</string>
     <string name="tf_import_list">Import List</string>
     <string name="tf_import_records">Import Records</string>
+    <string name="tf_import_wizard_running">Import wizard running...</string>   
 	<string name="tf_imported_file">Imported \"%s\"</string>
 	<string name="tf_importing_template_please_wait">Importing template...</string>
 	<string name="tf_improperly_formatted_licence_number">Improperly formatted licence number</string>
@@ -450,7 +451,7 @@
 	<string name="tf_open_data_kit">Open Data Kit</string>
 	<string name="tf_open_data_kit_abbrev">ODK</string>
     <string name="tf_preferences">Preferences</string>
-	<string name="tf_preparing_to_export">Preparing to export...</string>	
+	<string name="tf_preparing_to_export">Preparing to export...</string>
 	<string name="tf_reactivation_delayed_reason">Please wait 5 minutes after device reset</string>
 	<string name="tf_reactivation_delayed_wait">PIN will be accepted in%1$s%2$s %3$s</string>   
 	<string name="tf_register_this_device">Welcome to GC Mobile!</string>

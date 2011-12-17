@@ -18,6 +18,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -54,7 +56,11 @@ public class DataImportActivity extends Activity implements DataImportListener
     
     private static final int RESULT_FILE_SELECTED = 0;
     
+    // For use with mProgressHandler
+    public static final String KEY_PROGRESS_MSG = "progress_msg";
+    
     // Keys for retaining values between restarts and passing values to tasks, etc.
+    private static final String KEY_DATA_IMPORT_TASK = "data_import_task";
     private static final String KEY_DIALOG_MSG = "dialog_msg";    
     private static final String KEY_FIELD_IMPORT_MAP = "field_import_map";
     private static final String KEY_FORM_READER = "form_reader";
@@ -64,15 +70,15 @@ public class DataImportActivity extends Activity implements DataImportListener
     public static final String KEY_IMPORT_OPTION_PRO = "preserve_record_order";
     public static final String KEY_IMPORT_OPTION_SFR = "skip_first_row";
     private static final String KEY_PREVIEWED_RECORDS = "previewed_records";
+    private static final String KEY_PROCESS_FORM_DEFINITION_TASK = "process_form_definition_task";
     public static final String KEY_SELECTED_FILE = "selected_file";
     
     // Dialog keys
     private static final int DIALOG_IMPORT_COMPLETE = 0;
     private static final int DIALOG_IMPORT_EMPTY = 1;
     private static final int DIALOG_IMPORT_FAILED = 2;
-    private static final int DIALOG_IMPORTING = 3;
-    private static final int DIALOG_LOADING_TEMPLATE = 4;
-    private static final int DIALOG_UNABLE_TO_PARSE_TEMPLATE = 5;
+    private static final int DIALOG_LOADING_TEMPLATE = 3;
+    private static final int DIALOG_UNABLE_TO_PARSE_TEMPLATE = 4;
     
     // Asynchronous tasks
     private DataImportTask mDataImportTask;
@@ -107,6 +113,38 @@ public class DataImportActivity extends Activity implements DataImportListener
     
     // Map of field-to-CSV column for prepopulating field values
     Map<String, Integer> mFieldImportMap = new HashMap<String, Integer>();
+    
+    private Handler mProgressHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) 
+        {
+            switch (msg.what) {     
+            case DataImportTask.ERROR:
+                AlertDialog.Builder builder = new AlertDialog.Builder(DataImportActivity.this);
+                
+                // TODO: write or pass a proper error message
+                builder.setMessage(DataImportActivity.this.getString(R.string.tf_unknown_error))
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() { 
+                        public void onClick(DialogInterface dialog, int id) { 
+                            finish();                            
+                        }
+                    });
+                
+                AlertDialog alert = builder.create();
+                alert.show();                
+                break;
+
+            case DataImportTask.PROGRESS:
+                Bundle data = msg.getData();              
+                mProgressDialog.setMessage(data.getString(KEY_PROGRESS_MSG));
+                break;
+
+            case DataImportTask.COMPLETE:
+                break;
+            }
+        }
+    };
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) 
@@ -145,12 +183,23 @@ public class DataImportActivity extends Activity implements DataImportListener
         // Restore data after restart/orientation change
         Object data = getLastNonConfigurationInstance();
         
-        if (data instanceof DataImportTask) {
-            mDataImportTask = (DataImportTask) data;
-            mDataImportTask.setListener(this);
-        } else if (data instanceof ParseFormDefinitionTask) {
-            mParseFormDefinitionTask = (ParseFormDefinitionTask) data;
-        } else if (data instanceof HashMap<?, ?>) {
+        if (data instanceof HashMap<?, ?>) {
+            if (((HashMap<String, Object>) data).containsKey(KEY_DATA_IMPORT_TASK)) {
+                // Recreate progress handler for UI
+                mProgressDialog = new ProgressDialog(this);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setMessage(getString(R.string.tf_import_wizard_running));
+                mProgressDialog.show();
+
+                mDataImportTask = (DataImportTask) ((HashMap<String, Object>) data).get(KEY_DATA_IMPORT_TASK);
+                mDataImportTask.setHandler(mProgressHandler);   
+                mDataImportTask.setListener(this);
+            }
+            
+            if (((HashMap<String, Object>) data).containsKey(KEY_PROCESS_FORM_DEFINITION_TASK)) {
+                mParseFormDefinitionTask = (ParseFormDefinitionTask) ((HashMap<?, ?>) data).get(KEY_PROCESS_FORM_DEFINITION_TASK);
+            }
+            
             mFormReader = (FormReader) ((HashMap<String, Object>) data).get(KEY_FORM_READER);
             mFieldImportMap = (Map<String, Integer>) ((HashMap<String, Object>) data).get(KEY_FIELD_IMPORT_MAP);
             mPreviewedRecords = (ArrayList<List<String>>) ((HashMap<String, Object>) data).get(KEY_PREVIEWED_RECORDS);
@@ -237,10 +286,10 @@ public class DataImportActivity extends Activity implements DataImportListener
     @Override
     protected void onPause() 
     {
+        super.onPause();
+        
         if (mProgressDialog != null && mProgressDialog.isShowing())
             mProgressDialog.dismiss();
-        
-        super.onPause();
     }
     
     @Override
@@ -308,14 +357,7 @@ public class DataImportActivity extends Activity implements DataImportListener
             
             mAlertDialog = builder.create();
             break;
-            
-        case DIALOG_IMPORTING:
-            mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setMessage(mDialogMsg);
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            return mProgressDialog;
-            
+
         case DIALOG_LOADING_TEMPLATE:
             mProgressDialog = new ProgressDialog(this);
             mProgressDialog.setMessage(getText(R.string.tf_loading_template_please_wait));
@@ -349,13 +391,14 @@ public class DataImportActivity extends Activity implements DataImportListener
     @Override
     public Object onRetainNonConfigurationInstance()
     {
+        HashMap<String, Object> data = new HashMap<String, Object>();
+        
         if (mDataImportTask != null && mDataImportTask.getStatus() != AsyncTask.Status.FINISHED)
-            return mDataImportTask;
+            data.put(KEY_DATA_IMPORT_TASK, mDataImportTask);
         
         if (mParseFormDefinitionTask != null && mParseFormDefinitionTask.getStatus() != AsyncTask.Status.FINISHED)
-            return mParseFormDefinitionTask;
-        
-        HashMap<String, Object> data = new HashMap<String, Object>();
+            data.put(KEY_PROCESS_FORM_DEFINITION_TASK, mParseFormDefinitionTask);
+       
         data.put(KEY_FORM_READER, mFormReader);
         data.put(KEY_FIELD_IMPORT_MAP, mFieldImportMap);
         data.put(KEY_PREVIEWED_RECORDS, mPreviewedRecords);    
@@ -368,27 +411,22 @@ public class DataImportActivity extends Activity implements DataImportListener
     {
         super.onResume();
         
-        // Handle resume of data import task
-        if (mDataImportTask != null) {
-            mDataImportTask.setListener(this);
+        if (mDataImportTask != null && mDataImportTask.getStatus() != AsyncTask.Status.FINISHED) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage(getString(R.string.tf_import_wizard_running));
+            mProgressDialog.show();
             
-            if (mDataImportTask != null && mDataImportTask.getStatus() == AsyncTask.Status.FINISHED) {
-                try {
-                    dismissDialog(DIALOG_IMPORTING);
-                } catch (Exception e) {
-                    // Dialog might not be showing
-                }
-            }
+            mDataImportTask.setHandler(mProgressHandler);   
+            mDataImportTask.setListener(this);
         }
-        
-        // Handle resume of parse form definition task
-        if (mParseFormDefinitionTask != null) {           
-            if (mParseFormDefinitionTask != null && mParseFormDefinitionTask.getStatus() == AsyncTask.Status.FINISHED) {
-                try {
-                    dismissDialog(DIALOG_LOADING_TEMPLATE);
-                } catch (Exception e) {
-                    // Dialog might not be showing
-                }
+
+        // Handle resume of parse form definition task     
+        if (mParseFormDefinitionTask != null && mParseFormDefinitionTask.getStatus() == AsyncTask.Status.FINISHED) {
+            try {
+                dismissDialog(DIALOG_LOADING_TEMPLATE);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         
@@ -455,7 +493,8 @@ public class DataImportActivity extends Activity implements DataImportListener
     @Override
     public void importTaskFinished(Bundle data, ArrayList<List<String>> records) 
     {
-        removeDialog(DIALOG_IMPORTING);
+        if (mProgressDialog != null && mProgressDialog.isShowing())
+            mProgressDialog.dismiss();
         
         // Error out
         if (!data.getBoolean(SelectFieldImportListener.SUCCESSFUL, false)) {
@@ -692,51 +731,51 @@ public class DataImportActivity extends Activity implements DataImportListener
         });
     }
 
-    private void processCsvFile(int mode)
+    private void processCsvFile(final int mode)
     {
-        mDataImportTask = new DataImportTask();
-        mDataImportTask.setListener(this);
-
-        // Import path & mode
-        mDataImportTask.setImportFilePath(mSelectedFile);
-        mDataImportTask.setImportMode(mode);
+        mProgressDialog = new ProgressDialog(DataImportActivity.this);
+        mProgressDialog.setCancelable(false);                
+        mProgressDialog.setMessage(getString(R.string.tf_import_wizard_running));
+        mProgressDialog.show();
         
-        // Import options (preserve record order & skip first record)
-        Bundle options = new Bundle();
-        options.putBoolean(KEY_IMPORT_OPTION_PRO, mImportOptionPreserveRecordOrder.isChecked());
-        options.putBoolean(KEY_IMPORT_OPTION_SFR, mImportOptionSkipFirstRow.isChecked());
-        mDataImportTask.setImportOptions(options);
-        
-        // New form setup (assignments, names, statuses)
-        Bundle formSetup = new Bundle();
-        formSetup.putInt(KEY_FORM_SETUP_ASSIGNMENT, mFormSetupAssignmentPosition);
-        formSetup.putInt(KEY_FORM_SETUP_NAME, mFormSetupNamePosition);
-        formSetup.putInt(KEY_FORM_SETUP_STATUS, mFormSetupStatusPosition);
-        mDataImportTask.setFormSetup(formSetup);
-        
-        // Template definition loaded in form reader & field-to-column import map
-        mDataImportTask.setFormReader(mFormReader);
-        mDataImportTask.setFieldImportMap(mFieldImportMap);
-        
-        // New form instances will be assigned to this form definition
-        mDataImportTask.setFormDefinitionId(mFormDefinitionId);
-        
-        switch (mode) {
-        case DataImportListener.MODE_PREVIEW:
-            mDialogMsg = "Importing preview...";
-            break;
-            
-        case DataImportListener.MODE_VERIFY:
-            mDialogMsg = "Verifying data...";
-            break;
-            
-        case DataImportListener.MODE_IMPORT:
-            mDialogMsg = "Importing records...";
-            break;
-        }        
-
-        showDialog(DIALOG_IMPORTING);
-        mDataImportTask.execute();
+        new Thread() {
+            public void run() {
+                try {                   
+                    mDataImportTask = new DataImportTask();
+                    mDataImportTask.setHandler(mProgressHandler);
+                    mDataImportTask.setListener(DataImportActivity.this);
+                    
+                    // Import path & mode
+                    mDataImportTask.setImportFilePath(mSelectedFile);
+                    mDataImportTask.setImportMode(mode);
+                    
+                    // Import options (preserve record order & skip first record)
+                    Bundle options = new Bundle();
+                    options.putBoolean(KEY_IMPORT_OPTION_PRO, mImportOptionPreserveRecordOrder.isChecked());
+                    options.putBoolean(KEY_IMPORT_OPTION_SFR, mImportOptionSkipFirstRow.isChecked());
+                    mDataImportTask.setImportOptions(options);
+                    
+                    // New form setup (assignments, names, statuses)
+                    Bundle formSetup = new Bundle();
+                    formSetup.putInt(KEY_FORM_SETUP_ASSIGNMENT, mFormSetupAssignmentPosition);
+                    formSetup.putInt(KEY_FORM_SETUP_NAME, mFormSetupNamePosition);
+                    formSetup.putInt(KEY_FORM_SETUP_STATUS, mFormSetupStatusPosition);
+                    mDataImportTask.setFormSetup(formSetup);
+                    
+                    // Template definition loaded in form reader & field-to-column import map
+                    mDataImportTask.setFormReader(mFormReader);
+                    mDataImportTask.setFieldImportMap(mFieldImportMap);
+                    
+                    // New form instances will be assigned to this form definition
+                    mDataImportTask.setFormDefinitionId(mFormDefinitionId);
+                    mDataImportTask.execute();                    
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    mProgressDialog.dismiss();
+                    mProgressHandler.sendMessage(mProgressHandler.obtainMessage(DataImportTask.ERROR));
+                }
+            }
+        }.start();
     } 
     
     private void updateWizardNavigation()

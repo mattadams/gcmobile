@@ -19,6 +19,8 @@ import org.supercsv.prefs.CsvPreference;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import com.mycila.xmltool.XMLDoc;
@@ -36,13 +38,17 @@ import com.radicaldynamic.groupinform.xform.FormReader;
 import com.radicaldynamic.groupinform.xform.FormWriter;
 import com.radicaldynamic.groupinform.xform.Instance;
 import com.radicaldynamic.groupinform.xform.XForm;
-
-//public class DataImport extends AsyncTask<Params, Progress, Result> 
-public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>>> 
+ 
+public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<String>>> 
 {
     private static final String t = "DataImportTask: ";
     
+    public final static int COMPLETE = 0;
+    public final static int ERROR = 1;
+    public final static int PROGRESS = 2;
+    
     private DataImportListener mStateListener;
+    private Handler mHandler;
     
     private String mImportFilePath;
     private String mImportMsg;
@@ -67,8 +73,10 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
         
         ArrayList<List<String>> records = new ArrayList<List<String>>();
         List<String> line;
+        int lineNumber = 0;
         
         try {
+            publishProgress("Reading CSV file...");
             ICsvListReader inFile = new CsvListReader(new FileReader(mImportFilePath), CsvPreference.EXCEL_PREFERENCE);
             
             // If the user doesn't want to import the first line, skip it and discard
@@ -79,11 +87,14 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
             switch (mImportMode) {
             case DataImportListener.MODE_PREVIEW:
                 while ((line = inFile.read()) != null) {
-                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "previewing line " + inFile.getLineNumber() + ": " + line.toString());                    
+                    lineNumber = inFile.getLineNumber();
+                    
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "previewing line " + lineNumber + ": " + line.toString());
+                    publishProgress("Previewing row " + lineNumber + "/5");
                     records.add(new ArrayList<String>(line));
                     
                     // Only read a few lines in
-                    if (inFile.getLineNumber() > 4)
+                    if (lineNumber > 4)
                         break;
                 }
                 
@@ -101,7 +112,10 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                 }
                 
                 while ((line = inFile.read()) != null) {
-                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "verifying line " + inFile.getLineNumber() + ": " + line.toString());
+                    lineNumber = inFile.getLineNumber();
+                    
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "verifying line " + lineNumber + ": " + line.toString());
+                    publishProgress("Verifying row " + lineNumber);
                     
                     // Verify form assignment
                     if (mFormSetup.getInt(DataImportActivity.KEY_FORM_SETUP_ASSIGNMENT, 0) > 0) {
@@ -118,7 +132,7 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                             String address = emailAddresses[i].trim().toLowerCase();
                             
                             if (!allEmailAddresses.contains(address)) {
-                                mImportMsg = startErrorMsg(inFile.getLineNumber(), column + 1) + address + " does not belong to a device profile in this account.\n\nPlease check that your import file and new form setup options are correct and try again.";
+                                mImportMsg = startErrorMsg(lineNumber, column + 1) + address + " does not belong to a device profile in this account.\n\nPlease check that your import file and new form setup options are correct and try again.";
                                 return null;
                             }
                         }
@@ -137,7 +151,7 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                                 && !status.equals("incomplete") 
                                 && !status.equals("complete") 
                                 && !status.equals("completed")) {
-                            mImportMsg = startErrorMsg(inFile.getLineNumber(), column + 1) + "\"" + line.get(column).trim() + "\" is not a valid form status.  Expected draft or complete.\n\nPlease check that your import file and new form setup options are correct and try again.";
+                            mImportMsg = startErrorMsg(lineNumber, column + 1) + "\"" + line.get(column).trim() + "\" is not a valid form status.  Expected draft or complete.\n\nPlease check that your import file and new form setup options are correct and try again.";
                             return null;
                         }
                     }
@@ -177,7 +191,10 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                 formatter.applyPattern(Generic.DATETIME);
 
                 while ((line = inFile.read()) != null) {
-                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "importing line " + inFile.getLineNumber() + ": " + line.toString());
+                    lineNumber = inFile.getLineNumber();
+                    
+                    if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "importing line " + lineNumber + ": " + line.toString());
+                    publishProgress("Importing row " + lineNumber);
 
                     FormInstance fi = new FormInstance();
                     fi.setFormId(mFormDefinitionId);
@@ -236,7 +253,7 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                     Collect.getInstance().getDbService().getDb().create(fi);
                 }
                 
-                mImportMsg = "Import complete. " + inFile.getLineNumber() + " rows processed.";
+                mImportMsg = "Import complete. " + lineNumber + " rows processed.";
                 
                 break;
             }
@@ -245,11 +262,11 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
 
             mImportSuccessful = true;
         } catch (DbAccessException e) {
-            mImportMsg = "Failure while writing to database:\n\n" + e.toString();
+            mImportMsg = "Failure while writing to database:\n\n" + e.toString() + "\n\nError occured somewhere around line number " + lineNumber;
             if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "error while reading CSV file for import: " + e.toString());
             e.printStackTrace();            
         } catch (Exception e) {
-            mImportMsg = "Unexpected error countered:\n\n" + e.toString();
+            mImportMsg = "Unexpected error countered:\n\n" + e.toString() + "\n\nError occured somewhere around line number " + lineNumber;
             if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, t + "error while reading CSV file for import: " + e.toString());
             e.printStackTrace();
         }
@@ -262,6 +279,10 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
     {   
         synchronized (this) {
             if (mStateListener != null) {
+                Message done = Message.obtain();
+                done.what = COMPLETE;
+                mHandler.sendMessage(done);
+                
                 Bundle b = new Bundle();
                 b.putString(DataImportListener.MESSAGE, mImportMsg);
                 b.putInt(DataImportListener.MODE, mImportMode);         
@@ -269,6 +290,19 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
                 mStateListener.importTaskFinished(b, records);
             }
         }
+    }
+    
+    @Override
+    protected void onProgressUpdate(String... values)
+    {
+        Message update = Message.obtain();
+        update.what = PROGRESS;
+        
+        Bundle data = new Bundle();
+        data.putString(DataImportActivity.KEY_PROGRESS_MSG, values[0]);
+        update.setData(data);
+        
+        mHandler.sendMessage(update);
     }
     
     public void setFieldImportMap(Map<String, Integer> map)
@@ -290,6 +324,11 @@ public class DataImportTask extends AsyncTask<Void, Void, ArrayList<List<String>
     {
         mFormSetup = b;
     }        
+    
+    public void setHandler(Handler h)
+    {
+        mHandler = h;
+    }
     
     public void setImportFilePath(String filePath)
     {
