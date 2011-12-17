@@ -364,6 +364,7 @@ public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<Strin
         while (instanceIterator.hasNext()) {
             Instance i = instanceIterator.next();
              
+            // Don't output instance tags representing repeated data
             if (i.getChildren().isEmpty()) {
                 /*
                  * For some reason unknown to me we can only call gotoParent() when adding 
@@ -390,11 +391,6 @@ public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<Strin
                         mInstanceXML.gotoParent();                       
                     }
                 }
-            } else {
-                // Likely a repeated data set
-                mInstanceXML.addTag(i.getName()).addAttribute(XForm.Attribute.JR_TEMPLATE, "");
-                generateInstanceXML(i, recordRow);
-                mInstanceXML.gotoParent();
             }
         }
     }
