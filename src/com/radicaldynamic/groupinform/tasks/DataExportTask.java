@@ -103,7 +103,8 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 mExportHeaders.put("formDefinitionName", "Template Name");
                 mExportHeaders.put("formDefinitionUuid", "Template ID");
             }
-            
+
+            mExportHeaders.put("rowId", "Row Number");
             mExportHeaders.put("recordUuid", "Record ID");
                 
             if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
@@ -148,14 +149,14 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
 
             // Compile export data for each instance
             for (i = 0; i < mExportList.size(); i++) {
-                FormInstance instance = mExportList.get(i);
-                String instancePath = exportPath + File.separator + instance.getId() + ".xml";
-                
-                if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "processing " + instance.getId() + " for export");
-                
                 int idx = i + 1;                
                 publishProgress("Exporting record " + idx + "/" + mExportList.size());
                 
+                FormInstance instance = mExportList.get(i);
+                String instancePath = exportPath + File.separator + idx + "-" + instance.getId() + ".xml";
+                
+                if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "processing " + instance.getId() + " for export");
+
                 HashMap<String, Attachment> attachments = (HashMap<String, Attachment>) instance.getAttachments();
                 
                 if (attachments == null) {
@@ -173,7 +174,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                     } else {
                         // Determine if we should download the media file or skip it, as per the user
                         if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_MEDIA_FILES, false)) { 
-                            file = new FileOutputStream(exportPath + File.separator + instance.getId() + "-" + key);
+                            file = new FileOutputStream(exportPath + File.separator + idx + "-" + instance.getId() + "-" + key);
                         } else {
                             continue;
                         }
@@ -200,7 +201,8 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                     mExportData.getLast().put(mExportHeaders.get("formDefinitionUuid"), getStringValue(mFormDefinition.getId()));
                     mExportData.getLast().put(mExportHeaders.get("formDefinitionName"), getStringValue(mFormDefinition.getName()));
                 }
-                                
+
+                mExportData.getLast().put(mExportHeaders.get("rowId"), idx);
                 mExportData.getLast().put(mExportHeaders.get("recordUuid"), instance.getId());
                     
                 if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
