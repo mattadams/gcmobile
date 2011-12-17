@@ -25,7 +25,6 @@ public class Instance
     private String defaultValue = null;             // Any defaultValue assigned to this element
     
     private boolean active      = false;            // Used to determine which field is "active" in form builder navigation
-    private boolean hidden      = false;            // This is a hidden instance (it has no associated field)
     
     /*
      * Used for instantiating instances created by the form builder and to ensure
@@ -139,15 +138,5 @@ public class Instance
     public boolean isActive()
     {
         return active;
-    }
-
-    public void setHidden(boolean hidden)
-    {
-        this.hidden = hidden;
-    }
-
-    public boolean isHidden()
-    {
-        return hidden;
     }
 }

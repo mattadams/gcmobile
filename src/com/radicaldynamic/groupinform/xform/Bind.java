@@ -112,17 +112,7 @@ public class Bind
 
     public String getType()
     {
-        /*
-         * Also see field/bind association bit in the Field class constructor where we 
-         * attempt to ensure that all binds have the minimum number of expected attributes
-         * 
-         * We do this here because a bind may not have a type nor a control field that will
-         * ensure that one is set.
-         */          
-//        if (type == null)
-//            return "string";
-//        else 
-            return type;
+        return type;
     }
 
     public void setRequired(boolean required)

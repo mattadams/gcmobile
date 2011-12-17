@@ -343,8 +343,7 @@ public class FormReader
         if (instancePath.equals("/" + mInstanceRoot) == false) {
             Instance newInstance = new Instance(instancePath, tag.getInnerText(), tag.getCurrentTagLocation(), mBinds);
             
-            // Attempt to apply this instance to a pre-existing field -- if this fails then the instance is "hidden"
-            newInstance.setHidden(!applyInstanceToField(null, newInstance));
+            applyInstanceToField(null, newInstance);
             
             if (tag.getCurrentTagLocation().split("/").length == 5) {
                 // Add a top level instance
