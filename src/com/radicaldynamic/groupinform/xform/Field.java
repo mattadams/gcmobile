@@ -112,13 +112,10 @@ public class Field
                             
                             // Not all binds will have an associated type but our code (may) expect them to
                             if (b.getType() == null) {
-                                // FIXME: can this be removed?
-//                                if (getType().equals("input"))
-//                                    b.setType("string");
-//                                else 
-//                                    b.setType(getType());
+                                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "bind for " + b.getXPath() + " missing an explicit type (setting to string if input)");
                                 
-                                if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "bind for " + b.getXPath() + " missing an explicit type");
+                                if (getType().equals("input"))
+                                    b.setType("string");
                             }
 
                             // No point in looking further, right?
