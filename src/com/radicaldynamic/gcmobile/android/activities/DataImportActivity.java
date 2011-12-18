@@ -48,7 +48,9 @@ import com.radicaldynamic.groupinform.listeners.DataImportListener;
 import com.radicaldynamic.groupinform.listeners.SelectFieldImportListener;
 import com.radicaldynamic.groupinform.tasks.DataImportTask;
 import com.radicaldynamic.groupinform.xform.Field;
+import com.radicaldynamic.groupinform.xform.FormBuilderState;
 import com.radicaldynamic.groupinform.xform.FormReader;
+import com.radicaldynamic.groupinform.xform.Instance;
 
 public class DataImportActivity extends Activity implements DataImportListener
 {
@@ -83,15 +85,13 @@ public class DataImportActivity extends Activity implements DataImportListener
     // Asynchronous tasks
     private DataImportTask mDataImportTask;
     private ParseFormDefinitionTask mParseFormDefinitionTask;
-    
-    // UI feedback
-    private AlertDialog mAlertDialog;
-    private ProgressDialog mProgressDialog;
-    
+
     // Import wizard navigation
     private ViewFlipper mViewFlipper;
     private Button mNextStep;
     private Button mPreviousStep;
+    
+    private LinearLayout mMapInterface;
     
     // Import options
     private CheckBox mImportOptionSkipFirstRow;
@@ -109,11 +109,20 @@ public class DataImportActivity extends Activity implements DataImportListener
     private int mFormSetupAssignmentPosition = 0;
     
     // Records retrieved from CSV for preview
-    ArrayList<List<String>> mPreviewedRecords = new ArrayList<List<String>>();
+    private ArrayList<List<String>> mPreviewedRecords = new ArrayList<List<String>>();
     
     // Map of field-to-CSV column for prepopulating field values
-    Map<String, Integer> mFieldImportMap = new HashMap<String, Integer>();
+    private Map<String, Integer> mFieldImportMap = new HashMap<String, Integer>();
     
+    // Types that can accept user-supplied values from the CSV file
+    private List<String> mFieldImportBodyTypes = Arrays.asList(new String [] { "input", "select", "select1" });
+    private List<String> mFieldImportBindTypes = Arrays.asList(new String [] { "barcode", "date", "dateTime", "decimal", "geopoint", "int", "select", "select1", "string", "time" });
+        
+    // UI feedback
+    private AlertDialog mAlertDialog;
+    private ProgressDialog mProgressDialog;
+        
+    // Handler for reporting preview/verify/import progress
     private Handler mProgressHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) 
@@ -156,6 +165,7 @@ public class DataImportActivity extends Activity implements DataImportListener
         
         switch (requestCode) {
         case RESULT_FILE_SELECTED:
+            // CSV file selection
             mSelectedFile = intent.getStringExtra(FileDialog.RESULT_PATH);
             ((TextView) findViewById(R.id.stepSelectedFileName)).setText(new File(mSelectedFile).getName());
             break;
@@ -184,21 +194,11 @@ public class DataImportActivity extends Activity implements DataImportListener
         Object data = getLastNonConfigurationInstance();
         
         if (data instanceof HashMap<?, ?>) {
-            if (((HashMap<String, Object>) data).containsKey(KEY_DATA_IMPORT_TASK)) {
-                // Recreate progress handler for UI
-                mProgressDialog = new ProgressDialog(this);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.setMessage(getString(R.string.tf_import_wizard_running));
-                mProgressDialog.show();
-
+            if (((HashMap<String, Object>) data).containsKey(KEY_DATA_IMPORT_TASK)) 
                 mDataImportTask = (DataImportTask) ((HashMap<String, Object>) data).get(KEY_DATA_IMPORT_TASK);
-                mDataImportTask.setHandler(mProgressHandler);   
-                mDataImportTask.setListener(this);
-            }
             
-            if (((HashMap<String, Object>) data).containsKey(KEY_PROCESS_FORM_DEFINITION_TASK)) {
+            if (((HashMap<String, Object>) data).containsKey(KEY_PROCESS_FORM_DEFINITION_TASK))
                 mParseFormDefinitionTask = (ParseFormDefinitionTask) ((HashMap<?, ?>) data).get(KEY_PROCESS_FORM_DEFINITION_TASK);
-            }
             
             mFormReader = (FormReader) ((HashMap<String, Object>) data).get(KEY_FORM_READER);
             mFieldImportMap = (Map<String, Integer>) ((HashMap<String, Object>) data).get(KEY_FIELD_IMPORT_MAP);
@@ -482,8 +482,12 @@ public class DataImportActivity extends Activity implements DataImportListener
         {   
             removeDialog(DIALOG_LOADING_TEMPLATE);
             
+            // If createFieldImportUI() displays translated field labels, FieldText.getDefaultTranslation() will need this
+            Collect.getInstance().setFormBuilderState(new FormBuilderState());
+            Collect.getInstance().getFormBuilderState().setTranslations(mFormReader.getTranslations());
+            
             if (parseSuccessful && fr != null) {
-                populateImportFieldMapOptions(mFormReader);
+                createFieldImportUI(null);
             } else {
                 showDialog(DIALOG_UNABLE_TO_PARSE_TEMPLATE);
             }
@@ -571,83 +575,92 @@ public class DataImportActivity extends Activity implements DataImportListener
     }
     
     // Setup UI for step #4 (mapping fields to columns in the import file for prepopulation) 
-    private void populateImportFieldMapOptions(FormReader fr)
+    private void createFieldImportUI(Instance incomingInstance)
     {
-        LinearLayout mapInterface = (LinearLayout) findViewById(R.id.wizardStep4MapContainer);
-        mapInterface.removeAllViews();
+        Iterator<Instance> instanceIterator;
         
-        // Types that can accept default values/pre-population
-        List<String> fieldTypes = Arrays.asList(new String [] { "input", "select", "select1" });
-        List<String> bindTypes = Arrays.asList(new String [] { "barcode", "date", "dateTime", "decimal", "geopoint", "int", "select", "select1", "string", "time" });
+        if (incomingInstance == null) {
+            mMapInterface = (LinearLayout) findViewById(R.id.wizardStep4MapContainer);
+            mMapInterface.removeAllViews();
         
-        // If we were able to parse the form successfully then the structure will be found in memory
-        ArrayList<Field> fields = fr.getFields();
-        Iterator<Field> fieldIterator = fields.iterator();
-
-        while (fieldIterator.hasNext()) {
-            final Field f = fieldIterator.next();
+            instanceIterator = mFormReader.getInstance().iterator();
+        } else {
+            instanceIterator = incomingInstance.getChildren().iterator();
+        }
+        
+        while (instanceIterator.hasNext()) {
+            Instance instance = instanceIterator.next();
             
-            // Only provide a UI for mapping fields that can be prepopulated
-            if (!fieldTypes.contains(f.getType()) || !bindTypes.contains(f.getBind().getType()))
-                continue;
+            if (instance.getChildren().isEmpty()) {
+                final Field field = instance.getField();
+                
+                if (field != null) {
+                    // Only provide a UI for mapping fields that can be prepopulated
+                    if (!mFieldImportBodyTypes.contains(field.getType()) || !mFieldImportBindTypes.contains(field.getBind().getType()))
+                        continue;
+                    
+                    // Field label
+                    LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+                    lp.setMargins(0, 5, 0, 0);                
 
-            // Field label
-            LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-            lp.setMargins(0, 5, 0, 0);                
+                    TextView tv = new TextView(this);                
+                    tv.setText(field.getLabel().toString());
+                    tv.setTextAppearance(this, android.R.style.TextAppearance_Medium);                
+                    mMapInterface.addView(tv, lp);
 
-            TextView tv = new TextView(this);                
-            tv.setText(f.getLabel().toString());
-            tv.setTextAppearance(this, android.R.style.TextAppearance_Medium);                
-            mapInterface.addView(tv, lp);
+                    // Spinner to map column to field
+                    lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 
-            // Spinner to map column to field
-            lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+                    Spinner sp = new Spinner(this);
+                    sp.setPrompt("Map " + field.getLabel().toString() + "?");
+                    mMapInterface.addView(sp, lp);  
 
-            Spinner sp = new Spinner(this);
-            sp.setPrompt("Map " + f.getLabel().toString() + "?");
-            mapInterface.addView(sp, lp);  
+                    // Add column map options
+                    List<String> firstRowPreview = mPreviewedRecords.get(0); 
+                    ArrayList<String> mapOptionList = new ArrayList<String>();
+                    
+                    if (field.getInstance().getDefaultValue().length() > 0)            
+                        mapOptionList.add("Use template (" + field.getInstance().getDefaultValue() + ")");
+                    else
+                        mapOptionList.add("Use template (no default value)");
 
-            // Add column map options
-            List<String> firstRowPreview = mPreviewedRecords.get(0); 
-            ArrayList<String> mapOptionList = new ArrayList<String>();
-            
-            if (f.getInstance().getDefaultValue().length() > 0)            
-                mapOptionList.add("Use template (" + f.getInstance().getDefaultValue() + ")");
-            else
-                mapOptionList.add("Use template (no default value)");
+                    if (firstRowPreview != null) {
+                        for (int i = 0; i < firstRowPreview.size(); i++) {
+                            mapOptionList.add("Use column #" + (i + 1) + " (" + firstRowPreview.get(i) + ")");
+                        }
+                    }
 
-            if (firstRowPreview != null) {
-                for (int i = 0; i < firstRowPreview.size(); i++) {
-                    mapOptionList.add("Use column #" + (i + 1) + " (" + firstRowPreview.get(i) + ")");
-                }
+                    ArrayAdapter<String> mapOptions = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mapOptionList);
+                    mapOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+                    sp.setAdapter(mapOptions);
+                    
+                    if (mFieldImportMap.containsKey(field.getLocation()))
+                        sp.setSelection(mFieldImportMap.get(field.getLocation()));
+                    else
+                        sp.setSelection(0);
+                    
+                    sp.setOnItemSelectedListener(new OnItemSelectedListener() {            
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) 
+                        {
+                            mFieldImportMap.put(field.getLocation(), position);
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> arg0) 
+                        {
+                        }
+                    });                    
+                }               
+            } else {
+                if (instance.getChildren().size() == 0)
+                    createFieldImportUI(instance);
             }
-
-            ArrayAdapter<String> mapOptions = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mapOptionList);
-            mapOptions.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-            sp.setAdapter(mapOptions);
-            
-            if (mFieldImportMap.containsKey(f.getLocation()))
-                sp.setSelection(mFieldImportMap.get(f.getLocation()));
-            else
-                sp.setSelection(0);
-            
-            sp.setOnItemSelectedListener(new OnItemSelectedListener() {            
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) 
-                {
-                    mFieldImportMap.put(f.getLocation(), position);
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> arg0) 
-                {
-                }
-            });
         }
     }
     
-    private void populateNewFormSetupOptions()
+    private void createFormSetupUI()
     {
         // Set initial defaults for options
         ArrayList<String> formNameOptionList = new ArrayList<String>();
@@ -804,16 +817,16 @@ public class DataImportActivity extends Activity implements DataImportListener
             
         case R.id.wizardStep3:
             // UI interface
-            populateNewFormSetupOptions();
+            createFormSetupUI();
             
             mPreviousStep.setEnabled(true);
             mNextStep.setText("Next  ");            
             break;
             
         case R.id.wizardStep4:
-            // After form is correctly parsed, populateImportFieldMapOptions() will be triggered
+            // createFieldImportUI() will be automatically triggered if verification is successful
             mParseFormDefinitionTask = new ParseFormDefinitionTask();
-            mParseFormDefinitionTask.execute();            
+            mParseFormDefinitionTask.execute();       
             
             mPreviousStep.setEnabled(true);
             mNextStep.setText("Verify ");            

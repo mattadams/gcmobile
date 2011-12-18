@@ -37,7 +37,6 @@ import com.radicaldynamic.groupinform.xform.Field;
 import com.radicaldynamic.groupinform.xform.FormReader;
 import com.radicaldynamic.groupinform.xform.FormWriter;
 import com.radicaldynamic.groupinform.xform.Instance;
-import com.radicaldynamic.groupinform.xform.XForm;
  
 public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<String>>> 
 {
