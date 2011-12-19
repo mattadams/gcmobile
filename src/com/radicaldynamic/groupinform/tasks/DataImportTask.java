@@ -77,11 +77,6 @@ public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<Strin
         try {
             publishProgress("Reading CSV file...");
             ICsvListReader inFile = new CsvListReader(new FileReader(mImportFilePath), CsvPreference.EXCEL_PREFERENCE);
-            
-            // If the user doesn't want to import the first line, skip it and discard
-            if (mImportOptions.getBoolean(DataImportActivity.KEY_IMPORT_OPTION_SFR, false)) {
-                inFile.getCSVHeader(true);
-            }
 
             switch (mImportMode) {
             case DataImportListener.MODE_PREVIEW:
@@ -108,6 +103,11 @@ public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<Strin
                     
                     if (device.getStatus().contains("active") || device.getStatus().contains("unused"))
                         allEmailAddresses.add(device.getEmail());
+                }
+                
+                // If the user doesn't want to import the first line, skip it and discard
+                if (mImportOptions.getBoolean(DataImportActivity.KEY_IMPORT_OPTION_SFR, false)) {
+                    inFile.getCSVHeader(true);
                 }
                 
                 while ((line = inFile.read()) != null) {
@@ -188,6 +188,11 @@ public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<Strin
                 SimpleDateFormat formatter = (SimpleDateFormat) DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);                
                 formatter.setTimeZone(TimeZone.getDefault());
                 formatter.applyPattern(Generic.DATETIME);
+                
+                // If the user doesn't want to import the first line, skip it and discard
+                if (mImportOptions.getBoolean(DataImportActivity.KEY_IMPORT_OPTION_SFR, false)) {
+                    inFile.getCSVHeader(true);
+                }
 
                 while ((line = inFile.read()) != null) {
                     lineNumber = inFile.getLineNumber();

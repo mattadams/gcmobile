@@ -27,7 +27,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -37,7 +36,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout.LayoutParams;
 
 import com.radicaldynamic.groupinform.R;
@@ -271,14 +269,6 @@ public class DataImportActivity extends Activity implements DataImportListener
                 intent.putExtra(FileDialog.START_PATH, "/sdcard");
                 intent.putExtra(FileDialog.WINDOW_TITLE, "Select CSV File To Import");
                 startActivityForResult(intent, RESULT_FILE_SELECTED);
-            }
-        });
-        
-        mImportOptionSkipFirstRow.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) 
-            {
-                processCsvFile(DataImportListener.MODE_PREVIEW);
             }
         });
     }
@@ -626,7 +616,7 @@ public class DataImportActivity extends Activity implements DataImportListener
 
                     if (firstRowPreview != null) {
                         for (int i = 0; i < firstRowPreview.size(); i++) {
-                            mapOptionList.add("Use column #" + (i + 1) + " (" + firstRowPreview.get(i) + ")");
+                            mapOptionList.add("Use column #" + (i + 1) + ": " + firstRowPreview.get(i));
                         }
                     }
 
@@ -678,9 +668,9 @@ public class DataImportActivity extends Activity implements DataImportListener
         
         if (firstRowPreview != null) {
             for (int i = 0; i < firstRowPreview.size(); i++) {
-                formNameOptionList.add("Use column #" + (i + 1) + " (" + firstRowPreview.get(i) + ")");
-                formStatusOptionList.add("Use column #" + (i + 1) + " (" + firstRowPreview.get(i) + ")");
-                formAssignmentOptionList.add("Using column #" + (i + 1) + " (" + firstRowPreview.get(i) + ")");
+                formNameOptionList.add("Use column #" + (i + 1) + ": " + firstRowPreview.get(i));
+                formStatusOptionList.add("Use column #" + (i + 1) + ": " + firstRowPreview.get(i));
+                formAssignmentOptionList.add("Using column #" + (i + 1) + ": " + firstRowPreview.get(i));
             }
         }
         
