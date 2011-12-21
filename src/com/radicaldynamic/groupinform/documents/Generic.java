@@ -66,7 +66,7 @@ public class Generic extends CouchDbDocument
     @JsonIgnore
     public String getCreatedByAlias() 
     { 
-        AccountDevice device = Collect.getInstance().getInformOnlineState().getAccountDevices().get(createdBy);
+        AccountDevice device = Collect.getInstance().getDeviceState().getAccountDevices().get(createdBy);
         
         if (device == null)
             return Collect.getInstance().getString(R.string.tf_unavailable).toString();
@@ -85,7 +85,7 @@ public class Generic extends CouchDbDocument
     @JsonIgnore
     public String getUpdatedByAlias() 
     { 
-        AccountDevice device = Collect.getInstance().getInformOnlineState().getAccountDevices().get(updatedBy);
+        AccountDevice device = Collect.getInstance().getDeviceState().getAccountDevices().get(updatedBy);
         
         if (device == null)
             return Collect.getInstance().getString(R.string.tf_unavailable).toString();

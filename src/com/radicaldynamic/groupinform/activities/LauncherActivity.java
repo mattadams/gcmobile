@@ -51,7 +51,7 @@ import com.couchbase.libcouch.CouchService;
 import com.couchbase.libcouch.ICouchClient;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
@@ -283,7 +283,7 @@ public class LauncherActivity extends Activity
         case DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED:
             String msg;            
     
-            if (Collect.getInstance().getInformOnlineState().hasReplicatedFolders())
+            if (Collect.getInstance().getDeviceState().hasReplicatedFolders())
                 msg = getString(R.string.tf_connection_error_registered_with_db_msg);
             else    
                 msg = getString(R.string.tf_connection_error_registered_without_db_msg);
@@ -300,7 +300,7 @@ public class LauncherActivity extends Activity
                 }
             });
             
-            if (Collect.getInstance().getInformOnlineState().hasReplicatedFolders()) {                
+            if (Collect.getInstance().getDeviceState().hasReplicatedFolders()) {                
                 builder.setNeutralButton(getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         startCouch();
@@ -518,7 +518,7 @@ public class LauncherActivity extends Activity
             
             if (pinged) {
                 if (registered) {
-                    if (Collect.getInstance().getInformOnlineState().isExpired()) {
+                    if (Collect.getInstance().getDeviceState().isExpired()) {
                         showDialog(DIALOG_EXPIRED);
                     } else {
                         mProgressLoading.setText("Starting Database");
@@ -530,10 +530,10 @@ public class LauncherActivity extends Activity
                 }
             } else {
                 if (registered) {
-                    if (Collect.getInstance().getInformOnlineState().isExpired()) {
+                    if (Collect.getInstance().getDeviceState().isExpired()) {
                         showDialog(DIALOG_EXPIRED_CANNOT_CONNECT);
                     } else {
-                        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
+                        if (Collect.getInstance().getDeviceState().isOfflineModeEnabled())
                             showDialog(DIALOG_UNABLE_TO_CONNECT_OFFLINE_ENABLED);
                         else
                             showDialog(DIALOG_UNABLE_TO_CONNECT_OFFLINE_DISABLED);                    
@@ -601,7 +601,7 @@ public class LauncherActivity extends Activity
     private void displaySplash()
     {
         // Don't show the splash screen if this app appears to be registered
-        if (PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString(InformOnlineState.DEVICE_ID, null) instanceof String) {
+        if (PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString(DeviceState.DEVICE_ID, null) instanceof String) {
             return;
         }
         

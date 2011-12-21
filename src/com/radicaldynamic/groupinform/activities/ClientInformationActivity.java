@@ -25,7 +25,7 @@ import com.radicaldynamic.gcmobile.android.preferences.PreferencesActivity;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.listeners.SynchronizeFoldersListener;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.tasks.SynchronizeFoldersTask;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
@@ -76,21 +76,21 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
         TextView accountNumber = (TextView) findViewById(R.id.accountNumber);
         TextView accountKey = (TextView) findViewById(R.id.accountKey);
 
-        accountNumber.setText(Collect.getInstance().getInformOnlineState().getAccountNumber());
-        accountKey.setText(Collect.getInstance().getInformOnlineState().getAccountKey());
+        accountNumber.setText(Collect.getInstance().getDeviceState().getAccountNumber());
+        accountKey.setText(Collect.getInstance().getDeviceState().getAccountKey());
 
         TextView devicePin = (TextView) findViewById(R.id.devicePin);
         TextView deviceEmail = (TextView) findViewById(R.id.deviceEmail);                
 
-        devicePin.setText(Collect.getInstance().getInformOnlineState().getDevicePin());
+        devicePin.setText(Collect.getInstance().getDeviceState().getDevicePin());
 
         try {
             deviceEmail.setText(
                     Collect
                     .getInstance()
-                    .getInformOnlineState()
+                    .getDeviceState()
                     .getAccountDevices()
-                    .get(Collect.getInstance().getInformOnlineState().getDeviceId())
+                    .get(Collect.getInstance().getDeviceState().getDeviceId())
                     .getEmail()
             );
         } catch (NullPointerException e) {
@@ -262,7 +262,7 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
         @Override
         protected String doInBackground(Void... params)
         {            
-            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/reset";            
+            String url = Collect.getInstance().getDeviceState().getServerUrl() + "/device/reset";            
             return HttpUtils.getUrlData(url);
         }
         
@@ -286,7 +286,7 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
             try {   
                 result = (JSONObject) new JSONTokener(getResult).nextValue();
                 
-                if (result.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE).equals(InformOnlineState.OK))
+                if (result.optString(DeviceState.RESULT, DeviceState.FAILURE).equals(DeviceState.OK))
                     success = true;
             } catch (NullPointerException e) {
                 // Communication error
@@ -299,7 +299,7 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
             }
             
             if (success) {
-                Collect.getInstance().getInformOnlineState().resetDevice();
+                Collect.getInstance().getDeviceState().resetDevice();
                 showDialog(RESET_SUCCESSFUL_DIALOG);
             } else {
                 showDialog(RESET_FAILED_DIALOG);

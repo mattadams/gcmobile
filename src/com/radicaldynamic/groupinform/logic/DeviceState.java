@@ -26,12 +26,12 @@ import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 /**
- * Stores the state of this device as registered with Inform Online
- * (some of this information is dynamically populated)
+ * Stores the state of this device, registration and account information
+ * (some of this information is dynamically populated and changes at runtime)
  */
-public class InformOnlineState
+public class DeviceState
 {
-    private static final String t = "InformOnlineState: ";
+    private static final String t = "DeviceState: ";
     
     // Constants for strings commonly encountered when interacting with the Inform Online service
     public static final String OK = "ok";
@@ -104,12 +104,12 @@ public class InformOnlineState
     private SharedPreferences mPrefs = null;
     
     // Used by Collect
-    public InformOnlineState()
+    public DeviceState()
     {
         
     }
     
-    public InformOnlineState(Context context)
+    public DeviceState(Context context)
     {
         mContext = context;
         
@@ -431,7 +431,7 @@ public class InformOnlineState
         while (folderIds.hasNext()) {
             String id = folderIds.next();
             
-            if (Collect.getInstance().getInformOnlineState().getAccountFolders().get(id).isReplicated())
+            if (Collect.getInstance().getDeviceState().getAccountFolders().get(id).isReplicated())
                 replicatedFolders++;                        
         }
         

@@ -29,7 +29,7 @@ import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
 public class ClientRegistrationActivity extends Activity
@@ -564,9 +564,9 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("licenceNumber", mAccountNumber));
         params.add(new BasicNameValuePair("licenceKey", mAccountKey));
         params.add(new BasicNameValuePair("devicePin", mDevicePin));
-        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));        
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getDeviceState().getDeviceFingerprint()));        
         
-        String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/send/notice";
+        String verifyUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/send/notice";
         
         String postResult = HttpUtils.postUrlData(verifyUrl, params);
         JSONObject verify;
@@ -574,14 +574,14 @@ public class ClientRegistrationActivity extends Activity
         try {            
             verify = (JSONObject) new JSONTokener(postResult).nextValue();
             
-            String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+            String result = verify.optString(DeviceState.RESULT, DeviceState.FAILURE);
             
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_device_owner_notified_of_pin_use), Toast.LENGTH_LONG).show();
                 return true;
-            } else if (result.equals(InformOnlineState.FAILURE)) {
+            } else if (result.equals(DeviceState.FAILURE)) {
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_notify_device_user), Toast.LENGTH_LONG).show();
-                String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
+                String reason = verify.optString(DeviceState.REASON, REASON_UNKNOWN);
                 if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to notify device user: " + reason);
                 return false;
             } else {
@@ -616,20 +616,20 @@ public class ClientRegistrationActivity extends Activity
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("email", email.toLowerCase()));
         
-        String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/send/reminder";
+        String verifyUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/send/reminder";
         
         String postResult = HttpUtils.postUrlData(verifyUrl, params);
         JSONObject verify;
         
         try {            
             verify = (JSONObject) new JSONTokener(postResult).nextValue();
-            String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+            String result = verify.optString(DeviceState.RESULT, DeviceState.FAILURE);
             
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_reminder_sent), Toast.LENGTH_LONG).show();
                 return true;
-            } else if (result.equals(InformOnlineState.FAILURE)) {
-                String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
+            } else if (result.equals(DeviceState.FAILURE)) {
+                String reason = verify.optString(DeviceState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_EMAIL)) {
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();
@@ -668,13 +668,13 @@ public class ClientRegistrationActivity extends Activity
      */
     private void setRegistrationInformation(JSONObject container) throws JSONException
     {        
-        Collect.getInstance().getInformOnlineState().setAccountKey(container.getString("accountKey"));
-        Collect.getInstance().getInformOnlineState().setAccountNumber(container.getString("accountNumber"));
-        Collect.getInstance().getInformOnlineState().setAccountOwner(container.getBoolean("accountOwner"));
-        Collect.getInstance().getInformOnlineState().setDefaultDatabase(container.getString("defaultDb"));
-        Collect.getInstance().getInformOnlineState().setDeviceId(container.getString("deviceId"));
-        Collect.getInstance().getInformOnlineState().setDeviceKey(container.getString("deviceKey"));
-        Collect.getInstance().getInformOnlineState().setDevicePin(container.getString("devicePin"));
+        Collect.getInstance().getDeviceState().setAccountKey(container.getString("accountKey"));
+        Collect.getInstance().getDeviceState().setAccountNumber(container.getString("accountNumber"));
+        Collect.getInstance().getDeviceState().setAccountOwner(container.getBoolean("accountOwner"));
+        Collect.getInstance().getDeviceState().setDefaultDatabase(container.getString("defaultDb"));
+        Collect.getInstance().getDeviceState().setDeviceId(container.getString("deviceId"));
+        Collect.getInstance().getDeviceState().setDeviceKey(container.getString("deviceKey"));
+        Collect.getInstance().getDeviceState().setDevicePin(container.getString("devicePin"));
     }
 
     private boolean verifyAccountLicence(String number, String key)
@@ -714,22 +714,22 @@ public class ClientRegistrationActivity extends Activity
             params.add(new BasicNameValuePair("licenceNumber", number));
             params.add(new BasicNameValuePair("licenceKey", key));
             
-            String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/verify/licence";
+            String verifyUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/verify/licence";
             String postResult = HttpUtils.postUrlData(verifyUrl, params);
             JSONObject verify;
             
             try {
                 verify = (JSONObject) new JSONTokener(postResult).nextValue();                
                 
-                String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+                String result = verify.optString(DeviceState.RESULT, DeviceState.FAILURE);
                 
                 // Match
-                if (result.equals(InformOnlineState.OK)) {               
+                if (result.equals(DeviceState.OK)) {               
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_licence_validation_succeeded), Toast.LENGTH_SHORT).show();
                     // Clear email address in case it was saved after user requested new account with existing email address
                     mContactEmail = "";
                     return true;                   
-                } else if (result.equals(InformOnlineState.FAILURE)) {
+                } else if (result.equals(DeviceState.FAILURE)) {
                     // No match                     
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_licence_validation_failed), Toast.LENGTH_LONG).show();                    
                     return false;
@@ -762,24 +762,24 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("licenceNumber", mAccountNumber));
         params.add(new BasicNameValuePair("licenceKey", mAccountKey));
         params.add(new BasicNameValuePair("email", email.toLowerCase()));
-        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getDeviceState().getDeviceFingerprint()));
         
-        String registerDeviceUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/device";
+        String registerDeviceUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/register/device";
         String postResult = HttpUtils.postUrlData(registerDeviceUrl, params);
         JSONObject verify;
         
         try {            
             verify = (JSONObject) new JSONTokener(postResult).nextValue();
             
-            String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+            String result = verify.optString(DeviceState.RESULT, DeviceState.FAILURE);
             
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 // Store account information to preferences
                 mContactEmail = email;
                 setRegistrationInformation(verify);
                 return DEVICE_REGISTRATION_VERIFIED;
-            } else if (result.equals(InformOnlineState.FAILURE)) {
-                String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
+            } else if (result.equals(DeviceState.FAILURE)) {
+                String reason = verify.optString(DeviceState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_EMAIL)) {
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();
@@ -822,22 +822,22 @@ public class ClientRegistrationActivity extends Activity
         params.add(new BasicNameValuePair("licenceNumber", mAccountNumber));
         params.add(new BasicNameValuePair("licenceKey", mAccountKey));
         params.add(new BasicNameValuePair("devicePin", devicePin));
-        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getDeviceState().getDeviceFingerprint()));
         
-        String registerReactivateUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/reactivate";
+        String registerReactivateUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/register/reactivate";
         String postResult = HttpUtils.postUrlData(registerReactivateUrl, params);
         JSONObject reactivation;
         
         try {
             reactivation = (JSONObject) new JSONTokener(postResult).nextValue();
             
-            String result = reactivation.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+            String result = reactivation.optString(DeviceState.RESULT, DeviceState.FAILURE);
             
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 setRegistrationInformation(reactivation);
                 return true;
-            } else if (result.equals(InformOnlineState.FAILURE)) {
-                String reason = reactivation.optString(InformOnlineState.REASON, REASON_UNKNOWN);
+            } else if (result.equals(DeviceState.FAILURE)) {
+                String reason = reactivation.optString(DeviceState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_PIN)) {
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_pin), Toast.LENGTH_LONG).show();
@@ -904,9 +904,9 @@ public class ClientRegistrationActivity extends Activity
         // Data to POST
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("email", email.toLowerCase()));
-        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getDeviceState().getDeviceFingerprint()));
         
-        String verifyUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/register/account";
+        String verifyUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/register/account";
         
         String postResult = HttpUtils.postUrlData(verifyUrl, params);
         JSONObject verify;
@@ -914,17 +914,17 @@ public class ClientRegistrationActivity extends Activity
         try {            
             verify = (JSONObject) new JSONTokener(postResult).nextValue();
             
-            String result = verify.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+            String result = verify.optString(DeviceState.RESULT, DeviceState.FAILURE);
             
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 // Used by DIALOG_ACCOUNT_CREATED
                 mContactEmail = email;
                 
                 // Store account information to preferences
                 setRegistrationInformation(verify);
                 return true;
-            } else if (result.equals(InformOnlineState.FAILURE)) {
-                String reason = verify.optString(InformOnlineState.REASON, REASON_UNKNOWN);
+            } else if (result.equals(DeviceState.FAILURE)) {
+                String reason = verify.optString(DeviceState.REASON, REASON_UNKNOWN);
                 
                 if (reason.equals(REASON_INVALID_EMAIL)) {
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();

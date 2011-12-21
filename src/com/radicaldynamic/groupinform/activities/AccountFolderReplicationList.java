@@ -31,7 +31,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
@@ -171,7 +171,7 @@ public class AccountFolderReplicationList extends ListActivity
             for (int i = 0; i < databasesToReplicateById.size(); i++)
                 params.add(new BasicNameValuePair("databaseIds", databasesToReplicateById.get(i)));
             
-            String updateUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/set/replications";
+            String updateUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/device/set/replications";
             
             return HttpUtils.postUrlData(updateUrl, params);
         }
@@ -191,10 +191,10 @@ public class AccountFolderReplicationList extends ListActivity
             
             try {
                 update = (JSONObject) new JSONTokener(postResult).nextValue();
-                String result = update.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+                String result = update.optString(DeviceState.RESULT, DeviceState.ERROR);
                 
                 // Update successful
-                if (result.equals(InformOnlineState.OK)) {  
+                if (result.equals(DeviceState.OK)) {  
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_saved_data), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)

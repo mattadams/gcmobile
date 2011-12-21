@@ -203,7 +203,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         
         // Filter tasks for certain device roles
         for (String t : taskOptions) {
-            if (Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+            if (Collect.getInstance().getDeviceState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
                 if (!t.equals("Export Records") && !t.equals("Edit Form Templates")) {
                     taskSpinnerOptions.add(t);   
                 }
@@ -280,7 +280,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             @Override
             public void onClick(View v)
             {
-                if (Collect.getInstance().getInformOnlineState().hasReplicatedFolders())
+                if (Collect.getInstance().getDeviceState().hasReplicatedFolders())
                     showDialog(DIALOG_TOGGLE_ONLINE_STATE);
                 else 
                     showDialog(DIALOG_OFFLINE_MODE_UNAVAILABLE_FOLDERS);               
@@ -449,7 +449,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     {        
         super.onCreateContextMenu(menu, v, menuInfo);
         
-        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY) 
+        if (!Collect.getInstance().getDeviceState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY) 
                 && ((Spinner) findViewById(R.id.taskSpinner)).getSelectedItemPosition() != 3) 
         {
             menu.add(0, MENU_CONTEXT_COPY, 0, getString(R.string.tf_copy_to_folder));
@@ -1025,7 +1025,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         menu.add(0, MENU_OPTION_FOLDERS, 0, getString(R.string.tf_form_folders))
             .setIcon(R.drawable.ic_menu_archive);
         
-        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+        if (!Collect.getInstance().getDeviceState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
             menu.add(0, MENU_OPTION_NEWFORM, 0, getString(R.string.tf_add_template))
                 .setIcon(R.drawable.ic_menu_add);
         }
@@ -1341,7 +1341,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             if (copied) {
                 Toast.makeText(getApplicationContext(), getString(R.string.tf_something_was_successful, getString(R.string.tf_copy)), Toast.LENGTH_SHORT).show();
                 
-                if (copyToFolderId.equals(Collect.getInstance().getInformOnlineState().getSelectedDatabase()))
+                if (copyToFolderId.equals(Collect.getInstance().getDeviceState().getSelectedDatabase()))
                     loadScreen();
             } else if (duplicate) {
                 // Show duplicate explanation dialog
@@ -1372,7 +1372,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             
             try {
                 // Basic deduplication
-                FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb(Collect.getInstance().getInformOnlineState().getSelectedDatabase()));
+                FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb(Collect.getInstance().getDeviceState().getSelectedDatabase()));
                 List<FormDefinition> definitions = repo.findByName(f.getName());
 
                 if (!definitions.isEmpty()) {
@@ -1574,7 +1574,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                     // No search options, we must be using the simple status filter
                     
                     // TODO: move to AccountFolderList and activate when a user opens a folder?
-                    Collect.getInstance().getDbService().performHousekeeping(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
+                    Collect.getInstance().getDbService().performHousekeeping(Collect.getInstance().getDeviceState().getSelectedDatabase());
 
                     FormDefinitionRepo repo = new FormDefinitionRepo(Collect.getInstance().getDbService().getDb());                
                     tallies = repo.getFormsByInstanceStatus(statusFilter);
@@ -1600,7 +1600,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
                         break;
                     case 1:
                         // This device
-                        assignmentParameter.add(Collect.getInstance().getInformOnlineState().getDeviceId());
+                        assignmentParameter.add(Collect.getInstance().getDeviceState().getDeviceId());
                         break;
                     case 2:
                         // Specific devices
@@ -1679,8 +1679,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             ((Spinner) findViewById(R.id.taskSpinner)).setEnabled(true);
 
             if (folderUnavailable) {
-                String db = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
-                boolean isReplicated = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated();
+                String db = Collect.getInstance().getDeviceState().getSelectedDatabase();
+                boolean isReplicated = Collect.getInstance().getDeviceState().getAccountFolders().get(db).isReplicated();
                 
                 if (folderOutdated && isReplicated) {
                     showDialog(DIALOG_FOLDER_OUTDATED);
@@ -1892,8 +1892,8 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
      */
     private class UpdateFolderTask extends AsyncTask<Void, Void, Void>
     {
-        String db = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
-        AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db);
+        String db = Collect.getInstance().getDeviceState().getSelectedDatabase();
+        AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(db);
         ReplicationStatus status = null;
         
         @Override
@@ -1939,9 +1939,9 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         try {
             folderName = Collect
                 .getInstance()
-                .getInformOnlineState()
+                .getDeviceState()
                 .getAccountFolders()
-                .get(Collect.getInstance().getInformOnlineState().getSelectedDatabase())
+                .get(Collect.getInstance().getDeviceState().getSelectedDatabase())
                 .getName();
             
             // Shorten names that are too long
@@ -2068,7 +2068,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             if (Collect.getInstance().getIoService().isSignedIn()) {
                 b1.setText(getText(R.string.tf_inform_state_online));
             } else {
-                if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled())
+                if (Collect.getInstance().getDeviceState().isOfflineModeEnabled())
                     b1.setText(getText(R.string.tf_inform_state_offline));
                 else 
                     b1.setText(getText(R.string.tf_inform_state_disconnected));
@@ -2081,7 +2081,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             // Restore selected database (but only once)
             if (mSelectedDatabase != null) {
                 Log.v(Collect.LOGTAG, t + "restoring selected database " + mSelectedDatabase);
-                Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedDatabase);
+                Collect.getInstance().getDeviceState().setSelectedDatabase(mSelectedDatabase);
                 mSelectedDatabase = null;
             }
             
@@ -2093,7 +2093,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             b2.setText(folderName);
 
             // Open selected database
-            Collect.getInstance().getDbService().open(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
+            Collect.getInstance().getDbService().open(Collect.getInstance().getDeviceState().getSelectedDatabase());
         
             mRefreshViewTask = new RefreshViewTask();
 

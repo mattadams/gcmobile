@@ -26,7 +26,7 @@ public class FilterByAssignmentDialog extends Builder
     {
         super(context);
         
-        deviceList = new ArrayList<AccountDevice>(Collect.getInstance().getInformOnlineState().getAccountDevices().values());
+        deviceList = new ArrayList<AccountDevice>(Collect.getInstance().getDeviceState().getAccountDevices().values());
         items = new CharSequence[deviceList.size()];
         checkedItems = new boolean[deviceList.size()];
         

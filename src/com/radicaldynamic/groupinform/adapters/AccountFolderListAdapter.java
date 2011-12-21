@@ -27,7 +27,7 @@ public class AccountFolderListAdapter extends ArrayAdapter<AccountFolder>
     @Override
     public View getView(int position, View convertView, ViewGroup parent)
     {
-        String selectedDb = Collect.getInstance().getInformOnlineState().getSelectedDatabase();
+        String selectedDb = Collect.getInstance().getDeviceState().getSelectedDatabase();
 
         if (selectedDb == null)
             selectedDb = ""; 

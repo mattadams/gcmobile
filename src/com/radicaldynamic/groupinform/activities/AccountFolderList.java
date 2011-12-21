@@ -55,7 +55,7 @@ import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.listeners.SynchronizeFoldersListener;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.tasks.SynchronizeFoldersTask;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
@@ -188,7 +188,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         if (mCopyToFolder)
             visible = false;
         
-        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+        if (!Collect.getInstance().getDeviceState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
             menu.add(0, CONTEXT_MENU_EDIT, 0, getString(R.string.tf_edit_folder)).setEnabled(enabled).setVisible(visible);
         }
         
@@ -256,7 +256,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         if (mCopyToFolder)
             visible = false;
         
-        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+        if (!Collect.getInstance().getDeviceState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
             menu.add(0, MENU_ADD, 0, getString(R.string.tf_create_folder))
                 .setIcon(R.drawable.ic_menu_add)
                 .setEnabled(enabled)
@@ -279,7 +279,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         
         switch (item.getItemId()) {
         case CONTEXT_MENU_EDIT:
-            if (Collect.getInstance().getInformOnlineState().getDeviceId().equals(folder.getOwnerId())) {
+            if (Collect.getInstance().getDeviceState().getDeviceId().equals(folder.getOwnerId())) {
                 Intent i = new Intent(this, AccountFolderActivity.class);
                 i.putExtra(AccountFolderActivity.KEY_FOLDER_ID, folder.getId());
                 i.putExtra(AccountFolderActivity.KEY_FOLDER_REV, folder.getRev());            
@@ -427,16 +427,16 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         }
         
         // Try to ping the service to see if it is "up"
-        String folderListUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/folder/list";
+        String folderListUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/folder/list";
         String getResult = HttpUtils.getUrlData(folderListUrl);
         JSONObject jsonFolderList;
         
         try {
             jsonFolderList = (JSONObject) new JSONTokener(getResult).nextValue();
             
-            String result = jsonFolderList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+            String result = jsonFolderList.optString(DeviceState.RESULT, DeviceState.ERROR);
             
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 // Write out list of jsonFolders for later retrieval by loadFoldersList()
                 JSONArray jsonFolders = jsonFolderList.getJSONArray("folders");
 
@@ -508,7 +508,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
                     folders.add(folder);
                     
                     // Also update the account folder hash since this will be needed by BrowserActivity, among other things
-                    Collect.getInstance().getInformOnlineState().getAccountFolders().put(folder.getId(), folder);
+                    Collect.getInstance().getDeviceState().getAccountFolders().put(folder.getId(), folder);
                 }
             } catch (JSONException e) {
                 // Parse error (malformed result)
@@ -583,7 +583,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
             setResult(RESULT_OK, i);
             finish();
         } else {
-            Collect.getInstance().getInformOnlineState().setSelectedDatabase(mSelectedFolderId);
+            Collect.getInstance().getDeviceState().setSelectedDatabase(mSelectedFolderId);
             finish();
         }
     }

@@ -31,7 +31,7 @@ import android.widget.Toast;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
@@ -84,7 +84,7 @@ public class AccountDeviceActivity extends Activity
                 mDeviceId = savedInstanceState.getString(KEY_DEVICE_ID);
         }
         
-        mDevice = Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId);
+        mDevice = Collect.getInstance().getDeviceState().getAccountDevices().get(mDeviceId);
         
         mDeviceAlias = (EditText) findViewById(R.id.alias);
         mDeviceCheckin = (TextView) findViewById(R.id.checkin);
@@ -106,8 +106,8 @@ public class AccountDeviceActivity extends Activity
         // Initialize role field
         if (mDevice.getRole() == null) {
             // If the device role has never been set
-            if (mDevice.getId() == Collect.getInstance().getInformOnlineState().getDeviceId()) {
-                if (Collect.getInstance().getInformOnlineState().isAccountOwner()) {
+            if (mDevice.getId() == Collect.getInstance().getDeviceState().getDeviceId()) {
+                if (Collect.getInstance().getDeviceState().isAccountOwner()) {
                     // Set to administrator if we are viewing our own device profile and we're an account owner
                     mDeviceRole.setSelection(0);
                 }
@@ -287,7 +287,7 @@ public class AccountDeviceActivity extends Activity
         @Override
         protected String doInBackground(Void... nothing)
         {            
-            String removeUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/remove/" + mDeviceId;            
+            String removeUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/device/remove/" + mDeviceId;            
             return HttpUtils.getUrlData(removeUrl);
         }
     
@@ -308,10 +308,10 @@ public class AccountDeviceActivity extends Activity
                 if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
                 update = (JSONObject) new JSONTokener(getResult).nextValue();
 
-                String result = update.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+                String result = update.optString(DeviceState.RESULT, DeviceState.ERROR);
 
                 // Update successful
-                if (result.equals(InformOnlineState.OK)) {  
+                if (result.equals(DeviceState.OK)) {  
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mDevice.getDisplayName()), Toast.LENGTH_SHORT).show();                    
 
                     // Force the list to refresh (do not be destructive in case something bad happens later)
@@ -319,7 +319,7 @@ public class AccountDeviceActivity extends Activity
 
                     // Get out of here
                     finish();
-                } else if (result.equals(InformOnlineState.FAILURE)) {
+                } else if (result.equals(DeviceState.FAILURE)) {
                     // TODO: user tried to remove self is the only possible failure (implement at some point)
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_self), Toast.LENGTH_LONG).show();
                 } else {
@@ -346,7 +346,7 @@ public class AccountDeviceActivity extends Activity
         @Override
         protected String doInBackground(Void... params)
         {
-            String url = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/reset/" + mDeviceId;            
+            String url = Collect.getInstance().getDeviceState().getServerUrl() + "/device/reset/" + mDeviceId;            
             return HttpUtils.getUrlData(url);
         }
         
@@ -367,9 +367,9 @@ public class AccountDeviceActivity extends Activity
 	        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);   
                 reset = (JSONObject) new JSONTokener(getResult).nextValue();
                 
-                String result = reset.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+                String result = reset.optString(DeviceState.RESULT, DeviceState.ERROR);
                 
-                if (result.equals(InformOnlineState.OK)) {  
+                if (result.equals(DeviceState.OK)) {  
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_reset_with_param, mDevice.getDisplayName()), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
@@ -377,7 +377,7 @@ public class AccountDeviceActivity extends Activity
                     
                     // Get out of here
                     finish();                    
-                } else if (result.equals(InformOnlineState.FAILURE)) {
+                } else if (result.equals(DeviceState.FAILURE)) {
                     showDialog(CANNOT_RESET_OWN_DEVICE);
                 } else {
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_system_error_dialog_msg), Toast.LENGTH_LONG).show();
@@ -422,7 +422,7 @@ public class AccountDeviceActivity extends Activity
                 break;
             }
             
-            String updateUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/update";
+            String updateUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/device/update";
             
             return HttpUtils.postUrlData(updateUrl, params);
         }
@@ -442,21 +442,21 @@ public class AccountDeviceActivity extends Activity
             
             try {
                 update = (JSONObject) new JSONTokener(postResult).nextValue();
-                String result = update.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+                String result = update.optString(DeviceState.RESULT, DeviceState.FAILURE);
                 
                 // Update successful
-                if (result.equals(InformOnlineState.OK)) {  
+                if (result.equals(DeviceState.OK)) {  
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_saved_data), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
                     new File(getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).setLastModified(0);
                     
                     // Commit changes to the cache-in-memory to avoid running InformOnlineService.loadDeviceHash()
-                    Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());
-                    Collect.getInstance().getInformOnlineState().getAccountDevices().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());                
-                } else if (result.equals(InformOnlineState.FAILURE)) {
+                    Collect.getInstance().getDeviceState().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());
+                    Collect.getInstance().getDeviceState().getAccountDevices().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());                
+                } else if (result.equals(DeviceState.FAILURE)) {
                     // Update failed because of something the user did                    
-                    String reason = update.optString(InformOnlineState.REASON, ClientRegistrationActivity.REASON_UNKNOWN);
+                    String reason = update.optString(DeviceState.REASON, ClientRegistrationActivity.REASON_UNKNOWN);
                     
                     if (reason.equals(ClientRegistrationActivity.REASON_INVALID_EMAIL)) {
                         Toast.makeText(getApplicationContext(), getString(R.string.tf_invalid_email), Toast.LENGTH_LONG).show();

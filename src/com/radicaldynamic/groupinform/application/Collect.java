@@ -39,7 +39,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.services.DatabaseService;
 import com.radicaldynamic.groupinform.services.InformOnlineService;
 import com.radicaldynamic.groupinform.xform.FormBuilderState;
@@ -87,7 +87,7 @@ public class Collect extends Application
     private InformOnlineService ioService = null;
     
     // Current registration state of this device
-    private InformOnlineState informOnlineState = new InformOnlineState();
+    private DeviceState deviceState = new DeviceState();
 
     // State container for the form builder
     private FormBuilderState formBuilderState = new FormBuilderState();
@@ -256,8 +256,8 @@ public class Collect extends Application
     public void setDbService(DatabaseService dbService) { this.dbService = dbService; }
     public DatabaseService getDbService() { return dbService; }
 
-    public void setInformOnlineState(InformOnlineState informOnlineState) { this.informOnlineState = informOnlineState; }
-    public InformOnlineState getInformOnlineState() { return informOnlineState; }
+    public void setDeviceState(DeviceState deviceState) { this.deviceState = deviceState; }
+    public DeviceState getDeviceState() { return deviceState; }
 
     public void setIoService(InformOnlineService ioService) { this.ioService = ioService; }
     public InformOnlineService getIoService() { return ioService; }

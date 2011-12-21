@@ -38,7 +38,7 @@ public class InstanceInfoDialog extends AlertDialog
             }            
         });
         
-        if (!Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
+        if (!Collect.getInstance().getDeviceState().getDeviceRole().equals(AccountDevice.ROLE_DATA_ENTRY)) {
             setButton2(context.getString(R.string.tf_assign_form), new OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) 
@@ -69,8 +69,8 @@ public class InstanceInfoDialog extends AlertDialog
             while (i.hasNext()) {
                 String deviceId = i.next();
                 
-                if (Collect.getInstance().getInformOnlineState().getAccountDevices().containsKey(deviceId)) {
-                    AccountDevice device = Collect.getInstance().getInformOnlineState().getAccountDevices().get(deviceId);
+                if (Collect.getInstance().getDeviceState().getAccountDevices().containsKey(deviceId)) {
+                    AccountDevice device = Collect.getInstance().getDeviceState().getAccountDevices().get(deviceId);
                     assignedTo = assignedTo + "\n- " + device.getDisplayName(); 
                 }
             } 

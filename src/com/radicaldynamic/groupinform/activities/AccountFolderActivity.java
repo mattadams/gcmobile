@@ -29,7 +29,7 @@ import android.widget.Toast;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountFolder;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
@@ -238,9 +238,9 @@ public class AccountFolderActivity extends Activity
             String processUrl;
             
             if (mFolder.getId() == null)
-                processUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/folder/add";
+                processUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/folder/add";
             else 
-                processUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/folder/update";
+                processUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/folder/update";
             
             return HttpUtils.postUrlData(processUrl, params);
         }
@@ -260,10 +260,10 @@ public class AccountFolderActivity extends Activity
             
             try {
                 update = (JSONObject) new JSONTokener(postResult).nextValue();
-                String result = update.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+                String result = update.optString(DeviceState.RESULT, DeviceState.FAILURE);
                 
                 // Update successful
-                if (result.equals(InformOnlineState.OK)) {  
+                if (result.equals(DeviceState.OK)) {  
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_saved_data), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
@@ -295,7 +295,7 @@ public class AccountFolderActivity extends Activity
         @Override
         protected String doInBackground(Void... nothing)
         {            
-            String removeUrl = Collect.getInstance().getInformOnlineState().getServerUrl() 
+            String removeUrl = Collect.getInstance().getDeviceState().getServerUrl() 
                 + "/folder/remove/" + mFolder.getId() + File.separator + mFolder.getRev(); 
             
             return HttpUtils.getUrlData(removeUrl);
@@ -318,10 +318,10 @@ public class AccountFolderActivity extends Activity
                 if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "parsing getResult " + getResult);                
                 update = (JSONObject) new JSONTokener(getResult).nextValue();
                 
-                String result = update.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+                String result = update.optString(DeviceState.RESULT, DeviceState.ERROR);
                 
                 // Update successful
-                if (result.equals(InformOnlineState.OK)) {  
+                if (result.equals(DeviceState.OK)) {  
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_removed_with_param, mFolder.getName()), Toast.LENGTH_SHORT).show();                    
                     
                     // Force the list to refresh (do not be destructive in case something bad happens later)
@@ -329,7 +329,7 @@ public class AccountFolderActivity extends Activity
                     
                     // Get out of here
                     finish();
-                } else if (result.equals(InformOnlineState.FAILURE)) {
+                } else if (result.equals(DeviceState.FAILURE)) {
                     // There is only one possible failure right now (the user tried to remove their default DB)
                     Toast.makeText(getApplicationContext(), getString(R.string.tf_unable_to_remove_defaultdb), Toast.LENGTH_LONG).show();
                 } else {

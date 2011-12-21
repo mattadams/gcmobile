@@ -204,14 +204,14 @@ public class DatabaseService extends Service {
     // Convenience method (uses currently selected database)
     public CouchDbConnector getDb() 
     {
-        return getDb(Collect.getInstance().getInformOnlineState().getSelectedDatabase());
+        return getDb(Collect.getInstance().getDeviceState().getSelectedDatabase());
     }
     
     public CouchDbConnector getDb(String db)
     {
         final String tt = t + "getDb(): ";
         
-        AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db);
+        AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(db);
         CouchDbConnector dbConnector;
         
         if (folder.isReplicated()) {
@@ -272,14 +272,14 @@ public class DatabaseService extends Service {
     public void open(String db) throws DbUnavailableException 
     {        
         // If database metadata is not yet available then abort here
-        if (db == null || Collect.getInstance().getInformOnlineState().getAccountFolders().get(db) == null) {
+        if (db == null || Collect.getInstance().getDeviceState().getAccountFolders().get(db) == null) {
             throw new DbUnavailableDueToMetadataException(db);
         }
         
-        if (!Collect.getInstance().getIoService().isSignedIn() && !Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated())
+        if (!Collect.getInstance().getIoService().isSignedIn() && !Collect.getInstance().getDeviceState().getAccountFolders().get(db).isReplicated())
             throw new DbUnavailableWhileOfflineException();
         
-        boolean dbToOpenIsReplicated = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db).isReplicated();        
+        boolean dbToOpenIsReplicated = Collect.getInstance().getDeviceState().getAccountFolders().get(db).isReplicated();        
         
         if (dbToOpenIsReplicated) {
             // Local database
@@ -336,7 +336,7 @@ public class DatabaseService extends Service {
             return null;
         }
 
-        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
+        if (Collect.getInstance().getDeviceState().isOfflineModeEnabled()) {
             if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "aborting replication: offline mode is enabled");
             return null;
         }
@@ -388,8 +388,8 @@ public class DatabaseService extends Service {
         String source = null;
         String target = null;
         
-        String deviceId = Collect.getInstance().getInformOnlineState().getDeviceId();
-        String deviceKey = Collect.getInstance().getInformOnlineState().getDeviceKey();
+        String deviceId = Collect.getInstance().getDeviceState().getDeviceId();
+        String deviceKey = Collect.getInstance().getDeviceState().getDeviceKey();
         
         String localServer = "http://" + mLocalHost + ":" + mLocalPort + "/db_" + db; 
         String remoteServer = "http://" + deviceId + ":" + deviceKey + "@" + masterClusterIP + ":5984/db_" + db;
@@ -495,8 +495,8 @@ public class DatabaseService extends Service {
                 .host(host)
                 .port(port)
                 .socketTimeout(30 * 1000)
-                .username(Collect.getInstance().getInformOnlineState().getDeviceId())
-                .password(Collect.getInstance().getInformOnlineState().getDeviceKey())                    
+                .username(Collect.getInstance().getDeviceState().getDeviceId())
+                .password(Collect.getInstance().getDeviceState().getDeviceKey())                    
                 .build();
             
             mRemoteDbInstance = new StdCouchDbInstance(mRemoteHttpClient);
@@ -584,7 +584,7 @@ public class DatabaseService extends Service {
                     // Our metadata knows nothing about the db_ prefix
                     db = db.substring(3);
                     
-                    AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(db);
+                    AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(db);
 
                     if (folder == null) {
                         // Remove databases that exist locally but for which we have no metadata
@@ -631,7 +631,7 @@ public class DatabaseService extends Service {
                     if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, tt + "unable to remove old-style placeholder");
                     e.printStackTrace();
                 }
-            } else if (entry.getValue().optString("createdBy").equals(Collect.getInstance().getInformOnlineState().getDeviceId())) {
+            } else if (entry.getValue().optString("createdBy").equals(Collect.getInstance().getDeviceState().getDeviceId())) {
                 // Remove placeholders owned by me immediately
                 try {                        
                     getDb().delete(entry.getKey(), entry.getValue().optString("_rev"));
@@ -679,11 +679,11 @@ public class DatabaseService extends Service {
         String syncInterval = settings.getString(PreferencesActivity.KEY_SYNCHRONIZATION_INTERVAL, Integer.toString(TIME_FIVE_MINUTES));
         
         if (settings.getBoolean(PreferencesActivity.KEY_AUTOMATIC_SYNCHRONIZATION, true)) {
-            Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
+            Set<String> folderSet = Collect.getInstance().getDeviceState().getAccountFolders().keySet();
             Iterator<String> folderIds = folderSet.iterator();
             
             while (folderIds.hasNext()) {        
-                AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());    
+                AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(folderIds.next());    
                 
                 if (folder.isReplicated()) {
                     // Determine if this database needs to be replicated

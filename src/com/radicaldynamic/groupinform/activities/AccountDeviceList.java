@@ -46,7 +46,7 @@ import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.adapters.AccountDeviceListAdapter;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 
@@ -113,8 +113,8 @@ public class AccountDeviceList extends ListActivity
         AccountDevice device = (AccountDevice) getListAdapter().getItem(position);
         
         // Only account owners should proceed to the next screen
-        if (Collect.getInstance().getInformOnlineState().isAccountOwner() || 
-                Collect.getInstance().getInformOnlineState().getDeviceRole().equals(AccountDevice.ROLE_ADMIN)) 
+        if (Collect.getInstance().getDeviceState().isAccountOwner() || 
+                Collect.getInstance().getDeviceState().getDeviceRole().equals(AccountDevice.ROLE_ADMIN)) 
         {
             Intent i = new Intent(this, AccountDeviceActivity.class);
             i.putExtra(AccountDeviceActivity.KEY_DEVICE_ID, device.getId());
@@ -197,16 +197,16 @@ public class AccountDeviceList extends ListActivity
         }
                 
         // Try to ping the service to see if it is "up"
-        String deviceListUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/device/list";
+        String deviceListUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/device/list";
         String getResult = HttpUtils.getUrlData(deviceListUrl);
         JSONObject jsonDeviceList;
         
         try {
             jsonDeviceList = (JSONObject) new JSONTokener(getResult).nextValue();
             
-            String result = jsonDeviceList.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+            String result = jsonDeviceList.optString(DeviceState.RESULT, DeviceState.ERROR);
             
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 // Write out list of jsonDevices for later retrieval by loadDevicesList() and InformOnlineService.loadDevicesHash()                
                 JSONArray jsonDevices = jsonDeviceList.getJSONArray("devices");
                 
@@ -292,7 +292,7 @@ public class AccountDeviceList extends ListActivity
                     device.setRole(jsonDevice.optString("role"));
                     
                     // Update the lookup hash
-                    Collect.getInstance().getInformOnlineState().getAccountDevices().put(device.getId(), device);
+                    Collect.getInstance().getDeviceState().getAccountDevices().put(device.getId(), device);
                     
                     // Show a device so long as it hasn't been marked as removed
                     if (!device.getStatus().equals("removed")) {                        

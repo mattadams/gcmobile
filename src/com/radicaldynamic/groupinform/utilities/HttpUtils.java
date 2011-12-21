@@ -36,10 +36,10 @@ public class HttpUtils
             SecureHttpClient client = new SecureHttpClient();
             
             // Load any cookies that have been stored
-            if (Collect.getInstance().getInformOnlineState().getSession() == null)  {
+            if (Collect.getInstance().getDeviceState().getSession() == null)  {
                 if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "connection without session");
             } else {
-                client.setCookieStore(Collect.getInstance().getInformOnlineState().getSession());
+                client.setCookieStore(Collect.getInstance().getDeviceState().getSession());
             }
             
             URI uri = new URI(url);            
@@ -58,7 +58,7 @@ public class HttpUtils
             if (cookies.isEmpty()) {
                 if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "no cookies");
             } else {
-                Collect.getInstance().getInformOnlineState().setSession(client.getCookieStore());
+                Collect.getInstance().getDeviceState().setSession(client.getCookieStore());
                 
                 for (int i = 0; i < cookies.size(); i++)
                     if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "parsed cookie " + cookies.get(i).toString());
@@ -93,10 +93,10 @@ public class HttpUtils
             SecureHttpClient client = new SecureHttpClient();
             
             // Load any cookies that have been stored
-            if (Collect.getInstance().getInformOnlineState().getSession() == null) {
+            if (Collect.getInstance().getDeviceState().getSession() == null) {
                 if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "connection without session");
             } else {
-                client.setCookieStore(Collect.getInstance().getInformOnlineState().getSession());
+                client.setCookieStore(Collect.getInstance().getDeviceState().getSession());
             }
             
             URI uri = new URI(url);
@@ -116,7 +116,7 @@ public class HttpUtils
             if (cookies.isEmpty()) {
                 if (Collect.Log.WARN) Log.w(Collect.LOGTAG, tt + "no cookies");
             } else {
-                Collect.getInstance().getInformOnlineState().setSession(client.getCookieStore());
+                Collect.getInstance().getDeviceState().setSession(client.getCookieStore());
                 
                 for (int i = 0; i < cookies.size(); i++)
                     if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "parsed cookie " + cookies.get(i).toString());

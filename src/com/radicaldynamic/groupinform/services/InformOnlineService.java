@@ -46,7 +46,7 @@ import com.radicaldynamic.groupinform.activities.AccountFolderList;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
 import com.radicaldynamic.groupinform.logic.HttpCookieStore;
-import com.radicaldynamic.groupinform.logic.InformOnlineState;
+import com.radicaldynamic.groupinform.logic.DeviceState;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
@@ -89,11 +89,11 @@ public class InformOnlineService extends Service {
     @Override
     public void onCreate() {        
         // Do some basic initialization for this service
-        Collect.getInstance().setInformOnlineState(new InformOnlineState(getApplicationContext()));
+        Collect.getInstance().setDeviceState(new DeviceState(getApplicationContext()));
         restoreSession();        
         
         // connect() may not be run because of offline mode but metadata should still be loaded if available
-        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled()) {
+        if (Collect.getInstance().getDeviceState().isOfflineModeEnabled()) {
             AccountDeviceList.loadDeviceList();
             AccountFolderList.loadFolderList();
         }
@@ -149,7 +149,7 @@ public class InformOnlineService extends Service {
     {
         if (checkout()) {
             if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "went offline at users request");            
-            Collect.getInstance().getInformOnlineState().setOfflineModeEnabled(true);
+            Collect.getInstance().getDeviceState().setOfflineModeEnabled(true);
             return true;
         } else {
             if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to go offline at users request");
@@ -166,7 +166,7 @@ public class InformOnlineService extends Service {
         
         if (isSignedIn()) {
             if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "went online at users request");
-            Collect.getInstance().getInformOnlineState().setOfflineModeEnabled(false);
+            Collect.getInstance().getDeviceState().setOfflineModeEnabled(false);
             return true;
         } else {
             if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "unable to go online at users request");
@@ -194,7 +194,7 @@ public class InformOnlineService extends Service {
     // Registration info for this device is stored in the app's shared preferences
     public boolean isRegistered()
     {
-        return Collect.getInstance().getInformOnlineState().hasRegistration();
+        return Collect.getInstance().getDeviceState().hasRegistration();
     }
     
     // Is Inform Online available?
@@ -230,9 +230,9 @@ public class InformOnlineService extends Service {
         boolean registered = true;
         
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair("deviceId", Collect.getInstance().getInformOnlineState().getDeviceId()));
-        params.add(new BasicNameValuePair("deviceKey", Collect.getInstance().getInformOnlineState().getDeviceKey()));
-        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getInformOnlineState().getDeviceFingerprint()));
+        params.add(new BasicNameValuePair("deviceId", Collect.getInstance().getDeviceState().getDeviceId()));
+        params.add(new BasicNameValuePair("deviceKey", Collect.getInstance().getDeviceState().getDeviceKey()));
+        params.add(new BasicNameValuePair("fingerprint", Collect.getInstance().getDeviceState().getDeviceFingerprint()));
         
         try {
             params.add(new BasicNameValuePair("lastCheckinWith", this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName));
@@ -240,24 +240,24 @@ public class InformOnlineService extends Service {
             params.add(new BasicNameValuePair("lastCheckinWith", "unknown"));
         }
         
-        String checkinUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/checkin";
+        String checkinUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/checkin";
         String postResult = HttpUtils.postUrlData(checkinUrl, params);            
         JSONObject checkin;
         
         try {
             checkin = (JSONObject) new JSONTokener(postResult).nextValue();
-            String result = checkin.optString(InformOnlineState.RESULT, InformOnlineState.FAILURE);
+            String result = checkin.optString(DeviceState.RESULT, DeviceState.FAILURE);
             
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "successful checkin");
-                Collect.getInstance().getInformOnlineState().setExpired(false);
+                Collect.getInstance().getDeviceState().setExpired(false);
                 
                 // Update device role -- it might have changed
-                Collect.getInstance().getInformOnlineState().setDeviceRole(checkin.optString("role", AccountDevice.ROLE_UNASSIGNED));
-            } else if (result.equals(InformOnlineState.EXPIRED)) {
+                Collect.getInstance().getDeviceState().setDeviceRole(checkin.optString("role", AccountDevice.ROLE_UNASSIGNED));
+            } else if (result.equals(DeviceState.EXPIRED)) {
                 if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "associated order is expired; marking device as expired");
-                Collect.getInstance().getInformOnlineState().setExpired(true);
-            } else if (result.equals(InformOnlineState.FAILURE)) {
+                Collect.getInstance().getDeviceState().setExpired(true);
+            } else if (result.equals(DeviceState.FAILURE)) {
                 if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "checkin unsuccessful");
                 registered = false;
             } else {
@@ -276,7 +276,7 @@ public class InformOnlineService extends Service {
 
         // Clear the session for subsequent requests and reset stored state
         if (registered == false)          
-            Collect.getInstance().getInformOnlineState().resetDevice();
+            Collect.getInstance().getDeviceState().resetDevice();
         
         return registered;
     }
@@ -291,16 +291,16 @@ public class InformOnlineService extends Service {
     {
         boolean saidGoodbye = false;
         
-        String checkoutUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/checkout";
+        String checkoutUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/checkout";
         String getResult = HttpUtils.getUrlData(checkoutUrl);
         JSONObject checkout;
         
         try {
             checkout = (JSONObject) new JSONTokener(getResult).nextValue();
             
-            String result = checkout.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+            String result = checkout.optString(DeviceState.RESULT, DeviceState.ERROR);
             
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "said goodbye to Group Complete");
             } else { 
                 if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "device checkout unnecessary");
@@ -320,7 +320,7 @@ public class InformOnlineService extends Service {
             mSignedIn = false;
         }
         
-        Collect.getInstance().getInformOnlineState().setSession(null);
+        Collect.getInstance().getDeviceState().setSession(null);
         
         return saidGoodbye;
     }
@@ -333,7 +333,7 @@ public class InformOnlineService extends Service {
         mConnecting = true;
 
         // Make sure that the user has not specifically requested that we be offline
-        if (Collect.getInstance().getInformOnlineState().isOfflineModeEnabled() && forceOnline == false) {
+        if (Collect.getInstance().getDeviceState().isOfflineModeEnabled() && forceOnline == false) {
             if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "offline mode enabled; not auto-connecting");
             
             /* 
@@ -346,27 +346,27 @@ public class InformOnlineService extends Service {
             return;
         }
         
-        if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "pinging " + Collect.getInstance().getInformOnlineState().getServerUrl());
+        if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "pinging " + Collect.getInstance().getDeviceState().getServerUrl());
         
         // Try to ping the service to see if it is "up" (and determine whether we are registered)
-        String pingUrl = Collect.getInstance().getInformOnlineState().getServerUrl() + "/ping";
+        String pingUrl = Collect.getInstance().getDeviceState().getServerUrl() + "/ping";
         String getResult = HttpUtils.getUrlData(pingUrl);
         JSONObject ping;
         
         try {
             ping = (JSONObject) new JSONTokener(getResult).nextValue();
             
-            String result = ping.optString(InformOnlineState.RESULT, InformOnlineState.ERROR);
+            String result = ping.optString(DeviceState.RESULT, DeviceState.ERROR);
 
             // Online and registered (checked in)
-            if (result.equals(InformOnlineState.OK)) {
+            if (result.equals(DeviceState.OK)) {
                 if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "ping successful (we are connected and checked in)");
                 mServicePingSuccessful = mSignedIn = true;
-            } else if (result.equals(InformOnlineState.FAILURE)) {
+            } else if (result.equals(DeviceState.FAILURE)) {
                 if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "ping successful but not signed in (will attempt checkin)");
                 mServicePingSuccessful = true;
                 
-                if (Collect.getInstance().getInformOnlineState().hasRegistration() && checkin()) {
+                if (Collect.getInstance().getDeviceState().hasRegistration() && checkin()) {
                     if (Collect.Log.INFO) Log.i(Collect.LOGTAG, t + "checkin successful (we are connected)");
                     
                     // Fetch regardless of the fact that we're not yet marked as being signed in
@@ -424,7 +424,7 @@ public class InformOnlineService extends Service {
                 ois.close();
                 fis.close();
                 
-                Collect.getInstance().getInformOnlineState().setSession(new BasicCookieStore());
+                Collect.getInstance().getDeviceState().setSession(new BasicCookieStore());
                 Iterator<HttpCookieStore> cookies = session.getCookies().iterator();
                 
                 if (cookies.hasNext()) {
@@ -436,7 +436,7 @@ public class InformOnlineService extends Service {
                     bcc.setPath(ios.getPath());
                     bcc.setVersion(ios.getVersion());
                  
-                    Collect.getInstance().getInformOnlineState().getSession().addCookie(bcc);
+                    Collect.getInstance().getDeviceState().getSession().addCookie(bcc);
                 }
             } catch (Exception e) {
                 if (Collect.Log.WARN) Log.w(Collect.LOGTAG, t + "problem restoring cached session " + e.toString());
@@ -446,7 +446,7 @@ public class InformOnlineService extends Service {
                 new File(getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE).delete();
                 
                 // Clear the session
-                Collect.getInstance().getInformOnlineState().setSession(null);
+                Collect.getInstance().getDeviceState().setSession(null);
             }
         } else {
             if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "no session to restore");
@@ -459,13 +459,13 @@ public class InformOnlineService extends Service {
     private void serializeSession()
     {
         // Attempt to serialize the session for later use
-        if (Collect.getInstance().getInformOnlineState().getSession() instanceof CookieStore) {
+        if (Collect.getInstance().getDeviceState().getSession() instanceof CookieStore) {
             if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "serializing session");
             
             try {
                 HttpCookieStore session = new HttpCookieStore();
                 
-                Iterator<Cookie> cookies = Collect.getInstance().getInformOnlineState().getSession().getCookies().iterator();
+                Iterator<Cookie> cookies = Collect.getInstance().getDeviceState().getSession().getCookies().iterator();
                 
                 while (cookies.hasNext()) {
                     Cookie c = cookies.next();                    

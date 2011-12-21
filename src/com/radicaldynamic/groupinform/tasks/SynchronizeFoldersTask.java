@@ -142,7 +142,7 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
     {
         HashMap<String, HashMap<String, ReplicationStatus>> status = new HashMap<String, HashMap<String, ReplicationStatus>>();
         
-        Set<String> folderSet = Collect.getInstance().getInformOnlineState().getAccountFolders().keySet();
+        Set<String> folderSet = Collect.getInstance().getDeviceState().getAccountFolders().keySet();
         Iterator<String> folderIds = folderSet.iterator();
         
         int progress = 0;
@@ -150,7 +150,7 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
         
         // Figure out how many folders are marked for replication
         while (folderIds.hasNext()) {
-            AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
+            AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(folderIds.next());
             
             // If we were supplied with a specific list of folders to synchronize AND this folder isn't in the list
             if (!mFoldersToSynchronize.isEmpty() && !mFoldersToSynchronize.contains(folder.getId())) {
@@ -171,7 +171,7 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
         folderIds = folderSet.iterator();    
             
         while (folderIds.hasNext()) {
-            AccountFolder folder = Collect.getInstance().getInformOnlineState().getAccountFolders().get(folderIds.next());
+            AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(folderIds.next());
             HashMap<String, ReplicationStatus> replicationResults = new HashMap<String, ReplicationStatus>();
             
             // Remember if a database existed prior to the PULL that follows this
