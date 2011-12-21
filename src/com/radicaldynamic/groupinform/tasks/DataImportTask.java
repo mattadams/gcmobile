@@ -98,8 +98,8 @@ public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<Strin
                 List<String> allEmailAddresses = new ArrayList<String>(); 
                 
                 // Gather list of email addresses associated with active or unused device profiles
-                for (AccountDevice device : Collect.getInstance().getDeviceState().getAccountDevices().values()
-                        .toArray(new AccountDevice[Collect.getInstance().getDeviceState().getAccountDevices().values().size()])) {
+                for (AccountDevice device : Collect.getInstance().getDeviceState().getDeviceList().values()
+                        .toArray(new AccountDevice[Collect.getInstance().getDeviceState().getDeviceList().values().size()])) {
                     
                     if (device.getStatus().contains("active") || device.getStatus().contains("unused"))
                         allEmailAddresses.add(device.getEmail());
@@ -177,8 +177,8 @@ public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<Strin
                 Map<String, String> emailProfileIdMap = new HashMap<String, String>();
                 
                 // Gather list of email addresses associated with active or unused device profiles
-                for (AccountDevice device : Collect.getInstance().getDeviceState().getAccountDevices().values()
-                        .toArray(new AccountDevice[Collect.getInstance().getDeviceState().getAccountDevices().values().size()])) {
+                for (AccountDevice device : Collect.getInstance().getDeviceState().getDeviceList().values()
+                        .toArray(new AccountDevice[Collect.getInstance().getDeviceState().getDeviceList().values().size()])) {
                     
                     emailProfileIdMap.put(device.getEmail(), device.getId());
                 }

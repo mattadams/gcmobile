@@ -26,7 +26,7 @@ public class InstanceAssignDialog extends Builder
     {
         super(context);
         
-        deviceList = new ArrayList<AccountDevice>(Collect.getInstance().getDeviceState().getAccountDevices().values());
+        deviceList = new ArrayList<AccountDevice>(Collect.getInstance().getDeviceState().getDeviceList().values());
         items = new CharSequence[deviceList.size()];
         checkedItems = new boolean[deviceList.size()];
         

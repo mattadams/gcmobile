@@ -69,8 +69,8 @@ public class InstanceInfoDialog extends AlertDialog
             while (i.hasNext()) {
                 String deviceId = i.next();
                 
-                if (Collect.getInstance().getDeviceState().getAccountDevices().containsKey(deviceId)) {
-                    AccountDevice device = Collect.getInstance().getDeviceState().getAccountDevices().get(deviceId);
+                if (Collect.getInstance().getDeviceState().getDeviceList().containsKey(deviceId)) {
+                    AccountDevice device = Collect.getInstance().getDeviceState().getDeviceList().get(deviceId);
                     assignedTo = assignedTo + "\n- " + device.getDisplayName(); 
                 }
             } 

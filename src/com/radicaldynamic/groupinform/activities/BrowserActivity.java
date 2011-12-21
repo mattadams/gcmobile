@@ -1680,7 +1680,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
 
             if (folderUnavailable) {
                 String db = Collect.getInstance().getDeviceState().getSelectedDatabase();
-                boolean isReplicated = Collect.getInstance().getDeviceState().getAccountFolders().get(db).isReplicated();
+                boolean isReplicated = Collect.getInstance().getDeviceState().getFolderList().get(db).isReplicated();
                 
                 if (folderOutdated && isReplicated) {
                     showDialog(DIALOG_FOLDER_OUTDATED);
@@ -1893,7 +1893,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
     private class UpdateFolderTask extends AsyncTask<Void, Void, Void>
     {
         String db = Collect.getInstance().getDeviceState().getSelectedDatabase();
-        AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(db);
+        AccountFolder folder = Collect.getInstance().getDeviceState().getFolderList().get(db);
         ReplicationStatus status = null;
         
         @Override
@@ -1940,7 +1940,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             folderName = Collect
                 .getInstance()
                 .getDeviceState()
-                .getAccountFolders()
+                .getFolderList()
                 .get(Collect.getInstance().getDeviceState().getSelectedDatabase())
                 .getName();
             

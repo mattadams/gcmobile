@@ -44,7 +44,7 @@ public class AccountFolder
     
     public String getOwnerAlias() 
     { 
-        AccountDevice device = Collect.getInstance().getDeviceState().getAccountDevices().get(ownerId);
+        AccountDevice device = Collect.getInstance().getDeviceState().getDeviceList().get(ownerId);
         
         if (device == null)
             return Collect.getInstance().getString(R.string.tf_unavailable).toString();

@@ -84,7 +84,7 @@ public class AccountDeviceActivity extends Activity
                 mDeviceId = savedInstanceState.getString(KEY_DEVICE_ID);
         }
         
-        mDevice = Collect.getInstance().getDeviceState().getAccountDevices().get(mDeviceId);
+        mDevice = Collect.getInstance().getDeviceState().getDeviceList().get(mDeviceId);
         
         mDeviceAlias = (EditText) findViewById(R.id.alias);
         mDeviceCheckin = (TextView) findViewById(R.id.checkin);
@@ -452,8 +452,8 @@ public class AccountDeviceActivity extends Activity
                     new File(getCacheDir(), FileUtilsExtended.DEVICE_CACHE_FILE).setLastModified(0);
                     
                     // Commit changes to the cache-in-memory to avoid running InformOnlineService.loadDeviceHash()
-                    Collect.getInstance().getDeviceState().getAccountDevices().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());
-                    Collect.getInstance().getDeviceState().getAccountDevices().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());                
+                    Collect.getInstance().getDeviceState().getDeviceList().get(mDeviceId).setAlias(mDeviceAlias.getText().toString().trim());
+                    Collect.getInstance().getDeviceState().getDeviceList().get(mDeviceId).setEmail(mDeviceEmail.getText().toString().trim());                
                 } else if (result.equals(DeviceState.FAILURE)) {
                     // Update failed because of something the user did                    
                     String reason = update.optString(DeviceState.REASON, ClientRegistrationActivity.REASON_UNKNOWN);

@@ -508,7 +508,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
                     folders.add(folder);
                     
                     // Also update the account folder hash since this will be needed by BrowserActivity, among other things
-                    Collect.getInstance().getDeviceState().getAccountFolders().put(folder.getId(), folder);
+                    Collect.getInstance().getDeviceState().getFolderList().put(folder.getId(), folder);
                 }
             } catch (JSONException e) {
                 // Parse error (malformed result)

@@ -89,7 +89,7 @@ public class ClientInformationActivity extends Activity implements SynchronizeFo
                     Collect
                     .getInstance()
                     .getDeviceState()
-                    .getAccountDevices()
+                    .getDeviceList()
                     .get(Collect.getInstance().getDeviceState().getDeviceId())
                     .getEmail()
             );

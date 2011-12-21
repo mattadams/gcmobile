@@ -292,7 +292,7 @@ public class AccountDeviceList extends ListActivity
                     device.setRole(jsonDevice.optString("role"));
                     
                     // Update the lookup hash
-                    Collect.getInstance().getDeviceState().getAccountDevices().put(device.getId(), device);
+                    Collect.getInstance().getDeviceState().getDeviceList().put(device.getId(), device);
                     
                     // Show a device so long as it hasn't been marked as removed
                     if (!device.getStatus().equals("removed")) {                        

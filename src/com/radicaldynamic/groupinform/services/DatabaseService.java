@@ -211,7 +211,7 @@ public class DatabaseService extends Service {
     {
         final String tt = t + "getDb(): ";
         
-        AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(db);
+        AccountFolder folder = Collect.getInstance().getDeviceState().getFolderList().get(db);
         CouchDbConnector dbConnector;
         
         if (folder.isReplicated()) {
@@ -272,14 +272,14 @@ public class DatabaseService extends Service {
     public void open(String db) throws DbUnavailableException 
     {        
         // If database metadata is not yet available then abort here
-        if (db == null || Collect.getInstance().getDeviceState().getAccountFolders().get(db) == null) {
+        if (db == null || Collect.getInstance().getDeviceState().getFolderList().get(db) == null) {
             throw new DbUnavailableDueToMetadataException(db);
         }
         
-        if (!Collect.getInstance().getIoService().isSignedIn() && !Collect.getInstance().getDeviceState().getAccountFolders().get(db).isReplicated())
+        if (!Collect.getInstance().getIoService().isSignedIn() && !Collect.getInstance().getDeviceState().getFolderList().get(db).isReplicated())
             throw new DbUnavailableWhileOfflineException();
         
-        boolean dbToOpenIsReplicated = Collect.getInstance().getDeviceState().getAccountFolders().get(db).isReplicated();        
+        boolean dbToOpenIsReplicated = Collect.getInstance().getDeviceState().getFolderList().get(db).isReplicated();        
         
         if (dbToOpenIsReplicated) {
             // Local database
@@ -584,7 +584,7 @@ public class DatabaseService extends Service {
                     // Our metadata knows nothing about the db_ prefix
                     db = db.substring(3);
                     
-                    AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(db);
+                    AccountFolder folder = Collect.getInstance().getDeviceState().getFolderList().get(db);
 
                     if (folder == null) {
                         // Remove databases that exist locally but for which we have no metadata
@@ -679,11 +679,11 @@ public class DatabaseService extends Service {
         String syncInterval = settings.getString(PreferencesActivity.KEY_SYNCHRONIZATION_INTERVAL, Integer.toString(TIME_FIVE_MINUTES));
         
         if (settings.getBoolean(PreferencesActivity.KEY_AUTOMATIC_SYNCHRONIZATION, true)) {
-            Set<String> folderSet = Collect.getInstance().getDeviceState().getAccountFolders().keySet();
+            Set<String> folderSet = Collect.getInstance().getDeviceState().getFolderList().keySet();
             Iterator<String> folderIds = folderSet.iterator();
             
             while (folderIds.hasNext()) {        
-                AccountFolder folder = Collect.getInstance().getDeviceState().getAccountFolders().get(folderIds.next());    
+                AccountFolder folder = Collect.getInstance().getDeviceState().getFolderList().get(folderIds.next());    
                 
                 if (folder.isReplicated()) {
                     // Determine if this database needs to be replicated

@@ -123,23 +123,23 @@ public class DeviceState
         setDeviceFingerprint(mContext);
     }    
     
-    public void setAccountDevices(Map<String, AccountDevice> accountDevices) 
+    public void setDeviceList(Map<String, AccountDevice> accountDevices) 
     { 
 	if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setAccountDevices()");
         this.accountDevicesSyncMap = accountDevices; 
     }
     
-    public Map<String, AccountDevice> getAccountDevices() { 
+    public Map<String, AccountDevice> getDeviceList() { 
         return accountDevicesSyncMap; 
     }
     
-    public void setAccountFolders(Map<String, AccountFolder> accountFolders) 
+    public void setFolderList(Map<String, AccountFolder> accountFolders) 
     { 
         if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "setAccountFolders()");
         this.accountFoldersSyncMap = accountFolders; 
     }
     
-    public Map<String, AccountFolder> getAccountFolders() { 
+    public Map<String, AccountFolder> getFolderList() { 
         return accountFoldersSyncMap; 
     }
 
@@ -431,7 +431,7 @@ public class DeviceState
         while (folderIds.hasNext()) {
             String id = folderIds.next();
             
-            if (Collect.getInstance().getDeviceState().getAccountFolders().get(id).isReplicated())
+            if (Collect.getInstance().getDeviceState().getFolderList().get(id).isReplicated())
                 replicatedFolders++;                        
         }
         
