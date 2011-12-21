@@ -3,6 +3,7 @@ package com.radicaldynamic.groupinform.tasks;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.ektorp.ReplicationStatus;
@@ -142,8 +143,8 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
     {
         HashMap<String, HashMap<String, ReplicationStatus>> status = new HashMap<String, HashMap<String, ReplicationStatus>>();
         
-        Set<String> folderSet = Collect.getInstance().getDeviceState().getFolderList().keySet();
-        Iterator<String> folderIds = folderSet.iterator();
+        List<String> folderList = new ArrayList<String>(Collect.getInstance().getDeviceState().getFolderList().keySet());
+        Iterator<String> folderIds = folderList.iterator();
         
         int progress = 0;
         int total = 0;
@@ -168,7 +169,7 @@ public class SynchronizeFoldersTask extends AsyncTask<Void, Void, Void>
         }
         
         // Reset iterator
-        folderIds = folderSet.iterator();    
+        folderIds = folderList.iterator();    
             
         while (folderIds.hasNext()) {
             AccountFolder folder = Collect.getInstance().getDeviceState().getFolderList().get(folderIds.next());
