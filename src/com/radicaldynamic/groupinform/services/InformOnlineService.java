@@ -45,7 +45,7 @@ import com.radicaldynamic.groupinform.activities.AccountDeviceList;
 import com.radicaldynamic.groupinform.activities.AccountFolderList;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.AccountDevice;
-import com.radicaldynamic.groupinform.logic.InformOnlineSession;
+import com.radicaldynamic.groupinform.logic.HttpCookieStore;
 import com.radicaldynamic.groupinform.logic.InformOnlineState;
 import com.radicaldynamic.groupinform.utilities.HttpUtils;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
@@ -416,19 +416,19 @@ public class InformOnlineService extends Service {
             if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "restoring cached session");
             
             try {
-                InformOnlineSession session = new InformOnlineSession();
+                HttpCookieStore session = new HttpCookieStore();
                 
                 FileInputStream fis = new FileInputStream(sessionCache);
                 ObjectInputStream ois = new ObjectInputStream(fis);
-                session = (InformOnlineSession) ois.readObject();
+                session = (HttpCookieStore) ois.readObject();
                 ois.close();
                 fis.close();
                 
                 Collect.getInstance().getInformOnlineState().setSession(new BasicCookieStore());
-                Iterator<InformOnlineSession> cookies = session.getCookies().iterator();
+                Iterator<HttpCookieStore> cookies = session.getCookies().iterator();
                 
                 if (cookies.hasNext()) {
-                    InformOnlineSession ios = cookies.next();
+                    HttpCookieStore ios = cookies.next();
                     
                     BasicClientCookie bcc = new BasicClientCookie(ios.getName(), ios.getValue());
                     bcc.setDomain(ios.getDomain());
@@ -463,13 +463,13 @@ public class InformOnlineService extends Service {
             if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "serializing session");
             
             try {
-                InformOnlineSession session = new InformOnlineSession();
+                HttpCookieStore session = new HttpCookieStore();
                 
                 Iterator<Cookie> cookies = Collect.getInstance().getInformOnlineState().getSession().getCookies().iterator();
                 
                 while (cookies.hasNext()) {
                     Cookie c = cookies.next();                    
-                    session.getCookies().add(new InformOnlineSession(
+                    session.getCookies().add(new HttpCookieStore(
                             c.getDomain(),
                             c.getExpiryDate(),
                             c.getName(),

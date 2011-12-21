@@ -17,11 +17,11 @@ import java.util.List;
  * [path: /]
  * [expiry: Sat Jan 15 14:29:44 MST 2011]
  */
-public class InformOnlineSession implements Serializable
+public class HttpCookieStore implements Serializable
 {
     private static final long serialVersionUID = 1463065884577681730L;
 
-    private List<InformOnlineSession> cookies = new ArrayList<InformOnlineSession>();
+    private List<HttpCookieStore> cookies = new ArrayList<HttpCookieStore>();
     
     private String domain;
     private Date expiryDate;
@@ -30,12 +30,12 @@ public class InformOnlineSession implements Serializable
     private String value;
     private int version;  
     
-    public InformOnlineSession()
+    public HttpCookieStore()
     {
         
     }
     
-    public InformOnlineSession(String domain, Date expiryDate, String name, String path, String value, int version)
+    public HttpCookieStore(String domain, Date expiryDate, String name, String path, String value, int version)
     {
         setDomain(domain);
         setExpiryDate(expiryDate);
@@ -45,12 +45,12 @@ public class InformOnlineSession implements Serializable
         setVersion(version);
     }
 
-    public void setCookies(List<InformOnlineSession> cookies)
+    public void setCookies(List<HttpCookieStore> cookies)
     {
         this.cookies = cookies;
     }
 
-    public List<InformOnlineSession> getCookies()
+    public List<HttpCookieStore> getCookies()
     {
         return cookies;
     }

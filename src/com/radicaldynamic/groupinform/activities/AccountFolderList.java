@@ -552,7 +552,7 @@ public class AccountFolderList extends ListActivity implements SynchronizeFolder
         if (data.getBoolean(SynchronizeFoldersListener.SUCCESSFUL)) {
             openFolder();
         } else {
-            Toast.makeText(getApplicationContext(), "Unable to open " + mSelectedFolderName + ". Please try again in a few minutes.", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Unable to select " + mSelectedFolderName + ". Please try again in a few minutes.", Toast.LENGTH_LONG).show();
         }
     }
 

@@ -2100,31 +2100,25 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
             // Spinner must reflect results of refresh view below            
             switch (((Spinner) findViewById(R.id.taskSpinner)).getSelectedItemPosition()) {
             case 0:
-                Log.v("DEBUG", "refresh 0");
                 // Show all templates to start new form
                 mRefreshViewTask.setFilterByStatus(FormInstance.Status.any);
                 break;
             case 1:
-                Log.v("DEBUG", "refresh 1");
                 // Show templates with complete forms
                 mRefreshViewTask.setFilterByStatus(FormInstance.Status.complete);
                 break;
             case 2:
-                Log.v("DEBUG", "refresh 2");
                 // Show templates with draft forms
                 mRefreshViewTask.setFilterByStatus(FormInstance.Status.draft);
                 break;
             case 3:
-                Log.v("DEBUG", "refresh 3");
                 // Show forms according to filter, search results
                 mRefreshViewTask.setFilterOptions(mSearchFilter);
                 mRefreshViewTask.setFilterByStatus(null);
                 break;
             case 4:
-                Log.v("DEBUG", "refresh 4");
                 // Show all templates (for record export)
             case 5:
-                Log.v("DEBUG", "refresh 5");
                 // Show all templates (to edit template)
                 mRefreshViewTask.setFilterByStatus(FormInstance.Status.any);
                 break;
