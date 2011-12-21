@@ -257,6 +257,10 @@ public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<Strin
                     Collect.getInstance().getDbService().getDb().create(fi);
                 }
                 
+                // If the first row contained column headers, don't count it as being processed
+                if (mImportOptions.getBoolean(DataImportActivity.KEY_IMPORT_OPTION_SFR, false))
+                    lineNumber--;
+                
                 mImportMsg = "Import complete. " + lineNumber + " rows processed.";
                 
                 break;
@@ -391,8 +395,7 @@ public class DataImportTask extends AsyncTask<Void, String, ArrayList<List<Strin
                         mInstanceXML.addTag(i.getName()).setText(recordRow.get(column).trim());
                     } else {
                         // Use template default
-                        mInstanceXML.addTag(i.getName());
-                        mInstanceXML.gotoParent();                       
+                        mInstanceXML.addTag(i.getName()).setText(i.getDefaultValue().trim());                       
                     }
                 }
             }

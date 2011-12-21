@@ -609,8 +609,8 @@ public class DataImportActivity extends Activity implements DataImportListener
                     List<String> firstRowPreview = mPreviewedRecords.get(0); 
                     ArrayList<String> mapOptionList = new ArrayList<String>();
                     
-                    if (field.getInstance().getDefaultValue().length() > 0)            
-                        mapOptionList.add("Use template (" + field.getInstance().getDefaultValue() + ")");
+                    if (instance.getDefaultValue().trim().length() > 0)            
+                        mapOptionList.add("Use template (" + instance.getDefaultValue().trim() + ")");
                     else
                         mapOptionList.add("Use template (no default value)");
 
