@@ -37,7 +37,6 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -50,10 +49,10 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 
 import com.radicaldynamic.groupinform.R;
-import com.radicaldynamic.groupinform.application.Collect;
 
 public class DrawActivity extends Activity implements ColorPickerDialog.OnColorChangedListener 
 {      
+    @SuppressWarnings("unused")
     private static final String t = "DrawActivity: ";
     
     public static final String KEY_DRAW_MODE        = "draw_mode";
@@ -105,8 +104,6 @@ public class DrawActivity extends Activity implements ColorPickerDialog.OnColorC
         setTitle(getString(R.string.app_name) + " > " + mDrawMode.substring(0, 1).toUpperCase() + mDrawMode.substring(1));
             
         mSaveUri = (Uri) getIntent().getExtras().getParcelable(KEY_OUTPUT_URI);
-        Log.d(Collect.LOGTAG, t + "saveUri at " + mSaveUri.toString());
-        Log.d(Collect.LOGTAG, t + "saveUri.getPath at " + mSaveUri.getPath()); 
 
         // Initalize drawables
         mPaint = new Paint();

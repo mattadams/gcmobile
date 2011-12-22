@@ -2,6 +2,7 @@ package com.radicaldynamic.groupinform.repositories;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.ektorp.ComplexKey;
@@ -69,7 +70,22 @@ public class FormInstanceRepo extends CouchDbRepositorySupport<FormInstance>
         }
         
         if (assignedTo.size() > 0) {
-            return db.queryView(createQuery("byFilterIndex").keys(assignedTo).includeDocs(true), FormInstance.class);
+            List<FormInstance> r = db.queryView(createQuery("byFilterIndex").keys(assignedTo).includeDocs(true), FormInstance.class);
+            
+            // Remove any instances that do not match the specified status
+            if (!status.equals(FormInstance.Status.any)) {
+                Iterator<FormInstance> instanceIterator = r.iterator();
+                
+                if (instanceIterator.hasNext()) {
+                    FormInstance instance = instanceIterator.next();
+                    
+                    if (!status.equals(instance.getStatus())) {
+                        instanceIterator.remove();
+                    }
+                }
+            }
+            
+            return r;
         }
 
         return new ArrayList<FormInstance>();
