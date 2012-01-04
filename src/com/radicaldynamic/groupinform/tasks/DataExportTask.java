@@ -1,5 +1,7 @@
 package com.radicaldynamic.groupinform.tasks;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,8 +18,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.Map.Entry;
+import java.util.zip.Adler32;
+import java.util.zip.CheckedOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.ektorp.Attachment;
 import org.ektorp.AttachmentInputStream;
 import org.odk.collect.android.utilities.FileUtils;
@@ -246,28 +251,35 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 publishProgress("Compressing exported data...");
                 
                 String zip = Environment.getExternalStorageDirectory() + File.separator + prefix + ".zip";
-                ZipArchiveOutputStream os = new ZipArchiveOutputStream(new File(zip));
-                
                 if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "creating zip file " + zip);
                 
+                BufferedInputStream bis = null;
+                
+                FileOutputStream fos = new FileOutputStream(zip);                
+                CheckedOutputStream checksum = new CheckedOutputStream(fos, new Adler32());
+                ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(checksum));
+                
+                byte data[] = new byte[8192];
+              
                 for (File f : new File(exportPath).listFiles()) {
                     if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "adding " + f.getName() + " to zip file");
                     
-                    os.putArchiveEntry(os.createArchiveEntry(f, f.getName()));
+                    FileInputStream fis = new FileInputStream(f);
+                    bis = new BufferedInputStream(fis, 8192);
                     
-                    FileInputStream is = new FileInputStream(f);                    
-                    byte [] buffer = new byte[8192];
-                    int bytesRead = 0;
+                    ZipEntry entry = new ZipEntry(f.getName());
+                    zos.putNextEntry(entry);
                     
-                    while ((bytesRead = is.read(buffer)) != -1) {
-                        os.write(buffer, 0, bytesRead);
+                    int count;
+                    
+                    while ((count = bis.read(data, 0, 8192)) != -1) {
+                        zos.write(data, 0, count);
                     }
-
-                    is.close();                    
-                    os.closeArchiveEntry();                    
-                }
-                
-                os.close();
+                    
+                    bis.close();
+                 }
+                 
+                zos.close();
                 
                 // Remove export data directory
                 FileUtilsExtended.deleteFolder(exportPath);

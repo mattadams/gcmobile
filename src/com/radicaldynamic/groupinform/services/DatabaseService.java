@@ -31,8 +31,8 @@ import org.ektorp.CouchDbInstance;
 import org.ektorp.DbAccessException;
 import org.ektorp.ReplicationCommand;
 import org.ektorp.ReplicationStatus;
+import org.ektorp.android.http.AndroidHttpClient;
 import org.ektorp.http.HttpClient;
-import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbConnector;
 import org.ektorp.impl.StdCouchDbInstance;
 import org.json.JSONObject;
@@ -459,10 +459,9 @@ public class DatabaseService extends Service {
              * will fail.  It is possible that we will need to extend this in the future if
              * it turns out to be insufficient.
              */
-            mLocalHttpClient = new StdHttpClient.Builder()
+            mLocalHttpClient = new AndroidHttpClient.Builder()
                 .host(mLocalHost)
                 .port(mLocalPort)
-                .socketTimeout(TIME_FIVE_MINUTES * 1000)
                 .build();
             
             mLocalDbInstance = new StdCouchDbInstance(mLocalHttpClient);
@@ -490,11 +489,10 @@ public class DatabaseService extends Service {
         if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "establishing connection to " + host + ":" + port);
         
         try {                     
-            mRemoteHttpClient = new StdHttpClient.Builder()
+            mRemoteHttpClient = new AndroidHttpClient.Builder()
                 .enableSSL(true)            
                 .host(host)
                 .port(port)
-                .socketTimeout(30 * 1000)
                 .username(Collect.getInstance().getDeviceState().getDeviceId())
                 .password(Collect.getInstance().getDeviceState().getDeviceKey())                    
                 .build();
