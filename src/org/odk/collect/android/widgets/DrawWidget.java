@@ -17,7 +17,6 @@
 package org.odk.collect.android.widgets;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
@@ -45,7 +44,6 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 
 import com.radicaldynamic.groupinform.activities.FormEntryActivity;
-import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.utilities.FileUtilsExtended;
 
 public class DrawWidget extends QuestionWidget implements IBinaryWidget 
@@ -251,12 +249,7 @@ public class DrawWidget extends QuestionWidget implements IBinaryWidget
                     // Remove this file if it's still sitting around
                     tmp.delete();
                 } else {
-                    try {
-                        org.apache.commons.io.FileUtils.copyFile(new File(mInstanceFolder, mBinaryName), tmp);
-                    } catch (IOException e) {
-                        Log.e(Collect.LOGTAG, t + "unable to copy existing binary image to temporary location: " + e.toString());
-                        e.printStackTrace();
-                    }
+                    FileUtils.copyFile(new File(mInstanceFolder, mBinaryName), tmp);
                 }
 
                 Intent i = new Intent(getContext(), DrawActivity.class);

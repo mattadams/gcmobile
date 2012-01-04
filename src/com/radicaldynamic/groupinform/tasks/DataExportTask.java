@@ -281,9 +281,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
             if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_SEND, false)) {
                 mAttachmentPath = FileUtilsExtended.EXTERNAL_CACHE + File.separator + prefix + ".zip";
                 
-                org.apache.commons.io.FileUtils.copyFile(
-                        new File(Environment.getExternalStorageDirectory() + File.separator + prefix + ".zip"), 
-                        new File(mAttachmentPath));
+                FileUtilsExtended.copyFile(new File(Environment.getExternalStorageDirectory() + File.separator + prefix + ".zip"), new File(mAttachmentPath));
 
                 if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_EXTERNAL, false)) {
                     mCompleteMsg = mCompleteMsg + "\n\nSelect \"Send\" to compose an email with the exported data attached in a ZIP file or to transfer the file via Bluetooth.";

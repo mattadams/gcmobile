@@ -1,6 +1,10 @@
 package com.radicaldynamic.groupinform.utilities;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.Calendar;
 import java.util.regex.Pattern;
 
@@ -18,11 +22,13 @@ public final class FileUtilsExtended
     
     // Storage paths with support for API level 7
     public static final String EXTERNAL_PATH   = Environment.getExternalStorageDirectory() + "/Android/data/com.radicaldynamic.groupinform";
-    public static final String EXTERNAL_FILES  = EXTERNAL_PATH + "/files";    // API level 8 can use getExternalFilesDir()
-    public static final String EXTERNAL_CACHE  = EXTERNAL_PATH + "/cache";    // API level 8 can use getExternalCacheDir()
-    public static final String EXTERNAL_COUCH  = EXTERNAL_PATH + "/couchdb";
-    public static final String EXTERNAL_ERLANG = EXTERNAL_PATH + "/erlang";
+    public static final String EXTERNAL_FILES  = EXTERNAL_PATH + "/files";      // API level 8 can use getExternalFilesDir()
+    public static final String EXTERNAL_CACHE  = EXTERNAL_PATH + "/cache";      // API level 8 can use getExternalCacheDir()
+    public static final String EXTERNAL_COUCH  = EXTERNAL_PATH + "/couchdb";    // No longer used -- upgrade path only
+    public static final String EXTERNAL_ERLANG = EXTERNAL_PATH + "/erlang";     // No longer used -- upgrade path only
     public static final String EXTERNAL_DB     = EXTERNAL_PATH + "/db";
+    
+    public static final String INTERNAL_PATH   = "/data/data/com.radicaldynamic.groupinform"; 
     
     // Temporary storage for forms downloaded from ODK Aggregate or about to be uploaded to same
     public static final String ODK_IMPORT_PATH = EXTERNAL_CACHE + "/odk/import";
@@ -50,6 +56,31 @@ public final class FileUtilsExtended
     // 24 hours (represented as milliseconds)
     private static final long TIME_24_HOURS = 86400000;
     
+    public static void copyFile(File sourceFile, File destFile) throws IOException 
+    {
+        if (!destFile.exists()) {
+            destFile.createNewFile();
+        }
+
+        FileChannel source = null;
+        FileChannel destination = null;
+
+        try {
+            source = new FileInputStream(sourceFile).getChannel();
+            destination = new FileOutputStream(destFile).getChannel();
+            
+            destination.transferFrom(source, 0, source.size());
+        } finally {
+            if (source != null) {
+                source.close();
+            }
+            
+            if (destination != null) {
+                destination.close();
+            }
+        }
+    }
+    
     /*
      * Delete files from the app cache directory on the SD card according to
      * file names matching a specific CouchDB document ID.  This is usually
@@ -73,6 +104,26 @@ public final class FileUtilsExtended
                 }
             }
         }
+    }
+    
+    /*
+     * Recursively delete directory
+     */
+    public static Boolean deleteDirectory(File dir) 
+    {
+        if (dir.isDirectory()) {
+            String[] children = dir.list();
+            
+            for (int i = 0; i < children.length; i++) {
+                boolean success = deleteDirectory(new File(dir, children[i]));
+                
+                if (!success) {
+                    return false;
+                }
+            }
+        }
+        
+        return dir.delete();
     }
     
     /*
@@ -110,7 +161,7 @@ public final class FileUtilsExtended
         }
         
         if (f.isDirectory()) {
-            if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "expiring old files in " + f.getAbsolutePath());
+            if (Collect.Log.DEBUG) Log.v(Collect.LOGTAG, tt + "expiring old files in " + f.getAbsolutePath());
 
             for (File c : f.listFiles()) {
                 expireExternalCache(c);
@@ -177,12 +228,15 @@ public final class FileUtilsExtended
     /*
      * Removed from ODK FileUtils but we still use it
      */
-    public static boolean storageReady() {
+    public static boolean storageReady() 
+    {
         String cardstatus = Environment.getExternalStorageState();
+        
         if (cardstatus.equals(Environment.MEDIA_REMOVED)
                 || cardstatus.equals(Environment.MEDIA_UNMOUNTABLE)
                 || cardstatus.equals(Environment.MEDIA_UNMOUNTED)
-                || cardstatus.equals(Environment.MEDIA_MOUNTED_READ_ONLY)) {
+                || cardstatus.equals(Environment.MEDIA_MOUNTED_READ_ONLY)) 
+        {
             return false;
         } else {
             return true;

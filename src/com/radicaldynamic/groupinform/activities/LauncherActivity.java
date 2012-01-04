@@ -45,10 +45,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
 
-import com.couchbase.libcouch.CouchDB;
-import com.couchbase.libcouch.CouchInstaller;
-import com.couchbase.libcouch.CouchService;
-import com.couchbase.libcouch.ICouchClient;
+import com.couchbase.android.CouchbaseMobile;
+import com.couchbase.android.ICouchbaseDelegate;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.logic.DeviceState;
@@ -84,35 +82,51 @@ public class LauncherActivity extends Activity
     
     private boolean mExitApplication = false;
 
-    private final ICouchClient mCouchCallback = new ICouchClient.Stub() {
+//    private final ICouchClient mCouchCallback = new ICouchClient.Stub() {
+//        @Override
+//        public void couchStarted(String host, int port) 
+//        {
+//            if (mProgressDialog != null) {
+//                mProgressDialog.dismiss();
+//            }
+//            
+//            // Persistent service
+//            startService(new Intent(LauncherActivity.this, CouchService.class));
+//            
+//            Collect.getInstance().getDbService().setLocalDatabaseInfo(host, port);
+//            startActivityForResult(new Intent(LauncherActivity.this, BrowserActivity.class), BROWSER_ACTIVITY);
+//        }
+//
+//        @Override
+//        public void installing(int completed, int total) 
+//        {
+//            if (mProgressDialog == null) {
+//                mProgressDialog = new ProgressDialog(LauncherActivity.this);
+//                mProgressDialog.setTitle(" ");
+//                mProgressDialog.setCancelable(false);
+//                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+//                mProgressDialog.show();
+//            }            
+//            
+//            mProgressDialog.setTitle("Initializing Database");
+//            mProgressDialog.setProgress(completed);
+//            mProgressDialog.setMax(total);
+//        }
+//
+//        @Override
+//        public void exit(String error) 
+//        {
+//            if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, "CouchDB error: " + error);
+//            showDialog(DIALOG_COUCH_ERROR);
+//        }
+//    };
+    
+    private final ICouchbaseDelegate mCouchbaseDelegate = new ICouchbaseDelegate() {
         @Override
-        public void couchStarted(String host, int port) 
+        public void couchbaseStarted(String host, int port) 
         {
-            if (mProgressDialog != null) {
-                mProgressDialog.dismiss();
-            }
-            
-            // Persistent service
-            startService(new Intent(LauncherActivity.this, CouchService.class));
-            
             Collect.getInstance().getDbService().setLocalDatabaseInfo(host, port);
             startActivityForResult(new Intent(LauncherActivity.this, BrowserActivity.class), BROWSER_ACTIVITY);
-        }
-
-        @Override
-        public void installing(int completed, int total) 
-        {
-            if (mProgressDialog == null) {
-                mProgressDialog = new ProgressDialog(LauncherActivity.this);
-                mProgressDialog.setTitle(" ");
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                mProgressDialog.show();
-            }            
-            
-            mProgressDialog.setTitle("Initializing Database");
-            mProgressDialog.setProgress(completed);
-            mProgressDialog.setMax(total);
         }
 
         @Override
@@ -120,7 +134,7 @@ public class LauncherActivity extends Activity
         {
             if (Collect.Log.ERROR) Log.e(Collect.LOGTAG, "CouchDB error: " + error);
             showDialog(DIALOG_COUCH_ERROR);
-        }
+        }        
     };
 
     // Service handling for our connection to databases provided by Couch
@@ -582,19 +596,18 @@ public class LauncherActivity extends Activity
                 for (String file : dbFiles) {
                     if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, t + "about to copy " + file + " to new location");
                     File f = new File(FileUtilsExtended.EXTERNAL_COUCH, "/var/lib/couchdb/" + file);
-                    org.apache.commons.io.FileUtils.copyFileToDirectory(f, new File(FileUtilsExtended.EXTERNAL_DB));
+                    FileUtilsExtended.copyFile(f, new File(FileUtilsExtended.EXTERNAL_DB + File.separator + file));
                 }
             }
 
             // Remove couchdb, erlang and other files on sdcard data storage
-            CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_COUCH));
-            CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_ERLANG));
-            CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_FILES));
+            FileUtilsExtended.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_COUCH));
+            FileUtilsExtended.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_ERLANG));
+            FileUtilsExtended.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_FILES));
 
             // Remove couchdb & erlang on internal data storage
-            CouchInstaller.appNamespace = LauncherActivity.this.getApplication().getPackageName();
-            CouchInstaller.deleteDirectory(new File(CouchInstaller.dataPath() + "/couchdb"));
-            CouchInstaller.deleteDirectory(new File(CouchInstaller.dataPath() + "/erlang"));
+            FileUtilsExtended.deleteDirectory(new File(FileUtilsExtended.INTERNAL_PATH + "/couchdb"));
+            FileUtilsExtended.deleteDirectory(new File(FileUtilsExtended.INTERNAL_PATH + "/erlang"));
         }
     }
     
@@ -683,6 +696,7 @@ public class LauncherActivity extends Activity
 
     private void startCouch() 
     {
-        Collect.getInstance().setCouchService(CouchDB.getService(getBaseContext(), null, "release-1.0.2-2", mCouchCallback));
+        CouchbaseMobile couch = new CouchbaseMobile(getBaseContext(), mCouchbaseDelegate);
+        Collect.getInstance().setCouchService(couch.startCouchbase(getBaseContext()));
     }
 }

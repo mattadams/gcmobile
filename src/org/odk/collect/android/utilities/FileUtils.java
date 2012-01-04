@@ -211,10 +211,10 @@ public class FileUtils {
                 src.close();
                 dst.close();
             } catch (FileNotFoundException e) {
-                Log.e(t, "FileNotFoundExeception while copying audio");
+                Log.e(t, "FileNotFoundExeception while copying file");
                 e.printStackTrace();
             } catch (IOException e) {
-                Log.e(t, "IOExeception while copying audio");
+                Log.e(t, "IOExeception while copying file");
                 e.printStackTrace();
             }
         } else {
