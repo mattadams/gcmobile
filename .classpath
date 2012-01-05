@@ -9,7 +9,6 @@
 	<classpathentry kind="lib" path="lib/xmltool-3.4-SNAPSHOT.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="lib" path="lib/commons-compress-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/kxml2-2.3.0.jar"/>
 	<classpathentry kind="lib" path="lib/SuperCSV-1.52.jar"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>

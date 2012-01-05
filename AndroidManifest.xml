@@ -191,10 +191,9 @@ the License.
 
     <!-- CouchDB -->
     <service 
-        android:name="com.couchbase.libcouch.CouchService" 
+        android:name="com.couchbase.android.CouchbaseService" 
         android:enabled="true" 
-        android:exported="false">
-    </service>
+        android:exported="false" />
     
     <!-- Native ODK code -->
     <activity

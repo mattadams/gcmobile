@@ -17,8 +17,6 @@ import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import com.couchbase.libcouch.CouchInstaller;
-import com.couchbase.libcouch.CouchService;
 import com.radicaldynamic.groupinform.R;
 import com.radicaldynamic.groupinform.application.Collect;
 import com.radicaldynamic.groupinform.services.DatabaseService;
@@ -466,12 +464,12 @@ public class DeviceState
         new File(mContext.getCacheDir(), FileUtilsExtended.SESSION_CACHE_FILE).delete();
         
         // Remove external storage cache & files
-        CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_CACHE));
-        CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_FILES));
+        FileUtilsExtended.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_CACHE));
+        FileUtilsExtended.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_FILES));
 
         // Shutdown CouchDB and remove databases & log files
-        if (Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), CouchService.class)))
-            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "CouchService stopped");
+//        if (Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), CouchService.class)))
+//            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "CouchService stopped");
         
         // Shutdown other services to ensure a full reset off all stateful information
         if (Collect.getInstance().stopService(new Intent(Collect.getInstance().getApplicationContext(), DatabaseService.class)))
@@ -481,7 +479,7 @@ public class DeviceState
             if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "InformOnlineService stopped");  
 
         // Remove DB files & log files
-        if (CouchInstaller.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_DB)))
+        if (FileUtilsExtended.deleteDirectory(new File(FileUtilsExtended.EXTERNAL_DB)))
             FileUtils.createFolder(FileUtilsExtended.EXTERNAL_DB);
     }
 
