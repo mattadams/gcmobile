@@ -38,7 +38,6 @@ public class CouchbaseInstaller extends Thread {
 	 * Files needing to have variables replaced
 	 */
 	private static final String[] FILES_NEEDING_REPLACEMENTS = {
-		"couchdb/bin/couchjs_wrapper",
 		"couchdb/etc/couchdb/android.default.ini"
 	};
 

@@ -194,6 +194,7 @@ public class CouchbaseService extends Service {
 		try {
 			new File(path + "/apk.ez").delete();
 			Runtime.getRuntime().exec(new String[] { "ln", "-s", apkPath, path + "/apk.ez" });
+			Log.d(CouchbaseMobile.TAG, "Symlinked " + apkPath + " to " + path + "/apk.ez");
 		} catch (IOException e) {
 			Log.v(CouchbaseMobile.TAG, "Error symlinking apk.ez", e);
 			Message.obtain(mHandler, CouchbaseService.ERROR, e).sendToTarget();
