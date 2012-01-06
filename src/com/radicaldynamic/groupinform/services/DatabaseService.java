@@ -588,13 +588,13 @@ public class DatabaseService extends Service {
                         // Remove databases that exist locally but for which we have no metadata
 	                    if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "no metatdata for " + db + " (removing)");
                         mLocalDbInstance.deleteDatabase("db_" + db);
-                    } else if (isDbLocal(db) && folder.isReplicated() == false) {
-                        // Purge any databases that are local but not on the replication list                        
+                    } else if (folder.isReplicated() == false) {
+                        // Purge any local databases that are not on the replication list                        
                         try {
                             ReplicationStatus status = replicate(db, REPLICATE_PUSH);
 
-                            if (status != null && status.isOk()) {
-	                        if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "final replication push successful, removing " + db);
+                            if (status != null && (status.isOk() || status.isNoChanges())) {
+                                if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, tt + "final replication push successful, removing " + db);
                                 mLocalDbInstance.deleteDatabase("db_" + db);
                             }
                         } catch (Exception e) {
