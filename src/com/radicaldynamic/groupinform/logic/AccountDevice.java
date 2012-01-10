@@ -10,6 +10,7 @@ public class AccountDevice
         
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_UNUSED = "unused";
+    public final static String STATUS_REMOVED = "removed";
     
     private String id;                  // RO access by everyone
     private String rev;

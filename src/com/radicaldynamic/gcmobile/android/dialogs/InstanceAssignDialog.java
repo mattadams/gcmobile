@@ -1,6 +1,7 @@
 package com.radicaldynamic.gcmobile.android.dialogs;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import android.app.AlertDialog.Builder;
@@ -27,6 +28,18 @@ public class InstanceAssignDialog extends Builder
         super(context);
         
         deviceList = new ArrayList<AccountDevice>(Collect.getInstance().getDeviceState().getDeviceList().values());
+        
+        // Remove "removed" device profiles from from the list
+        Iterator<AccountDevice> deviceListIterator = deviceList.iterator();
+        
+        while (deviceListIterator.hasNext()) {
+            AccountDevice d = deviceListIterator.next();
+            
+            if (d.getStatus().equals(AccountDevice.STATUS_REMOVED)) {
+                deviceListIterator.remove();
+            }
+        }
+        
         items = new CharSequence[deviceList.size()];
         checkedItems = new boolean[deviceList.size()];
         
