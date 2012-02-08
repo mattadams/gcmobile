@@ -55,7 +55,14 @@ public class BrowserLongListAdapter extends ArrayAdapter<FormInstance>
         else if (i.getStatus().equals(FormInstance.Status.complete))
             icon.setImageDrawable(Collect.getInstance().getResources().getDrawable(R.drawable.to_do_list_checked3));
 
-        topText.setText(mFormDefinitions.get(i.getFormId()).getName());
+        /*
+         * It is possible that we might be iterating over a list of instances for which we have no definition
+         * so we need to check for template presence before we reference definition information.
+         */
+        if (mFormDefinitions.containsKey(i.getFormId()))
+            topText.setText(mFormDefinitions.get(i.getFormId()).getName());            
+        else
+            topText.setText(getContext().getString(R.string.tf_template_unavailable));            
         
         if (i.getName() == null)
             bottomText.setText("");

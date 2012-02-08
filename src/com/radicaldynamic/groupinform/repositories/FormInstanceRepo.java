@@ -25,14 +25,20 @@ public class FormInstanceRepo extends CouchDbRepositorySupport<FormInstance>
     
     public FormInstanceRepo(CouchDbConnector db) 
     {
-        super(FormInstance.class, db, "FormInstanceRepoR3");
+        super(FormInstance.class, db, "GCMobileR1");
         initStandardDesignDocument();
+    }
+        
+    @Override
+    public List<FormInstance> getAll()
+    {
+        return queryView("allInstances");
     }
     
     public HashMap<String, JSONObject> getAllPlaceholders()
     {
         HashMap<String, JSONObject> results = new HashMap<String, JSONObject>();
-        ViewResult r = db.queryView(createQuery("allPlaceholders"));
+        ViewResult r = db.queryView(createQuery("placeholderInstances"));
         
         for (Row record : r.getRows()) {
             try {
@@ -48,13 +54,13 @@ public class FormInstanceRepo extends CouchDbRepositorySupport<FormInstance>
     
     public List<FormInstance> findByFormId(String formId) 
     {
-        return queryView("byFormId", formId);
+        return queryView("instancesByDefinitionId", formId);
     }
     
     public List<FormInstance> findByFilterIndex(List<String> assignedTo, FormInstance.Status status)
     {
         if (status == FormInstance.Status.any && assignedTo.isEmpty()) {
-            return db.queryView(createQuery("allActive").includeDocs(true), FormInstance.class);
+            return db.queryView(createQuery("activeInstances").includeDocs(true), FormInstance.class);
         }
         
         if (!status.equals(FormInstance.Status.any) && assignedTo.isEmpty()) {

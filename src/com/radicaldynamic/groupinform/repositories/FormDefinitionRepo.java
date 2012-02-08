@@ -27,36 +27,42 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
     
     public FormDefinitionRepo(CouchDbConnector db) 
     {
-        super(FormDefinition.class, db, "FormDefinitionRepoR2");
+        super(FormDefinition.class, db, "GCMobileR1");
         initStandardDesignDocument();
+    }
+    
+    @Override
+    public List<FormDefinition> getAll()
+    {
+        return queryView("allDefinitions");
     }
     
     // For deuplication (when copying)
     public List<FormDefinition> findByName(String name) 
     {
-        return queryView("byName", name);
+        return queryView("definitionsByName", name);
     }
     
     // For deduplication (when importing from ODK Aggregate)
     public List<FormDefinition> findByXmlHash(String xmlHash) 
     {
-        return queryView("byXmlHash", xmlHash);
+        return queryView("definitionsByXmlHash", xmlHash);
     }
 
     public List<FormDefinition> getAllActive()
     {        
-        return db.queryView(createQuery("allActive").includeDocs(true), FormDefinition.class);
+        return db.queryView(createQuery("activeDefinitions").includeDocs(true), FormDefinition.class);
     }
     
     public List<FormDefinition> getAllActiveByKeys(Collection<Object> keys) 
     {
-        return db.queryView(createQuery("allActive").keys(keys).includeDocs(true), FormDefinition.class);
+        return db.queryView(createQuery("activeDefinitions").keys(keys).includeDocs(true), FormDefinition.class);
     }
     
     public HashMap<String, JSONObject> getAllPlaceholders()
     {
         HashMap<String, JSONObject> results = new HashMap<String, JSONObject>();
-        ViewResult r = db.queryView(createQuery("allPlaceholders"));
+        ViewResult r = db.queryView(createQuery("placeholderDefinitions"));
         
         for (Row record : r.getRows()) {
             try {
@@ -73,7 +79,7 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
     public HashMap<String, HashMap<String, String>> getFormsByInstanceStatus(FormInstance.Status status) 
     {
         HashMap<String, HashMap<String, String>> results = new HashMap<String, HashMap<String, String>>();
-        ViewResult r = db.queryView(createQuery("byInstanceStatus").group(true));        
+        ViewResult r = db.queryView(createQuery("definitionsByInstanceStatus").group(true));        
         List<Row> rows = r.getRows();
         
         for(Row record : rows) {
@@ -104,7 +110,7 @@ public class FormDefinitionRepo extends CouchDbRepositorySupport<FormDefinition>
     {
         Map<String, List<String>> results = new HashMap<String, List<String>>();
         
-        ViewResult r = db.queryView(createQuery("byAggregateReadiness"));
+        ViewResult r = db.queryView(createQuery("odkReadyInstancesByDefinitionId"));
         List<Row> rows = r.getRows();
         
         for(Row record : rows) {

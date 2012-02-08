@@ -288,7 +288,7 @@
 	<string name="tf_date_type_date_only">Date only</string>
 	<string name="tf_date_type_time_only">Time only</string>
 	<string name="tf_date_type_date_and_time">Date &amp; time</string>
-	<string name="tf_default_ionline_server">arthur.902northland.adams.home</string>
+	<string name="tf_default_ionline_server">192.168.42.25</string>
 	<string name="tf_default_ionline_port">5101</string>
 	<string name="tf_decimal_number_type">Integers and decimals</string>
 	<string name="tf_destination">Destination</string>
@@ -519,6 +519,7 @@
 	<string name="tf_synchronization_settings">Synchronization settings</string>
 	<string name="tf_system_error_dialog">An Error Occurred</string>
 	<string name="tf_system_error_dialog_msg">We encountered a system error. A team of trained monkeys has been dispatched to fix the problem. Please try again later!</string>
+    <string name="tf_template_unavailable">Template Unavailable</string>
 	<string name="tf_translate_hint">Translate Description</string>
 	<string name="tf_translate_label">Translate Label</string>
 	<string name="tf_try_again">Try Again</string>
