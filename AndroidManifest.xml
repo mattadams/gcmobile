@@ -265,6 +265,6 @@ the License.
 
   <uses-sdk 
       android:minSdkVersion="8" 
-      android:maxSdkVersion="13"
+      android:maxSdkVersion="15"
       android:targetSdkVersion="8" />
 </manifest>
