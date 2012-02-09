@@ -65,6 +65,9 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
     private String mCompleteMsg;    
     private String mErrorMsg;
     
+    // Incrementing counter of records processed for export
+    private int mExportedRecords = 0;
+    
     private Bundle mExportOptions;
     private Handler mHandler;
     private DataExportListener mStateListener;
@@ -101,43 +104,43 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
             mFormReader = new FormReader(ais, false);
             ais.close();
             
-            publishProgress("Generating headers...");
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_FORMAT_CSV, false)) {            
+                publishProgress("Generating headers...");
 
-            // Include metadata headers?
-            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
-                mExportHeaders.put("formDefinitionName", "Template Name");
-                mExportHeaders.put("formDefinitionUuid", "Template ID");
-            }
+                // Include metadata headers?
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
+                    mExportHeaders.put("formDefinitionName", "Template Name");
+                    mExportHeaders.put("formDefinitionUuid", "Template ID");
+                }
 
-            mExportHeaders.put("rowId", "Row Number");
-            mExportHeaders.put("recordUuid", "Record ID");
-                
-            if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
-                mExportHeaders.put("dateCreated", "Record Date Created");
-                mExportHeaders.put("createdBy", "Record Created By");
-                mExportHeaders.put("dateUpdated", "Record Date Updated");
-                mExportHeaders.put("updatedBy", "Record Updated By");
-                mExportHeaders.put("recordStatus", "Record Status");
-            }
+                mExportHeaders.put("rowId", "Row Number");
+                mExportHeaders.put("recordUuid", "Record ID");
 
-            generateExportHeaders(mFormReader.getInstance());
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
+                    mExportHeaders.put("dateCreated", "Record Date Created");
+                    mExportHeaders.put("createdBy", "Record Created By");
+                    mExportHeaders.put("dateUpdated", "Record Date Updated");
+                    mExportHeaders.put("updatedBy", "Record Updated By");
+                    mExportHeaders.put("recordStatus", "Record Status");
+                }
+
+                generateExportHeaders(mFormReader.getInstance());
             
-            // Exit early if error
-            if (mErrorMsg != null)
-                return null;
+                // Exit early if error
+                if (mErrorMsg != null)
+                    return null;
+            }
 
             publishProgress("Retrieving records...");
             List<FormInstance> unfilteredList = ((FormInstanceRepo) new FormInstanceRepo(Collect.getInstance().getDbService().getDb())).findByFormId(mFormDefinition.getId());
             
             // Filter list
             for (i = 0; i < unfilteredList.size(); i++) {
-                if (unfilteredList.get(i).getStatus().equals(FormInstance.Status.complete) 
-                        && mExportOptions.getBoolean(DataExportActivity.KEY_EXPORT_COMPLETED, false)) {
+                if (unfilteredList.get(i).getStatus().equals(FormInstance.Status.complete) && mExportOptions.getBoolean(DataExportActivity.KEY_EXPORT_COMPLETED, false)) {
                     mExportList.add(unfilteredList.get(i));
                 }
                 
-                if (unfilteredList.get(i).getStatus().equals(FormInstance.Status.draft) 
-                        && mExportOptions.getBoolean(DataExportActivity.KEY_EXPORT_DRAFT, false)) {
+                if (unfilteredList.get(i).getStatus().equals(FormInstance.Status.draft) && mExportOptions.getBoolean(DataExportActivity.KEY_EXPORT_DRAFT, false)) {
                     mExportList.add(unfilteredList.get(i));
                 }
             }
@@ -198,53 +201,63 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                     ais.close();
                 }
                 
-                // Prepare new record for export
-                mExportData.add(new HashMap<String, Object>());
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_FORMAT_CSV, false)) {
+                    // Prepare new record for export
+                    mExportData.add(new HashMap<String, Object>());
 
-                // Add in per-record metadata?
-                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
-                    mExportData.getLast().put(mExportHeaders.get("formDefinitionUuid"), getStringValue(mFormDefinition.getId()));
-                    mExportData.getLast().put(mExportHeaders.get("formDefinitionName"), getStringValue(mFormDefinition.getName()));
-                }
+                    // Add in per-record metadata?
+                    if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
+                        mExportData.getLast().put(mExportHeaders.get("formDefinitionUuid"), getStringValue(mFormDefinition.getId()));
+                        mExportData.getLast().put(mExportHeaders.get("formDefinitionName"), getStringValue(mFormDefinition.getName()));
+                    }
 
-                mExportData.getLast().put(mExportHeaders.get("rowId"), idx);
-                mExportData.getLast().put(mExportHeaders.get("recordUuid"), instance.getId());
-                    
-                if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
-                    mExportData.getLast().put(mExportHeaders.get("recordStatus"), getStringValue(instance.getStatus().toString()));
-                    mExportData.getLast().put(mExportHeaders.get("dateCreated"), getStringValue(instance.getDateCreated()));
-                    mExportData.getLast().put(mExportHeaders.get("createdBy"), getStringValue(instance.getCreatedByAlias()));
-                    mExportData.getLast().put(mExportHeaders.get("dateUpdated"), getStringValue(instance.getDateUpdated()));
-                    mExportData.getLast().put(mExportHeaders.get("updatedBy"), getStringValue(instance.getUpdatedByAlias()));
+                    mExportData.getLast().put(mExportHeaders.get("rowId"), idx);
+                    mExportData.getLast().put(mExportHeaders.get("recordUuid"), instance.getId());
+
+                    if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_RECORD_METADATA, false)) {
+                        mExportData.getLast().put(mExportHeaders.get("recordStatus"), getStringValue(instance.getStatus().toString()));
+                        mExportData.getLast().put(mExportHeaders.get("dateCreated"), getStringValue(instance.getDateCreated()));
+                        mExportData.getLast().put(mExportHeaders.get("createdBy"), getStringValue(instance.getCreatedByAlias()));
+                        mExportData.getLast().put(mExportHeaders.get("dateUpdated"), getStringValue(instance.getDateUpdated()));
+                        mExportData.getLast().put(mExportHeaders.get("updatedBy"), getStringValue(instance.getUpdatedByAlias()));
+                    }
                 }
                 
                 // Parse instance data from XML file
                 FileInputStream fis = new FileInputStream(new File(instancePath));
                 XMLTag instanceXml = XMLDoc.from(fis, false);
-                readData(instanceXml, "/" + instanceXml.getCurrentTagName());
+                
+                if (mExportOptions.getBoolean(DataExportActivity.KEY_FORMAT_CSV, false)) {
+                    readData(instanceXml, "/" + instanceXml.getCurrentTagName());
+                }
+                
                 fis.close();
                 
                 // Remove XForm instance file unless the user has opted to keep it
-                if (!mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_XFORM_FILES, false)) {
+                if (!mExportOptions.getBoolean(DataExportActivity.KEY_FORMAT_XML, false)) {
                     new File(instancePath).delete();
                 }   
+                
+                mExportedRecords++;
             }
             
-            publishProgress("Writing CSV file...");            
-            ICsvMapWriter writer = new CsvMapWriter(new FileWriter(exportPath + prefix + ".csv"), CsvPreference.EXCEL_PREFERENCE);
+            if (mExportOptions.getBoolean(DataExportActivity.KEY_FORMAT_CSV, false)) {
+                publishProgress("Writing CSV file...");
+                ICsvMapWriter writer = new CsvMapWriter(new FileWriter(exportPath + prefix + ".csv"), CsvPreference.EXCEL_PREFERENCE);
             
-            Object[] headerObjects = mExportHeaders.values().toArray();
-            String[] headers = Arrays.asList(headerObjects).toArray(new String[headerObjects.length]);
-            writer.writeHeader(headers);            
-            
-            for (i = 0; i < mExportData.size(); i++) {                
-                writer.write(mExportData.get(i), headers);
+                Object[] headerObjects = mExportHeaders.values().toArray();
+                String[] headers = Arrays.asList(headerObjects).toArray(new String[headerObjects.length]);
+                writer.writeHeader(headers);            
+
+                for (i = 0; i < mExportData.size(); i++) {                
+                    writer.write(mExportData.get(i), headers);
+                }
+
+                writer.close();
             }
-            
-            writer.close();
             
             // Total successfully exported vs. total in list to export
-            String exportTally = mExportData.size() + "/" + mExportList.size();
+            String exportTally = mExportedRecords + "/" + mExportList.size();
 
             // Create a ZIP archive containing the requested file
             if (mExportOptions.getBoolean(DataExportActivity.KEY_OUTPUT_ZIP, false)) {
@@ -385,7 +398,7 @@ public class DataExportTask extends AsyncTask<Object, String, Void>
                 if (Collect.Log.VERBOSE) Log.v(Collect.LOGTAG, tt + "add export column index " + i.getXPath() + " with column header " + xpathPrefix + i.getName());
                 mExportHeaders.put(i.getXPath(), xpathPrefix + i.getName());
             } else {
-                mErrorMsg = "This form template contains one or more repeated groups.\n\nExport of form data with repeated groups is not supported by this version of GC Mobile.\n\nSupport for exporting these types of forms will be added in a future release.";
+                mErrorMsg = "This form template contains one or more repeated groups.\n\nExport of form data with repeated groups to CSV is not supported by this version of GC Mobile.\n\nSupport for exporting these types of forms to CSV will be added in a future release.";
                 return;
             }
         }

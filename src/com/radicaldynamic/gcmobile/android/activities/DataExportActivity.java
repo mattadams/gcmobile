@@ -39,11 +39,12 @@ public class DataExportActivity extends Activity implements DataExportListener
     // Export options
     public static final String KEY_EXPORT_DRAFT = "export_draft";
     public static final String KEY_EXPORT_COMPLETED = "export_complete";
+    public static final String KEY_FORMAT_CSV = "export_csv";
+    public static final String KEY_FORMAT_XML = "export_xml";
     public static final String KEY_OUTPUT_EXTERNAL = "output_external";
     public static final String KEY_OUTPUT_SEND = "output_send";
     public static final String KEY_OUTPUT_ZIP = "external_zip";
     public static final String KEY_OUTPUT_MEDIA_FILES = "output_media_files";
-    public static final String KEY_OUTPUT_XFORM_FILES = "output_xform_files";
     public static final String KEY_OUTPUT_RECORD_METADATA = "output_record_metadata";
     
     // For handling activity restarts
@@ -62,11 +63,12 @@ public class DataExportActivity extends Activity implements DataExportListener
     
     private CheckBox mExportDraft;
     private CheckBox mExportCompleted;
+    private CheckBox mFormatCsv;
+    private CheckBox mFormatXml;
     private CheckBox mOutputExternal;
     private CheckBox mOutputSend;
     private CheckBox mOutputZip;
     private CheckBox mOutputMediaFiles;
-    private CheckBox mOutputXFormFiles;
     private CheckBox mOutputRecordMetadata;
     
     private FormDefinition mFormDefinition;
@@ -113,11 +115,12 @@ public class DataExportActivity extends Activity implements DataExportListener
 
         mExportDraft        = (CheckBox) findViewById(R.id.exportDraft);
         mExportCompleted    = (CheckBox) findViewById(R.id.exportCompleted);
+        mFormatCsv          = (CheckBox) findViewById(R.id.formatCsv);
+        mFormatXml          = (CheckBox) findViewById(R.id.formatXml);
         mOutputExternal     = (CheckBox) findViewById(R.id.outputExternal);
         mOutputSend         = (CheckBox) findViewById(R.id.outputSend);
         mOutputZip          = (CheckBox) findViewById(R.id.outputZip);
         mOutputMediaFiles   = (CheckBox) findViewById(R.id.outputMediaFiles);
-        mOutputXFormFiles   = (CheckBox) findViewById(R.id.outputXFormFiles);
         mOutputRecordMetadata = (CheckBox) findViewById(R.id.outputRecordMetadata);
         
         Button beginExport = (Button) findViewById(R.id.beginExport);
@@ -126,7 +129,7 @@ public class DataExportActivity extends Activity implements DataExportListener
             @Override
             public void onClick(View v)
             {
-                if (!verifyFilterOptions() || !verifyDestionationOptions()) {
+                if (!verifyFilterOptions() || !verifyDestionationOptions() || !verifyFormatOptions()) {
                     showDialog(DIALOG_OPTIONS_REQUIRED);
                 } else {
                     mProgressDialog = new ProgressDialog(DataExportActivity.this);
@@ -155,41 +158,35 @@ public class DataExportActivity extends Activity implements DataExportListener
         mOutputExternal.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (!mOutputSend.isChecked()) {
-                    mOutputZip.setEnabled(isChecked);
-                    mOutputMediaFiles.setEnabled(isChecked);
-                    mOutputXFormFiles.setEnabled(isChecked);
-                    mOutputRecordMetadata.setEnabled(isChecked);
-                }
-
                 if (!mOutputMediaFiles.isChecked() && isChecked)
                     mOutputMediaFiles.setChecked(true);
-
-                if (!mOutputRecordMetadata.isChecked() && isChecked)
-                    mOutputRecordMetadata.setChecked(true);
             }           
         });
         
         // Handle dependencies
         mOutputSend.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (!mOutputExternal.isChecked()) {
-                    mOutputZip.setEnabled(isChecked);
-                    mOutputMediaFiles.setEnabled(isChecked);
-                    mOutputXFormFiles.setEnabled(isChecked);
-                    mOutputRecordMetadata.setEnabled(isChecked);
-                }
-                
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {               
                 if (!mOutputZip.isChecked() && isChecked)
                     mOutputZip.setChecked(true);
 
                 if (!mOutputMediaFiles.isChecked() && isChecked)
                     mOutputMediaFiles.setChecked(true);
-
-                if (!mOutputRecordMetadata.isChecked() && isChecked)
-                    mOutputRecordMetadata.setChecked(true);
             }           
+        });
+        
+        // Handle dependencies
+        mFormatCsv.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    mOutputRecordMetadata.setChecked(true);
+                    mOutputRecordMetadata.setEnabled(true);
+                } else {
+                    mOutputRecordMetadata.setChecked(false);
+                    mOutputRecordMetadata.setEnabled(false);
+                }
+            }
         });
         
         // Handle dependencies
@@ -431,12 +428,17 @@ public class DataExportActivity extends Activity implements DataExportListener
         if (mExportCompleted.isChecked())
             data.putBoolean(KEY_EXPORT_COMPLETED, true);
         
+        if (mFormatCsv.isEnabled() && mFormatCsv.isChecked())
+            data.putBoolean(KEY_FORMAT_CSV, true);
+        
+        if (mFormatXml.isEnabled() && mFormatXml.isChecked())
+            data.putBoolean(KEY_FORMAT_XML, true);
+      
         if (mOutputExternal.isEnabled() && mOutputExternal.isChecked())
             data.putBoolean(KEY_OUTPUT_EXTERNAL, true);
         
-        if (mOutputSend.isEnabled() && mOutputSend.isChecked()) {
+        if (mOutputSend.isEnabled() && mOutputSend.isChecked())
             data.putBoolean(KEY_OUTPUT_SEND, true);
-        }
         
         if (mOutputZip.isEnabled() && mOutputZip.isChecked())
             data.putBoolean(KEY_OUTPUT_ZIP, true);
@@ -444,9 +446,6 @@ public class DataExportActivity extends Activity implements DataExportListener
         if (mOutputMediaFiles.isEnabled() && mOutputMediaFiles.isChecked())
             data.putBoolean(KEY_OUTPUT_MEDIA_FILES, true);
         
-        if (mOutputXFormFiles.isEnabled() && mOutputXFormFiles.isChecked())
-            data.putBoolean(KEY_OUTPUT_XFORM_FILES, true);
-
         if (mOutputRecordMetadata.isEnabled() && mOutputRecordMetadata.isChecked())
             data.putBoolean(KEY_OUTPUT_RECORD_METADATA, true);
         
@@ -472,6 +471,17 @@ public class DataExportActivity extends Activity implements DataExportListener
         if (mExportDraft.isChecked() || mExportCompleted.isChecked())
             return true;
 
+        return false;
+    }
+    
+    /*
+     * Ensure that at least one export format is selected
+     */
+    private boolean verifyFormatOptions()
+    {
+        if (mFormatCsv.isChecked() || mFormatXml.isChecked())
+            return true;
+        
         return false;
     }
 }

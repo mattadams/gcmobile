@@ -7,7 +7,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"  
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="10dip">
 
@@ -38,19 +38,39 @@
         android:layout_marginBottom="3dp"
         android:paddingTop="10dp"
         android:text="Export Destinations"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+        android:textAppearance="?android:attr/textAppearanceLarge" />    
+            
+    <CheckBox
+        android:id="@+id/outputSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send data (email, Bluetooth &amp; more)" />
         
     <CheckBox             
         android:id="@+id/outputExternal"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
-        android:text="Save data to SD card" />
-        
+        android:text="Save data to mobile device" />
+    
+    <TextView 
+        android:id="@android:id/empty"
+        android:layout_height="wrap_content" 
+        android:layout_width="fill_parent"
+        android:layout_marginBottom="3dp"
+        android:text="Export Formats"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+    
     <CheckBox
-        android:id="@+id/outputSend"
+        android:id="@+id/formatCsv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Send data via email/Bluetooth" />
+        android:text="Export data as CSV" />
+    
+    <CheckBox
+        android:id="@+id/formatXml"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Export data as XML" />    
         
     <TextView 
         android:id="@android:id/empty"
@@ -63,31 +83,22 @@
         
     <CheckBox             
         android:id="@+id/outputZip"
-        android:enabled="false"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:text="ZIP exported data" />
         
     <CheckBox             
         android:id="@+id/outputMediaFiles"
-        android:enabled="false"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:text="Include media files" />
-        
-    <CheckBox             
-        android:id="@+id/outputXFormFiles"
-        android:enabled="false"
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content"
-        android:text="Include XForm files" />
         
     <CheckBox
         android:id="@+id/outputRecordMetadata"
         android:enabled="false"
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
-        android:text="Include record metadata" />
+        android:text="Include metadata (CSV only)" />
         
     <Button
         android:id="@+id/beginExport"

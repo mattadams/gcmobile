@@ -76,7 +76,9 @@ public class LauncherActivity extends Activity
     
     private static final int BROWSER_ACTIVITY = 1;
     
+    @SuppressWarnings("unused")
     private ProgressDialog mProgressDialog;
+    
     private Toast mSplashToast;
     private TextView mProgressLoading;
     
@@ -317,6 +319,7 @@ public class LauncherActivity extends Activity
             if (Collect.getInstance().getDeviceState().hasReplicatedFolders()) {                
                 builder.setNeutralButton(getText(R.string.tf_go_offline), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
+                        mProgressLoading.setText("Starting Database");
                         startCouch();
                     }
                 });    

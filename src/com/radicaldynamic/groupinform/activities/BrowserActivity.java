@@ -198,7 +198,7 @@ public class BrowserActivity extends ListActivity implements DefinitionImportLis
         getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.title_browser_activity);
         
         // Initiate and populate spinner to filter form browser on the basis of the currently selected task
-        ArrayAdapter<String> taskSpinnerOptions = new ArrayAdapter(this, android.R.layout.simple_spinner_item);        
+        ArrayAdapter<String> taskSpinnerOptions = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);        
         String [] taskOptions = getResources().getStringArray(R.array.tf_task_selector_options);
         
         // Filter tasks for certain device roles
