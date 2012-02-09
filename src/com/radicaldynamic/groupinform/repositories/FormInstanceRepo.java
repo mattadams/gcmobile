@@ -66,17 +66,17 @@ public class FormInstanceRepo extends CouchDbRepositorySupport<FormInstance>
         if (!status.equals(FormInstance.Status.any) && assignedTo.isEmpty()) {
             ComplexKey startKey = ComplexKey.of(status.toString());
             ComplexKey endKey = ComplexKey.of(status.toString(), ComplexKey.emptyObject());
-            return db.queryView(createQuery("byFilterIndex").startKey(startKey).endKey(endKey).includeDocs(true), FormInstance.class);
+            return db.queryView(createQuery("instanceFilterIndex").startKey(startKey).endKey(endKey).includeDocs(true), FormInstance.class);
         }
         
         if (!status.equals(FormInstance.Status.any) && assignedTo.size() == 1) {
             ComplexKey startKey = ComplexKey.of(status.toString(), assignedTo.get(0));
             ComplexKey endKey = ComplexKey.of(status.toString(), assignedTo.get(0), ComplexKey.emptyObject());
-            return db.queryView(createQuery("byFilterIndex").startKey(startKey).endKey(endKey).includeDocs(true), FormInstance.class);
+            return db.queryView(createQuery("instanceFilterIndex").startKey(startKey).endKey(endKey).includeDocs(true), FormInstance.class);
         }
         
         if (assignedTo.size() > 0) {
-            List<FormInstance> r = db.queryView(createQuery("byFilterIndex").keys(assignedTo).includeDocs(true), FormInstance.class);
+            List<FormInstance> r = db.queryView(createQuery("instanceFilterIndex").keys(assignedTo).includeDocs(true), FormInstance.class);
             
             // Remove any instances that do not match the specified status
             if (!status.equals(FormInstance.Status.any)) {
