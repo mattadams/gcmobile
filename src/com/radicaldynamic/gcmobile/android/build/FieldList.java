@@ -53,6 +53,7 @@ import com.radicaldynamic.groupinform.xform.FormBuilderState;
 import com.radicaldynamic.groupinform.xform.FormReader;
 import com.radicaldynamic.groupinform.xform.FormWriter;
 import com.radicaldynamic.groupinform.xform.Instance;
+import com.radicaldynamic.groupinform.xform.XForm;
 import com.radicaldynamic.groupinform.xform.FormWriter.FormSanityException;
 
 public class FieldList extends ListActivity implements FormLoaderListener, FormSavedListener
@@ -190,7 +191,7 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
         
         private void removeByXPath(String xpath)
         {
-	    if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "removing instances and binds matching XPath " + xpath);
+            if (Collect.Log.DEBUG) Log.d(Collect.LOGTAG, t + "removing instances and binds matching XPath " + xpath);
 
             // Also remove the related instance
             removeInstanceByXPath(xpath, null);
@@ -509,6 +510,26 @@ public class FieldList extends ListActivity implements FormLoaderListener, FormS
         }
         
         return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu)
+    {
+        MenuItem item = menu.findItem(R.id.group);
+
+        Field field = returnActiveField(null);
+        
+        if (item != null && field != null
+                && field.getType().equals("group") 
+                && field.getAttributes().containsKey(XForm.Attribute.APPEARANCE) 
+                && field.getAttributes().get(XForm.Attribute.APPEARANCE).equals(XForm.Value.FIELD_LIST))
+        {             
+            item.setEnabled(false);
+        } else {
+            item.setEnabled(true);
+        }
+        
+        return true;
     }
     
     @Override
