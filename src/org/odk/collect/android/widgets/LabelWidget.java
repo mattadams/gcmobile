@@ -263,5 +263,11 @@ public class LabelWidget extends QuestionWidget {
             label.setOnLongClickListener(l);
         }
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

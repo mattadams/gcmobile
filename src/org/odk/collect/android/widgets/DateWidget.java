@@ -129,5 +129,11 @@ public class DateWidget extends QuestionWidget {
         super.cancelLongPress();
         mDatePicker.cancelLongPress();
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

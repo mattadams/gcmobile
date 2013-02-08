@@ -416,5 +416,11 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
             mImageView.cancelLongPress();
         }
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

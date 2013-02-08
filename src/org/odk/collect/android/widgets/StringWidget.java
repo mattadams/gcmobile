@@ -134,5 +134,12 @@ public class StringWidget extends QuestionWidget {
         super.cancelLongPress();
         mAnswer.cancelLongPress();
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+        mAnswer.setOnKeyListener(listener);
+    }    
+    // END custom
 }

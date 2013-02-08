@@ -152,4 +152,10 @@ public class BarcodeWidget extends QuestionWidget implements IBinaryWidget {
         mStringAnswer.cancelLongPress();
     }
 
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

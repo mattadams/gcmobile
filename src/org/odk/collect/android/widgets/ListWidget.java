@@ -324,5 +324,11 @@ public class ListWidget extends QuestionWidget implements OnCheckedChangeListene
             r.cancelLongPress();
         }
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

@@ -23,6 +23,7 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.text.method.DigitsKeyListener;
 import android.util.TypedValue;
+import android.view.View.OnKeyListener;
 
 /**
  * Widget that restricts values to integers.
@@ -78,5 +79,12 @@ public class IntegerWidget extends StringWidget {
             }
         }
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+        mAnswer.setOnKeyListener(listener);
+    }    
+    // END custom
 }

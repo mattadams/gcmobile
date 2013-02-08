@@ -179,5 +179,11 @@ public class SelectOneWidget extends QuestionWidget implements OnCheckedChangeLi
             button.cancelLongPress();
         }
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

@@ -180,5 +180,11 @@ public class SpinnerWidget extends QuestionWidget {
         super.cancelLongPress();
         spinner.cancelLongPress();
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

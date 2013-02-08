@@ -291,4 +291,11 @@ public class DrawWidget extends QuestionWidget implements IBinaryWidget
         
         addView(mImageView);
     }
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

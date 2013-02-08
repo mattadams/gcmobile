@@ -146,4 +146,7 @@ public abstract class QuestionWidget extends LinearLayout {
         }
     }
 
+    // BEGIN custom
+    public abstract void setOnKeyListener(OnKeyListener listener);
+    // END custom
 }

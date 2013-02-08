@@ -346,4 +346,11 @@ public class GridWidget extends QuestionWidget {
         super.cancelLongPress();
         gridview.cancelLongPress();
     }
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

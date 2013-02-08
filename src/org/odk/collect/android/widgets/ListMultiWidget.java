@@ -333,4 +333,11 @@ public class ListMultiWidget extends QuestionWidget {
             c.cancelLongPress();
         }
     }
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

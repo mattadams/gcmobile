@@ -289,5 +289,11 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
         mChooseButton.cancelLongPress();
         mPlayButton.cancelLongPress();
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

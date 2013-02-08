@@ -32,6 +32,7 @@ import android.provider.MediaStore.Audio;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.View.OnKeyListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -288,5 +289,11 @@ public class AudioWidget extends QuestionWidget implements IBinaryWidget {
         mChooseButton.cancelLongPress();
         mPlayButton.cancelLongPress();
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

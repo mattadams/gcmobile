@@ -155,5 +155,11 @@ public class DateTimeWidget extends QuestionWidget {
         mDatePicker.cancelLongPress();
         mTimePicker.cancelLongPress();
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

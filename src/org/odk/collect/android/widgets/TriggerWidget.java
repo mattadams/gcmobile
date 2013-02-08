@@ -132,4 +132,10 @@ public class TriggerWidget extends QuestionWidget {
         mStringAnswer.cancelLongPress();
     }
 
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }

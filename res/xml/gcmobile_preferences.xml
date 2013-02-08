@@ -7,8 +7,8 @@
         android:summary="@string/click_to_web">
         
         <intent 
-                android:action="android.intent.action.VIEW"
-                android:data="http://groupcomplete.com" />
+            android:action="android.intent.action.VIEW"
+            android:data="http://groupcomplete.com" />
     </PreferenceScreen>
 
     <PreferenceCategory android:title="@string/tf_synchronization_settings">    

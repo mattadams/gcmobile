@@ -66,6 +66,7 @@ import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.View.OnClickListener;
+import android.view.View.OnKeyListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -899,6 +900,31 @@ public class FormEntryActivity extends Activity implements AnimationListener, Fo
                         registerForContextMenu(qw);
                     }
                 }
+                
+                // BEGIN custom
+                /* 
+                 * If the last widget is a barcode, number or text string, bind a listener
+                 * such that a CR while the widget is selected automatically causes the
+                 * form to advance to the next question/end of form.
+                 */
+                QuestionWidget lastQw = odkv.getWidgets().get(odkv.getWidgets().size() - 1);
+                
+                if (lastQw != null) {
+                    lastQw.setOnKeyListener(new OnKeyListener() {
+                        @Override
+                        public boolean onKey(View v, int keyCode, KeyEvent event)
+                        {
+                            // If the event is a key-down event on the "enter" button
+                            if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {                               
+                                showNextView();
+                                return true;
+                            }
+                            
+                            return false;
+                        }                        
+                    });
+                }                
+                // END custom
 
                 return odkv;
             default:

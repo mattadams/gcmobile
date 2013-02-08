@@ -210,5 +210,11 @@ public class SelectOneAutoAdvanceWidget extends QuestionWidget implements OnChec
             r.cancelLongPress();
         }
     }
-
+    
+    // BEGIN custom
+    @Override
+    public void setOnKeyListener(OnKeyListener listener)
+    {
+    }    
+    // END custom
 }
